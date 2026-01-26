@@ -1,0 +1,384 @@
+/* =========================
+   PATIENT DASHBOARD - NEW DESIGN
+========================= */
+
+body {
+    background: #f6f9fb;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card-rounded {
+    border-radius: 16px;
+}
+
+/* =========================
+   WELCOME BANNER
+========================= */
+
+.welcome-banner {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    border-radius: 16px;
+    padding: 40px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.welcome-subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+    margin-bottom: 24px;
+}
+
+.welcome-btn {
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.welcome-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* =========================
+   SUMMARY CARDS
+========================= */
+
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid #f1f5f9;
+}
+
+.summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.summary-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.summary-icon-primary {
+    background: rgba(20, 184, 166, 0.1);
+    color: #14b8a6;
+}
+
+.summary-icon-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.summary-icon-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-label {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.summary-month {
+    font-size: 16px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* =========================
+   STATISTICS CARD
+========================= */
+
+.card-header-statistics {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    background: white;
+    border-radius: 16px 16px 0 0;
+}
+
+.card-header-statistics h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+#visitChart {
+    max-height: 300px;
+}
+
+/* =========================
+   QUICK ACTIONS
+========================= */
+
+.quick-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    background: #f8fafc;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #334155;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.quick-action-card:hover {
+    background: white;
+    border-color: #14b8a6;
+    color: #14b8a6;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
+}
+
+.quick-action-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.quick-action-text {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* =========================
+   NEAREST APPOINTMENT CARD
+========================= */
+
+.nearest-appointment-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 2px solid #86efac;
+}
+
+.nearest-appointment-content {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.dentist-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dentist-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.dentist-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.dentist-specialty {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.appointment-datetime {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.datetime-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #475569;
+}
+
+.datetime-item i {
+    color: #14b8a6;
+    width: 20px;
+}
+
+/* =========================
+   FLOATING CHAT BUTTON
+========================= */
+
+.floating-chat-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 1000;
+}
+
+.floating-chat-btn .btn {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.floating-chat-btn .btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+    color: white;
+}
+
+.btn-light {
+    background: white;
+    color: #14b8a6;
+    border: none;
+}
+
+.btn-light:hover {
+    background: #f8fafc;
+    color: #0d9488;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card-body {
+    padding: 24px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 992px) {
+    .welcome-title {
+        font-size: 24px;
+    }
+    
+    .summary-value {
+        font-size: 24px;
+    }
+    
+    .floating-chat-btn {
+        bottom: 16px;
+        right: 16px;
+    }
+    
+    .floating-chat-btn .btn {
+        width: 56px;
+        height: 56px;
+    }
+}
+
+@media (max-width: 768px) {
+    .welcome-banner {
+        padding: 24px;
+    }
+    
+    .welcome-title {
+        font-size: 20px;
+    }
+    
+    .summary-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .quick-action-card {
+        padding: 16px;
+    }
+}

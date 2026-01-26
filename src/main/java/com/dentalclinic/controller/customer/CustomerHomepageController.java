@@ -34,24 +34,37 @@ public class CustomerHomepageController {
         this.blogRepo = blogRepo;
     }
 
+    @GetMapping({"/", "/index", "/home"})
+    public String redirectToHomepage() {
+        return "redirect:/homepage";
+    }
+
     @GetMapping("/homepage")
     public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
         Long currentCustomerId = 3L;
 
-        // 1. Lấy dữ liệu Profile khách hàng
-        CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
-        if (profile == null) {
-            profile = new CustomerProfile();
-            profile.setFullName("Khách hàng");
-            model.addAttribute("appointments", new ArrayList<>());
-        } else {
-            model.addAttribute("appointments", profileService.getCustomerAppointments(currentCustomerId));
-        }
-        model.addAttribute("customer", profile);
+            // 1. Lấy dữ liệu Profile khách hàng
+            CustomerProfile profile = profileService.getCurrentCustomerProfile(currentUserId);
+            if (profile == null) {
+                profile = new CustomerProfile();
+                profile.setFullName("Khách hàng");
+                model.addAttribute("appointments", new ArrayList<>());
+            } else {
+                // Get appointments by customer.id (which equals user.id due to @MapsId)
+                try {
+                    model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
+                } catch (Exception e) {
+                    model.addAttribute("appointments", new ArrayList<>());
+                }
+            }
+            model.addAttribute("customer", profile);
 
-        // 2. Lấy danh sách Dịch vụ và Bác sĩ để hiển thị lên giao diện mới
-        model.addAttribute("services", serviceRepo.findAll());
-        model.addAttribute("dentists", dentistRepo.findAll());
+            // 2. Lấy danh sách Dịch vụ và Bác sĩ để hiển thị lên giao diện mới
+            try {
+                model.addAttribute("services", serviceRepo.findAll());
+            } catch (Exception e) {
+                model.addAttribute("services", new ArrayList<>());
+            }
 
         // Lấy 2 bài blog trang đầu tiên
         Pageable pageable = PageRequest.of(page, 2);
@@ -61,6 +74,21 @@ public class CustomerHomepageController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", blogPage.getTotalPages());
 
-        return "customer/homepage"; // Trả về file src/main/resources/templates/customer/homepage.html
+            try {
+                model.addAttribute("blogs", blogRepo.findByIsPublishedTrueOrderByCreatedAtDesc());
+            } catch (Exception e) {
+                model.addAttribute("blogs", new ArrayList<>());
+            }
+
+            return "customer/homepage";
+        } catch (Exception e) {
+            // Fallback: return homepage with empty data
+            model.addAttribute("customer", new CustomerProfile());
+            model.addAttribute("appointments", new ArrayList<>());
+            model.addAttribute("services", new ArrayList<>());
+            model.addAttribute("dentists", new ArrayList<>());
+            model.addAttribute("blogs", new ArrayList<>());
+            return "customer/homepage";
+        }
     }
 }

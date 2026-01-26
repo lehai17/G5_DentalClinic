@@ -44,18 +44,22 @@
         <div class="section-subtitle">DỊCH VỤ NỔI BẬT</div>
         <h2 class="section-title">Các Dịch Vụ Chăm Sóc Răng Tuyệt Vời</h2>
         <div class="services-grid">
+            <div th:if="${services == null or services.isEmpty()}" class="text-center py-5">
+                <p class="text-muted">Chưa có dịch vụ nào</p>
+            </div>
             <div th:each="service : ${services}"
+                 th:if="${services != null}"
                  class="service-card"
-                 th:data-id="${service.id}"
-                 th:data-name="${service.name}"
-                 th:data-description="${service.description}"
-                 th:data-price="${service.price}"
+                 th:data-id="${service?.id}"
+                 th:data-name="${service?.name}"
+                 th:data-description="${service?.description}"
+                 th:data-price="${service?.price}"
                  onclick="handleServiceClick(this)">
 
                 <div class="service-icon"></div>
-                <div class="service-name" th:text="${service.name}">Tên dịch vụ</div>
-                <div class="service-desc" th:text="${service.description}">Mô tả</div>
-                <div class="service-price" th:text="${service.price != null ? #numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}"></div>
+                <div class="service-name" th:text="${service?.name ?: 'Dịch vụ'}">Tên dịch vụ</div>
+                <div class="service-desc" th:text="${service?.description ?: 'Mô tả dịch vụ'}">Mô tả</div>
+                <div class="service-price" th:text="${service?.price != null ? #numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}"></div>
                 <div class="service-duration"> Xem chi tiết →</div>
             </div>
         </div>
@@ -65,11 +69,16 @@
         <div class="section-subtitle">ĐỘI NGŨ CHUYÊN NGHIỆP</div>
         <h2 class="section-title">Các Bác Sĩ Giàu Kinh Nghiệm</h2>
         <div class="dentist-grid">
-            <div th:each="dentist : ${dentists}" class="dentist-card">
+            <div th:if="${dentists == null or dentists.isEmpty()}" class="text-center py-5">
+                <p class="text-muted">Chưa có bác sĩ nào</p>
+            </div>
+            <div th:each="dentist : ${dentists}"
+                 th:if="${dentists != null}"
+                 class="dentist-card">
                 <div class="dentist-avatar"></div>
                 <div class="dentist-info">
-                    <div class="dentist-name" th:text="${dentist.fullName}">Tên Bác Sĩ</div>
-                    <div class="dentist-specialty" th:text="${dentist.specialization}">Chuyên khoa</div>
+                    <div class="dentist-name" th:text="${dentist?.fullName ?: 'Bác sĩ'}">Tên Bác Sĩ</div>
+                    <div class="dentist-specialty" th:text="${dentist?.specialization ?: 'Nha sĩ tổng quát'}">Chuyên khoa</div>
                     <div class="dentist-stars"></div>
                 </div>
             </div>
