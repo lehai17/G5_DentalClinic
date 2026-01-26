@@ -16,9 +16,8 @@ public class Swp391G5DentalClinicApplication {
         SpringApplication.run(Swp391G5DentalClinicApplication.class, args);
     }
 
-
-@Bean
-CommandLineRunner run() {
+    @Bean
+    CommandLineRunner run() {
         return args -> {
             System.out.println("======================================");
             System.out.println("  SWP391 G5 – DENTAL CLINIC STARTED!");

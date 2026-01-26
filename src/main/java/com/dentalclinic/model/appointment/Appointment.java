@@ -2,7 +2,7 @@ package com.dentalclinic.model.appointment;
 
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.profile.DentistProfile;
-import com.dentalclinic.model.service.Service;
+import com.dentalclinic.model.service.Services;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -25,7 +25,7 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private Service service;
+    private Services service;
 
     @Column(name = "appointment_date")
     private LocalDate date;
@@ -49,8 +49,8 @@ public class Appointment {
     public void setCustomer(CustomerProfile customer) { this.customer = customer; }
     public DentistProfile getDentist() { return dentist; }
     public void setDentist(DentistProfile dentist) { this.dentist = dentist; }
-    public Service getService() { return service; }
-    public void setService(Service service) { this.service = service; }
+    public Services getService() { return service; }
+    public void setService(Services service) { this.service = service; }
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
     public LocalTime getStartTime() { return startTime; }
