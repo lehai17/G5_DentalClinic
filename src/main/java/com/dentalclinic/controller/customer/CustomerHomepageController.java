@@ -1,14 +1,19 @@
 package com.dentalclinic.controller.customer;
 
+import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.repository.BlogRepository;
 import com.dentalclinic.service.customer.CustomerProfileService;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 
@@ -35,9 +40,8 @@ public class CustomerHomepageController {
     }
 
     @GetMapping("/homepage")
-    public String showHomepage(Model model) {
-        try {
-            Long currentUserId = 3L; // User ID
+    public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
+        Long currentCustomerId = 3L;
 
             // 1. Lấy dữ liệu Profile khách hàng
             CustomerProfile profile = profileService.getCurrentCustomerProfile(currentUserId);
@@ -62,11 +66,13 @@ public class CustomerHomepageController {
                 model.addAttribute("services", new ArrayList<>());
             }
 
-            try {
-                model.addAttribute("dentists", dentistRepo.findAll());
-            } catch (Exception e) {
-                model.addAttribute("dentists", new ArrayList<>());
-            }
+        // Lấy 2 bài blog trang đầu tiên
+        Pageable pageable = PageRequest.of(page, 2);
+        Page<Blog> blogPage = blogRepo.findByIsPublishedTrueOrderByCreatedAtDesc(pageable);
+
+        model.addAttribute("blogs", blogPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", blogPage.getTotalPages());
 
             try {
                 model.addAttribute("blogs", blogRepo.findByIsPublishedTrueOrderByCreatedAtDesc());

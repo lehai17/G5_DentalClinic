@@ -27,7 +27,7 @@ public class Blog {
     @Column(name = "summary", columnDefinition = "NVARCHAR(500)")
     private String summary;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "NVARCHAR(MAX)")
     private String imageUrl;
 
     @Column(name = "created_at")
