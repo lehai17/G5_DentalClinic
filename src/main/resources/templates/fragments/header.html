@@ -1,10 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org">
 <body>
+<nav th:fragment="header" class="navbar">
+    <div class="navbar-container">
+        <div class="navbar-logo">
+            <a th:href="@{/homepage}"><span>Nha Khoa ABC</span></a>
+        </div>
 
+        <ul class="navbar-menu">
+            <li><a onclick="scrollToSection('services')">Dịch Vụ</a></li>
+            <li><a onclick="scrollToSection('dentists')">Bác Sĩ</a></li>
+            <li><a th:href="@{/blogs}">Blog</a></li>
+            <li><a href="#contact">Liên Hệ</a></li>
+        </ul>
+
+        <div class="navbar-actions">
+            <a th:href="@{/appointments/book}" class="navbar-cta" style="text-decoration: none; display: inline-block;">
+                Đặt Lịch Ngay
+            </a>
+        </div>
+    </div>
+</nav>
 </body>
 </html>

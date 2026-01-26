@@ -1,0 +1,40 @@
+:root {
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --success: #27ae60;
+    --light: #ecf0f1;
+    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; margin: 0; color: var(--primary); }
+.dashboard-container { display: flex; min-height: 100vh; }
+
+/* Sidebar & Content Layout */
+.main-content { flex: 1; padding: 30px; }
+
+/* Card Styles */
+.glass-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    margin-bottom: 25px;
+}
+
+.card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: var(--accent); border-bottom: 2px solid var(--light); padding-bottom: 10px; }
+
+/* Table Design */
+.custom-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+.custom-table th { padding: 15px; background: transparent; color: #7f8c8d; font-size: 0.85rem; text-transform: uppercase; }
+.custom-table tr { background: white; transition: transform 0.2s; }
+.custom-table tr:hover { transform: scale(1.01); box-shadow: var(--shadow); }
+.custom-table td { padding: 15px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+.custom-table td:first-child { border-left: 1px solid #eee; border-radius: 10px 0 0 10px; }
+.custom-table td:last-child { border-right: 1px solid #eee; border-radius: 0 10px 10px 0; }
+
+/* Status Badges */
+.status-pill { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+.PENDING { background: #fff3cd; color: #856404; }
+.CONFIRMED { background: #d4edda; color: #155724; }
+
+.btn-book { background: var(--accent); color: white; padding: 12px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; float: right; }

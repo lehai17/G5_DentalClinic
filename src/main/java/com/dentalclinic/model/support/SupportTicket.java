@@ -2,13 +2,11 @@ package com.dentalclinic.model.support;
 
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "support_ticket")
 public class SupportTicket {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,12 +16,18 @@ public class SupportTicket {
     private User customer;
 
     @ManyToOne
-    @JoinColumn(name = "dentist_id")
-    private User dentist;
+    @JoinColumn(name = "staff_id")
+    private User staff;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String question;
-    private String answer;
-    private String status;
-    private LocalDateTime createdAt;
-}
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
+    private String answer;
+
+    private String status; // OPEN, CLOSED, IN_PROGRESS
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+}

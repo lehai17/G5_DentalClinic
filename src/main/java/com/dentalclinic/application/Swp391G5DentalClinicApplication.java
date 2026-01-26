@@ -5,15 +5,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(scanBasePackages = "com.dentalclinic")
 @EntityScan(basePackages = "com.dentalclinic.model")
+@EnableJpaRepositories(basePackages = "com.dentalclinic.repository")
 public class Swp391G5DentalClinicApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(Swp391G5DentalClinicApplication.class, args);
     }
-
 
 
 @Bean
