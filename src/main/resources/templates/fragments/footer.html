@@ -1,10 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org">
 <body>
+<footer th:fragment="footer" class="footer">
+    <div class="footer-container">
+        <div class="footer-section">
+            <h3>Nha Khoa ABC</h3>
+            <p>Nụ cười của bạn là sứ mệnh và là niềm hạnh phúc của đội ngũ chúng tôi.</p>
+        </div>
 
+        <div class="footer-section">
+            <h4>Liên Kết</h4>
+            <ul>
+                <li><a th:href="@{/homepage}">Trang chủ</a></li>
+                <li><a th:href="@{/public/blogs}">Tin tức & Blog</a></li>
+                <li><a href="#services">Dịch vụ</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section" id="contact">
+            <h4>Liên Hệ</h4>
+            <p>📍 123 Đường ABC, Hà Nội</p>
+            <p>📞 Hotline: 1900 1234</p>
+            <p>📧 Email: info@nhakhoaabc.vn</p>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        &copy; 2026 Nha Khoa ABC. Bảo lưu mọi quyền.
+    </div>
+</footer>
 </body>
 </html>

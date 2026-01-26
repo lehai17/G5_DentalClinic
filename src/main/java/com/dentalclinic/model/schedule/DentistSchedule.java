@@ -9,15 +9,23 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "dentist_schedule")
 public class DentistSchedule {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "dentist_id")
     private DentistProfile dentist;
 
+    @Column(name = "work_date")
     private LocalDate date;
+
+    @Column(name = "start_time")
     private LocalTime startTime;
+
+    @Column(name = "end_time")
     private LocalTime endTime;
+
+    @Column(name = "is_available")
+    private boolean available = true;
 }
