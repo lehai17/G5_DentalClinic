@@ -21,10 +21,11 @@ public class CustomerProfileService {
     }
 
     public CustomerProfile getCurrentCustomerProfile(Long userId) {
-        return profileRepository.findById(userId).orElse(null);
+        return profileRepository.findByUser_Id(userId).orElse(null);
     }
 
     public List<Appointment> getCustomerAppointments(Long customerId) {
+        // customerId is the CustomerProfile.id (which equals user.id due to @MapsId)
         return appointmentRepository.findByCustomerId(customerId);
     }
 }

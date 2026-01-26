@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xem lịch trống</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <!-- Patient CSS -->
+    <link rel="stylesheet" th:href="@{/css/patient/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/patient/topbar.css}">
+    <link rel="stylesheet" th:href="@{/css/patient/appointments.css}">
+</head>
+
+<body>
+
+<!-- ===== TOPBAR ===== -->
+<div th:replace="~{patient/fragments/topbar :: topbar}"></div>
+
+<div class="d-flex">
+    <!-- ===== SIDEBAR ===== -->
+    <div th:replace="~{patient/fragments/sidebar :: sidebar}"></div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <div class="mb-4">
+            <h3 class="fw-bold">Xem lịch trống</h3>
+            <p class="text-muted">Chọn ngày và nha sĩ để xem các khung giờ còn trống</p>
+        </div>
+
+        <!-- Filter Form -->
+        <div class="card border-0 shadow-sm card-rounded mb-4">
+            <div class="card-body p-4">
+                <form method="get" th:action="@{/patient/appointments/available}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="date" class="form-label fw-semibold">Ngày</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="date" 
+                                   name="date"
+                                   th:value="${selectedDate}"
+                                   th:min="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"
+                                   required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dentistId" class="form-label fw-semibold">Nha sĩ</label>
+                            <select class="form-select" id="dentistId" name="dentistId" required>
+                                <option value="">-- Chọn nha sĩ --</option>
+                                <option th:each="dentist : ${dentists}" 
+                                        th:value="${dentist.id}"
+                                        th:selected="${selectedDentistId != null and selectedDentistId == dentist.id}"
+                                        th:text="${dentist.user != null ? dentist.user.email : 'Nha sĩ'} + (${dentist.specialization != null ? dentist.specialization : 'Nha sĩ tổng quát'})">
+                                    Nha sĩ
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-2"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Available Time Slots -->
+        <div class="card border-0 shadow-sm card-rounded" 
+             th:if="${timeSlots != null and !timeSlots.isEmpty()}">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>Khung giờ còn trống
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-3 col-sm-4 col-6" 
+                         th:each="slot : ${timeSlots}">
+                        <div class="time-slot-card" 
+                             th:classappend="${slot.available} ? 'available' : 'unavailable'">
+                            <div class="time-slot-content">
+                                <i class="bi" 
+                                   th:classappend="${slot.available} ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'"></i>
+                                <div class="time-slot-time">
+                                    <strong th:text="${#temporals.format(slot.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(slot.endTime, 'HH:mm')}">09:00 - 10:00</strong>
+                                </div>
+                                <small th:if="${slot.available}" class="text-success">Còn trống</small>
+                                <small th:if="${!slot.available}" class="text-danger">Đã đặt</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="card border-0 shadow-sm card-rounded text-center py-5" 
+             th:if="${timeSlots == null or timeSlots.isEmpty()}">
+            <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
+            <h5 class="text-muted">Vui lòng chọn ngày và nha sĩ để xem lịch trống</h5>
+        </div>
+
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
