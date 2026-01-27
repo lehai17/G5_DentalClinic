@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GENZ CLINIC - Login</title>
+
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+<body>
+<div class="page" >
+    <div class="brand">
+        <div class="logo">🦷</div>
+        <div class="name">GENZ CLINIC</div>
+        <div class="tagline">Brighten the Vietnamese smile</div>
+    </div>
+
+    <div class="card">
+        <h2>Welcome </h2>
+        <p class="sub">Sign In to your GenZ Clinic account</p>
+
+        <!-- báo lỗi -->
+        <div class="alert" th:if="${param.error}">
+            Sai username hoặc password.
+        </div>
+        <div class="alert success" th:if="${param.logout}">
+            Bạn đã đăng xuất.
+        </div>
+
+        <!-- Spring Security mặc định xử lý POST /login -->
+        <form th:action="@{/do-login}" method="post">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Username" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Password" required>
+
+            <div class="row">
+                <label class="remember">
+                    <input type="checkbox" name="remember-me">
+                    Remember me
+                </label>
+                <a class="link" th:href="@{/forgot-password}">Forgot password?</a>
+            </div>
+
+            <div class="btns">
+                <button class="btn primary" type="submit">Login</button>
+                <a class="btn ghost" th:href="@{/oauth2/authorization/google}">
+                    <span class="g">G</span> Login with Google
+                </a>
+            </div>
+
+            <p class="bottom">
+                Do not have an account ?
+                <a class="link" th:href="@{/register}">Sign up</a>
+            </p>
+        </form>
+    </div>
+</div>
+</body>
+</html>
