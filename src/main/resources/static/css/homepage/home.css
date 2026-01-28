@@ -1,0 +1,387 @@
+/* --- 1. CẤU TRÚC LAYOUT TỔNG THỂ --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    background: #ffffff;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Container chính bao bọc toàn bộ trang */
+.app-wrapper {
+    display: flex; /* Sidebar và Main nằm cạnh nhau theo chiều ngang */
+    width: 100%;
+}
+
+/* Phần nội dung bên phải */
+.main-content {
+    flex: 1;
+    margin-left: 260px; /* Đẩy nội dung sang phải để không bị Sidebar che mất */
+    width: calc(100% - 260px);
+    transition: all 0.3s ease;
+    background: #ffffff;
+}
+
+/* Sidebar cố định bên trái */
+.patient-sidebar {
+    width: 260px;
+    height: 100vh;
+    position: fixed; /* Cố định khi cuộn trang */
+    top: 0;
+    left: 0;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    z-index: 1001;
+}
+
+/* --- 2. HEADER (NAVBAR) --- */
+.navbar {
+    position: sticky; /* Đổi từ fixed sang sticky để nằm gọn trong main-content */
+    top: 0;
+    z-index: 1000;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-menu {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+.navbar-menu li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.navbar-menu li a:hover { color: #667eea; }
+
+/* --- 3. HERO SECTION --- */
+.hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 120px 40px !important;
+    text-align: center;
+}
+
+.hero-title {
+    font-size: 48px !important;
+    font-weight: 800 !important;
+    margin-bottom: 25px !important;
+    display: block !important;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem !important;
+    margin: 0 auto 45px auto !important;
+    opacity: 0.9 !important;
+    max-width: 700px;
+}
+
+.btn-primary {
+    background: white !important;
+    color: #667eea !important;
+    padding: 15px 35px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: transform 0.3s;
+    border: none;
+}
+
+.btn-primary:hover { transform: scale(1.05); }
+
+/* --- 4. SECTION CHUNG --- */
+.section { padding: 80px 20px; max-width: 1200px; margin: 0 auto; }
+
+.section-title {
+    font-size: 32px !important;
+    text-align: center !important;
+    margin-bottom: 50px !important;
+    font-weight: 700 !important;
+    display: block !important;
+    color: #1a202c !important;
+}
+
+.section-subtitle {
+    color: #667eea !important;
+    text-align: center !important;
+    font-weight: 800 !important;
+    display: block !important;
+    margin-bottom: 10px !important;
+}
+
+/* --- 5. GRID DỊCH VỤ & BÁC SĨ --- */
+.services-grid, .dentist-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 30px !important;
+}
+
+.service-card, .dentist-card {
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 16px;
+    padding: 35px;
+    text-align: center;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    border-color: #667eea;
+    box-shadow: 0 20px 40px rgba(102,126,234,0.1);
+}
+
+.service-price {
+    color: #667eea !important;
+    font-weight: 800 !important;
+    font-size: 22px !important;
+    margin: 15px 0 !important;
+}
+
+/* --- 6. PHẦN BLOG (2 BÀI / 1 HÀNG + FIX BỊ BÓP CHIỀU NGANG) --- */
+.bg-light {
+    background-color: #f8fafc !important;
+    width: 100% !important;
+    padding: 60px 0;
+}
+
+/* FIX quan trọng: đảm bảo section blog chiếm đủ bề ngang trong main-content */
+#blog.section {
+    width: 100% !important;
+    max-width: 1200px !important;  /* giữ layout đẹp, không quá rộng */
+    margin: 0 auto !important;
+}
+
+/* Grid blog: 2 bài viết nằm 2 bên */
+#blog .blog-grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important; /* 2 cột */
+    gap: 28px !important;
+    align-items: stretch;
+    margin-top: 24px;
+}
+
+/* Card blog gọn, bo góc, hover nổi */
+#blog .blog-card {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    background: #ffffff;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+
+    display: flex;
+    flex-direction: column;
+
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+#blog .blog-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(102,126,234,0.55);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+}
+
+/* Ảnh blog */
+#blog .blog-thumb {
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Nội dung blog */
+#blog .blog-content {
+    padding: 22px 22px 18px;
+}
+
+/* Ngày đăng */
+#blog .blog-date {
+    display: inline-block;
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+/* Tiêu đề */
+#blog .blog-content h3 {
+    font-size: 1.1rem;
+    line-height: 1.4;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px;
+}
+
+/* Tóm tắt: giới hạn 3 dòng để card đều nhau */
+#blog .blog-content p {
+    color: #475569;
+    margin: 0 0 14px;
+    line-height: 1.6;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Link đọc thêm */
+#blog .read-more {
+    margin-top: auto; /* đẩy link xuống cuối card */
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    color: #667eea;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+#blog .read-more:hover {
+    text-decoration: underline;
+}
+
+/* Responsive: màn hình nhỏ -> 1 cột */
+@media (max-width: 900px) {
+    #blog .blog-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    #blog .blog-thumb {
+        height: 200px;
+    }
+}
+
+
+/* --- 7. PHÂN TRANG (ĐẸP HƠN + ACTIVE RÕ + CĂN GIỮA) --- */
+
+/* wrapper nếu bạn có .pagination-wrapper */
+.pagination-wrapper {
+    width: 100% !important;
+    display: flex;
+    justify-content: center;
+}
+
+/* Khung phân trang */
+#blog .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 34px;
+    flex-wrap: wrap; /* nếu nhiều trang sẽ tự xuống dòng đẹp */
+}
+
+/* Cụm số trang */
+#blog .page-numbers {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 10px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+}
+
+/* Nút "Trước/Sau" + nút số trang */
+#blog .btn-page,
+#blog .page-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 40px;
+    min-width: 40px;
+    padding: 0 14px;
+
+    border-radius: 999px; /* pill */
+    border: 1px solid #e2e8f0;
+    background: #fff;
+
+    color: #334155;
+    font-weight: 700;
+    text-decoration: none;
+
+    transition: transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+/* Nút số trang là hình tròn */
+#blog .page-num {
+    padding: 0;
+    width: 40px;
+}
+
+/* Hover đẹp */
+#blog .btn-page:hover,
+#blog .page-num:hover {
+    border-color: rgba(102,126,234,0.6);
+    color: #667eea;
+    box-shadow: 0 10px 25px rgba(15,23,42,0.08);
+    transform: translateY(-1px);
+}
+
+/* Trang hiện tại (active) */
+#blog .page-num.active {
+    background: #667eea !important;
+    border-color: #667eea !important;
+    color: #ffffff !important;
+    box-shadow: 0 14px 30px rgba(102,126,234,0.25);
+}
+
+/* Nút disabled (nếu sau này bạn muốn thêm class disabled) */
+#blog .btn-page.disabled {
+    opacity: .5;
+    pointer-events: none;
+}
+
+
+/* --- 8. FOOTER --- */
+.footer {
+    background-color: #1a202c !important;
+    color: #ffffff !important;
+    padding: 70px 0 30px 0 !important;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.footer-section h3 { color: #63b3ed !important; margin-bottom: 20px !important; }
+
+/* --- 9. MOBILE RESPONSIVE --- */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    .patient-sidebar {
+        display: none; /* Ẩn sidebar trên mobile hoặc chuyển thành menu burger */
+    }
+}
