@@ -1,10 +1,68 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<aside th:fragment="sidebar" id="sidebar"
+       class="patient-sidebar d-flex flex-column position-fixed top-0 start-0 h-100"
+       xmlns:th="http://www.w3.org/1999/xhtml">
 
-</body>
-</html>
+    <div class="d-flex align-items-center justify-content-between p-4 border-bottom sidebar-header">
+        <div class="d-flex align-items-center gap-3 logo-wrapper">
+            <div class="logo-icon"></div>
+            <span class="logo-text fw-bold" style="color: #667eea; font-size: 1.25rem;">Nha Khoa ABC</span>
+        </div>
+        <button type="button" class="toggle-btn" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+    </div>
+
+    <nav class="flex-grow-1 px-3 py-4 d-flex flex-column gap-1 sidebar-nav">
+
+        <a th:href="@{/patient/dashboard}"
+           th:classappend="${active == 'dashboard'} ? ' active'" class="menu-item">
+            <i class="bi bi-speedometer2"></i>
+            <span>Bảng điều khiển</span>
+        </a>
+
+        <a th:href="@{/patient/appointments}"
+           th:classappend="${active == 'appointments'} ? ' active'" class="menu-item">
+            <i class="bi bi-calendar2-check"></i>
+            <span>Lịch hẹn của tôi</span>
+        </a>
+
+        <a th:href="@{/patient/medical-records}"
+           th:classappend="${active == 'records'} ? ' active'" class="menu-item">
+            <i class="bi bi-file-medical"></i>
+            <span>Hồ sơ bệnh án</span>
+        </a>
+
+        <a th:href="@{/patient/prescriptions}"
+           th:classappend="${active == 'prescriptions'} ? ' active'" class="menu-item">
+            <i class="bi bi-capsule"></i>
+            <span>Đơn thuốc</span>
+        </a>
+
+        <a th:href="@{/patient/recheck}"
+           th:classappend="${active == 'recheck'} ? ' active'" class="menu-item">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Tái khám</span>
+        </a>
+
+        <a th:href="@{/patient/support}"
+           th:classappend="${active == 'support'} ? ' active'" class="menu-item">
+            <i class="bi bi-headset"></i>
+            <span>Hỗ trợ chuyên môn</span>
+        </a>
+
+        <a th:href="@{/patient/feedback}"
+           th:classappend="${active == 'feedback'} ? ' active'" class="menu-item">
+            <i class="bi bi-chat-left-text"></i>
+            <span>Góp ý & Khiếu nại</span>
+        </a>
+
+    </nav>
+
+    <div class="p-3 border-top">
+        <a th:href="@{/logout}" class="menu-item logout">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Đăng xuất</span>
+        </a>
+    </div>
+
+</aside>
