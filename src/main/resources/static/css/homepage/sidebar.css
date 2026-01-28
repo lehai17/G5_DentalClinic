@@ -1,0 +1,86 @@
+/* Sidebar cơ bản */
+.patient-sidebar {
+    width: 260px !important;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    z-index: 1100;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow-x: hidden;
+}
+
+/* Khi thu gọn */
+.patient-sidebar.collapsed {
+    width: 80px !important;
+}
+
+.patient-sidebar.collapsed .logo-text,
+.patient-sidebar.collapsed .menu-item span {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute; /* Tránh chiếm không gian */
+}
+
+.patient-sidebar.collapsed .menu-item {
+    justify-content: center;
+    padding: 12px 0;
+}
+
+.patient-sidebar.collapsed .menu-item i {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* ĐIỀU CHỈNH NỘI DUNG CHÍNH (Main Content) */
+.main-content {
+    margin-left: 260px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Khi sidebar thụt vào, nội dung chính thò ra */
+.main-content.expanded {
+    margin-left: 80px !important;
+}
+
+/* Nút Toggle 3 gạch */
+.toggle-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: #4b5563;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+}
+
+.toggle-btn:hover { background: #f3f4f6; }
+
+/* Item Menu */
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    text-decoration: none !important;
+    color: #4b5563;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.menu-item i { font-size: 1.3rem; min-width: 30px; text-align: center; }
+
+.menu-item:hover { background: #f3f4f6; color: #667eea; }
+
+.menu-item.active {
+    background: #667eea;
+    color: white !important;
+}
+
+.menu-item.logout:hover {
+    background: #fee2e2;
+    color: #ef4444 !important;
+}
+
