@@ -1,12 +1,12 @@
 package com.dentalclinic.config;
 
-import org.apache.catalina.User;
+import com.dentalclinic.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.*;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -21,7 +21,7 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .loginProcessingUrl("/do-login") // form POST /login
+                        .loginProcessingUrl("/do-login")
                         .defaultSuccessUrl("/dashboard", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
@@ -30,22 +30,29 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout=true")
                         .permitAll()
                 )
-                // nếu bạn đang test form đơn giản, có thể bật tạm (chỉ khi cần)
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
 
-    // Tài khoản test (sau này bạn đổi sang DB)
+    // ⚠ DEV MODE - plaintext password
     @Bean
-    public UserDetailsService users() {
-        UserDetails user = org.springframework.security.core.userdetails.User
-                .withUsername("admin")
-                .password("{noop}123456")
-                .roles("ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(user);
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
     }
 
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> {
+            com.dentalclinic.model.user.User user = userRepository
+                    .findByEmail(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(user.getEmail())
+                    .password(user.getPassword()) // plaintext
+                    .roles(user.getRole().name())
+                    .build();
+        };
+    }
 }

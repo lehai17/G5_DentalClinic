@@ -8,7 +8,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        return "/customer/login"; // -> templates/login.html
+        return "/customer/login";
     }
 
     @GetMapping("/")
