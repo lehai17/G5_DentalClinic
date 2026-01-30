@@ -1,6 +1,8 @@
 package com.dentalclinic.model.user;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,6 +43,13 @@ public class User {
             length = 20
     )
     private UserStatus status = UserStatus.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Gender gender;
+
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
 
     @Column(
             name = "created_at",
@@ -104,4 +113,12 @@ public class User {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public Gender getGender() { return gender; }
+
+    public void setGender(Gender gender) { this.gender = gender; }
+
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
 }

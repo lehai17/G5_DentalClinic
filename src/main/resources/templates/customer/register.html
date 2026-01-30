@@ -1,10 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Register - GenZ Clinic</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}">
 </head>
 <body>
+<div class="page">
+    <div class="card">
+        <h2>Create Account</h2>
+        <p class="sub">Register as a patient</p>
 
+        <div class="alert" th:if="${error}">
+            Email đã tồn tại!
+        </div>
+
+        <form th:action="@{/register}" method="post">
+
+            <label>Email</label>
+            <input type="email" name="email" required>
+
+            <label>Password</label>
+            <input type="password" name="password" required>
+
+            <label>Date of Birth</label>
+            <input type="date" name="dateOfBirth" required>
+
+            <label>Gender</label>
+            <select name="gender" required>
+                <option value="">-- Select --</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+            </select>
+
+            <div class="btns">
+                <button class="btn primary" type="submit">
+                    Register
+                </button>
+            </div>
+
+            <p class="bottom">
+                Already have an account?
+                <a th:href="@{/login}">Login</a>
+            </p>
+
+        </form>
+    </div>
+</div>
 </body>
 </html>
