@@ -12,6 +12,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
+    private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
+
+    public SecurityConfig(GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler) {
+        this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
+    }
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -28,9 +34,8 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth -> oauth
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .successHandler(googleOAuth2SuccessHandler)
                 )
-
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout=true")
                         .permitAll()
@@ -54,7 +59,7 @@ public class SecurityConfig {
 
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getEmail())
-                    .password(user.getPassword()) // plaintext
+                    .password(user.getPassword())
                     .roles(user.getRole().name())
                     .build();
         };

@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 @Component
-public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
+public class RoleBasedURL implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(

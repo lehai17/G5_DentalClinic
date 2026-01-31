@@ -50,8 +50,9 @@ public class User {
     @Column(nullable = false, length = 10)
     private Gender gender;
 
-    @Column(name = "date_of_birth", nullable = false)
+    @Column(name = "date_of_birth", nullable = true)
     private LocalDate dateOfBirth;
+
 
     @Column(
             name = "created_at",
