@@ -26,6 +26,11 @@ public class SecurityConfig {
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
+                .oauth2Login(oauth -> oauth
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/dashboard", true)
+                )
+
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout=true")
                         .permitAll()
