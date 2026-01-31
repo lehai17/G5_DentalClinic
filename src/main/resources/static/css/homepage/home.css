@@ -28,7 +28,8 @@ body {
 }
 
 /* Sidebar cố định bên trái */
-.patient-sidebar {
+.patient-sidebar,
+.customer-sidebar {
     width: 260px;
     height: 100vh;
     position: fixed; /* Cố định khi cuộn trang */
@@ -381,7 +382,8 @@ body {
         margin-left: 0;
         width: 100%;
     }
-    .patient-sidebar {
+    .patient-sidebar,
+    .customer-sidebar {
         display: none; /* Ẩn sidebar trên mobile hoặc chuyển thành menu burger */
     }
 }
