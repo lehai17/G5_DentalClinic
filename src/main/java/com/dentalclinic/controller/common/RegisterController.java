@@ -8,6 +8,7 @@ import com.dentalclinic.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import com.dentalclinic.model.profile.CustomerProfile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,23 +37,37 @@ public class RegisterController {
             @RequestParam String email,
             @RequestParam String password,
             @RequestParam String gender,
-            @RequestParam String dateOfBirth
+            @RequestParam String dateOfBirth,
+            @RequestParam String fullName,
+            @RequestParam String phone
     ) {
         // Check email tồn tại
         if (userRepository.findByEmail(email).isPresent()) {
             return "redirect:/register?error=true";
         }
 
+        // ========== USER ==========
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(Role.CUSTOMER);
         user.setStatus(UserStatus.ACTIVE);
-        user.setGender(Gender.valueOf(gender.toUpperCase())); //convert từ String sang Enum
+        user.setGender(Gender.valueOf(gender.toUpperCase()));
         user.setDateOfBirth(LocalDate.parse(dateOfBirth));
 
+        // ========== CUSTOMER PROFILE ==========
+        CustomerProfile profile = new CustomerProfile();
+        profile.setFullName(fullName);
+        profile.setPhone(phone);
+        profile.setAddress(null); // có thể để trống cho user update sau
+
+        // Gắn 2 chiều
+        user.setCustomerProfile(profile);
+
+        // Save 1 lần -> lưu cả user + profile
         userRepository.save(user);
 
         return "redirect:/login?registered=true";
     }
+
 }

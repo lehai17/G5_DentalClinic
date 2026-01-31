@@ -22,7 +22,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/do-login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .defaultSuccessUrl("/homepage", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
@@ -35,7 +35,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ⚠ DEV MODE - plaintext password
     @Bean
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();

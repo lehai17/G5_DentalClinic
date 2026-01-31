@@ -1,5 +1,6 @@
 package com.dentalclinic.model.user;
 
+import com.dentalclinic.model.profile.CustomerProfile;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -7,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+
 public class User {
 
     @Id
@@ -59,6 +61,12 @@ public class User {
     private LocalDateTime createdAt;
 
     // =========================
+    // RELATIONSHIP
+    // =========================
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private CustomerProfile customerProfile;
+
+    // =========================
     // Lifecycle
     // =========================
     @PrePersist
@@ -106,9 +114,7 @@ public class User {
         return status;
     }
 
-    public void setStatus(UserStatus status) {
-        this.status = status;
-    }
+    public void setStatus(UserStatus status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -121,4 +127,13 @@ public class User {
     public LocalDate getDateOfBirth() { return dateOfBirth; }
 
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public CustomerProfile getCustomerProfile() { return customerProfile; }
+
+    public void setCustomerProfile(CustomerProfile customerProfile) {
+        this.customerProfile = customerProfile;
+        if (customerProfile != null) {
+            customerProfile.setUser(this);
+        }
+    }
 }
