@@ -3,6 +3,7 @@ package com.dentalclinic.controller.customer;
 import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
 import com.dentalclinic.dto.customer.SlotDto;
+import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -23,17 +24,23 @@ public class CustomerAppointmentController {
     private static final String SESSION_USER_ID = "userId";
 
     private final CustomerAppointmentService customerAppointmentService;
+    private final UserRepository userRepository;
 
-    public CustomerAppointmentController(CustomerAppointmentService customerAppointmentService) {
+    public CustomerAppointmentController(CustomerAppointmentService customerAppointmentService,
+                                         UserRepository userRepository) {
         this.customerAppointmentService = customerAppointmentService;
+        this.userRepository = userRepository;
     }
 
-    /** Lấy userId từ session (được set khi CUSTOMER đăng nhập). Chưa đăng nhập → null → API trả 401. */
+    /** Lấy userId từ session (user đăng nhập sau khi đăng ký). Chỉ trả về userId nếu user tồn tại trong DB. */
     private Long getCurrentUserId(HttpSession session) {
         Object uid = session.getAttribute(SESSION_USER_ID);
-        if (uid instanceof Long) return (Long) uid;
-        if (uid instanceof Number) return ((Number) uid).longValue();
-        return null;
+        Long userId = null;
+        if (uid instanceof Long) userId = (Long) uid;
+        else if (uid instanceof Number) userId = ((Number) uid).longValue();
+        if (userId == null) return null;
+        if (!userRepository.existsById(userId)) return null;
+        return userId;
     }
 
     /** GET /customer/slots?serviceId=&dentistId=&date=yyyy-MM-dd */
@@ -63,7 +70,12 @@ public class CustomerAppointmentController {
             AppointmentDto created = customerAppointmentService.createAppointment(userId, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.contains("User not found") || msg.contains("đăng nhập")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."));
+            }
+            return ResponseEntity.badRequest().body(Map.of("error", msg));
         }
     }
 

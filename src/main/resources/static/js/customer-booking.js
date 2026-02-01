@@ -130,7 +130,7 @@
     document.querySelectorAll('.customer-stepper-label').forEach(function (l) {
       l.style.display = parseInt(l.getAttribute('data-step-label'), 10) === step ? '' : 'none';
     });
-    for (var i = 1; i <= 5; i++) {
+    for (var i = 1; i <= 4; i++) {
       var el = document.getElementById('customer-booking-step-' + i);
       if (el) el.style.display = step === i ? '' : 'none';
     }
@@ -140,14 +140,6 @@
     btn.addEventListener('click', function () {
       setBookingStep(parseInt(btn.getAttribute('data-back-step'), 10));
     });
-  });
-
-  var toDepositBtn = document.getElementById('customer-booking-to-deposit');
-  if (toDepositBtn) toDepositBtn.addEventListener('click', function () {
-    var ch = (document.getElementById('customer-booking-contact-channel') || {}).value;
-    var cv = (document.getElementById('customer-booking-contact-value') || {}).value.trim();
-    if (!ch || !cv) { alert('Vui lòng điền đầy đủ thông tin liên hệ.'); return; }
-    setBookingStep(4);
   });
 
   var submitBtn = document.getElementById('customer-booking-submit');
@@ -185,7 +177,17 @@
           submitBtn.disabled = false;
           if (!data) return;
           window.__lastCreatedAppointmentId = data.id;
-          setBookingStep(5);
+          var summaryEl = document.getElementById('customer-success-summary');
+          if (summaryEl) {
+            var dateStr = data.date ? formatDateDisplay(data.date) : '';
+            var timeStr = data.startTime && data.endTime ? formatTime(data.startTime) + ' - ' + formatTime(data.endTime) : (data.startTime ? formatTime(data.startTime) : '');
+            summaryEl.innerHTML = '<p class="customer-success-summary-title">Thông tin lịch vừa đặt:</p>' +
+              '<p><strong>Dịch vụ:</strong> ' + (data.serviceName || '—') + '</p>' +
+              '<p><strong>Bác sĩ:</strong> ' + (data.dentistName || '—') + '</p>' +
+              '<p><strong>Ngày:</strong> ' + dateStr + '</p>' +
+              '<p><strong>Giờ:</strong> ' + timeStr + '</p>';
+          }
+          setBookingStep(4);
           var openLink = document.getElementById('customer-booking-open-appointments');
           if (openLink) openLink.href = '/customer/my-appointments#highlight=' + data.id;
         })
