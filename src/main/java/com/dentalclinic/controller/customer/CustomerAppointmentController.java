@@ -6,7 +6,6 @@ import com.dentalclinic.dto.customer.SlotDto;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,32 +23,16 @@ public class CustomerAppointmentController {
 
     private final CustomerAppointmentService customerAppointmentService;
 
-    /**
-     * Demo: dùng user mặc định khi chưa đăng nhập để chạy luồng đặt lịch / lịch hẹn.
-     * Cấu hình trong application.properties: customer.dev.default-user-id=3
-     *
-     * Khi bật đăng nhập: xóa hoặc comment dòng dùng devDefaultUserId bên dưới,
-     * chỉ lấy userId từ session; nếu null thì return null (API trả 401).
-     */
-    @Value("${customer.dev.default-user-id:0}")
-    private long devDefaultUserId;
-
     public CustomerAppointmentController(CustomerAppointmentService customerAppointmentService) {
         this.customerAppointmentService = customerAppointmentService;
     }
 
+    /** Lấy userId từ session (được set khi CUSTOMER đăng nhập). Chưa đăng nhập → null → API trả 401. */
     private Long getCurrentUserId(HttpSession session) {
         Object uid = session.getAttribute(SESSION_USER_ID);
         if (uid instanceof Long) return (Long) uid;
         if (uid instanceof Number) return ((Number) uid).longValue();
-        // ========== DEMO: không cần đăng nhập ==========
-        // Dùng user mặc định (customer.dev.default-user-id trong application.properties)
-        if (devDefaultUserId > 0) return devDefaultUserId;
         return null;
-        // ========== KHI BẬT ĐĂNG NHẬP: thay đoạn trên bằng đoạn dưới ==========
-        // Chỉ lấy userId từ session; không dùng devDefaultUserId.
-        // Nếu chưa login, return null → API trả 401, frontend có thể redirect đến trang đăng nhập.
-        // return null;
     }
 
     /** GET /customer/slots?serviceId=&dentistId=&date=yyyy-MM-dd */
