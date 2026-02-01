@@ -15,30 +15,16 @@ import java.util.Optional;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    // =========================
-    // Check dentist busy (SQL Server: cast time params to TIME to avoid time/datetime mismatch)
-    // =========================
-    @Query(value = "SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM appointment a WHERE a.dentist_id = :dentistId AND a.appointment_date = :date AND a.start_time <= CAST(:startTime AS TIME) AND a.end_time >= CAST(:endTime AS TIME)) THEN 1 ELSE 0 END AS BIT)", nativeQuery = true)
-    boolean hasOverlappingAppointments(
-//    boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-//            Long dentistId,
-//            LocalDate date,
-//            LocalTime startTime,
-//            LocalTime endTime
-//    );
-
-
+    /** Kiểm tra bác sĩ có bận trong khung giờ (SQL Server: cast time sang TIME). */
     @Query(
             value = """
-        SELECT CASE 
-            WHEN COUNT(*) > 0 THEN 1 ELSE 0 
-        END
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
         FROM appointment
         WHERE dentist_id = :dentistId
           AND appointment_date = :date
           AND start_time < CAST(:endTime AS time)
           AND end_time > CAST(:startTime AS time)
-    """,
+        """,
             nativeQuery = true
     )
     int countBusyAppointments(
@@ -54,7 +40,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             LocalTime startTime,
             LocalTime endTime
     ) {
-        return hasOverlappingAppointments(dentistId, date, startTime, endTime);
+        return countBusyAppointments(dentistId, date, startTime, endTime) > 0;
     }
 
 

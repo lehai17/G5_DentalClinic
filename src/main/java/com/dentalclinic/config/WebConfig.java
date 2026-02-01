@@ -9,7 +9,7 @@
 
         @Override
         public void addViewControllers(ViewControllerRegistry registry) {
-            // Cho phép vào "/" là ra login
-            registry.addViewController("/").setViewName("redirect:/login");
+            // "/" công khai -> trang chủ (khách chưa đăng nhập chỉ xem thông tin)
+            registry.addViewController("/").setViewName("redirect:/homepage");
         }
     }
