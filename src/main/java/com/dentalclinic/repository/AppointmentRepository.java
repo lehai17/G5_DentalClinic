@@ -3,6 +3,8 @@ package com.dentalclinic.repository;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -16,12 +18,35 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // =========================
     // Check dentist busy
     // =========================
-    boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-            Long dentistId,
-            LocalDate date,
-            LocalTime startTime,
-            LocalTime endTime
+//    boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+//            Long dentistId,
+//            LocalDate date,
+//            LocalTime startTime,
+//            LocalTime endTime
+//    );
+
+
+    @Query(
+            value = """
+        SELECT CASE 
+            WHEN COUNT(*) > 0 THEN 1 ELSE 0 
+        END
+        FROM appointment
+        WHERE dentist_id = :dentistId
+          AND appointment_date = :date
+          AND start_time < CAST(:endTime AS time)
+          AND end_time > CAST(:startTime AS time)
+    """,
+            nativeQuery = true
+    )
+    int countBusyAppointments(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
     );
+
+
 
     Optional<Appointment> findByIdAndCustomer_User_Id(
             Long appointmentId,

@@ -14,10 +14,6 @@ public class StaffAppointmentController {
     @Autowired
     private StaffAppointmentService staffAppointmentService;
 
-    /* =================================================
-       UI: STAFF DASHBOARD   (THÊM)
-       URL: /staff/dashboard
-       ================================================= */
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
 
@@ -37,10 +33,6 @@ public class StaffAppointmentController {
         return "staff/dashboard";
     }
 
-    /* =================================================
-       UI: STAFF APPOINTMENTS PAGE   (THÊM)
-       URL: /staff/appointments
-       ================================================= */
     @GetMapping("/appointments")
     public String appointments(Model model) {
 
@@ -54,19 +46,12 @@ public class StaffAppointmentController {
         return "staff/appointments";
     }
 
-    /* =================================================
-       API: CONFIRM APPOINTMENT (GIỮ NGUYÊN)
-       URL: /staff/appointments/confirm
-       ================================================= */
     @PostMapping("/appointments/confirm")
     @ResponseBody
     public void confirm(@RequestParam Long id) {
         staffAppointmentService.confirmAppointment(id);
     }
 
-    /* =================================================
-       API: ASSIGN DENTIST (GIỮ NGUYÊN)
-       ================================================= */
     @PostMapping("/appointments/assign")
     @ResponseBody
     public void assign(
@@ -75,18 +60,13 @@ public class StaffAppointmentController {
         staffAppointmentService.assignDentist(appointmentId, dentistId);
     }
 
-    /* =================================================
-       API: CHECK-IN (GIỮ NGUYÊN)
-       ================================================= */
-    @PostMapping("/appointments/checkin")
+    @PostMapping("/appointments/complete")
     @ResponseBody
-    public void checkIn(@RequestParam Long id) {
-        staffAppointmentService.checkIn(id);
+    public void complete(@RequestParam Long id) {
+        staffAppointmentService.completeAppointment(id);
     }
 
-    /* =================================================
-       API: CANCEL (GIỮ NGUYÊN)
-       ================================================= */
+
     @PostMapping("/appointments/cancel")
     @ResponseBody
     public void cancel(
