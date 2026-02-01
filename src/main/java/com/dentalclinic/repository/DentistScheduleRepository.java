@@ -10,11 +10,9 @@ import java.util.List;
 @Repository
 public interface DentistScheduleRepository extends JpaRepository<DentistSchedule, Long> {
 
-    // View available time slots
     List<DentistSchedule> findByDate(LocalDate date);
 
-    List<DentistSchedule> findByDentistUserIdAndDate(
-            Long dentistUserId,
-            LocalDate date
-    );
+    List<DentistSchedule> findByDentist_IdAndDate(Long dentistId, LocalDate date);
+
+    List<DentistSchedule> findByDentist_User_IdAndDate(Long dentistUserId, LocalDate date);
 }
