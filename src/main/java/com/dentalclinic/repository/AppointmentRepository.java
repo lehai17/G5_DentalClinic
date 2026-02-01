@@ -58,7 +58,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByCustomer_User_IdOrderByDateDesc(
             Long customerUserId
     );
-    List<Appointment> findByCustomerId(Long customerId);
+//    List<Appointment> findByCustomerId(Long customerId);
+    List<Appointment> findByCustomer_Id(Long customerProfileId);
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.customer c

@@ -21,12 +21,14 @@
     </div>
 
     <nav class="nav">
-      <a class="nav-item active" th:href="@{/dentist/work-schedule(dentistUserId=${dentistUserId})}">Work Schedule</a>
+      <a class="nav-item active"
+         th:href="@{/dentist/work-schedule(dentistUserId=${dentistUserId})}">
+        Work Schedule
+      </a>
       <a class="nav-item" href="/dentist/support-tickets">Support Tickets</a>
       <a class="nav-item" href="/dentist/profile">Profile</a>
     </nav>
 
-    <!-- ✅ SIGN OUT xuống đáy -->
     <div style="margin-top:auto;">
       <a class="nav-item danger" href="/logout">Sign Out</a>
     </div>
@@ -35,11 +37,9 @@
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div>
-        <div style="color:var(--muted);font-size:12px;">Modules &nbsp;›&nbsp; Work Schedule</div>
-      </div>
+      <div style="color:var(--muted);font-size:12px;">Modules › Work Schedule</div>
       <a href="/dentist/profile" class="user-chip">
-        <div class="user-name" th:text="${dentistName}">Dr. Sarah Thompson</div>
+        <div class="user-name" th:text="${dentistName}">Dentist</div>
         <div class="user-sub">General Dentist</div>
       </a>
     </div>
@@ -47,12 +47,12 @@
     <div class="content">
       <h2 style="margin:6px 0 4px;">Weekly Schedule</h2>
       <div style="color:var(--muted);margin-bottom:10px;">
-        <span th:text="${#temporals.format(weekStart,'dd/MM/yyyy')}">26/01/2026</span>
+        <span th:text="${#temporals.format(weekStart,'dd/MM/yyyy')}"></span>
         -
-        <span th:text="${#temporals.format(weekEnd,'dd/MM/yyyy')}">01/02/2026</span>
+        <span th:text="${#temporals.format(weekEnd,'dd/MM/yyyy')}"></span>
       </div>
 
-      <!-- ✅ CHỈ 1 DROPDOWN TUẦN (bỏ hết nút) -->
+      <!-- WEEK SELECT -->
       <div class="filter" style="align-items:center;">
         <div class="field" style="min-width:260px;">
           <label>Week range</label>
@@ -62,32 +62,41 @@
                     th:value="${w.value}"
                     th:text="${w.label}"
                     th:selected="${w.value == selectedWeekStart}">
-              26/01 To 01/02
             </option>
           </select>
         </div>
-
         <input type="hidden" id="dentistUserIdHidden" th:value="${dentistUserId}">
       </div>
 
-      <!-- ✅ GRID -->
+      <!-- GRID -->
       <div class="schedule-grid">
         <div class="grid-head">
           <div class="time-col"></div>
-          <div class="day-col" th:each="d : ${days}" th:text="${#temporals.format(d,'EEEE')}">Monday</div>
+          <div class="day-col"
+               th:each="d : ${days}"
+               th:text="${#temporals.format(d,'EEEE')}">
+          </div>
         </div>
 
         <div class="grid-body">
           <div class="row" th:each="t : ${timeSlots}">
-            <div class="time-col" th:text="${#temporals.format(t,'HH:mm')}">09:00</div>
+            <div class="time-col"
+                 th:text="${#temporals.format(t,'HH:mm')}"></div>
 
             <div class="cell" th:each="d : ${days}">
               <th:block th:with="
-      key=${d.toString() + '_' + #temporals.format(t,'HH:mm')},
-      ev=${eventMap.get(key)}
-  ">
-                <div th:if="${showAppointments and ev != null}"
-                     class="appt">
+                key=${d.toString() + '_' + #temporals.format(t,'HH:mm')},
+                ev=${eventMap.get(key)}
+              ">
+                <div th:if="${ev != null}"
+                     class="appt"
+                     th:attr="
+                       data-appointment-id=${ev.appointmentId},
+                       data-patient-name=${ev.patientName},
+                       data-service-name=${ev.serviceName},
+                       data-customer-user-id=${ev.customerUserId},
+                       data-dentist-user-id=${dentistUserId}
+                     ">
                   <div class="appt-name" th:text="${ev.patientName}"></div>
                   <div class="appt-sub" th:text="${ev.serviceName}"></div>
                 </div>
@@ -102,7 +111,7 @@
   </div>
 </div>
 
-<!-- ✅ MODAL: chỉ hiện khi click, có nút X -->
+<!-- MODAL -->
 <div id="apptModalBackdrop" class="modal-backdrop" hidden>
   <div class="modal" role="dialog" aria-modal="true">
     <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -110,9 +119,7 @@
         <div id="apptModalTitle" class="modal-title">Appointment</div>
         <div id="apptModalSub" class="modal-sub">Choose action</div>
       </div>
-
-      <!-- ✅ DẤU X -->
-      <button id="btnCloseModal" class="icon-btn" type="button" title="Close">✕</button>
+      <button id="btnCloseModal" class="icon-btn" type="button">✕</button>
     </div>
 
     <div class="modal-actions">
@@ -124,12 +131,12 @@
 
 <script src="/js/app.js"></script>
 
-<!-- ✅ dropdown change -->
 <script>
   document.getElementById('weekSelect')?.addEventListener('change', (e) => {
     const weekStart = e.target.value;
     const dentistUserId = document.getElementById('dentistUserIdHidden')?.value || '';
-    window.location.href = `/dentist/work-schedule?dentistUserId=${dentistUserId}&weekStart=${weekStart}`;
+    window.location.href =
+            `/dentist/work-schedule?dentistUserId=${dentistUserId}&weekStart=${weekStart}`;
   });
 </script>
 

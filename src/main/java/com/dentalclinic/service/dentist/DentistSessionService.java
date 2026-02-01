@@ -34,7 +34,7 @@ public class DentistSessionService {
      * Khi có Spring Security → sửa method này là đủ
      */
     public Long getCurrentDentistUserId() {
-        return null;
+        return 1L;
     }
 
     /* =========================================================
