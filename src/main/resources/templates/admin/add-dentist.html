@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add New Dentist - GENZ CLINIC</title>
+    <link rel="stylesheet" th:href="@{/css/admin/add-dentist.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --sidebar-color: #1A237E; --bg-light: #F4F7FE; --primary-blue: #0088CC; }
+        body { display: flex; margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-light); }
+
+        .sidebar { width: 250px; background: var(--sidebar-color); min-height: 100vh; color: white; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; color: white; text-decoration: none; opacity: 0.7; }
+        .nav-item.active { opacity: 1; background: rgba(255,255,255,0.1); border-left: 4px solid #fff; }
+
+        .main-content { flex: 1; padding: 25px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+
+        .form-card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .card-title { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .icon-box { width: 45px; height: 45px; border-radius: 12px; background: #E8F5E9; color: #4CAF50; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 12px; font-weight: 700; color: #A3AED0; text-transform: uppercase; }
+        .input-wrapper { background: #F4F7FE; border-radius: 12px; padding: 12px 15px; display: flex; align-items: center; gap: 10px; }
+        .input-wrapper input, .input-wrapper select, .input-wrapper textarea { border: none; background: transparent; outline: none; width: 100%; color: #2B3674; font-size: 14px; }
+
+        /* Day Label Style - Giữ lại để xử lý hiệu ứng đổi màu khi chọn */
+        .day-label { transition: 0.3s; }
+        input[type="checkbox"]:checked + .day-label { background: #0095FF !important; color: white !important; }
+
+        .profile-upload { display: flex; flex-direction: column; align-items: center; gap: 10px; grid-row: span 2; }
+        .avatar-circle { width: 120px; height: 120px; border-radius: 50%; background: #F4F7FE; display: flex; align-items: center; justify-content: center; position: relative; border: 2px dashed #D1D9E8; }
+        .camera-btn { position: absolute; bottom: 5px; right: 5px; background: #1A237E; color: white; width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; }
+
+        .access-card { background: #1A237E; color: white; padding: 30px; border-radius: 20px; }
+        .access-card .input-wrapper { background: rgba(255,255,255,0.1); color: white; }
+        .access-card input { color: white !important; }
+
+        .form-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
+        .btn-discard { background: #F4F7FE; color: #2B3674; padding: 12px 30px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; }
+        .btn-create { background: #0095FF; color: white; padding: 12px 30px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div style="padding: 30px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-weight: 800; font-size: 18px;">GENZ CLINIC</span>
+    </div>
+    <nav>
+        <a th:href="@{/admin/dashboard}" class="nav-item"><i class="fas fa-th-large"></i> Dashboard</a>
+        <div style="font-size: 10px; padding: 20px 20px 10px; opacity: 0.5;">USER MANAGEMENT</div>
+        <a th:href="@{/admin/dentists}" class="nav-item active"><i class="fas fa-stethoscope"></i> Dentists</a>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/admin/dentists}" style="text-decoration: none; color: #707EAE; font-size: 14px; font-weight: 600;">
+                <i class="fas fa-arrow-left"></i> Back to Dentists List
+            </a>
+            <h2 style="color: #2B3674; margin: 10px 0 0;">Add New Dentist Profile</h2>
+        </div>
+    </div>
+
+    <form th:action="@{/admin/dentists/save}" th:object="${dentistDTO}" method="POST">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
+
+            <div class="left-col">
+                <div class="form-card">
+                    <div class="card-title">
+                        <div class="icon-box"><i class="fas fa-user-md"></i></div>
+                        <div>
+                            <h4 style="margin:0; color: #2B3674;">Personal Information</h4>
+                            <small style="color: #A3AED0;">Identity and contact details</small>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div style="grid-row: span 2; text-align: center;">
+                            <div class="avatar-circle">
+                                <i class="fas fa-user" style="font-size: 35px; color: #D1D9E8;"></i>
+                                <button type="button" class="camera-btn"><i class="fas fa-camera" style="font-size: 12px;"></i></button>
+                            </div>
+                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">UPLOAD PHOTO</small>
+                        </div>
+                        <div class="input-group">
+                            <label>Full Name</label>
+                            <div class="input-wrapper"><i class="far fa-user"></i><input type="text" th:field="*{fullName}" placeholder="Dr. Nguyen Van A" required></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper"><i class="far fa-envelope"></i><input type="email" th:field="*{email}" placeholder="doctor@genzclinic.vn" required></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Phone Number</label>
+                            <div class="input-wrapper"><i class="fas fa-phone-alt"></i><input type="text" th:field="*{phone}" placeholder="+84 ..."></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <div class="card-title">
+                        <div class="icon-box" style="background: #FFF3E0; color: #FF9800;"><i class="fas fa-graduation-cap"></i></div>
+                        <h4 style="margin:0; color: #2B3674;">Professional Background</h4>
+                    </div>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Medical Specialty</label>
+                            <div class="input-wrapper">
+                                <select th:field="*{specialty}">
+                                    <option value="Orthodontics">Orthodontics (Niềng răng)</option>
+                                    <option value="Endodontics">Endodontics (Nội nha)</option>
+                                    <option value="Periodontics">Periodontics (Chu nha)</option>
+                                    <option value="Prosthodontics">Prosthodontics (Phục hình)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Years of Experience</label>
+                            <div class="input-wrapper"><i class="fas fa-history"></i><input type="number" th:field="*{experience}" min="0"></div>
+                        </div>
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label>Qualifications & Certifications</label>
+                            <div class="input-wrapper" style="height: 80px;">
+                                <textarea th:field="*{qualifications}" placeholder="Degree, University, Certifications..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <div class="card-title">
+                        <div class="icon-box" style="background: #E3F2FD; color: #1976D2;"><i class="far fa-clock"></i></div>
+                        <h4 style="margin:0; color: #2B3674;">Work Schedule</h4>
+                    </div>
+                    <label style="font-size: 11px; font-weight: 700; color: #A3AED0; margin-bottom: 15px; display: block;">AVAILABLE WORKING DAYS</label>
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap;">
+                        <div th:each="day : ${T(java.time.DayOfWeek).values()}">
+                            <input type="checkbox" th:value="${day.name()}" th:field="*{availableDays}" th:id="${day.name()}" style="display:none;">
+                            <label th:for="${day.name()}" class="day-label">
+                                <span th:text="${#strings.substring(day.name(), 0, 3)}"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Shift Start Time</label>
+                            <div class="input-wrapper"><i class="far fa-clock"></i><input type="time" th:field="*{shiftStartTime}"></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Shift End Time</label>
+                            <div class="input-wrapper"><i class="fas fa-door-closed"></i><input type="time" th:field="*{shiftEndTime}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-col">
+                <div class="access-card">
+                    <div class="card-title">
+                        <div class="icon-box" style="background: rgba(255,255,255,0.2); color: white;"><i class="fas fa-shield-alt"></i></div>
+                        <h4 style="margin:0;">Access & Role</h4>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label style="color: rgba(255,255,255,0.6);">Assigned Role</label>
+                        <div class="input-wrapper"><input type="text" value="Dentist" readonly></div>
+                    </div>
+                    <div class="input-group">
+                        <label style="color: rgba(255,255,255,0.6);">Temporary Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" th:field="*{tempPassword}" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-discard" onclick="window.history.back()">Discard</button>
+                    <button type="submit" class="btn-create">Create Profile</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

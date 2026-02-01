@@ -1,8 +1,9 @@
-/* Sidebar cơ bản */
+/* Sidebar cơ bản (customer = khách hàng) */
 .patient-sidebar {
     width: 260px !important;
     background: #ffffff;
     border-right: 1px solid #e5e7eb;
+
     z-index: 1100;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     overflow-x: hidden;
@@ -20,12 +21,13 @@
     position: absolute; /* Tránh chiếm không gian */
 }
 
-.patient-sidebar.collapsed .menu-item {
+.patient-sidebar.collapsed .menu-item{
     justify-content: center;
     padding: 12px 0;
 }
 
-.patient-sidebar.collapsed .menu-item i {
+.patient-sidebar.collapsed .menu-item i,
+.customer-sidebar.collapsed .menu-item i {
     margin: 0;
     font-size: 1.5rem;
 }
@@ -66,13 +68,14 @@
     color: #4b5563;
     font-weight: 500;
     border-radius: 8px;
-    transition: 0.2s;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
     white-space: nowrap;
 }
 
 .menu-item i { font-size: 1.3rem; min-width: 30px; text-align: center; }
 
-.menu-item:hover { background: #f3f4f6; color: #667eea; }
+.menu-item:hover { background: #f3f4f6; color: #667eea; transform: translateX(2px); }
+.menu-item:active { transform: translateX(0); }
 
 .menu-item.active {
     background: #667eea;

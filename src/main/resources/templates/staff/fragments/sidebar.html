@@ -9,6 +9,14 @@
             <li><a th:href="@{/staff/dashboard}">Dashboard</a></li>
             <li><a th:href="@{/staff/appointments}">Appointments</a></li>
             <li><a th:href="@{/staff/schedules}">Schedules</a></li>
+
+            <li class="logout">
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="logout-btn">
+                        Logout
+                    </button>
+                </form>
+            </li>
         </ul>
     </aside>
 </div>

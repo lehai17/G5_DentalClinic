@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Management - GENZ CLINIC</title>
+    <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* CSS nội bộ để định hình khung Dashboard theo mẫu của bạn */
+        :root {
+            --sidebar-color: #1A237E; /* Màu Navy Blue từ mẫu GENZ CLINIC */
+            --bg-light: #F4F7FE;
+        }
+        body { display: flex; margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-light); }
+
+        /* Sidebar Navigation */
+        .sidebar { width: 250px; background: var(--sidebar-color); min-height: 100vh; color: white; padding: 20px 0; }
+        .logo-section { padding: 0 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nav-group { padding: 20px 0; }
+        .nav-label { font-size: 10px; text-transform: uppercase; padding: 0 20px 10px; opacity: 0.6; letter-spacing: 1px; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; cursor: pointer; text-decoration: none; color: white; transition: 0.3s; }
+        .nav-item i { margin-right: 15px; width: 20px; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); border-left: 4px solid #fff; }
+
+        /* Main Content & Header */
+        .main-content { flex: 1; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .search-bar { background: #F4F7FE; border-radius: 12px; padding: 8px 15px; display: flex; align-items: center; width: 300px; }
+        .search-bar input { border: none; background: transparent; padding-left: 10px; outline: none; width: 100%; }
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+        .icon-btn { background: none; border: none; font-size: 18px; color: #707EAE; cursor: pointer; position: relative; }
+        .admin-profile { display: flex; align-items: center; gap: 12px; border-left: 1px solid #E0E7FF; padding-left: 20px; }
+        .admin-info span { display: block; font-size: 12px; }
+        .admin-name { font-weight: 700; color: #1B2559; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #1A237E; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo-section">
+        <img th:src="@{/images/logo-genz.png}" alt="GENZ CLINIC" style="width: 40px;">
+        <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
+    </div>
+
+    <div class="nav-group">
+        <a href="#" class="nav-item active"><i class="fas fa-th-large"></i> Dashboard</a>
+
+        <div class="nav-label">User Management</div>
+        <a th:href="@{/admin/dentists}"
+           class="nav-item"
+           th:classappend="${activePage == 'dentists' ? 'active' : ''}">
+            <i class="fas fa-stethoscope"></i> Dentists
+        </a>
+
+        <a th:href="@{/admin/staff}"
+           class="nav-item"
+           th:classappend="${activePage == 'staff' ? 'active' : ''}">
+            <i class="fas fa-users-cog"></i> Staff
+        </a>
+
+        <a th:href="@{/admin/customers}" class="nav-item">
+            <i class="fas fa-user-friends"></i> Customer
+        </a>
+
+        <div class="nav-label">Operations</div>
+        <a href="#" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
+        <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
+    </div>
+</div>
+
+<div class="main-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 style="color: var(--navy-dark); margin: 0;">Staff Management</h2>
+        <a th:href="@{/admin/staff/add}" class="add-btn" style="background: #1A237E; color: white; padding: 10px 20px; border-radius: 12px; text-decoration: none; font-weight: 700;">
+            <i class="fas fa-plus"></i> Add Staff
+        </a>
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-header"><div class="icon-box"><i class="fas fa-users"></i></div> Total Staff</div>
+            <div class="stat-value" th:text="${totalStaff}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header"><div class="icon-box"><i class="fas fa-user-lock"></i></div> Locked Accounts</div>
+            <div class="stat-value" th:text="${lockedStaffCount}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header"><div class="icon-box"><i class="fas fa-check-circle"></i></div> Active Accounts</div>
+            <div class="stat-value" th:text="${activeStaffCount}">0</div>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <form th:action="@{/admin/staff}" method="GET" id="filterForm" class="filter-group">
+            <div class="filter-item">
+                <span class="filter-label">POSITION:</span>
+                <select name="position" onchange="this.form.submit()">
+                    <option value="">All Positions</option>
+                    <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Receptionist</option>
+                    <option value="Nurse" th:selected="${selectedPos == 'Nurse'}">Nurse</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <span class="filter-label">STATUS:</span>
+                <select name="status" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
+                    <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
+                </select>
+            </div>
+        </form>
+        <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
+            Showing <span th:text="${#lists.size(staffs)}">0</span> members
+        </div>
+    </div>
+
+    <div class="data-table-container">
+        <table th:if="${not #lists.isEmpty(staffs)}">
+            <thead>
+            <tr>
+                <th>Staff Member</th>
+                <th>Position</th>
+                <th>Phone Number</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="staff : ${staffs}">
+                <td>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #1A237E; color: white; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <div th:text="${staff.fullName}">Name</div>
+                            <div style="font-size: 11px; color: #707EAE;" th:text="${staff.user.email}">email@clinic.vn</div>
+                        </div>
+                    </div>
+                </td>
+                <td th:text="${staff.position}">Position</td>
+                <td th:text="${staff.phone}">Phone</td>
+                <td>
+                            <span class="status-badge"
+                                  th:classappend="${staff.user.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
+                                  th:text="${staff.user.status}">
+                            </span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <a th:href="@{/admin/staff/edit/{id}(id=${staff.id})}" class="action-btn"><i class="far fa-edit"></i></a>
+                        <form th:action="@{/admin/staff/lock/{id}(id=${staff.user.id})}" method="POST" style="display:inline;">
+                            <button type="submit" class="action-btn" style="color: #F44336;"
+                                    onclick="return confirm('Khóa nhân viên này?')">
+                                <i class="fas fa-user-lock"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(staffs)}" style="text-align: center; padding: 80px 0; color: #A3AED0;">
+            <i class="fas fa-users-slash" style="font-size: 50px; margin-bottom: 15px;"></i>
+            <h3>Chưa có nhân viên nào</h3>
+        </div>
+    </div>
+</div>
+</body>
+</html>

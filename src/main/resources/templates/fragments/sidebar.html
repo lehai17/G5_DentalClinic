@@ -13,13 +13,10 @@
     </div>
 
     <nav class="flex-grow-1 px-3 py-4 d-flex flex-column gap-1 sidebar-nav">
-
-        <a th:href="@{/patient/dashboard}"
-           th:classappend="${active == 'dashboard'} ? ' active'" class="menu-item">
-            <i class="bi bi-speedometer2"></i>
-            <span>Bảng điều khiển</span>
+        <a th:href="@{/customer/book}" class="menu-item">
+            <i class="bi bi-calendar-plus"></i>
+            <span>Đặt lịch khám</span>
         </a>
-
         <a th:href="@{/patient/appointments}"
            th:classappend="${active == 'appointments'} ? ' active'" class="menu-item">
             <i class="bi bi-calendar2-check"></i>
@@ -55,6 +52,7 @@
             <i class="bi bi-chat-left-text"></i>
             <span>Góp ý & Khiếu nại</span>
         </a>
+
 
     </nav>
 

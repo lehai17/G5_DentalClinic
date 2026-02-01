@@ -4,17 +4,13 @@ import com.dentalclinic.model.profile.DentistProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DentistProfileRepository extends JpaRepository<DentistProfile, Long> {
 
-    // Find dentist by specialization
-    List<DentistProfile> findBySpecialization(String specialization);
+    // dùng trong toàn bộ flow hiện tại
+    Optional<DentistProfile> findByUser_Id(Long userId);
 
-    // Find dentists with minimum experience
-    List<DentistProfile> findByExperienceYearsGreaterThanEqual(int years);
-
-    // Check dentist profile exists
     boolean existsByUser_Id(Long userId);
 }
