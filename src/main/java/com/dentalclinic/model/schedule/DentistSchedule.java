@@ -3,6 +3,7 @@ package com.dentalclinic.model.schedule;
 import com.dentalclinic.model.profile.DentistProfile;
 import jakarta.persistence.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -17,8 +18,12 @@ public class DentistSchedule {
     @JoinColumn(name = "dentist_id")
     private DentistProfile dentist;
 
-    @Column(name = "work_date")
-    private LocalDate date;
+//    @Column(name = "work_date")
+//    private LocalDate date;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week")
+    private DayOfWeek dayOfWeek;
 
     @Column(name = "start_time")
     private LocalTime startTime;
@@ -26,6 +31,6 @@ public class DentistSchedule {
     @Column(name = "end_time")
     private LocalTime endTime;
 
-    @Column(name = "is_available")
-    private boolean available = true;
+//    @Column(name = "is_available")
+//    private boolean available = true;
 }
