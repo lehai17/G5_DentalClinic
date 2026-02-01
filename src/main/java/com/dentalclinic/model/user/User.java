@@ -1,10 +1,14 @@
 package com.dentalclinic.model.user;
 
+import com.dentalclinic.model.profile.CustomerProfile;
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+
 public class User {
 
     @Id
@@ -42,12 +46,25 @@ public class User {
     )
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Gender gender;
+
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
+
     @Column(
             name = "created_at",
             nullable = false,
             updatable = false
     )
     private LocalDateTime createdAt;
+
+    // =========================
+    // RELATIONSHIP
+    // =========================
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private CustomerProfile customerProfile;
 
     // =========================
     // Lifecycle
@@ -97,11 +114,26 @@ public class User {
         return status;
     }
 
-    public void setStatus(UserStatus status) {
-        this.status = status;
-    }
+    public void setStatus(UserStatus status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Gender getGender() { return gender; }
+
+    public void setGender(Gender gender) { this.gender = gender; }
+
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public CustomerProfile getCustomerProfile() { return customerProfile; }
+
+    public void setCustomerProfile(CustomerProfile customerProfile) {
+        this.customerProfile = customerProfile;
+        if (customerProfile != null) {
+            customerProfile.setUser(this);
+        }
     }
 }
