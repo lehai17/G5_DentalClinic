@@ -17,7 +17,7 @@ public class DentistSchedule {
     @ManyToOne
     @JoinColumn(name = "dentist_id")
     private DentistProfile dentist;
-
+//gg
 //    @Column(name = "work_date")
 //    private LocalDate date;
 
