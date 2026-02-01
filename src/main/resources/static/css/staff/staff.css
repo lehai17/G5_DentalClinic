@@ -281,3 +281,22 @@ button {
     justify-content: flex-end;
     gap: 8px;
 }
+
+.sidebar ul li.logout {
+    margin-top: 20px;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 8px 12px;
+    background: #d9534f;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.logout-btn:hover {
+    background: #c9302c;
+}
+
