@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Staff Appointments</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+    <script src="/js/staff/staff.js"></script>
+</head>
+<body>
+<div class="app-wrapper">
+
+    <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div th:replace="staff/fragments/header :: header"></div>
+
+        <div class="content">
+            <h2>📅 Quản lý lịch khám</h2>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Bệnh nhân</th>
+                    <th>Ngày</th>
+                    <th>Giờ</th>
+                    <th>Dịch vụ</th>
+                    <th>Bác sĩ</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="a : ${appointments}">
+                    <td th:text="${a.id}"></td>
+                    <td th:text="${a.customer.fullName}"></td>
+                    <td th:text="${a.date}"></td>
+                    <td th:text="${a.startTime}"></td>
+                    <td th:text="${a.service.name}"></td>
+                    <td th:text="${a.dentist != null ? a.dentist.fullName : 'Chưa gán'}"></td>
+                    <td th:text="${a.status}"></td>
+
+                    <td>
+                        <button th:if="${a.status.name() == 'PENDING' and a.dentist != null}"
+                                th:onclick="'confirmAppointment(' + ${a.id} + ')'">
+                            Xác nhận
+                        </button>
+
+                        <button th:if="${a.status.name() == 'PENDING'}"
+                                th:onclick="'assignDentist(' + ${a.id} + ')'">
+                            Gán BS
+                        </button>
+
+
+                        <button th:if="${a.status.name() == 'CONFIRMED'}"
+                                th:onclick="'completeAppointment(' + ${a.id} + ')'">
+                            Hoàn thành
+                        </button>
+
+
+                        <button th:onclick="'cancelAppointment(' + ${a.id} + ')'">
+                            Hủy
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

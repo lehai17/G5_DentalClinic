@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Staff Dashboard</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+</head>
+<body>
+<div class="app-wrapper">
+
+    <th:block th:replace="~{staff/fragments/sidebar :: sidebar}"></th:block>
+
+    <div class="main-content">
+        <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
+
+        <div class="content">
+            <h2> Tổng quan hôm nay</h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Lịch hôm nay</div>
+                    <div class="stat-number" th:text="${todayCount}">0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Chờ xác nhận</div>
+                    <div class="stat-number" th:text="${pendingCount}">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

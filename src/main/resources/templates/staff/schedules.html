@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dentist Schedule</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+</head>
+<body>
+<div class="app-wrapper">
+
+    <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div th:replace="staff/fragments/header :: header"></div>
+
+        <div class="content">
+            <h2>👨‍⚕️ Lịch làm việc bác sĩ</h2>
+
+            <form method="get" th:action="@{/staff/schedules}" class="schedule-filter">
+                <select name="dentistId" required>
+                    <option value="">-- Chọn bác sĩ --</option>
+                    <option th:each="d : ${dentists}"
+                            th:value="${d.id}"
+                            th:text="${d.fullName}">
+                    </option>
+                </select>
+
+                <input type="date" name="date" required/>
+
+                <button type="submit">Xem</button>
+            </form>
+
+
+            <table th:if="${schedule != null}">
+                <thead>
+                <tr>
+                    <th>Bác sĩ</th>
+                    <th>Giờ</th>
+                    <th>Dịch vụ</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="a : ${schedule}">
+                    <td th:text="${a.dentist.fullName}"></td>
+                    <td th:text="${a.startTime + ' - ' + a.endTime}"></td>
+                    <td th:text="${a.service.name}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

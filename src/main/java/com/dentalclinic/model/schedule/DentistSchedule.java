@@ -3,6 +3,7 @@ package com.dentalclinic.model.schedule;
 import com.dentalclinic.model.profile.DentistProfile;
 import jakarta.persistence.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -16,9 +17,12 @@ public class DentistSchedule {
     @ManyToOne
     @JoinColumn(name = "dentist_id")
     private DentistProfile dentist;
-
     @Column(name = "work_date")
     private LocalDate date;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week")
+    private DayOfWeek dayOfWeek;
 
     @Column(name = "start_time")
     private LocalTime startTime;
@@ -28,4 +32,60 @@ public class DentistSchedule {
 
     @Column(name = "is_available")
     private boolean available = true;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public DentistProfile getDentist() {
+        return dentist;
+    }
+
+    public void setDentist(DentistProfile dentist) {
+        this.dentist = dentist;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public DayOfWeek getDayOfWeek() {
+        return dayOfWeek;
+    }
+
+    public void setDayOfWeek(DayOfWeek dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
 }
