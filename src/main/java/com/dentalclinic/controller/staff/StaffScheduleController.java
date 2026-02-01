@@ -1,6 +1,7 @@
 package com.dentalclinic.controller.staff;
 
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.service.staff.StaffScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,10 +18,7 @@ public class StaffScheduleController {
     @Autowired
     private StaffScheduleService staffScheduleService;
 
-    /* =================================================
-       UI: VIEW DENTIST SCHEDULE (THÊM)
-       URL: /staff/schedules
-       ================================================= */
+    /* URL: /staff/schedules */
     @GetMapping
     public String viewSchedule(
             @RequestParam(required = false) Long dentistId,
@@ -30,6 +28,8 @@ public class StaffScheduleController {
 
         model.addAttribute("pageTitle", "Lịch bác sĩ");
         model.addAttribute("staffName", "Staff");
+
+        model.addAttribute("dentists", staffScheduleService.getAllDentists());
 
         if (dentistId != null && date != null) {
             List<Appointment> schedule =
@@ -43,10 +43,7 @@ public class StaffScheduleController {
         return "staff/schedules";
     }
 
-    /* =================================================
-       API: JSON – DENTIST SCHEDULE (GIỮ NGUYÊN)
-       URL: /staff/schedules/dentist
-       ================================================= */
+    /* URL: /staff/schedules/dentist */
     @GetMapping("/dentist")
     @ResponseBody
     public List<Appointment> viewDentistSchedule(
@@ -58,4 +55,10 @@ public class StaffScheduleController {
                 LocalDate.parse(date)
         );
     }
+    @GetMapping("/dentists")
+    @ResponseBody
+    public List<DentistProfile> getAllDentists() {
+        return staffScheduleService.getAllDentists();
+    }
+
 }

@@ -19,48 +19,43 @@ public class StaffAppointmentService {
     @Autowired
     private DentistProfileRepository dentistProfileRepository;
 
-    /* =========================
-       VIEW ALL APPOINTMENTS (STAFF)
-       ========================= */
+    /* VIEW ALL APPOINTMENTS (STAFF) */
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
 
-    /* =========================
-       CONFIRM APPOINTMENT
-       ========================= */
+    /* CONFIRM APPOINTMENT */
     public void confirmAppointment(Long appointmentId) {
-        Appointment appt = appointmentRepository.findById(appointmentId)
+        Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (appt.getStatus() != AppointmentStatus.PENDING) {
+        if (appointment.getDentist() == null) {
+            throw new RuntimeException("Phải gán bác sĩ trước khi xác nhận");
+        }
+
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
             throw new RuntimeException("Only PENDING appointment can be confirmed");
         }
 
-        appt.setStatus(AppointmentStatus.CONFIRMED);
-        appointmentRepository.save(appt);
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+        appointmentRepository.save(appointment);
     }
 
-    /* =========================
-       ASSIGN / REASSIGN DENTIST
-       ========================= */
+    /* ASSIGN / REASSIGN DENTIST */
     public void assignDentist(Long appointmentId, Long dentistId) {
 
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        boolean dentistBusy =
-                appointmentRepository
-                        .existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                                dentistId,
-                                appt.getDate(),
-                                appt.getEndTime(),
-                                appt.getStartTime()
-                        );
-
-        if (dentistBusy) {
-            throw new RuntimeException("Dentist is busy at this time");
+        if (appointmentRepository.countBusyAppointments(
+                dentistId,
+                appt.getDate(),
+                appt.getStartTime(),
+                appt.getEndTime()
+        ) > 0 ) {
+            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
         }
+
 
         DentistProfile dentist = dentistProfileRepository.findById(dentistId)
                 .orElseThrow(() -> new RuntimeException("Dentist not found"));
@@ -69,25 +64,16 @@ public class StaffAppointmentService {
         appointmentRepository.save(appt);
     }
 
-    /* =========================
-       CHECK-IN
-       ========================= */
-    public void checkIn(Long appointmentId) {
-
-        Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        if (appt.getStatus() != AppointmentStatus.CONFIRMED) {
-            throw new RuntimeException("Only CONFIRMED appointment can be checked in");
+    public void completeAppointment(Long id) {
+        Appointment a = appointmentRepository.findById(id).orElseThrow();
+        if (a.getStatus() == AppointmentStatus.CONFIRMED) {
+            a.setStatus(AppointmentStatus.COMPLETED);
+            appointmentRepository.save(a);
         }
-
-        appt.setStatus(AppointmentStatus.CHECKED_IN);
-        appointmentRepository.save(appt);
     }
 
-    /* =========================
-       CANCEL APPOINTMENT
-       ========================= */
+
+    /* CANCEL APPOINTMENT */
     public void cancelAppointment(Long appointmentId, String reason) {
 
         Appointment appt = appointmentRepository.findById(appointmentId)
