@@ -6,6 +6,7 @@
   <title>Đặt lịch khám - Nha Khoa ABC</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
   <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -27,14 +28,11 @@
           <span class="customer-stepper-step" data-step="3">3</span>
           <span class="customer-stepper-line"></span>
           <span class="customer-stepper-step" data-step="4">4</span>
-          <span class="customer-stepper-line"></span>
-          <span class="customer-stepper-step" data-step="5">5</span>
         </div>
         <p class="customer-stepper-label" data-step-label="1">Chọn ngày</p>
         <p class="customer-stepper-label" data-step-label="2" style="display:none;">Chọn giờ</p>
-        <p class="customer-stepper-label" data-step-label="3" style="display:none;">Thông tin liên hệ</p>
-        <p class="customer-stepper-label" data-step-label="4" style="display:none;">Đặt cọc giữ chỗ</p>
-        <p class="customer-stepper-label" data-step-label="5" style="display:none;">Hoàn tất</p>
+        <p class="customer-stepper-label" data-step-label="3" style="display:none;">Thông tin & xác nhận</p>
+        <p class="customer-stepper-label" data-step-label="4" style="display:none;">Hoàn tất</p>
       </div>
 
       <div class="customer-booking-step" id="customer-booking-step-1">
@@ -96,27 +94,17 @@
         </div>
         <div class="customer-modal-actions">
           <button type="button" class="customer-btn" data-back-step="2">Quay lại</button>
-          <button type="button" id="customer-booking-to-deposit" class="customer-btn customer-btn-primary">Tiếp theo</button>
+          <button type="button" id="customer-booking-submit" class="customer-btn customer-btn-primary">Xác nhận đặt lịch</button>
         </div>
       </div>
 
       <div class="customer-booking-step" id="customer-booking-step-4" style="display:none;">
-        <div class="customer-deposit-message">
-          <i class="bi bi-info-circle-fill"></i>
-          <p>Nhân viên sẽ liên hệ qua kênh bạn chọn để hướng dẫn đặt cọc giữ chỗ.</p>
-          <p class="customer-deposit-note">Xác nhận để hoàn tất đặt lịch.</p>
-        </div>
-        <div class="customer-modal-actions">
-          <button type="button" class="customer-btn" data-back-step="3">Quay lại</button>
-          <button type="button" id="customer-booking-submit" class="customer-btn customer-btn-primary">Xác nhận đặt cọc</button>
-        </div>
-      </div>
-
-      <div class="customer-booking-step" id="customer-booking-step-5" style="display:none;">
         <div class="customer-success-message">
           <i class="bi bi-check-circle-fill"></i>
           <p class="customer-success-title">Đặt lịch thành công!</p>
-          <p>Nhân viên sẽ liên hệ qua kênh bạn chọn để hướng dẫn đặt cọc.</p>
+          <p class="customer-success-desc">Lịch hẹn của bạn đã được ghi nhận.</p>
+          <p class="customer-success-cta">Xem chi tiết tại <strong>Lịch hẹn của tôi</strong>.</p>
+          <div id="customer-success-summary" class="customer-success-summary"></div>
         </div>
         <div class="customer-modal-actions">
           <a th:href="@{/customer/my-appointments}" id="customer-booking-open-appointments" class="customer-btn customer-btn-primary" style="text-decoration:none;">Xem lịch hẹn của tôi</a>
@@ -126,7 +114,6 @@
     </section>
   </main>
 </div>
-<script th:src="@{/js/home.js}"></script>
 <script th:src="@{/js/customer-booking.js}"></script>
 </body>
 </html>

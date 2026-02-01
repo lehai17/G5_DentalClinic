@@ -433,6 +433,35 @@
   margin: 0 0 6px;
   font-size: 1rem;
 }
+.customer-success-desc { color: #374151 !important; }
+.customer-success-cta {
+  margin-top: 12px !important;
+  font-size: 1.05rem !important;
+  color: #1f2937 !important;
+}
+.customer-success-summary {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  text-align: left;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.customer-success-summary-title {
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 10px !important;
+  font-size: 0.95rem !important;
+}
+.customer-success-summary p {
+  margin: 0 0 6px !important;
+  font-size: 0.95rem !important;
+  color: #374151 !important;
+}
+.customer-success-summary p:last-child { margin-bottom: 0 !important; }
 
 /* ========== Danh sách lịch hẹn ========== */
 .customer-appointments-list {

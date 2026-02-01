@@ -7,10 +7,12 @@ import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.schedule.DentistSchedule;
+import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.DentistScheduleRepository;
 import com.dentalclinic.repository.ServiceRepository;
+import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.model.service.Services;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,18 +26,34 @@ import java.util.stream.Collectors;
 public class CustomerAppointmentService {
 
     private final CustomerProfileRepository customerProfileRepository;
+    private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
     private final DentistScheduleRepository dentistScheduleRepository;
     private final ServiceRepository serviceRepository;
 
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
+                                     UserRepository userRepository,
                                      AppointmentRepository appointmentRepository,
                                      DentistScheduleRepository dentistScheduleRepository,
                                      ServiceRepository serviceRepository) {
         this.customerProfileRepository = customerProfileRepository;
+        this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
         this.dentistScheduleRepository = dentistScheduleRepository;
         this.serviceRepository = serviceRepository;
+    }
+
+    /** Lấy hoặc tạo CustomerProfile cho user (user cũ có thể chưa có profile). */
+    private CustomerProfile getOrCreateCustomerProfile(Long userId) {
+        return customerProfileRepository.findByUser_Id(userId)
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new IllegalArgumentException("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."));
+                    CustomerProfile profile = new CustomerProfile();
+                    profile.setUser(user);
+                    profile.setFullName(user.getEmail() != null ? user.getEmail() : "Khách hàng");
+                    return customerProfileRepository.save(profile);
+                });
     }
 
     /**
@@ -75,8 +93,7 @@ public class CustomerAppointmentService {
 
     @Transactional
     public AppointmentDto createAppointment(Long userId, CreateAppointmentRequest request) {
-        CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found for user"));
+        CustomerProfile customer = getOrCreateCustomerProfile(userId);
         DentistSchedule slot = dentistScheduleRepository.findById(request.getSlotId())
                 .orElseThrow(() -> new IllegalArgumentException("Slot not found"));
         Services service = serviceRepository.findById(request.getServiceId())
@@ -90,7 +107,7 @@ public class CustomerAppointmentService {
         appointment.setDate(slot.getDate());
         appointment.setStartTime(slot.getStartTime());
         appointment.setEndTime(slot.getEndTime());
-        appointment.setStatus(AppointmentStatus.PENDING_DEPOSIT);
+        appointment.setStatus(AppointmentStatus.PENDING);
         appointment.setNotes(request.getPatientNote());
         appointment.setContactChannel(request.getContactChannel());
         appointment.setContactValue(request.getContactValue());
