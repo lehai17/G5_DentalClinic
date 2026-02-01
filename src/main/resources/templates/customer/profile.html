@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+<body>
+<div class="app-wrapper">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div style="max-width:900px;margin:30px auto;background:#fff;padding:20px;border-radius:14px;border:1px solid #e5e7eb;">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:12px;">Thông tin cá nhân</h2>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Email</div>
+                <div th:text="${user.email}">email</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Role</div>
+                <div th:text="${user.role}">CUSTOMER</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Status</div>
+                <div th:text="${user.status}">ACTIVE</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Ngày sinh</div>
+                <div th:text="${user.dateOfBirth}">-</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Giới tính</div>
+                <div th:text="${user.gender}">OTHER</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Họ tên</div>
+                <div th:text="${profile != null ? profile.fullName : 'Chưa cập nhật'}">fullname</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Số điện thoại</div>
+                <div th:text="${profile != null ? profile.phone : 'Chưa cập nhật'}">phone</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Địa chỉ</div>
+                <div th:text="${profile != null ? profile.address : 'Chưa cập nhật'}">address</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/js/user-dropdown.js}" defer></script>
+</body>
+</html>

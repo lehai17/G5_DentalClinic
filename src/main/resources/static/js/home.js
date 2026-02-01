@@ -51,3 +51,18 @@ window.addEventListener('click', function(event) {
         event.target.classList.remove('active');
     }
 });
+
+//Xử lý đóng mở tiện ích từ ava profile
+    function toggleUserMenu(e){
+    e.stopPropagation();
+    const dd = document.getElementById("userDropdown");
+    dd.classList.toggle("hidden");
+}
+
+    document.addEventListener("click", function(){
+    const dd = document.getElementById("userDropdown");
+    if(dd && !dd.classList.contains("hidden")){
+    dd.classList.add("hidden");
+}
+});
+
