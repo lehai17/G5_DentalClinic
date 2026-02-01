@@ -2,7 +2,6 @@ package com.dentalclinic.controller.dentist;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.repository.AppointmentRepository;
-import com.dentalclinic.service.dentist.DentistSessionService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,14 +17,9 @@ import java.util.*;
 public class DentistWebController {
 
     private final AppointmentRepository appointmentRepository;
-    private final DentistSessionService dentistSessionService;
 
-    public DentistWebController(
-            AppointmentRepository appointmentRepository,
-            DentistSessionService dentistSessionService
-    ) {
+    public DentistWebController(AppointmentRepository appointmentRepository) {
         this.appointmentRepository = appointmentRepository;
-        this.dentistSessionService = dentistSessionService;
     }
 
     @GetMapping("/dentist/work-schedule")
@@ -36,32 +30,30 @@ public class DentistWebController {
             Model model
     ) {
 
-        // 1. Dentist từ session
-        Long dentistUserId = dentistSessionService.getCurrentDentistUserId();
+        // ✅ FIX CỨNG để test
+        Long dentistUserId = 1L;
 
-        // 2. Snap tuần (Thứ 2 → Chủ nhật)
+        // ===== SNAP TUẦN
         LocalDate base = (weekStart != null) ? weekStart : LocalDate.now();
         LocalDate start = base.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate end = start.plusDays(6);
 
-        // 3. Danh sách ngày trong tuần
+        // ===== DAYS
         List<LocalDate> days = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             days.add(start.plusDays(i));
         }
 
-        // 4. Khung giờ 08:00 → 17:00
+        // ===== TIME SLOTS
         List<LocalTime> timeSlots = new ArrayList<>();
-        LocalTime t = LocalTime.of(8, 0);
-        while (t.isBefore(LocalTime.of(18, 0))) {
-            timeSlots.add(t);
-            t = t.plusHours(1);
+        for (int h = 8; h <= 17; h++) {
+            timeSlots.add(LocalTime.of(h, 0));
         }
 
-        // 5. Dropdown chọn tuần
+        // ===== WEEK DROPDOWN
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
         List<Map<String, String>> weekOptions = new ArrayList<>();
-        for (int i = -8; i <= 8; i++) {
+        for (int i = -6; i <= 6; i++) {
             LocalDate ws = start.plusWeeks(i);
             Map<String, String> opt = new HashMap<>();
             opt.put("value", ws.toString());
@@ -69,40 +61,17 @@ public class DentistWebController {
             weekOptions.add(opt);
         }
 
-        // 6. Load appointments
+        // ===== LOAD APPOINTMENTS
+        List<Appointment> appts =
+                appointmentRepository.findScheduleForWeek(dentistUserId, start, end);
+
         Map<String, ScheduleEventResponse> eventMap = new HashMap<>();
-        if (dentistUserId != null) {
-            List<Appointment> appts =
-                    appointmentRepository.findScheduleForWeek(
-                            dentistUserId, start, end
-                    );
-            eventMap = buildEventMap(appts);
-        }
-
-        // 7. Model
-        model.addAttribute("dentistUserId", dentistUserId);
-        model.addAttribute("weekStart", start);
-        model.addAttribute("weekEnd", end);
-        model.addAttribute("weekOptions", weekOptions);
-        model.addAttribute("selectedWeekStart", start.toString());
-        model.addAttribute("days", days);
-        model.addAttribute("timeSlots", timeSlots);
-        model.addAttribute("eventMap", eventMap);
-
-        return "Dentist/work-schedule";
-    }
-
-    // Helper build event
-    private Map<String, ScheduleEventResponse> buildEventMap(
-            List<Appointment> appts
-    ) {
-        Map<String, ScheduleEventResponse> map = new HashMap<>();
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
 
         for (Appointment a : appts) {
-            String key = a.getDate() + "_" + a.getStartTime().format(timeFmt);
+            String key = a.getDate() + "_" + a.getStartTime().format(tf);
 
-            map.put(key, new ScheduleEventResponse(
+            eventMap.put(key, new ScheduleEventResponse(
                     a.getId(),
                     a.getCustomer().getUser().getId(),
                     a.getCustomer().getFullName(),
@@ -113,6 +82,18 @@ public class DentistWebController {
                     a.getStatus().name()
             ));
         }
-        return map;
+
+        // ===== MODEL
+        model.addAttribute("dentistUserId", dentistUserId);
+        model.addAttribute("dentistName", "Dentist");
+        model.addAttribute("weekStart", start);
+        model.addAttribute("weekEnd", end);
+        model.addAttribute("weekOptions", weekOptions);
+        model.addAttribute("selectedWeekStart", start.toString());
+        model.addAttribute("days", days);
+        model.addAttribute("timeSlots", timeSlots);
+        model.addAttribute("eventMap", eventMap);
+
+        return "Dentist/work-schedule";
     }
 }

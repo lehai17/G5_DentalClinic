@@ -11,21 +11,17 @@
 <div class="app-shell">
 
   <!-- SIDEBAR -->
-  <aside id="sidebar" class="sidebar" style="display:flex; flex-direction:column;">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <div class="brand-mini">
         <div class="brand-badge">D+</div>
         <div style="font-weight:800">DentalPlus</div>
       </div>
-      <button id="sidebarToggle" class="icon-btn" type="button">☰</button>
+      <button id="sidebarToggle" class="icon-btn">☰</button>
     </div>
 
     <nav class="nav">
-      <a class="nav-item active"
-         th:href="@{/dentist/work-schedule(dentistUserId=${dentistUserId})}">
-        Work Schedule
-      </a>
-      <a class="nav-item" href="/dentist/support-tickets">Support Tickets</a>
+      <a class="nav-item active">Work Schedule</a>
       <a class="nav-item" href="/dentist/profile">Profile</a>
     </nav>
 
@@ -36,16 +32,18 @@
 
   <!-- MAIN -->
   <div class="main">
+
     <div class="topbar">
       <div style="color:var(--muted);font-size:12px;">Modules › Work Schedule</div>
-      <a href="/dentist/profile" class="user-chip">
+      <div class="user-chip">
         <div class="user-name" th:text="${dentistName}">Dentist</div>
         <div class="user-sub">General Dentist</div>
-      </a>
+      </div>
     </div>
 
     <div class="content">
-      <h2 style="margin:6px 0 4px;">Weekly Schedule</h2>
+
+      <h2>Weekly Schedule</h2>
       <div style="color:var(--muted);margin-bottom:10px;">
         <span th:text="${#temporals.format(weekStart,'dd/MM/yyyy')}"></span>
         -
@@ -53,11 +51,10 @@
       </div>
 
       <!-- WEEK SELECT -->
-      <div class="filter" style="align-items:center;">
-        <div class="field" style="min-width:260px;">
+      <div class="filter">
+        <div class="field">
           <label>Week range</label>
-          <select id="weekSelect"
-                  style="width:260px;padding:10px;border:1px solid var(--line);border-radius:10px;">
+          <select id="weekSelect">
             <option th:each="w : ${weekOptions}"
                     th:value="${w.value}"
                     th:text="${w.label}"
@@ -68,7 +65,7 @@
         <input type="hidden" id="dentistUserIdHidden" th:value="${dentistUserId}">
       </div>
 
-      <!-- GRID -->
+      <!-- SCHEDULE GRID -->
       <div class="schedule-grid">
         <div class="grid-head">
           <div class="time-col"></div>
@@ -102,7 +99,6 @@
                 </div>
               </th:block>
             </div>
-
           </div>
         </div>
       </div>
@@ -111,32 +107,77 @@
   </div>
 </div>
 
-<!-- MODAL -->
+<!-- ================= MODAL ================= -->
 <div id="apptModalBackdrop" class="modal-backdrop" hidden>
   <div class="modal" role="dialog" aria-modal="true">
+
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div id="apptModalTitle" class="modal-title">Appointment</div>
         <div id="apptModalSub" class="modal-sub">Choose action</div>
       </div>
-      <button id="btnCloseModal" class="icon-btn" type="button">✕</button>
+      <button id="btnCloseModal" class="icon-btn">✕</button>
     </div>
 
     <div class="modal-actions">
-      <a id="btnBillingTransfer" class="btn" href="#">Service &amp; Billing Transfer</a>
-      <a id="btnExamination" class="btn primary" href="#">Clinical Examination Process</a>
+      <a id="btnBillingTransfer" class="btn">Service & Billing Transfer</a>
+      <a id="btnExamination" class="btn primary">Clinical Examination Process</a>
     </div>
   </div>
 </div>
 
-<script src="/js/app.js"></script>
-
+<!-- ================= JS INLINE (QUAN TRỌNG) ================= -->
 <script>
-  document.getElementById('weekSelect')?.addEventListener('change', (e) => {
-    const weekStart = e.target.value;
-    const dentistUserId = document.getElementById('dentistUserIdHidden')?.value || '';
-    window.location.href =
-            `/dentist/work-schedule?dentistUserId=${dentistUserId}&weekStart=${weekStart}`;
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const backdrop = document.getElementById('apptModalBackdrop');
+    const btnClose = document.getElementById('btnCloseModal');
+    const title = document.getElementById('apptModalTitle');
+    const sub = document.getElementById('apptModalSub');
+    const btnExam = document.getElementById('btnExamination');
+    const btnBilling = document.getElementById('btnBillingTransfer');
+
+    function closeModal() {
+      backdrop.hidden = true;
+    }
+
+    btnClose.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    document.querySelectorAll('.appt').forEach(el => {
+      el.addEventListener('click', () => {
+
+        const appointmentId = el.dataset.appointmentId;
+        const patientName = el.dataset.patientName;
+        const serviceName = el.dataset.serviceName;
+        const customerUserId = el.dataset.customerUserId;
+        const dentistUserId = el.dataset.dentistUserId;
+
+        title.textContent = patientName;
+        sub.textContent = serviceName;
+
+        btnExam.href =
+                `/dentist/appointments/${appointmentId}/examination`
+                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
+
+        btnBilling.href =
+                `/dentist/appointments/${appointmentId}/billing-transfer`
+                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
+
+        backdrop.hidden = false;
+      });
+    });
+
+    document.getElementById('weekSelect')?.addEventListener('change', e => {
+      const weekStart = e.target.value;
+      const dentistUserId =
+              document.getElementById('dentistUserIdHidden').value;
+      window.location.href =
+              `/dentist/work-schedule?weekStart=${weekStart}&dentistUserId=${dentistUserId}`;
+    });
+
   });
 </script>
 
