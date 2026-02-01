@@ -1,5 +1,6 @@
 package com.dentalclinic.config;
 
+import com.dentalclinic.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,6 +15,14 @@ import java.util.Collection;
 @Component
 public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
 
+    private static final String SESSION_USER_ID = "userId";
+
+    private final UserRepository userRepository;
+
+    public RoleBasedSuccessHandler(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
@@ -24,7 +33,7 @@ public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
         Collection<? extends GrantedAuthority> authorities =
                 authentication.getAuthorities();
 
-        String redirectUrl = "/";
+        String redirectUrl = "/homepage";
 
         for (GrantedAuthority authority : authorities) {
             String role = authority.getAuthority();
@@ -40,7 +49,9 @@ public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
                     redirectUrl = "/dentist/dashboard";
                     break;
                 case "ROLE_CUSTOMER":
-                    redirectUrl = "/customer/home";
+                    redirectUrl = "/homepage";
+                    userRepository.findByEmail(authentication.getName())
+                            .ifPresent(user -> request.getSession().setAttribute(SESSION_USER_ID, user.getId()));
                     break;
             }
         }
