@@ -28,8 +28,7 @@ body {
 }
 
 /* Sidebar cố định bên trái */
-.patient-sidebar,
-.customer-sidebar {
+.patient-sidebar {
     width: 260px;
     height: 100vh;
     position: fixed; /* Cố định khi cuộn trang */
@@ -382,77 +381,8 @@ body {
         margin-left: 0;
         width: 100%;
     }
-    .patient-sidebar,
-    .customer-sidebar {
+    .patient-sidebar {
         display: none; /* Ẩn sidebar trên mobile hoặc chuyển thành menu burger */
     }
 }
-
-/* --- 10. SIDEBAR (gộp từ sidebar.css: thu gọn, menu, toggle) --- */
-.patient-sidebar,
-.customer-sidebar {
-    width: 260px !important;
-    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
-    z-index: 1100;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    overflow-x: hidden;
 }
-.patient-sidebar.collapsed,
-.customer-sidebar.collapsed {
-    width: 80px !important;
-}
-.patient-sidebar.collapsed .logo-text,
-.patient-sidebar.collapsed .menu-item span,
-.customer-sidebar.collapsed .logo-text,
-.customer-sidebar.collapsed .menu-item span {
-    opacity: 0;
-    visibility: hidden;
-    position: absolute;
-}
-.patient-sidebar.collapsed .menu-item,
-.customer-sidebar.collapsed .menu-item {
-    justify-content: center;
-    padding: 12px 0;
-}
-.patient-sidebar.collapsed .menu-item i,
-.customer-sidebar.collapsed .menu-item i {
-    margin: 0;
-    font-size: 1.5rem;
-}
-.main-content {
-    margin-left: 260px !important;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-.main-content.expanded {
-    margin-left: 80px !important;
-}
-.toggle-btn {
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    color: #4b5563;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    border-radius: 8px;
-}
-.toggle-btn:hover { background: #f3f4f6; }
-/* Menu item (sidebar nav + logout) */
-#sidebar .menu-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px 15px;
-    text-decoration: none !important;
-    color: #4b5563;
-    font-weight: 500;
-    border-radius: 8px;
-    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
-    white-space: nowrap;
-}
-#sidebar .menu-item i { font-size: 1.3rem; min-width: 30px; text-align: center; }
-#sidebar .menu-item:hover { background: #f3f4f6; color: #667eea; transform: translateX(2px); }
-#sidebar .menu-item.active { background: #667eea; color: white !important; }
-#sidebar .menu-item.logout:hover { background: #fee2e2; color: #ef4444 !important; }

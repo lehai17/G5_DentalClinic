@@ -15,13 +15,13 @@ import java.util.Collection;
 @Component
 public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
 
-    private static final String SESSION_USER_ID = "userId";
-
-    private final UserRepository userRepository;
-
-    public RoleBasedSuccessHandler(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+//    private static final String SESSION_USER_ID = "userId";
+//
+//    private final UserRepository userRepository;
+//
+//    public RoleBasedSuccessHandler(UserRepository userRepository) {
+//        this.userRepository = userRepository;
+//    }
 
     @Override
     public void onAuthenticationSuccess(
@@ -33,7 +33,7 @@ public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
         Collection<? extends GrantedAuthority> authorities =
                 authentication.getAuthorities();
 
-        String redirectUrl = "/homepage";
+        String redirectUrl = "/";
 
         for (GrantedAuthority authority : authorities) {
             String role = authority.getAuthority();
@@ -49,9 +49,7 @@ public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
                     redirectUrl = "/dentist/dashboard";
                     break;
                 case "ROLE_CUSTOMER":
-                    redirectUrl = "/homepage";
-                    userRepository.findByEmail(authentication.getName())
-                            .ifPresent(user -> request.getSession().setAttribute(SESSION_USER_ID, user.getId()));
+                    redirectUrl = "/customer/home";
                     break;
             }
         }

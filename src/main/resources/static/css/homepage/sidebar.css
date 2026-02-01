@@ -1,32 +1,27 @@
 /* Sidebar cơ bản (customer = khách hàng) */
-.patient-sidebar,
-.customer-sidebar {
+.patient-sidebar {
     width: 260px !important;
-    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    background: #ffffff;
     border-right: 1px solid #e5e7eb;
-    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+
     z-index: 1100;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     overflow-x: hidden;
 }
 
 /* Khi thu gọn */
-.patient-sidebar.collapsed,
-.customer-sidebar.collapsed {
+.patient-sidebar.collapsed {
     width: 80px !important;
 }
 
 .patient-sidebar.collapsed .logo-text,
-.patient-sidebar.collapsed .menu-item span,
-.customer-sidebar.collapsed .logo-text,
-.customer-sidebar.collapsed .menu-item span {
+.patient-sidebar.collapsed .menu-item span {
     opacity: 0;
     visibility: hidden;
     position: absolute; /* Tránh chiếm không gian */
 }
 
-.patient-sidebar.collapsed .menu-item,
-.customer-sidebar.collapsed .menu-item {
+.patient-sidebar.collapsed .menu-item{
     justify-content: center;
     padding: 12px 0;
 }
