@@ -11,8 +11,4 @@ public class AuthController {
         return "/customer/login";
     }
 
-    @GetMapping("/")
-    public String home() {
-        return "redirect:/login";
-    }
 }
