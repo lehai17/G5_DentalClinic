@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Service & Billing Transfer</title>
+  <link rel="stylesheet" href="/css/app.css"/>
+  <style>
+    .alert-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:10px 12px;border-radius:12px;margin:10px 0;font-weight:600;}
+    .section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mini{font-size:12px;color:var(--muted)}
+    .svc-row{display:grid;grid-template-columns:22px 1fr 90px 120px;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:#fff}
+    .svc-name{font-weight:700}
+    .tbl{width:100%;border-collapse:collapse;margin-top:10px}
+    .tbl th,.tbl td{border-bottom:1px solid var(--line);padding:8px;text-align:left;font-size:14px}
+    .tbl th{color:var(--muted);font-weight:700}
+    .icon-mini{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  </style>
+</head>
+<body class="page">
+
+<div class="card">
+  <h2>Service &amp; Billing Transfer</h2>
+
+  <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}">Saved successfully.</div>
+
+  <div class="meta">
+    <div><b>Appointment ID:</b> <span th:text="${appointmentId}">1</span></div>
+    <div><b>Patient:</b> <span th:text="${patientName}">Robert Wilson</span></div>
+    <div><b>Date:</b> <span th:text="${apptDate}">2026-02-01</span></div>
+    <div><b>Time:</b> <span th:text="${#temporals.format(startTime,'HH:mm')}">09:00</span> - <span th:text="${#temporals.format(endTime,'HH:mm')}">10:00</span></div>
+    <div><b>Requested:</b> <span th:text="${requestedServiceName}">Scaling</span></div>
+  </div>
+
+  <form id="billingForm" method="post" th:action="@{/dentist/appointments/{id}/billing-transfer(id=${appointmentId})}">
+    <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
+    <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
+
+    <!-- hidden payloads -->
+    <input type="hidden" id="performedServicesJson" name="performedServicesJson" th:value="${performedServicesJson}">
+    <input type="hidden" id="prescriptionNote" name="prescriptionNote" th:value="${prescriptionNote}">
+
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:end;">
+        <div>
+          <div style="font-weight:900;">A) Performed Services</div>
+          <div class="mini">Tick the services actually performed (qty, tooth optional).</div>
+        </div>
+      </div>
+
+      <div id="servicesBox">
+        <div class="svc-row" th:each="s : ${services}"
+             th:attr="data-service-id=${s.id}, data-service-name=${s.name}">
+          <input type="checkbox" class="svc-check">
+          <div class="svc-name" th:text="${s.name}">Scaling</div>
+          <input class="svc-qty" type="number" min="1" value="1">
+          <input class="svc-tooth" type="text" placeholder="Tooth (e.g. 36)">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div style="font-weight:900;">B) Digital Prescription</div>
+      <div class="mini">Enter medications, dosage, duration, instruction (saved as JSON for staff).</div>
+
+      <table class="tbl" id="rxTable">
+        <thead>
+        <tr>
+          <th>Medication</th><th>Dosage</th><th>Duration</th><th>Instruction</th><th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <button type="button" class="icon-mini" id="btnAddRx">+ Add medicine</button>
+    </div>
+
+    <div class="section">
+      <div style="font-weight:900;">C) Note to Staff (optional)</div>
+      <textarea name="note" rows="4" th:text="${note}" placeholder="Any note for billing/dispensing..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn primary" type="submit">SAVE</button>
+      <a class="btn" th:href="@{/dentist/work-schedule(dentistUserId=${dentistUserId})}">Back</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // -------- helpers --------
+  function safeJsonParse(s){
+    try { return JSON.parse(s); } catch(e){ return null; }
+  }
+
+  // -------- prefill performed services --------
+  (function prefillServices(){
+    const raw = document.getElementById('performedServicesJson')?.value || '';
+    const arr = safeJsonParse(raw);
+    if(!Array.isArray(arr)) return;
+
+    const rows = document.querySelectorAll('#servicesBox .svc-row');
+    rows.forEach(r => {
+      const serviceId = Number(r.dataset.serviceId);
+      const hit = arr.find(x => Number(x.serviceId) === serviceId);
+      if(hit){
+        r.querySelector('.svc-check').checked = true;
+        r.querySelector('.svc-qty').value = hit.qty ?? 1;
+        r.querySelector('.svc-tooth').value = hit.toothNo ?? '';
+      }
+    });
+  })();
+
+  // -------- RX dynamic table --------
+  const rxTbody = document.querySelector('#rxTable tbody');
+  function addRxRow(item){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="rx-name" placeholder="Name"></td>
+      <td><input class="rx-dosage" placeholder="e.g. 500mg"></td>
+      <td><input class="rx-duration" placeholder="e.g. 5 days"></td>
+      <td><input class="rx-inst" placeholder="e.g. after meals"></td>
+      <td><button type="button" class="icon-mini rx-del">✕</button></td>
+    `;
+    tr.querySelector('.rx-del').addEventListener('click', ()=> tr.remove());
+    if(item){
+      tr.querySelector('.rx-name').value = item.name || '';
+      tr.querySelector('.rx-dosage').value = item.dosage || '';
+      tr.querySelector('.rx-duration').value = item.duration || '';
+      tr.querySelector('.rx-inst').value = item.instruction || '';
+    }
+    rxTbody.appendChild(tr);
+  }
+
+  document.getElementById('btnAddRx').addEventListener('click', ()=> addRxRow());
+
+  // prefill prescription JSON
+  (function prefillRx(){
+    const raw = document.getElementById('prescriptionNote')?.value || '';
+    const arr = safeJsonParse(raw);
+    if(Array.isArray(arr) && arr.length){
+      arr.forEach(addRxRow);
+    } else {
+      addRxRow(); // add 1 row by default
+    }
+  })();
+
+  // -------- build payload on submit --------
+  document.getElementById('billingForm').addEventListener('submit', (e) => {
+    // performed services
+    const out = [];
+    document.querySelectorAll('#servicesBox .svc-row').forEach(r => {
+      const checked = r.querySelector('.svc-check').checked;
+      if(!checked) return;
+      out.push({
+        serviceId: Number(r.dataset.serviceId),
+        qty: Number(r.querySelector('.svc-qty').value || 1),
+        toothNo: (r.querySelector('.svc-tooth').value || '').trim()
+      });
+    });
+    document.getElementById('performedServicesJson').value = JSON.stringify(out);
+
+    // rx
+    const rx = [];
+    document.querySelectorAll('#rxTable tbody tr').forEach(tr => {
+      const name = tr.querySelector('.rx-name').value.trim();
+      const dosage = tr.querySelector('.rx-dosage').value.trim();
+      const duration = tr.querySelector('.rx-duration').value.trim();
+      const instruction = tr.querySelector('.rx-inst').value.trim();
+      if(name || dosage || duration || instruction){
+        rx.push({ name, dosage, duration, instruction });
+      }
+    });
+    document.getElementById('prescriptionNote').value = JSON.stringify(rx);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+:root{
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --primary:#2563eb;
+    --sidebar:#0b1736;
+    --sidebar2:#0e2148;
+}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);background:var(--bg)}
+a{color:var(--primary);text-decoration:none}
+pre{background:#0b1220;color:#e5e7eb;padding:12px;border-radius:10px;overflow:auto}
+
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px rgba(2,6,23,.08);padding:18px;max-width:900px;width:100%}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 40px rgba(2,6,23,.12);padding:20px;width:420px}
+
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.brand-badge{width:40px;height:40px;border-radius:10px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.brand-title{font-weight:800}
+.brand-sub{color:var(--muted);font-size:13px}
+
+label{display:block;margin-top:10px;font-size:13px;color:var(--muted)}
+input,textarea,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px;margin-top:6px;background:#fff}
+textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.hint{margin-top:10px;color:var(--muted);font-size:13px}
+
+.btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:1px solid var(--line);
+    padding:10px 12px;border-radius:10px;background:#fff;color:var(--text);
+    cursor:pointer;margin-top:10px
+}
+.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn.ghost{background:transparent}
+.nav-item.danger{color:#fff;background:rgba(255,255,255,.06);border-radius:10px;padding:10px}
+
+.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;color:var(--muted);font-size:14px;margin:10px 0}
+
+.table{width:100%;border-collapse:collapse;margin-top:12px}
+.table th,.table td{border-bottom:1px solid var(--line);padding:10px;text-align:left;font-size:14px}
+.table th{color:var(--muted);font-weight:600}
+
+/* APP SHELL */
+.app-shell{display:flex;min-height:100vh}
+.sidebar{
+    width:260px;
+    background:linear-gradient(180deg,var(--sidebar),var(--sidebar2));
+    color:#fff;padding:14px;
+    transition:width .2s;
+}
+.sidebar.collapsed{width:84px}
+.sidebar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.brand-mini{display:flex;align-items:center;gap:10px}
+
+/* icon button mặc định (dùng trên sidebar tối) */
+.icon-btn{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer
+}
+.icon-btn:hover{background:rgba(255,255,255,.12)}
+
+.nav{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.nav-item{color:#fff;opacity:.9;padding:10px;border-radius:10px}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.14)}
+.sidebar-bottom{margin-top:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,.12)}
+
+.main{flex:1;display:flex;flex-direction:column}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line)}
+.user-chip{text-align:right}
+.user-name{font-weight:800}
+.user-sub{color:var(--muted);font-size:12px}
+
+.content{padding:18px}
+.filter{display:flex;gap:10px;align-items:end;margin:12px 0}
+.field{display:flex;flex-direction:column}
+
+/* SCHEDULE GRID */
+.schedule-grid{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.grid-head{display:grid;grid-template-columns:90px repeat(7,1fr);border-bottom:1px solid var(--line)}
+.grid-head .time-col,.grid-head .day-col{padding:12px;font-weight:700;color:var(--muted);background:#fafbff}
+.grid-body .row{display:grid;grid-template-columns:90px repeat(7,1fr);min-height:58px;border-bottom:1px solid var(--line)}
+.grid-body .time-col{padding:12px;color:var(--muted);background:#fafbff}
+.cell{padding:8px;border-left:1px solid var(--line)}
+
+.appt{background:#eef5ff;border:1px solid #cfe1ff;border-radius:12px;padding:10px;cursor:pointer}
+.appt:hover{transform:translateY(-1px)}
+.appt-name{font-weight:800;color:#1e3a8a}
+.appt-sub{font-size:12px;color:var(--muted)}
+
+/* MODAL */
+.modal-backdrop{
+    position:fixed; inset:0;
+    background:rgba(15,23,42,.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:18px;
+    z-index: 9999;
+}
+
+/* ✅ QUAN TRỌNG: hidden phải ẩn thật sự, tránh modal tự hiện */
+.modal-backdrop[hidden]{
+    display:none !important;
+}
+
+.modal{
+    background:#fff;border-radius:16px;border:1px solid var(--line);
+    box-shadow:0 18px 60px rgba(2,6,23,.3);
+    padding:16px;max-width:420px;width:100%;
+}
+.modal-title{font-weight:900;font-size:18px}
+.modal-sub{color:var(--muted);margin-top:4px}
+.modal-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+
+/* ✅ Nút X dùng trong MODAL (trên nền trắng) */
+.modal .icon-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+}
+.modal .icon-btn:hover{
+    background:rgba(15,23,42,.05);
+}

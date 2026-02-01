@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="sidebar">
+    <aside class="sidebar">
+        <h2>Staff Panel</h2>
+        <ul>
+            <li><a th:href="@{/staff/dashboard}">Dashboard</a></li>
+            <li><a th:href="@{/staff/appointments}">Appointments</a></li>
+            <li><a th:href="@{/staff/schedules}">Schedules</a></li>
+
+            <li class="logout">
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="logout-btn">
+                        Logout
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </aside>
+</div>
+
+</body>
+</html>

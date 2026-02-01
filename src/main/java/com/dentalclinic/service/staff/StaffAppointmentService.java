@@ -1,4 +1,86 @@
 package com.dentalclinic.service.staff;
 
+import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.appointment.AppointmentStatus;
+import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.DentistProfileRepository;
+import com.dentalclinic.model.profile.DentistProfile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
 public class StaffAppointmentService {
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @Autowired
+    private DentistProfileRepository dentistProfileRepository;
+
+    /* VIEW ALL APPOINTMENTS (STAFF) */
+    public List<Appointment> getAllAppointments() {
+        return appointmentRepository.findAll();
+    }
+
+    /* CONFIRM APPOINTMENT */
+    public void confirmAppointment(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appointment.getDentist() == null) {
+            throw new RuntimeException("Phải gán bác sĩ trước khi xác nhận");
+        }
+
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
+            throw new RuntimeException("Only PENDING appointment can be confirmed");
+        }
+
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+        appointmentRepository.save(appointment);
+    }
+
+    /* ASSIGN / REASSIGN DENTIST */
+    public void assignDentist(Long appointmentId, Long dentistId) {
+
+        Appointment appt = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appointmentRepository.countBusyAppointments(
+                dentistId,
+                appt.getDate(),
+                appt.getStartTime(),
+                appt.getEndTime()
+        ) > 0 ) {
+            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
+        }
+
+
+        DentistProfile dentist = dentistProfileRepository.findById(dentistId)
+                .orElseThrow(() -> new RuntimeException("Dentist not found"));
+
+        appt.setDentist(dentist);
+        appointmentRepository.save(appt);
+    }
+
+    public void completeAppointment(Long id) {
+        Appointment a = appointmentRepository.findById(id).orElseThrow();
+        if (a.getStatus() == AppointmentStatus.CONFIRMED) {
+            a.setStatus(AppointmentStatus.COMPLETED);
+            appointmentRepository.save(a);
+        }
+    }
+
+
+    /* CANCEL APPOINTMENT */
+    public void cancelAppointment(Long appointmentId, String reason) {
+
+        Appointment appt = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        appt.setStatus(AppointmentStatus.CANCELLED);
+        appt.setNotes(reason);
+        appointmentRepository.save(appt);
+    }
 }
