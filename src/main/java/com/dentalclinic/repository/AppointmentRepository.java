@@ -62,4 +62,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             Long customerUserId
     );
     List<Appointment> findByCustomerId(Long customerId);
+    @Query("""
+        SELECT a FROM Appointment a
+        JOIN FETCH a.customer c
+        JOIN FETCH c.user cu
+        JOIN FETCH a.service s
+        JOIN FETCH a.dentist d
+        WHERE d.id = :dentistProfileId
+          AND a.date BETWEEN :start AND :end
+    """)
+    List<Appointment> findScheduleForWeek(
+            @Param("dentistProfileId") Long dentistProfileId,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
+    );
 }

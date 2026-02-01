@@ -13,47 +13,40 @@ public class BillingNote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 1-1 theo appointment
-    @OneToOne
+    // 1 billing note cho 1 appointment
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id", nullable = false, unique = true)
     private Appointment appointment;
 
-    // Notebook note (optional)
+    // Ghi chú nội bộ (optional)
     @Column(name = "note", columnDefinition = "NVARCHAR(MAX)")
     private String note;
 
     /**
-     * Dịch vụ đã sử dụng (bác sĩ tick).
-     * Tối giản: lưu dạng text/CSV/JSON string để dễ làm nhanh.
-     * Ví dụ: "Scaling|Full mouth|1;Composite filling|36|1"
+     * ✅ Performed services (bác sĩ tick) - lưu JSON
+     * Ví dụ:
+     * [
+     *  {"serviceId":1,"qty":1,"toothNo":"Full mouth"},
+     *  {"serviceId":2,"qty":1,"toothNo":"36"}
+     * ]
      */
-    @Column(name = "performed_services", columnDefinition = "NVARCHAR(MAX)")
-    private String performedServices;
+    @Column(name = "performed_services_json", columnDefinition = "NVARCHAR(MAX)")
+    private String performedServicesJson;
 
-    /**
-     * Prescription dạng Q&A (optional).
-     * Bạn muốn: có câu hỏi + khung trả lời (điền hay không cũng được)
-     */
+    // Prescription Q&A (optional)
     @Column(name = "prescription_note", columnDefinition = "NVARCHAR(MAX)")
     private String prescriptionNote;
-
-    // gửi staff hay chưa
-    @Column(name = "sent_to_staff")
-    private Boolean sentToStaff = false;
-
-    @Column(name = "sent_at")
-    private LocalDateTime sentAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
     @PreUpdate
-    public void onUpdate() {
+    public void touch() {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // GET/SET
+    // =================== GET/SET ===================
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -63,17 +56,11 @@ public class BillingNote {
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
 
-    public String getPerformedServices() { return performedServices; }
-    public void setPerformedServices(String performedServices) { this.performedServices = performedServices; }
+    public String getPerformedServicesJson() { return performedServicesJson; }
+    public void setPerformedServicesJson(String performedServicesJson) { this.performedServicesJson = performedServicesJson; }
 
     public String getPrescriptionNote() { return prescriptionNote; }
     public void setPrescriptionNote(String prescriptionNote) { this.prescriptionNote = prescriptionNote; }
-
-    public Boolean getSentToStaff() { return sentToStaff; }
-    public void setSentToStaff(Boolean sentToStaff) { this.sentToStaff = sentToStaff; }
-
-    public LocalDateTime getSentAt() { return sentAt; }
-    public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
