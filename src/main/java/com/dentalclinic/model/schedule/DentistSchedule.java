@@ -17,9 +17,9 @@ public class DentistSchedule {
     @ManyToOne
     @JoinColumn(name = "dentist_id")
     private DentistProfile dentist;
-//gg
     @Column(name = "work_date")
     private LocalDate date;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week")
     private DayOfWeek dayOfWeek;
@@ -29,62 +29,6 @@ public class DentistSchedule {
 
     @Column(name = "end_time")
     private LocalTime endTime;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public DentistProfile getDentist() {
-        return dentist;
-    }
-
-    public void setDentist(DentistProfile dentist) {
-        this.dentist = dentist;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public DayOfWeek getDayOfWeek() {
-        return dayOfWeek;
-    }
-
-    public void setDayOfWeek(DayOfWeek dayOfWeek) {
-        this.dayOfWeek = dayOfWeek;
-    }
-
-    public LocalTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public boolean isAvailable() {
-        return available;
-    }
-
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
-
-    public LocalTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalTime endTime) {
-        this.endTime = endTime;
-    }
 
     @Column(name = "is_available")
     private boolean available = true;
