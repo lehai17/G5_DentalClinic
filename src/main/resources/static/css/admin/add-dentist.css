@@ -1,0 +1,39 @@
+/* Thiết lập khung chính 2 cột */
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+/* Định dạng các thẻ Card trắng */
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Chia lưới cho các ô nhập liệu */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Hiệu ứng cho nút chọn ngày làm việc */
+.day-chip {
+    padding: 10px 18px;
+    background: #F4F7FE;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    color: #2B3674;
+    transition: 0.3s ease;
+}
+
+input[type="checkbox"]:checked + .day-chip {
+    background: #0095FF;
+    color: white;
+}

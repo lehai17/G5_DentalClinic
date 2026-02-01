@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body>
+
+<div th:fragment="admin-sidebar" class="sidebar">
+    <div style="padding: 30px; display: flex; align-items: center; gap: 10px;">
+        <img th:src="@{/images/logo-genz.png}" width="30" alt="Logo" th:if="${false}"> <span style="font-weight: 800; font-size: 18px; color: white;">GENZ CLINIC</span>
+    </div>
+
+    <nav>
+        <a th:href="@{/admin/dashboard}"
+           class="nav-item"
+           th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+            <i class="fas fa-th-large"></i> Dashboard
+        </a>
+
+        <div class="nav-section-title" style="font-size: 10px; padding: 20px 20px 10px; opacity: 0.5; color: white; font-weight: 700;">USER MANAGEMENT</div>
+
+        <a th:href="@{/admin/dentists}"
+           class="nav-item"
+           th:classappend="${activePage == 'dentists' ? 'active' : ''}">
+            <i class="fas fa-stethoscope"></i> Dentists
+        </a>
+
+        <a th:href="@{/admin/staff}"
+           class="nav-item"
+           th:classappend="${activePage == 'staff' ? 'active' : ''}">
+            <i class="fas fa-users"></i> Staff
+        </a>
+
+        <a th:href="@{/admin/customers}"
+           class="nav-item"
+           th:classappend="${activePage == 'customers' ? 'active' : ''}">
+            <i class="fas fa-user-friends"></i> Customer
+        </a>
+
+        <div class="nav-section-title" style="font-size: 10px; padding: 20px 20px 10px; opacity: 0.5; color: white; font-weight: 700;">OPERATIONS</div>
+
+        <a th:href="@{/admin/services}"
+           class="nav-item"
+           th:classappend="${activePage == 'services' ? 'active' : ''}">
+            <i class="fas fa-briefcase-medical"></i> Services
+        </a>
+
+        <a th:href="@{/admin/slots}"
+           class="nav-item"
+           th:classappend="${activePage == 'slots' ? 'active' : ''}">
+            <i class="fas fa-calendar-alt"></i> Slots
+        </a>
+    </nav>
+</div>
+
+</body>
+</html>
