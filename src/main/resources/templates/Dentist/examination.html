@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Clinical Examination</title>
+  <link rel="stylesheet" href="/css/app.css"/>
+  <style>
+    .alert-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:10px 12px;border-radius:12px;margin:10px 0;font-weight:600;}
+    .section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+    .mini{font-size:12px;color:var(--muted)}
+    .tbl{width:100%;border-collapse:collapse;margin-top:10px}
+    .tbl th,.tbl td{border-bottom:1px solid var(--line);padding:8px;text-align:left;font-size:14px}
+    .tbl th{color:var(--muted);font-weight:700}
+    .icon-mini{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+    .chipbox{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .svc-chip{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;display:flex;gap:8px;align-items:center}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  </style>
+</head>
+<body class="page">
+
+<div class="card">
+  <h2>Clinical Examination</h2>
+  <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}">Saved successfully.</div>
+
+  <div class="meta">
+    <div><b>Appointment ID:</b> <span th:text="${appointmentId}">1</span></div>
+    <div><b>Patient:</b> <span th:text="${patientName}">Robert Wilson</span></div>
+    <div><b>Date:</b> <span th:text="${apptDate}">2026-02-01</span></div>
+    <div><b>Time:</b> <span th:text="${#temporals.format(startTime,'HH:mm')}">09:00</span> - <span th:text="${#temporals.format(endTime,'HH:mm')}">10:00</span></div>
+    <div><b>Requested:</b> <span th:text="${requestedServiceName}">Scaling</span></div>
+  </div>
+
+  <!-- hidden raw payload from DB -->
+  <textarea id="rawTreatmentNote" style="display:none;" th:text="${treatmentNote}"></textarea>
+
+  <form id="examForm" method="post" th:action="@{/dentist/appointments/{id}/examination(id=${appointmentId})}">
+    <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
+    <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
+
+    <!-- ✅ primary diagnosis -->
+    <div class="section">
+      <div style="font-weight:900;">A) Diagnosis</div>
+      <div class="mini">Primary diagnosis saved to MedicalRecord.diagnosis</div>
+      <textarea id="primaryDiagnosis" name="diagnosis" rows="3" th:text="${diagnosis}" placeholder="Primary diagnosis..."></textarea>
+
+      <label style="margin-top:10px;">Secondary diagnosis (optional)</label>
+      <input id="secondaryDiagnosis" type="text" placeholder="Secondary diagnosis...">
+    </div>
+
+    <!-- ✅ complaint -->
+    <div class="section">
+      <div style="font-weight:900;">B) Patient Complaint</div>
+      <div class="two">
+        <div class="field">
+          <label>Predefined complaint</label>
+          <select id="complaintCode">
+            <option value="">-- Select --</option>
+            <option value="TOOTHACHE">Toothache</option>
+            <option value="SENSITIVITY">Sensitivity</option>
+            <option value="BLEEDING_GUMS">Bleeding gums</option>
+            <option value="SWELLING">Swelling</option>
+            <option value="BAD_BREATH">Bad breath</option>
+            <option value="CHECKUP">Routine checkup</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Complaint note (optional)</label>
+          <input id="complaintNote" type="text" placeholder="Add note...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ findings -->
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:end;">
+        <div>
+          <div style="font-weight:900;">C) Clinical Findings by Tooth</div>
+          <div class="mini">Tooth number, condition, severity (and note).</div>
+        </div>
+        <button type="button" class="icon-mini" id="btnAddFinding">+ Add</button>
+      </div>
+
+      <table class="tbl" id="findingTable">
+        <thead>
+        <tr>
+          <th style="width:110px;">Tooth</th>
+          <th>Condition</th>
+          <th style="width:120px;">Severity</th>
+          <th>Note</th>
+          <th style="width:60px;"></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- ✅ proposed services -->
+    <div class="section">
+      <div style="font-weight:900;">D) Propose Additional Services</div>
+      <div class="mini">Tick services discovered during exam.</div>
+
+      <div class="chipbox" id="proposeBox">
+        <label class="svc-chip" th:each="s : ${services}">
+          <input type="checkbox" class="prop-check" th:attr="data-service-id=${s.id}">
+          <span th:text="${s.name}">Scaling</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ✅ clinical notes -->
+    <div class="section">
+      <div style="font-weight:900;">E) Clinical Notes</div>
+      <textarea id="clinicalNotes" rows="5" placeholder="Detailed notes..."></textarea>
+    </div>
+
+    <!-- ✅ images (URL metadata) -->
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:end;">
+        <div>
+          <div style="font-weight:900;">F) Dental Images</div>
+          <div class="mini">Add image URL + type + note (metadata). File upload can be added later.</div>
+        </div>
+        <button type="button" class="icon-mini" id="btnAddImg">+ Add</button>
+      </div>
+
+      <table class="tbl" id="imgTable">
+        <thead>
+        <tr>
+          <th>URL</th><th style="width:140px;">Type</th><th>Note</th><th style="width:60px;"></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- ✅ follow-up -->
+    <div class="section">
+      <div style="font-weight:900;">G) Follow-up / Re-exam Plan</div>
+      <div class="two">
+        <div class="field">
+          <label>Follow-up date</label>
+          <input id="followUpDate" type="date">
+        </div>
+        <div class="field">
+          <label>Reason</label>
+          <input id="followUpReason" type="text" placeholder="Reason...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ history -->
+    <div class="section">
+      <div style="font-weight:900;">H) Patient Medical History</div>
+      <div class="mini">Last records (read-only)</div>
+      <table class="tbl">
+        <thead>
+        <tr>
+          <th style="width:140px;">Date</th>
+          <th>Diagnosis</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="r : ${historyRecords}">
+          <td th:text="${r.appointment.date}">2026-01-20</td>
+          <td th:text="${r.diagnosis}">...</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- hidden JSON payload stored into treatmentNote -->
+    <input type="hidden" name="treatmentNote" id="payloadTreatmentNote">
+
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn primary" type="submit">SAVE</button>
+      <a class="btn" th:href="@{/dentist/work-schedule(dentistUserId=${dentistUserId})}">Back</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  function safeJsonParse(s){
+    try { return JSON.parse(s); } catch(e){ return null; }
+  }
+
+  // ---- Findings table ----
+  const fTbody = document.querySelector('#findingTable tbody');
+  function addFindingRow(item){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="f-tooth" placeholder="36"></td>
+      <td><input class="f-cond" placeholder="Caries / Fracture / ..."></td>
+      <td>
+        <select class="f-sev">
+          <option value="">--</option>
+          <option>Mild</option>
+          <option>Moderate</option>
+          <option>Severe</option>
+        </select>
+      </td>
+      <td><input class="f-note" placeholder="Note"></td>
+      <td><button type="button" class="icon-mini f-del">✕</button></td>
+    `;
+    tr.querySelector('.f-del').addEventListener('click', ()=> tr.remove());
+    if(item){
+      tr.querySelector('.f-tooth').value = item.toothNo || '';
+      tr.querySelector('.f-cond').value = item.condition || '';
+      tr.querySelector('.f-sev').value = item.severity || '';
+      tr.querySelector('.f-note').value = item.note || '';
+    }
+    fTbody.appendChild(tr);
+  }
+  document.getElementById('btnAddFinding').addEventListener('click', ()=> addFindingRow());
+
+  // ---- Images table ----
+  const iTbody = document.querySelector('#imgTable tbody');
+  function addImgRow(item){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="i-url" placeholder="https://... or /uploads/..."></td>
+      <td>
+        <select class="i-type">
+          <option value="">--</option>
+          <option value="INTRAORAL">Intraoral</option>
+          <option value="X_RAY">X-ray</option>
+          <option value="BEFORE_AFTER">Before/After</option>
+        </select>
+      </td>
+      <td><input class="i-note" placeholder="Note"></td>
+      <td><button type="button" class="icon-mini i-del">✕</button></td>
+    `;
+    tr.querySelector('.i-del').addEventListener('click', ()=> tr.remove());
+    if(item){
+      tr.querySelector('.i-url').value = item.url || '';
+      tr.querySelector('.i-type').value = item.type || '';
+      tr.querySelector('.i-note').value = item.note || '';
+    }
+    iTbody.appendChild(tr);
+  }
+  document.getElementById('btnAddImg').addEventListener('click', ()=> addImgRow());
+
+  // ---- Prefill from treatmentNote JSON payload (if any) ----
+  (function prefill(){
+    const raw = document.getElementById('rawTreatmentNote').value || '';
+    const obj = safeJsonParse(raw);
+
+    // if not json -> treat as clinical notes
+    if(!obj){
+      document.getElementById('clinicalNotes').value = raw;
+      addFindingRow();
+      addImgRow();
+      return;
+    }
+
+    document.getElementById('secondaryDiagnosis').value = obj.secondaryDiagnosis || '';
+
+    if(obj.complaint){
+      document.getElementById('complaintCode').value = obj.complaint.code || '';
+      document.getElementById('complaintNote').value = obj.complaint.note || '';
+    }
+
+    (obj.findings || []).forEach(addFindingRow);
+    if(!(obj.findings || []).length) addFindingRow();
+
+    // proposed services
+    const ids = new Set((obj.proposedServices || []).map(x => String(x.serviceId)));
+    document.querySelectorAll('.prop-check').forEach(ch => {
+      if(ids.has(String(ch.dataset.serviceId))) ch.checked = true;
+    });
+
+    document.getElementById('clinicalNotes').value = obj.clinicalNotes || '';
+
+    (obj.images || []).forEach(addImgRow);
+    if(!(obj.images || []).length) addImgRow();
+
+    if(obj.followUp){
+      document.getElementById('followUpDate').value = obj.followUp.date || '';
+      document.getElementById('followUpReason').value = obj.followUp.reason || '';
+    }
+  })();
+
+  // ---- Build payload on submit -> store into treatmentNote ----
+  document.getElementById('examForm').addEventListener('submit', (e) => {
+    const payload = {};
+
+    payload.secondaryDiagnosis = document.getElementById('secondaryDiagnosis').value.trim();
+
+    payload.complaint = {
+      code: document.getElementById('complaintCode').value,
+      note: document.getElementById('complaintNote').value.trim()
+    };
+
+    payload.findings = [];
+    document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
+      const toothNo = tr.querySelector('.f-tooth').value.trim();
+      const condition = tr.querySelector('.f-cond').value.trim();
+      const severity = tr.querySelector('.f-sev').value;
+      const note = tr.querySelector('.f-note').value.trim();
+      if(toothNo || condition || severity || note){
+        payload.findings.push({ toothNo, condition, severity, note });
+      }
+    });
+
+    payload.proposedServices = [];
+    document.querySelectorAll('.prop-check').forEach(ch => {
+      if(ch.checked){
+        payload.proposedServices.push({ serviceId: Number(ch.dataset.serviceId) });
+      }
+    });
+
+    payload.clinicalNotes = document.getElementById('clinicalNotes').value;
+
+    payload.images = [];
+    document.querySelectorAll('#imgTable tbody tr').forEach(tr => {
+      const url = tr.querySelector('.i-url').value.trim();
+      const type = tr.querySelector('.i-type').value;
+      const note = tr.querySelector('.i-note').value.trim();
+      if(url || type || note){
+        payload.images.push({ url, type, note });
+      }
+    });
+
+    payload.followUp = {
+      date: document.getElementById('followUpDate').value,
+      reason: document.getElementById('followUpReason').value.trim()
+    };
+
+    document.getElementById('payloadTreatmentNote').value = JSON.stringify(payload);
+  });
+</script>
+
+</body>
+</html>
