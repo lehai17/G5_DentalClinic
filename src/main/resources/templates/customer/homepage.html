@@ -4,127 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nha Khoa ABC - Chăm Sóc Răng Chuyên Nghiệp</title>
-    <link rel="stylesheet" th:href="@{/css/home.css}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+    <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
 <div class="app-wrapper">
-    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-    <section class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">Chăm Sóc Răng Chuyên Nghiệp</h1>
-            <p class="hero-subtitle">Nếp sống khỏe mạnh bắt đầu từ nụ cười đẹp. Hãy để chúng tôi giúp bạn!</p>
-            <div class="hero-buttons">
-                <a th:href="@{/appointments/book}" class="btn-primary" style="text-decoration: none; display: inline-block;">
-                    Đặt Lịch Khám
-                </a>
-            </div>
-        </div>
-    </section>
 
-    <section class="section" id="intro">
-        <div class="intro-container">
-            <div class="intro-image">
-                <img th:src="@{/images/phong-kham.jpg}" alt="Phòng khám Nha Khoa ABC">
-            </div>
-            <div class="intro-text">
-                <h2 class="section-title" style="text-align: left;">Về Nha Khoa ABC</h2>
-                <p>Chúng tôi tự hào là đơn vị tiên phong trong việc ứng dụng công nghệ hiện đại vào điều trị nha khoa tại Việt Nam.</p>
-                <ul class="intro-features">
-                    <li> Đội ngũ bác sĩ chuyên khoa cấp I, cấp II</li>
-                    <li> Hệ thống máy X-quang CT Cone Beam 3D</li>
-                    <li> Chế độ bảo hành tận tâm trọn đời</li>
-                </ul>
-            </div>
-        </div>
-    </section>
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header}"></div>
 
-    <section class="section" id="services">
-        <div class="section-subtitle">DỊCH VỤ NỔI BẬT</div>
-        <h2 class="section-title">Các Dịch Vụ Chăm Sóc Răng Tuyệt Vời</h2>
-        <div class="services-grid">
-            <div th:if="${services == null or services.isEmpty()}" class="text-center py-5">
-                <p class="text-muted">Chưa có dịch vụ nào</p>
-            </div>
-            <div th:each="service : ${services}"
-                 th:if="${services != null}"
-                 class="service-card"
-                 th:data-id="${service?.id}"
-                 th:data-name="${service?.name}"
-                 th:data-description="${service?.description}"
-                 th:data-price="${service?.price}"
-                 onclick="handleServiceClick(this)">
-
-                <div class="service-icon"></div>
-                <div class="service-name" th:text="${service?.name ?: 'Dịch vụ'}">Tên dịch vụ</div>
-                <div class="service-desc" th:text="${service?.description ?: 'Mô tả dịch vụ'}">Mô tả</div>
-                <div class="service-price" th:text="${service?.price != null ? #numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}"></div>
-                <div class="service-duration"> Xem chi tiết →</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section" id="dentists">
-        <div class="section-subtitle">ĐỘI NGŨ CHUYÊN NGHIỆP</div>
-        <h2 class="section-title">Các Bác Sĩ Giàu Kinh Nghiệm</h2>
-        <div class="dentist-grid">
-            <div th:if="${dentists == null or dentists.isEmpty()}" class="text-center py-5">
-                <p class="text-muted">Chưa có bác sĩ nào</p>
-            </div>
-            <div th:each="dentist : ${dentists}"
-                 th:if="${dentists != null}"
-                 class="dentist-card">
-                <div class="dentist-avatar"></div>
-                <div class="dentist-info">
-                    <div class="dentist-name" th:text="${dentist?.fullName ?: 'Bác sĩ'}">Tên Bác Sĩ</div>
-                    <div class="dentist-specialty" th:text="${dentist?.specialization ?: 'Nha sĩ tổng quát'}">Chuyên khoa</div>
-                    <div class="dentist-stars"></div>
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">Chăm Sóc Răng Chuyên Nghiệp</h1>
+                <p class="hero-subtitle">Nếp sống khỏe mạnh bắt đầu từ nụ cười đẹp. Hãy để chúng tôi giúp bạn!</p>
+                <div class="hero-buttons">
+                    <a th:href="@{/appointments/book}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                        Đặt Lịch Khám
+                    </a>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="bg-light">
-        <section class="section" id="blog">
-            <h2 class="section-title">Tin Tức Mới Nhất</h2>
-
-            <div class="blog-grid">
-                <article th:each="blog : ${blogs}" class="blog-card">
-                    <div class="blog-thumb" th:style="'background-image: url(' + ${blog.imageUrl} + ')'"></div>
-                    <div class="blog-content">
-                        <span class="blog-date" th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy')}"></span>
-                        <h3 th:text="${blog.title}"></h3>
-                        <p th:text="${blog.summary}"></p>
-                        <a th:href="@{/public/blogs/{id}(id=${blog.id})}" class="read-more">Đọc thêm →</a>
-                    </div>
-                </article>
-            </div>
-
-            <div class="pagination" th:if="${totalPages > 1}">
-                <a href="javascript:void(0)"
-                   th:onclick="'loadBlogPage(' + (${currentPage - 1}) + ')'"
-                   th:if="${currentPage > 0}" class="btn-page">← Trước</a>
-
-                <div class="page-numbers">
-                <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-                    <a href="javascript:void(0)"
-                       th:onclick="'loadBlogPage(' + ${i} + ')'"
-                       th:text="${i + 1}"
-                       th:class="${i == currentPage} ? 'page-num active' : 'page-num'"></a>
-                </span>
-                </div>
-
-                <a href="javascript:void(0)"
-                   th:onclick="'loadBlogPage(' + (${currentPage + 1}) + ')'"
-                   th:if="${currentPage < totalPages - 1}" class="btn-page">Sau →</a>
             </div>
         </section>
-    </div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+        <section class="section" id="intro">
+            <div class="intro-container">
+                <div class="intro-image">
+                    <img th:src="@{/images/phong-kham.jpg}" alt="Phòng khám Nha Khoa ABC">
+                </div>
+                <div class="intro-text">
+                    <h2 class="section-title" style="text-align: left !important;">Về Nha Khoa ABC</h2>
+                    <p>Chúng tôi tự hào là đơn vị tiên phong trong việc ứng dụng công nghệ hiện đại vào điều trị nha khoa tại Việt Nam.</p>
+                    <ul class="intro-features">
+                        <li> Đội ngũ bác sĩ chuyên khoa cấp I, cấp II</li>
+                        <li> Hệ thống máy X-quang CT Cone Beam 3D</li>
+                        <li> Chế độ bảo hành tận tâm trọn đời</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
+        <section class="section" id="services">
+            <div class="section-subtitle">DỊCH VỤ NỔI BẬT</div>
+            <h2 class="section-title">Các Dịch Vụ Chăm Sóc Răng Tuyệt Vời</h2>
+            <div class="services-grid">
+                <div th:if="${services == null or services.isEmpty()}" class="text-center py-5">
+                    <p class="text-muted">Chưa có dịch vụ nào</p>
+                </div>
+                <div th:each="service : ${services}"
+                     class="service-card"
+                     th:data-id="${service?.id}"
+                     th:data-name="${service?.name}"
+                     onclick="handleServiceClick(this)">
+                    <div class="service-icon"></div>
+                    <div class="service-name" th:text="${service?.name ?: 'Dịch vụ'}"></div>
+                    <div class="service-desc" th:text="${service?.description ?: 'Mô tả dịch vụ'}"></div>
+                    <div class="service-price" th:text="${service?.price != null ? #numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT') + ' ₫' : 'Liên hệ'}"></div>
+                    <div class="service-duration"> Xem chi tiết →</div>
+                </div>
+            </div>
+        </section>
 
+        <section class="section" id="dentists">
+            <div class="section-subtitle">ĐỘI NGŨ CHUYÊN NGHIỆP</div>
+            <h2 class="section-title">Các Bác Sĩ Giàu Kinh Nghiệm</h2>
+            <div class="dentist-grid">
+                <div th:if="${dentists == null or dentists.isEmpty()}" class="text-center py-5">
+                    <p class="text-muted">Chưa có bác sĩ nào</p>
+                </div>
+                <div th:each="dentist : ${dentists}" class="dentist-card">
+                    <div class="dentist-avatar"></div>
+                    <div class="dentist-info">
+                        <div class="dentist-name" th:text="${dentist?.fullName ?: 'Bác sĩ'}"></div>
+                        <div class="dentist-specialty" th:text="${dentist?.specialization ?: 'Nha sĩ tổng quát'}"></div>
+                        <div class="dentist-stars"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="bg-light">
+            <section class="section" id="blog">
+                <h2 class="section-title">Tin Tức Mới Nhất</h2>
+
+                <div class="blog-grid">
+                    <article th:each="blog : ${blogs}" class="blog-card">
+                        <div class="blog-thumb"
+                             th:style="'background-image: url(' + @{${blog.imageUrl}} + ');'">
+                        </div>
+                        <div class="blog-content">
+                            <span class="blog-date" th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy')}"></span>
+                            <h3 th:text="${blog.title}"></h3>
+                            <p class="line-clamp-3" th:text="${blog.summary}"></p>
+                            <a th:href="@{/public/blogs/{id}(id=${blog.id})}" class="read-more">Đọc thêm →</a>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="pagination-wrapper" th:if="${totalPages > 1}">
+                    <div class="pagination">
+                        <a href="javascript:void(0)"
+                           th:onclick="'loadBlogPage(' + (${currentPage - 1}) + ')'"
+                           th:if="${currentPage > 0}" class="btn-page">← Trước</a>
+
+                        <div class="page-numbers">
+                            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                                <a href="javascript:void(0)"
+                                   th:onclick="'loadBlogPage(' + ${i} + ')'"
+                                   th:text="${i + 1}"
+                                   th:class="${i == currentPage} ? 'page-num active' : 'page-num'"></a>
+                            </th:block>
+                        </div>
+
+                        <a href="javascript:void(0)"
+                           th:onclick="'loadBlogPage(' + (${currentPage + 1}) + ')'"
+                           th:if="${currentPage < totalPages - 1}" class="btn-page">Sau →</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </main>
 </div>
 <script th:src="@{/js/user-dropdown.js}" defer></script>
 </body>
