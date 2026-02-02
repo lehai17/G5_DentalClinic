@@ -24,8 +24,13 @@ public class CustomerProfileService {
         return profileRepository.findByUser_Id(userId).orElse(null);
     }
 
-    public List<Appointment> getCustomerAppointments(Long customerId) {
-        // customerId is the CustomerProfile.id (which equals user.id due to @MapsId)
-        return appointmentRepository.findByCustomerId(customerId);
+    public Object getCustomerAppointments(Long id) {
+
+        return 1;
     }
+
+//    public List<Appointment> getCustomerAppointments(Long customerId) {
+//        // customerId is the CustomerProfile.id (which equals user.id due to @MapsId)
+//        return appointmentRepository.findByCustomerId(customerId);
+//    }
 }
