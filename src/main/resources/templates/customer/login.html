@@ -6,56 +6,78 @@
     <title>GENZ CLINIC - Login</title>
 
     <link rel="stylesheet" th:href="@{/css/login.css}">
+    <script defer th:src="@{/js/login.js}"></script>
 </head>
-<body>
-<div class="page" >
-    <div class="brand">
-        <div class="logo">🦷</div>
-        <div class="name">GENZ CLINIC</div>
-        <div class="tagline">Brighten the Vietnamese smile</div>
+<body class="login-body">
+
+<!-- Brand top-left -->
+<header class="brand">
+    <div class="brand__logo" aria-hidden="true">🦷</div>
+    <div class="brand__text">
+        <div class="brand__name">GENZ CLINIC</div>
+        <div class="brand__tagline">Brighten the Vietnamese smile</div>
     </div>
+</header>
 
-    <div class="card">
-        <h2>Welcome </h2>
-        <p class="sub">Sign In to your GenZ Clinic account</p>
+<main class="page">
+    <section class="card" aria-label="Login card">
+        <h1 class="title">Welcome Back</h1>
+        <p class="sub">Login to your account</p>
 
-        <!-- báo lỗi -->
-        <div class="alert" th:if="${param.error}">
+        <!-- Alerts -->
+        <div class="alert alert--error" th:if="${param.error}">
             Sai username hoặc password.
         </div>
-        <div class="alert success" th:if="${param.logout}">
+        <div class="alert alert--success" th:if="${param.logout}">
             Bạn đã đăng xuất.
         </div>
 
-        <!-- Spring Security mặc định xử lý POST /login -->
-        <form th:action="@{/do-login}" method="post">
-            <label>Username</label>
-            <input type="email" name="username" placeholder="Email" required>
+        <!-- Form -->
+        <!-- giữ action như bạn đang dùng: /do-login -->
+        <!-- nếu Security config của bạn dùng loginProcessingUrl("/login") thì đổi thành th:action="@{/login}" -->
+        <form id="loginForm" class="form" th:action="@{/do-login}" method="post" novalidate>
+            <div class="field">
+                <label class="label" for="username">Username</label>
+                <div class="input-wrap">
+                    <input id="username" class="input" type="email" name="username" placeholder="Username" required>
+                </div>
+            </div>
 
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Password" required>
+            <div class="field">
+                <label class="label" for="password">Password</label>
+                <div class="input-wrap">
+                    <input id="password" class="input" type="password" name="password" placeholder="Password" required>
+                </div>
+            </div>
 
             <div class="row">
                 <label class="remember">
                     <input type="checkbox" name="remember-me">
-                    Remember me
+                    <span>Remember me</span>
                 </label>
+
                 <a class="link" th:href="@{/forgot-password}">Forgot password?</a>
             </div>
 
             <div class="btns">
-                <button class="btn primary" type="submit">Login</button>
-                <a class="btn ghost" th:href="@{/oauth2/authorization/google}">
-                <span class="g">G</span> Login with Google
+                <button id="loginBtn" class="btn btn--primary" type="submit">
+                    <span class="btn__text">Login</span>
+                    <span class="btn__spinner" aria-hidden="true"></span>
+                </button>
+
+                <a class="btn btn--google" th:href="@{/oauth2/authorization/google}">
+                    <span class="g">G</span>
+                    <span>Login with Google</span>
                 </a>
             </div>
 
             <p class="bottom">
                 Do not have an account ?
-                <a class="link" th:href="@{/register}">Sign up</a>
+                <a class="link link--accent" th:href="@{/register}">Sign up</a>
             </p>
         </form>
-    </div>
-</div>
+    </section>
+</main>
+
 </body>
 </html>
