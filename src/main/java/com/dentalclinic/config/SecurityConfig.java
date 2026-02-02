@@ -22,7 +22,6 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/dentist/**").hasRole("DENTIST")
                         .requestMatchers("/customer/**").hasRole("CUSTOMER")
-
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
