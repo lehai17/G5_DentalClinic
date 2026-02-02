@@ -5,6 +5,7 @@ import com.dentalclinic.model.service.Services;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -50,6 +51,23 @@ public class DentistAppointmentController {
 
         return "Dentist/examination";
     }
+    @PostMapping("/{id}/examination")
+    public String saveExamination(
+            @PathVariable Long id,
+            @RequestParam Long customerUserId,
+            @RequestParam Long dentistUserId,
+            @RequestParam String diagnosis,
+            @RequestParam String treatmentNote,
+            RedirectAttributes redirect
+    ) {
+        // TODO: gọi service lưu MedicalRecord
+
+        redirect.addFlashAttribute("successMessage", "Examination saved successfully");
+        return "redirect:/dentist/appointments/" + id
+                + "/examination?customerUserId=" + customerUserId
+                + "&dentistUserId=" + dentistUserId;
+    }
+
 
     // ================= BILLING =================
 
@@ -81,4 +99,22 @@ public class DentistAppointmentController {
 
         return "Dentist/billing-note";
     }
+    @PostMapping("/{id}/billing-transfer")
+    public String saveBillingTransfer(
+            @PathVariable Long id,
+            @RequestParam Long customerUserId,
+            @RequestParam Long dentistUserId,
+            @RequestParam String note,
+            @RequestParam String performedServicesJson,
+            @RequestParam String prescriptionNote,
+            RedirectAttributes redirect
+    ) {
+        // TODO: gọi service xử lý billing
+
+        redirect.addFlashAttribute("successMessage", "Billing note saved successfully");
+        return "redirect:/dentist/appointments/" + id
+                + "/billing-transfer?customerUserId=" + customerUserId
+                + "&dentistUserId=" + dentistUserId;
+    }
+
 }
