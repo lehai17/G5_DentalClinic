@@ -31,6 +31,9 @@ public class StaffScheduleController {
 
         model.addAttribute("dentists", staffScheduleService.getAllDentists());
 
+        model.addAttribute("selectedDentistId", dentistId);
+        model.addAttribute("selectedDate", date);
+
         if (dentistId != null && date != null) {
             List<Appointment> schedule =
                     staffScheduleService.getDentistSchedule(
