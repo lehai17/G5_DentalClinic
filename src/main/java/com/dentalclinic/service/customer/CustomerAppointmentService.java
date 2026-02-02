@@ -32,10 +32,10 @@ public class CustomerAppointmentService {
     private final ServiceRepository serviceRepository;
 
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
-                                     UserRepository userRepository,
-                                     AppointmentRepository appointmentRepository,
-                                     DentistScheduleRepository dentistScheduleRepository,
-                                     ServiceRepository serviceRepository) {
+                                      UserRepository userRepository,
+                                      AppointmentRepository appointmentRepository,
+                                      DentistScheduleRepository dentistScheduleRepository,
+                                      ServiceRepository serviceRepository) {
         this.customerProfileRepository = customerProfileRepository;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
@@ -67,6 +67,7 @@ public class CustomerAppointmentService {
         } else {
             schedules = dentistScheduleRepository.findByDate(date);
         }
+
         return schedules.stream()
                 .filter(DentistSchedule::isAvailable)
                 .filter(slot -> slot.getDentist() != null)
@@ -78,11 +79,12 @@ public class CustomerAppointmentService {
                     dto.setEndTime(slot.getEndTime());
                     dto.setDentistId(slot.getDentist().getId());
                     dto.setDentistName(slot.getDentist().getFullName());
-                    boolean busy = appointmentRepository.existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                            slot.getDentist().getId(),
-                            slot.getDate(),
-                            slot.getEndTime(),
-                            slot.getStartTime()
+
+                    // ✅ Slot được coi là bận nếu đã có appointment "còn hiệu lực"
+                    // (không tính CANCELLED -> hủy xong đặt lại được)
+                    boolean busy = appointmentRepository.existsBySlot_IdAndStatusNot(
+                            slot.getId(),
+                            AppointmentStatus.CANCELLED
                     );
                     dto.setAvailable(!busy);
                     return dto;
@@ -94,23 +96,33 @@ public class CustomerAppointmentService {
     @Transactional
     public AppointmentDto createAppointment(Long userId, CreateAppointmentRequest request) {
         CustomerProfile customer = getOrCreateCustomerProfile(userId);
+
         DentistSchedule slot = dentistScheduleRepository.findById(request.getSlotId())
                 .orElseThrow(() -> new IllegalArgumentException("Slot not found"));
+
         Services service = serviceRepository.findById(request.getServiceId())
                 .orElseThrow(() -> new IllegalArgumentException("Service not found"));
+
+        // ✅ Không cho phép đặt trùng slot nếu đã có appointment còn hiệu lực (không tính CANCELLED)
+        if (appointmentRepository.existsBySlot_IdAndStatusNot(slot.getId(), AppointmentStatus.CANCELLED)) {
+            throw new IllegalArgumentException("Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.");
+        }
 
         Appointment appointment = new Appointment();
         appointment.setCustomer(customer);
         appointment.setSlot(slot);
-        appointment.setDentist(slot.getDentist());
+
+        // Chưa gán bác sĩ ngay sau khi đặt – staff sẽ gán sau
         appointment.setService(service);
         appointment.setDate(slot.getDate());
         appointment.setStartTime(slot.getStartTime());
         appointment.setEndTime(slot.getEndTime());
         appointment.setStatus(AppointmentStatus.PENDING);
+
         appointment.setNotes(request.getPatientNote());
         appointment.setContactChannel(request.getContactChannel());
         appointment.setContactValue(request.getContactValue());
+
         appointment = appointmentRepository.save(appointment);
         return toDto(appointment);
     }
@@ -129,12 +141,32 @@ public class CustomerAppointmentService {
     public Optional<AppointmentDto> checkIn(Long userId, Long appointmentId) {
         Optional<Appointment> opt = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId);
         if (opt.isEmpty()) return Optional.empty();
+
         Appointment a = opt.get();
         LocalDate today = LocalDate.now();
+
         if (!a.getDate().equals(today) || a.getStatus() != AppointmentStatus.CONFIRMED) {
             return Optional.empty();
         }
+
         a.setStatus(AppointmentStatus.CHECKED_IN);
+        appointmentRepository.save(a);
+        return Optional.of(toDto(a));
+    }
+
+    @Transactional
+    public Optional<AppointmentDto> cancelAppointment(Long userId, Long appointmentId) {
+        Optional<Appointment> opt = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId);
+        if (opt.isEmpty()) return Optional.empty();
+
+        Appointment a = opt.get();
+
+        // Không hủy lại lịch đã hoàn thành / đã hủy
+        if (a.getStatus() == AppointmentStatus.COMPLETED || a.getStatus() == AppointmentStatus.CANCELLED) {
+            return Optional.empty();
+        }
+
+        a.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(a);
         return Optional.of(toDto(a));
     }
@@ -149,16 +181,20 @@ public class CustomerAppointmentService {
         dto.setNotes(a.getNotes());
         dto.setContactChannel(a.getContactChannel());
         dto.setContactValue(a.getContactValue());
+
         if (a.getService() != null) {
             dto.setServiceId(a.getService().getId());
             dto.setServiceName(a.getService().getName());
         }
+
         if (a.getDentist() != null) {
             dto.setDentistId(a.getDentist().getId());
             dto.setDentistName(a.getDentist().getFullName());
         }
+
         LocalDate today = LocalDate.now();
         dto.setCanCheckIn(a.getDate().equals(today) && a.getStatus() == AppointmentStatus.CONFIRMED);
+
         return dto;
     }
 }
