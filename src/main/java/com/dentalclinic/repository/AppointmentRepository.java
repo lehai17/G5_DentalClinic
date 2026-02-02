@@ -15,7 +15,6 @@ import java.util.Optional;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    /** Kiểm tra bác sĩ có bận trong khung giờ (SQL Server: cast time sang TIME). */
     @Query(
             value = """
         SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
@@ -40,10 +39,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             LocalTime startTime,
             LocalTime endTime
     ) {
+        // true nếu bác sĩ đã có lịch trùng khung giờ (bất kỳ appointment nào overlap)
         return countBusyAppointments(dentistId, date, startTime, endTime) > 0;
     }
 
+    /** Không cho phép 1 slot (DentistSchedule) có nhiều appointment còn hiệu lực (không tính CANCELLED). */
+    boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
 
+    // (Giữ lại nếu chỗ khác trong project đang gọi; không dùng cho rule mới)
+    boolean existsBySlot_Id(Long slotId);
 
     Optional<Appointment> findByIdAndCustomer_User_Id(
             Long appointmentId,
@@ -58,8 +62,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByCustomer_User_IdOrderByDateDesc(
             Long customerUserId
     );
-//    List<Appointment> findByCustomerId(Long customerId);
-    List<Appointment> findByCustomer_Id(Long customerProfileId);
+
+    List<Appointment> findByCustomerId(Long customerId);
+
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.customer c
