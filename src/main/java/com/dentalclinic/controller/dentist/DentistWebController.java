@@ -7,19 +7,24 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.dentalclinic.repository.UserRepository;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
+
 @Controller
 public class DentistWebController {
 
     private final AppointmentRepository appointmentRepository;
-
-    public DentistWebController(AppointmentRepository appointmentRepository) {
+    private final UserRepository userRepository;
+    public DentistWebController(AppointmentRepository appointmentRepository,UserRepository userRepository) {
         this.appointmentRepository = appointmentRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/dentist/work-schedule")
@@ -30,8 +35,16 @@ public class DentistWebController {
             Model model
     ) {
 
-        // ✅ FIX CỨNG để test
-        Long dentistUserId = 1L;
+        // ===== LẤY DENTIST ĐANG LOGIN (KHÔNG FIX CỨNG)
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName(); // email đăng nhập
+
+        Long dentistUserId = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Dentist not found"))
+                .getId();
+
 
         // ===== SNAP TUẦN
         LocalDate base = (weekStart != null) ? weekStart : LocalDate.now();
