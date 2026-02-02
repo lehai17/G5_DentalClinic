@@ -4,6 +4,7 @@ import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.service.Services;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,6 +23,7 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "dentist_id")
+    @JsonIgnore
     private DentistProfile dentist;
 
     @ManyToOne

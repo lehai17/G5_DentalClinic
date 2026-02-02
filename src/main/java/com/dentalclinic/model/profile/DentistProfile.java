@@ -2,6 +2,7 @@ package com.dentalclinic.model.profile;
 
 import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -43,6 +44,7 @@ public class DentistProfile {
     }
 
     // 1. Quan hệ với lịch làm việc (Sửa lỗi "Cannot resolve symbol schedules")
+    @JsonIgnore
     @OneToMany(mappedBy = "dentist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DentistSchedule> schedules;
 
