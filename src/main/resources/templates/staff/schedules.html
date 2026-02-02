@@ -7,24 +7,25 @@
 <body>
 <div class="app-wrapper">
 
-    <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+    <div th:replace="~{staff/fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <div th:replace="staff/fragments/header :: header"></div>
+        <div th:replace="~{staff/fragments/header :: header}"></div>
 
         <div class="content">
-            <h2>👨‍⚕️ Lịch làm việc bác sĩ</h2>
+            <h2>️ Lịch làm việc bác sĩ</h2>
 
             <form method="get" th:action="@{/staff/schedules}" class="schedule-filter">
                 <select name="dentistId" required>
                     <option value="">-- Chọn bác sĩ --</option>
                     <option th:each="d : ${dentists}"
                             th:value="${d.id}"
-                            th:text="${d.fullName}">
+                            th:text="${d.fullName}"
+                            th:selected="${d.id==selectedDentistId}">
                     </option>
                 </select>
 
-                <input type="date" name="date" required/>
+                <input type="date" name="date" th:value="${selectedDate}" required/>
 
                 <button type="submit">Xem</button>
             </form>
