@@ -2,6 +2,7 @@ package com.dentalclinic.service.mail;
 
 import com.dentalclinic.model.appointment.Appointment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -11,26 +12,19 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     @Autowired
-    private JavaMailSender mailSender;
+    @Qualifier("supportMailSender")
+    private JavaMailSender supportMailSender;
 
-    // ✅ MAIL THẬT – dùng khi CONFIRM
     @Async
     public void sendAppointmentConfirmed(Appointment appointment) {
 
         SimpleMailMessage message = new SimpleMailMessage();
+
+        // ⚠️ FROM PHẢI TRÙNG USERNAME SMTP
         message.setFrom("lenguyendaihai17@gmail.com");
 
-        String toEmail = appointment.getCustomer() != null &&
-                appointment.getCustomer().getUser() != null
-                ? appointment.getCustomer().getUser().getEmail()
-                : null;
-
-        if (toEmail == null || toEmail.isBlank()) {
-            throw new RuntimeException("Customer email not found");
-        }
-
+        String toEmail = appointment.getCustomer().getUser().getEmail();
         message.setTo(toEmail);
-
 
         message.setSubject("Xác nhận lịch khám - Dental Clinic");
 
@@ -44,8 +38,6 @@ public class EmailService {
             📅 Ngày khám: %s
             ⏰ Thời gian: %s - %s
 
-            Vui lòng đến trước 10 phút.
-
             Trân trọng,
             Dental Clinic
             """.formatted(
@@ -57,18 +49,6 @@ public class EmailService {
                 appointment.getEndTime()
         ));
 
-        mailSender.send(message);
-    }
-
-    // 🧪 MAIL TEST (giữ lại để debug)
-    @Async
-    public void sendTestMail() {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("lenguyendaihai17@gmail.com");
-        message.setTo("hailndhe182237@fpt.edu.vn");
-        message.setSubject("Test gửi mail từ DentalClinic");
-        message.setText("Test mail OK");
-
-        mailSender.send(message);
+        supportMailSender.send(message);
     }
 }
