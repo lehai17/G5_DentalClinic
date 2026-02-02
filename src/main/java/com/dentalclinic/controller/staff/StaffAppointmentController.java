@@ -130,11 +130,6 @@ public class StaffAppointmentController {
         staffAppointmentService.cancelAppointment(id, reason);
     }
 
-    @GetMapping("/test-mail")
-    @ResponseBody
-    public String testMail() {
-        emailService.sendTestMail();
-        return "TEST MAIL SENT";
-    }
+
 
 }
