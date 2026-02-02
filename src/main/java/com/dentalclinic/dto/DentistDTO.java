@@ -1,5 +1,8 @@
 package com.dentalclinic.dto;
 
+import jakarta.persistence.Column;
+
+import java.time.LocalDate;
 import java.util.List;
 
 public class DentistDTO {
@@ -104,4 +107,25 @@ public class DentistDTO {
     private List<String> availableDays; // List các ngày như "Mon", "Tue"...
     private String shiftStartTime;
     private String shiftEndTime;
+    @Column(name = "date_of_birth")
+    private LocalDate dob;
+
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    @Column(name = "gender")
+    private String gender;
 }
