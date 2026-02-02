@@ -39,7 +39,7 @@ public class CustomerHomepageController {
         return "redirect:/homepage";
     }
 
-    @GetMapping("/customer/homepage")
+    @GetMapping({"/homepage", "/customer/homepage"})
     public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
         // Sử dụng một ID giả lập hoặc lấy từ Security nếu có
         Long currentCustomerId = 3L;
