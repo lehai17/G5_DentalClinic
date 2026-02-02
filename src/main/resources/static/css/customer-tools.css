@@ -1,0 +1,527 @@
+/* ========== Trang đặt lịch / lịch hẹn (cùng layout trang chủ) ========== */
+.customer-page-section {
+  padding: 32px 24px;
+  max-width: 1000px;
+  margin: 24px auto;
+  background: linear-gradient(135deg, #f9fafb 0%, #eff6ff 100%);
+  border-radius: 20px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+.customer-page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 24px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(148, 163, 184, 0.4);
+}
+.customer-detail-panel {
+  margin-top: 28px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.05);
+}
+.customer-detail-panel-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+}
+
+/* ========== Sidebar: menu items ========== */
+.customer-sidebar .customer-menu-item,
+.customer-sidebar .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #4b5563;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.customer-sidebar .customer-menu-item:hover,
+.customer-sidebar .menu-item:hover {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+  color: #667eea;
+  transform: translateX(2px);
+}
+.customer-sidebar .customer-menu-item:active,
+.customer-sidebar .menu-item:active {
+  transform: translateX(0);
+}
+.customer-sidebar .customer-menu-item i,
+.customer-sidebar .menu-item i {
+  font-size: 1.3rem;
+  min-width: 30px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+.customer-sidebar .customer-menu-item:hover i,
+.customer-sidebar .menu-item:hover i {
+  transform: scale(1.1);
+}
+
+/* ========== Modal ========== */
+.customer-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.customer-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.customer-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+.customer-modal.is-open .customer-modal-backdrop:hover {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.customer-modal-box {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.customer-modal.is-open .customer-modal-box {
+  transform: scale(1);
+}
+.customer-modal-box--wide {
+  max-width: 560px;
+}
+.customer-modal-box--booking {
+  max-width: 520px;
+}
+
+.customer-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+}
+.customer-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+.customer-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 6px;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.customer-modal-close:hover {
+  background: #f3f4f6;
+  color: #111;
+}
+
+.customer-modal-body {
+  padding: 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.customer-form-row {
+  margin-bottom: 16px;
+}
+.customer-form-row label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+.customer-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.customer-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+.required { color: #dc2626; }
+
+.customer-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  margin-right: 8px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+}
+.customer-btn:hover {
+  background: #f9fafb;
+}
+.customer-btn:active {
+  transform: scale(0.98);
+}
+.customer-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-color: transparent;
+}
+.customer-btn-primary:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%);
+  color: #fff;
+}
+
+.customer-modal-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ========== Stepper 5 bước ========== */
+.customer-booking-stepper {
+  margin-bottom: 22px;
+}
+.customer-stepper-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.customer-stepper-step {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.25s, color 0.25s, transform 0.2s;
+}
+.customer-stepper-step.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  transform: scale(1.08);
+}
+.customer-stepper-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  max-width: 24px;
+  border-radius: 1px;
+}
+.customer-stepper-label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* ========== Bảng lịch (calendar) ========== */
+.customer-calendar-wrap {
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fafbfc;
+}
+.customer-calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-bottom: 1px solid #e5e7eb;
+}
+.customer-calendar-nav-btn {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4b5563;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+.customer-calendar-nav-btn:hover {
+  background: #f9fafb;
+  border-color: #667eea;
+  color: #667eea;
+  transform: scale(1.05);
+}
+.customer-calendar-month-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+.customer-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.customer-calendar-table thead th {
+  padding: 10px 4px;
+  text-align: center;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.customer-calendar-table tbody td {
+  padding: 6px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+.customer-calendar-cell--empty {
+  background: #f9fafb;
+  color: #d1d5db;
+}
+.customer-calendar-cell--day {
+  cursor: pointer;
+  font-weight: 500;
+  color: #374151;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.customer-calendar-cell--day:hover {
+  background: #eef2ff;
+  color: #667eea;
+  transform: scale(1.1);
+}
+.customer-calendar-cell--past {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.customer-calendar-cell--past:hover {
+  background: #f9fafb;
+  color: #9ca3af;
+  transform: none;
+}
+
+/* ========== Bảng chọn giờ ========== */
+.customer-step-date-label {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+.customer-step-date-label strong { color: #374151; }
+.customer-times-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.customer-times-table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  border-bottom: 1px solid #e5e7eb;
+}
+.customer-times-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.customer-time-row {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.customer-time-row:hover {
+  background: #f0f4ff;
+}
+.customer-time-row.selected {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-left: 3px solid #667eea;
+}
+.customer-time-row:last-child td {
+  border-bottom: none;
+}
+
+.customer-loading, .customer-empty {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 12px 0;
+}
+
+/* ========== Trang đặt cọc ========== */
+.customer-deposit-message {
+  text-align: center;
+  padding: 24px 16px;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+.customer-deposit-message i {
+  font-size: 2.5rem;
+  color: #0284c7;
+  display: block;
+  margin-bottom: 12px;
+}
+.customer-deposit-message p {
+  margin: 0 0 8px;
+  color: #0c4a6e;
+  font-size: 1rem;
+}
+.customer-deposit-note {
+  font-size: 0.9rem !important;
+  color: #0369a1 !important;
+}
+
+/* ========== Thanh toán thành công ========== */
+.customer-success-message {
+  text-align: center;
+  padding: 28px 16px;
+  color: #059669;
+}
+.customer-success-message i {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 2px 4px rgba(5, 150, 105, 0.3));
+}
+.customer-success-title {
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 8px !important;
+}
+.customer-success-message p {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+.customer-success-desc { color: #374151 !important; }
+.customer-success-cta {
+  margin-top: 12px !important;
+  font-size: 1.05rem !important;
+  color: #1f2937 !important;
+}
+.customer-success-summary {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  text-align: left;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.customer-success-summary-title {
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 10px !important;
+  font-size: 0.95rem !important;
+}
+.customer-success-summary p {
+  margin: 0 0 6px !important;
+  font-size: 0.95rem !important;
+  color: #374151 !important;
+}
+.customer-success-summary p:last-child { margin-bottom: 0 !important; }
+
+/* ========== Danh sách lịch hẹn ========== */
+.customer-appointments-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.customer-appointments-list li {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.15s ease;
+}
+.customer-appointments-list li:hover {
+  background: #f9fafb;
+  border-color: #c7d2fe;
+  transform: translateX(4px);
+  box-shadow: 0 12px 30px rgba(148, 163, 184, 0.35);
+}
+.customer-appointments-list li.highlight-new {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+.customer-appointments-list li .apt-date { font-weight: 600; color: #374151; }
+.customer-appointments-list li .apt-service { color: #6b7280; font-size: 0.9rem; }
+.customer-appointments-list li .apt-status { font-size: 0.85rem; color: #6b7280; margin-top: 4px; }
+
+/* ========== Chi tiết lịch hẹn ========== */
+.customer-detail-dl {
+  margin: 0;
+}
+.customer-detail-dl dt {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-top: 12px;
+  margin-bottom: 2px;
+}
+.customer-detail-dl dt:first-child { margin-top: 0; }
+.customer-detail-dl dd {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Button style: primary & danger (hủy lịch) */
+.customer-btn-danger {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+.customer-btn-danger:hover {
+  background: #fecaca;
+  border-color: #fca5a5;
+  color: #7f1d1d;
+}

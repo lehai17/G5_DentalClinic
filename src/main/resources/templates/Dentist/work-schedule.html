@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Work Schedule</title>
+  <link rel="stylesheet" href="/css/app.css"/>
+</head>
+
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="brand-mini">
+        <div class="brand-badge">D+</div>
+        <div style="font-weight:800">DentalPlus</div>
+      </div>
+      <button id="sidebarToggle" class="icon-btn">☰</button>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item active">Work Schedule</a>
+      <a class="nav-item" href="/dentist/profile">Profile</a>
+    </nav>
+
+    <div style="margin-top:auto;">
+      <a class="nav-item danger" href="/logout">Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="topbar">
+      <div style="color:var(--muted);font-size:12px;">Modules › Work Schedule</div>
+      <div class="user-chip">
+        <div class="user-name" th:text="${dentistName}">Dentist</div>
+        <div class="user-sub">General Dentist</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <h2>Weekly Schedule</h2>
+      <div style="color:var(--muted);margin-bottom:10px;">
+        <span th:text="${#temporals.format(weekStart,'dd/MM/yyyy')}"></span>
+        -
+        <span th:text="${#temporals.format(weekEnd,'dd/MM/yyyy')}"></span>
+      </div>
+
+      <!-- WEEK SELECT -->
+      <div class="filter">
+        <div class="field">
+          <label>Week range</label>
+          <select id="weekSelect">
+            <option th:each="w : ${weekOptions}"
+                    th:value="${w.value}"
+                    th:text="${w.label}"
+                    th:selected="${w.value == selectedWeekStart}">
+            </option>
+          </select>
+        </div>
+        <input type="hidden" id="dentistUserIdHidden" th:value="${dentistUserId}">
+      </div>
+
+      <!-- SCHEDULE GRID -->
+      <div class="schedule-grid">
+        <div class="grid-head">
+          <div class="time-col"></div>
+          <div class="day-col"
+               th:each="d : ${days}"
+               th:text="${#temporals.format(d,'EEEE')}">
+          </div>
+        </div>
+
+        <div class="grid-body">
+          <div class="row" th:each="t : ${timeSlots}">
+            <div class="time-col"
+                 th:text="${#temporals.format(t,'HH:mm')}"></div>
+
+            <div class="cell" th:each="d : ${days}">
+              <th:block th:with="
+                key=${d.toString() + '_' + #temporals.format(t,'HH:mm')},
+                ev=${eventMap.get(key)}
+              ">
+                <div th:if="${ev != null}"
+                     class="appt"
+                     th:attr="
+                       data-appointment-id=${ev.appointmentId},
+                       data-patient-name=${ev.patientName},
+                       data-service-name=${ev.serviceName},
+                       data-customer-user-id=${ev.customerUserId},
+                       data-dentist-user-id=${dentistUserId}
+                     ">
+                  <div class="appt-name" th:text="${ev.patientName}"></div>
+                  <div class="appt-sub" th:text="${ev.serviceName}"></div>
+                </div>
+              </th:block>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div id="apptModalBackdrop" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div id="apptModalTitle" class="modal-title">Appointment</div>
+        <div id="apptModalSub" class="modal-sub">Choose action</div>
+      </div>
+      <button id="btnCloseModal" class="icon-btn">✕</button>
+    </div>
+
+    <div class="modal-actions">
+      <a id="btnBillingTransfer" class="btn">Service & Billing Transfer</a>
+      <a id="btnExamination" class="btn primary">Clinical Examination Process</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= JS INLINE (QUAN TRỌNG) ================= -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const backdrop = document.getElementById('apptModalBackdrop');
+    const btnClose = document.getElementById('btnCloseModal');
+    const title = document.getElementById('apptModalTitle');
+    const sub = document.getElementById('apptModalSub');
+    const btnExam = document.getElementById('btnExamination');
+    const btnBilling = document.getElementById('btnBillingTransfer');
+
+    function closeModal() {
+      backdrop.hidden = true;
+    }
+
+    btnClose.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    document.querySelectorAll('.appt').forEach(el => {
+      el.addEventListener('click', () => {
+
+        const appointmentId = el.dataset.appointmentId;
+        const patientName = el.dataset.patientName;
+        const serviceName = el.dataset.serviceName;
+        const customerUserId = el.dataset.customerUserId;
+        const dentistUserId = el.dataset.dentistUserId;
+
+        title.textContent = patientName;
+        sub.textContent = serviceName;
+
+        btnExam.href =
+                `/dentist/appointments/${appointmentId}/examination`
+                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
+
+        btnBilling.href =
+                `/dentist/appointments/${appointmentId}/billing-transfer`
+                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
+
+        backdrop.hidden = false;
+      });
+    });
+
+    document.getElementById('weekSelect')?.addEventListener('change', e => {
+      const weekStart = e.target.value;
+      const dentistUserId =
+              document.getElementById('dentistUserIdHidden').value;
+      window.location.href =
+              `/dentist/work-schedule?weekStart=${weekStart}&dentistUserId=${dentistUserId}`;
+    });
+
+  });
+</script>
+
+</body>
+</html>

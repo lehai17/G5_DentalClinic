@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DentistProfileRepository extends JpaRepository<DentistProfile, Long> {
@@ -19,6 +19,9 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
     List<DentistProfile> findByExperienceYearsGreaterThanEqual(int years);
 
     // 3. Kiểm tra hồ sơ tồn tại
+    // dùng trong toàn bộ flow hiện tại
+    Optional<DentistProfile> findByUser_Id(Long userId);
+
     boolean existsByUser_Id(Long userId);
 
     /**

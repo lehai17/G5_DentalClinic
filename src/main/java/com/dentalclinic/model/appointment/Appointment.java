@@ -2,6 +2,7 @@ package com.dentalclinic.model.appointment;
 
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.service.Services;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -27,6 +28,10 @@ public class Appointment {
     @JoinColumn(name = "service_id")
     private Services service;
 
+    @ManyToOne
+    @JoinColumn(name = "slot_id")
+    private DentistSchedule slot;
+
     @Column(name = "appointment_date")
     private LocalDate date;
 
@@ -41,6 +46,12 @@ public class Appointment {
 
     @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;
+
+    @Column(name = "contact_channel", length = 20)
+    private String contactChannel;
+
+    @Column(name = "contact_value", length = 100)
+    private String contactValue;
 
 
     public Long getId() { return id; }
@@ -61,4 +72,10 @@ public class Appointment {
     public void setStatus(AppointmentStatus status) { this.status = status; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public DentistSchedule getSlot() { return slot; }
+    public void setSlot(DentistSchedule slot) { this.slot = slot; }
+    public String getContactChannel() { return contactChannel; }
+    public void setContactChannel(String contactChannel) { this.contactChannel = contactChannel; }
+    public String getContactValue() { return contactValue; }
+    public void setContactValue(String contactValue) { this.contactValue = contactValue; }
 }

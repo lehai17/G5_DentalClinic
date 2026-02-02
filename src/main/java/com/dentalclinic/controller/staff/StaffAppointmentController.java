@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import com.dentalclinic.service.mail.EmailService;
+
 
 @Controller
 @RequestMapping("/staff")
@@ -13,6 +15,10 @@ public class StaffAppointmentController {
 
     @Autowired
     private StaffAppointmentService staffAppointmentService;
+
+    @Autowired
+    private EmailService emailService;
+
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -74,4 +80,12 @@ public class StaffAppointmentController {
             @RequestParam String reason) {
         staffAppointmentService.cancelAppointment(id, reason);
     }
+
+    @GetMapping("/test-mail")
+    @ResponseBody
+    public String testMail() {
+        emailService.sendTestMail();
+        return "TEST MAIL SENT";
+    }
+
 }

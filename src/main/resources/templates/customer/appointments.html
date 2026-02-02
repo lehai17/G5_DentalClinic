@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lịch hẹn của tôi - Nha Khoa ABC</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="customer-page-section">
+      <h1 class="customer-page-title">Lịch hẹn của tôi</h1>
+
+      <div id="customer-appointments-loading" class="customer-loading">Đang tải...</div>
+      <div id="customer-appointments-list-wrap" style="display:none;">
+        <ul id="customer-appointments-list" class="customer-appointments-list"></ul>
+        <p id="customer-appointments-empty" class="customer-empty" style="display:none;">Bạn chưa có lịch hẹn nào.</p>
+      </div>
+
+      <div id="customer-detail-panel" class="customer-detail-panel" style="display:none;">
+        <h2 class="customer-detail-panel-title">Chi tiết lịch hẹn</h2>
+        <div id="customer-detail-loading" class="customer-loading">Đang tải...</div>
+        <div id="customer-detail-content" style="display:none;">
+          <dl class="customer-detail-dl">
+            <dt>Dịch vụ</dt>
+            <dd id="customer-detail-service"></dd>
+            <dt>Bác sĩ</dt>
+            <dd id="customer-detail-dentist"></dd>
+            <dt>Ngày</dt>
+            <dd id="customer-detail-date"></dd>
+            <dt>Giờ</dt>
+            <dd id="customer-detail-time"></dd>
+            <dt>Trạng thái</dt>
+            <dd id="customer-detail-status"></dd>
+            <dt>Liên hệ</dt>
+            <dd id="customer-detail-contact"></dd>
+            <dd id="customer-detail-notes" style="margin-top:8px;"></dd>
+          </dl>
+          <div id="customer-detail-checkin-wrap" style="display:none;" class="customer-modal-actions">
+            <button type="button" id="customer-detail-checkin-btn" class="customer-btn customer-btn-primary">Check-in online</button>
+          </div>
+          <div id="customer-detail-cancel-wrap" style="display:none;" class="customer-modal-actions">
+            <button type="button" id="customer-detail-cancel-btn" class="customer-btn customer-btn-danger">Hủy lịch</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script th:src="@{/js/customer-appointments.js}"></script>
+</body>
+</html>

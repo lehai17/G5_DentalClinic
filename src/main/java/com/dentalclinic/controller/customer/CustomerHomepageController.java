@@ -39,7 +39,7 @@ public class CustomerHomepageController {
         return "redirect:/homepage";
     }
 
-    @GetMapping("/homepage")
+    @GetMapping("/customer/homepage")
     public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
         // Sử dụng một ID giả lập hoặc lấy từ Security nếu có
         Long currentCustomerId = 3L;
@@ -81,5 +81,18 @@ public class CustomerHomepageController {
             model.addAttribute("totalPages", 0);
             return "customer/homepage";
         }
+    }
+
+    /** Trang đặt lịch khám (cùng layout với trang chủ) */
+    @GetMapping("/customer/book")
+    public String bookingPage(Model model) {
+        model.addAttribute("services", serviceRepo.findAll());
+        return "customer/booking";
+    }
+
+    /** Trang lịch hẹn của tôi (cùng layout với trang chủ). Dùng /my-appointments để tránh trùng GET /customer/appointments (API JSON). */
+    @GetMapping("/customer/my-appointments")
+    public String appointmentsPage() {
+        return "customer/appointments";
     }
 }
