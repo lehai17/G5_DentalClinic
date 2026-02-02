@@ -58,7 +58,8 @@
                         </button>
 
 
-                        <button th:onclick="'cancelAppointment(' + ${a.id} + ')'">
+                        <button th:if="${a.status.name() == 'PENDING'}"
+                                th:onclick="'cancelAppointment(' + ${a.id} + ')'">
                             Hủy
                         </button>
                     </td>

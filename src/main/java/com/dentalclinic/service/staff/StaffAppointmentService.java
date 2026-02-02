@@ -5,6 +5,7 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.service.mail.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,10 @@ public class StaffAppointmentService {
 
     @Autowired
     private DentistProfileRepository dentistProfileRepository;
+
+    @Autowired
+    private EmailService emailService;
+
 
     /* VIEW ALL APPOINTMENTS (STAFF) */
     public List<Appointment> getAllAppointments() {
@@ -39,6 +44,8 @@ public class StaffAppointmentService {
 
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointmentRepository.save(appointment);
+
+        emailService.sendAppointmentConfirmed(appointment);
     }
 
     /* ASSIGN / REASSIGN DENTIST */
