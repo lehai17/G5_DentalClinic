@@ -1,7 +1,10 @@
 package com.dentalclinic.model.profile;
 
+import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "dentist_profile")
@@ -29,6 +32,19 @@ public class DentistProfile {
 
     @Column(name = "bio", columnDefinition = "NVARCHAR(MAX)")
     private String bio;
+    // --- PHẦN THÊM MỚI ---
+
+    public List<DentistSchedule> getSchedules() {
+        return schedules;
+    }
+
+    public void setSchedules(List<DentistSchedule> schedules) {
+        this.schedules = schedules;
+    }
+
+    // 1. Quan hệ với lịch làm việc (Sửa lỗi "Cannot resolve symbol schedules")
+    @OneToMany(mappedBy = "dentist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<DentistSchedule> schedules;
 
 
     public Long getId() { return id; }

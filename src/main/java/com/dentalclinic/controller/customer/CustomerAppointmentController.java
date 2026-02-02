@@ -7,7 +7,6 @@ import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -112,6 +111,20 @@ public class CustomerAppointmentController {
         Optional<AppointmentDto> result = customerAppointmentService.checkIn(userId, id);
         if (result.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Check-in not allowed (wrong date or status)"));
+        }
+        return ResponseEntity.ok(result.get());
+    }
+
+    /** POST /customer/appointments/{id}/cancel */
+    @PostMapping("/appointments/{id}/cancel")
+    public ResponseEntity<?> cancel(@PathVariable Long id, HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        Optional<AppointmentDto> result = customerAppointmentService.cancelAppointment(userId, id);
+        if (result.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Không thể hủy lịch hẹn này."));
         }
         return ResponseEntity.ok(result.get());
     }

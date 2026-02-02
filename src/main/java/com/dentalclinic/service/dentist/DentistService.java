@@ -81,4 +81,36 @@ public class DentistService {
         }
         return null;
     }
+    public List<DentistProfile> searchDentists(String specialty, String statusStr) {
+        UserStatus status = null;
+        if (statusStr != null && !statusStr.isEmpty()) {
+            try {
+                status = UserStatus.valueOf(statusStr.toUpperCase()); // Chuyển String sang Enum
+            } catch (IllegalArgumentException e) {
+                status = null;
+            }
+        }
+
+        // Nếu specialty là chuỗi rỗng, gán null để Repository bỏ qua điều kiện lọc
+        String specialtyParam = (specialty != null && !specialty.isEmpty()) ? specialty : null;
+
+        return dentistProfileRepository.filterDentists(specialtyParam, status);
+    }
+
+    // Hàm đếm số lượng cho Stat Cards
+    public long countByStatus(String statusStr) {
+        try {
+            return dentistProfileRepository.countByUserStatus(UserStatus.valueOf(statusStr.toUpperCase()));
+        } catch (Exception e) { return 0; }
+    }
+    public void deactivateDentist(Long userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            // Cập nhật trạng thái người dùng thành LOCKED
+            user.setStatus(UserStatus.LOCKED);
+            userRepository.save(user);
+
+            // Log thông báo hoặc xử lý logic phụ nếu cần (ví dụ: hủy lịch hẹn tương lai)
+            System.out.println("Đã khóa tài khoản bác sĩ có User ID: " + userId);
+        });
+    }
 }

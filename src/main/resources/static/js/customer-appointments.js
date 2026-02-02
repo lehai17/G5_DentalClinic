@@ -70,6 +70,8 @@
         set('customer-detail-notes', data.notes || '—');
         var checkinWrap = document.getElementById('customer-detail-checkin-wrap');
         var checkinBtn = document.getElementById('customer-detail-checkin-btn');
+        var cancelWrap = document.getElementById('customer-detail-cancel-wrap');
+        var cancelBtn = document.getElementById('customer-detail-cancel-btn');
         if (data.canCheckIn && checkinWrap && checkinBtn) {
           checkinWrap.style.display = '';
           checkinBtn.onclick = function () {
@@ -94,6 +96,34 @@
               });
           };
         } else if (checkinWrap) checkinWrap.style.display = 'none';
+
+        // Hủy lịch hẹn
+        if (cancelWrap && cancelBtn && (data.status !== 'CANCELLED' && data.status !== 'COMPLETED')) {
+          cancelWrap.style.display = '';
+          cancelBtn.onclick = function () {
+            if (!confirm('Bạn có chắc chắn muốn hủy lịch hẹn này không?')) return;
+            cancelBtn.disabled = true;
+            fetch('/customer/appointments/' + id + '/cancel', { method: 'POST', credentials: 'same-origin' })
+              .then(function (res) {
+                if (res.status === 401) { alert('Bạn cần đăng nhập.'); cancelBtn.disabled = false; return null; }
+                if (!res.ok) return res.json().then(function (e) { throw new Error(e.error || 'Hủy lịch thất bại'); });
+                return res.json();
+              })
+              .then(function (updated) {
+                cancelBtn.disabled = false;
+                if (!updated) return;
+                set('customer-detail-status', updated.status || 'CANCELLED');
+                cancelWrap.style.display = 'none';
+                loadAppointments();
+              })
+              .catch(function (err) {
+                cancelBtn.disabled = false;
+                alert(err.message || 'Hủy lịch thất bại.');
+              });
+          };
+        } else if (cancelWrap) {
+          cancelWrap.style.display = 'none';
+        }
       })
       .catch(function () {
         if (loading) loading.style.display = 'none';

@@ -12,36 +12,57 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequestMapping("/admin/dentists") // Sửa lại để quản lý tập trung chuyên mục Dentist
+@RequestMapping("/admin/dentists")
 public class AdminUserController {
 
     @Autowired
     private DentistProfileRepository dentistProfileRepository;
 
     @Autowired
-    private DentistService dentistService; // BỔ SUNG: Khai báo Service để gọi hàm save
+    private DentistService dentistService;
 
-    // 1. Hiển thị danh sách: localhost:8080/admin/dentists
+    // 1. Hiển thị danh sách kèm bộ lọc Tìm kiếm
     @GetMapping
-    public String showDentistList(Model model) {
-        List<DentistProfile> dentists = dentistProfileRepository.findAll();
+    public String showDentistList(
+            @RequestParam(value = "specialty", required = false) String specialty,
+            @RequestParam(value = "status", required = false) String status,
+            Model model) {
+
+        // Gọi Service xử lý lọc dữ liệu an toàn
+        List<DentistProfile> dentists = dentistService.searchDentists(specialty, status);
+
         model.addAttribute("dentists", dentists);
-        model.addAttribute("totalDentists", dentists.size());
+        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thái Dropdown
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("activePage", "dentists"); // Làm sáng Menu Sidebar
+
+        // Cập nhật số liệu thực tế cho Stat Cards
+        model.addAttribute("totalDentists", dentistProfileRepository.count());
+        model.addAttribute("onDutyCount", dentistService.countByStatus("ACTIVE"));
+
         return "admin/dentist-list";
     }
 
-    // 2. Hiển thị Form thêm mới: localhost:8080/admin/dentists/add
+    // 2. Hiển thị Form thêm mới
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("dentistDTO", new DentistDTO());
+        model.addAttribute("activePage", "dentists");
         return "admin/add-dentist";
     }
 
-    // 3. Xử lý lưu dữ liệu: localhost:8080/admin/dentists/save
+    // 3. Xử lý lưu dữ liệu
     @PostMapping("/save")
     public String processAddDentist(@ModelAttribute("dentistDTO") DentistDTO dto) {
-        // SỬA LỖI: Sử dụng biến đối tượng dentistService (chữ d viết thường)
         dentistService.saveDentist(dto);
+        return "redirect:/admin/dentists";
+    }
+
+    // 4. Xử lý khóa tài khoản bác sĩ
+    @PostMapping("/lock/{id}")
+    public String lockDentist(@PathVariable("id") Long userId) {
+        // Sử dụng chung logic khóa từ hệ thống (trạng thái User sang LOCKED)
+        dentistService.deactivateDentist(userId);
         return "redirect:/admin/dentists";
     }
 }
