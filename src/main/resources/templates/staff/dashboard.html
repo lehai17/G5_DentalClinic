@@ -13,19 +13,39 @@
         <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
 
         <div class="content">
-            <h2> Tổng quan hôm nay</h2>
+            <h2> Tổng quan</h2>
+
+            <form method="get" th:action="@{/staff/dashboard}" class="filter-bar">
+                <label>Xem theo:</label>
+                <select name="view" onchange="this.form.submit()">
+                    <option value="today" th:selected="${view == 'today'}">Hôm nay</option>
+                    <option value="week" th:selected="${view == 'week'}">Tuần này</option>
+                    <option value="month" th:selected="${view == 'month'}">Tháng này</option>
+                </select>
+            </form>
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Lịch hôm nay</div>
-                    <div class="stat-number" th:text="${todayCount}">0</div>
+                    <div class="stat-label">Tổng lịch</div>
+                    <div class="stat-number" th:text="${totalCount}">0</div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card warning">
                     <div class="stat-label">Chờ xác nhận</div>
                     <div class="stat-number" th:text="${pendingCount}">0</div>
                 </div>
+
+                <div class="stat-card success">
+                    <div class="stat-label">Hoàn thành</div>
+                    <div class="stat-number" th:text="${completedCount}">0</div>
+                </div>
+
+                <div class="stat-card danger">
+                    <div class="stat-label">Đã hủy</div>
+                    <div class="stat-number" th:text="${cancelledCount}">0</div>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
