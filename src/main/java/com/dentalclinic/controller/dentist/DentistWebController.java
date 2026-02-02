@@ -71,6 +71,15 @@ public class DentistWebController {
         for (Appointment a : appts) {
             String key = a.getDate() + "_" + a.getStartTime().format(tf);
 
+            if (eventMap.containsKey(key)) {
+                ScheduleEventResponse existing = eventMap.get(key);
+
+                // 🔒 COMPLETED luôn thắng
+                if ("COMPLETED".equals(existing.getStatus())) {
+                    continue;
+                }
+            }
+
             eventMap.put(key, new ScheduleEventResponse(
                     a.getId(),
                     a.getCustomer().getUser().getId(),
@@ -82,6 +91,7 @@ public class DentistWebController {
                     a.getStatus().name()
             ));
         }
+
 
         // ===== MODEL
         model.addAttribute("dentistUserId", dentistUserId);

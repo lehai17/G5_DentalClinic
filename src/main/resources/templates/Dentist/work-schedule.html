@@ -177,10 +177,6 @@
 
         const status = el.dataset.status;
 
-        // 🔒 nếu đã billing xong → không cho vào
-        if (status === 'COMPLETED') {
-          return; // không mở modal
-        }
 
         const appointmentId = el.dataset.appointmentId;
         const patientName = el.dataset.patientName;
@@ -209,7 +205,8 @@
       const dentistUserId =
               document.getElementById('dentistUserIdHidden').value;
       window.location.href =
-              `/dentist/work-schedule?weekStart=${weekStart}&dentistUserId=${dentistUserId}`;
+              `/dentist/work-schedule?weekStart=${weekStart}`;
+
     });
 
   });

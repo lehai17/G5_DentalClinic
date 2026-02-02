@@ -38,6 +38,8 @@
   <form id="examForm" method="post" th:action="@{/dentist/appointments/{id}/examination(id=${appointmentId})}">
     <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
     <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
+    <input type="hidden" id="appointmentStatus"
+           th:value="${appointmentStatus}">
 
     <!-- ✅ primary diagnosis -->
     <div class="section">
@@ -335,6 +337,20 @@
     }
   });
 
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const status = document.getElementById('appointmentStatus')?.value;
+
+    if (status === 'COMPLETED') {
+      document.querySelectorAll('input, textarea, select').forEach(el => {
+        el.disabled = true;
+      });
+
+      const saveBtn = document.querySelector('button[type="submit"]');
+      if (saveBtn) saveBtn.style.display = 'none';
+    }
+  });
 </script>
 
 </body>

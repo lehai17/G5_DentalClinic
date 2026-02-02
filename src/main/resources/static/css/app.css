@@ -143,19 +143,18 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 #btnBillingTransfer{
     order: 2;   /* bên phải */
 }
-/* ===== APPOINTMENT COMPLETED ===== */
 .appt-completed {
-    background: #e5e7eb;          /* xám nhạt */
-    border: 1px solid #9ca3af;
-    cursor: not-allowed;
-    opacity: 0.8;
+    background: #ecfdf5;          /* xanh lục nhạt */
+    border: 1px solid #22c55e;    /* xanh lục đậm */
+    opacity: 1;
 }
 
 .appt-completed .appt-name {
-    color: #374151;
-    text-decoration: line-through;
+    color: #166534;               /* xanh đậm */
+    text-decoration: none;        /* ❌ bỏ gạch */
 }
 
 .appt-completed .appt-sub {
-    color: #6b7280;
+    color: #15803d;
 }
+
