@@ -283,52 +283,58 @@
 
   // ---- Build payload on submit -> store into treatmentNote ----
   document.getElementById('examForm').addEventListener('submit', (e) => {
-    const payload = {};
+    try {
+      const payload = {};
 
-    payload.secondaryDiagnosis = document.getElementById('secondaryDiagnosis').value.trim();
+      payload.secondaryDiagnosis = document.getElementById('secondaryDiagnosis').value.trim();
 
-    payload.complaint = {
-      code: document.getElementById('complaintCode').value,
-      note: document.getElementById('complaintNote').value.trim()
-    };
+      payload.complaint = {
+        code: document.getElementById('complaintCode').value,
+        note: document.getElementById('complaintNote').value.trim()
+      };
 
-    payload.findings = [];
-    document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
-      const toothNo = tr.querySelector('.f-tooth').value.trim();
-      const condition = tr.querySelector('.f-cond').value.trim();
-      const severity = tr.querySelector('.f-sev').value;
-      const note = tr.querySelector('.f-note').value.trim();
-      if(toothNo || condition || severity || note){
-        payload.findings.push({ toothNo, condition, severity, note });
-      }
-    });
+      payload.findings = [];
+      document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
+        const toothNo = tr.querySelector('.f-tooth').value.trim();
+        const condition = tr.querySelector('.f-cond').value.trim();
+        const severity = tr.querySelector('.f-sev').value;
+        const note = tr.querySelector('.f-note').value.trim();
+        if (toothNo || condition || severity || note) {
+          payload.findings.push({ toothNo, condition, severity, note });
+        }
+      });
 
-    payload.proposedServices = [];
-    document.querySelectorAll('.prop-check').forEach(ch => {
-      if(ch.checked){
-        payload.proposedServices.push({ serviceId: Number(ch.dataset.serviceId) });
-      }
-    });
+      payload.proposedServices = [];
+      document.querySelectorAll('.prop-check').forEach(ch => {
+        if (ch.checked) {
+          payload.proposedServices.push({ serviceId: Number(ch.dataset.serviceId) });
+        }
+      });
 
-    payload.clinicalNotes = document.getElementById('clinicalNotes').value;
+      payload.clinicalNotes = document.getElementById('clinicalNotes').value;
 
-    payload.images = [];
-    document.querySelectorAll('#imgTable tbody tr').forEach(tr => {
-      const url = tr.querySelector('.i-url').value.trim();
-      const type = tr.querySelector('.i-type').value;
-      const note = tr.querySelector('.i-note').value.trim();
-      if(url || type || note){
-        payload.images.push({ url, type, note });
-      }
-    });
+      payload.images = [];
+      document.querySelectorAll('#imgTable tbody tr').forEach(tr => {
+        const url = tr.querySelector('.i-url').value.trim();
+        const type = tr.querySelector('.i-type').value;
+        const note = tr.querySelector('.i-note').value.trim();
+        if (url || type || note) {
+          payload.images.push({ url, type, note });
+        }
+      });
 
-    payload.followUp = {
-      date: document.getElementById('followUpDate').value,
-      reason: document.getElementById('followUpReason').value.trim()
-    };
+      payload.followUp = {
+        date: document.getElementById('followUpDate').value,
+        reason: document.getElementById('followUpReason').value.trim()
+      };
 
-    document.getElementById('payloadTreatmentNote').value = JSON.stringify(payload);
+      document.getElementById('payloadTreatmentNote').value = JSON.stringify(payload);
+    } catch (err) {
+      alert("Error preparing examination data. Data was NOT saved.");
+      e.preventDefault();
+    }
   });
+
 </script>
 
 </body>

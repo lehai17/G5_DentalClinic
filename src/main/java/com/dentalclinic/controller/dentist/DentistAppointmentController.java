@@ -1,11 +1,16 @@
 package com.dentalclinic.controller.dentist;
 
-import com.dentalclinic.repository.ServicesRepository;
+import com.dentalclinic.model.medical.MedicalRecord;
 import com.dentalclinic.model.service.Services;
+import com.dentalclinic.repository.ServicesRepository;
+import com.dentalclinic.service.medical.MedicalRecordService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.appointment.AppointmentStatus;
+import com.dentalclinic.repository.AppointmentRepository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -16,13 +21,25 @@ import java.util.List;
 public class DentistAppointmentController {
 
     private final ServicesRepository servicesRepository;
-
-    public DentistAppointmentController(ServicesRepository servicesRepository) {
+    private final MedicalRecordService medicalRecordService;
+    private final AppointmentRepository appointmentRepository;
+    public DentistAppointmentController(
+            ServicesRepository servicesRepository,
+            MedicalRecordService medicalRecordService,
+            AppointmentRepository appointmentRepository
+    ) {
         this.servicesRepository = servicesRepository;
+        this.medicalRecordService = medicalRecordService;
+        this.appointmentRepository = appointmentRepository;
     }
 
     // ================= EXAMINATION =================
 
+    /**
+     * VIEW examination page
+     * - Nếu đã có MedicalRecord → load lại dữ liệu
+     * - Nếu chưa có → form trống
+     */
     @GetMapping("/{id}/examination")
     public String examinationPage(
             @PathVariable Long id,
@@ -30,8 +47,11 @@ public class DentistAppointmentController {
             @RequestParam Long dentistUserId,
             Model model
     ) {
+        // ===== services list (cho propose service)
         List<Services> services = servicesRepository.findAll();
+        model.addAttribute("services", services);
 
+        // ===== basic appointment info (demo / tạm)
         model.addAttribute("appointmentId", id);
         model.addAttribute("customerUserId", customerUserId);
         model.addAttribute("dentistUserId", dentistUserId);
@@ -42,15 +62,31 @@ public class DentistAppointmentController {
         model.addAttribute("endTime", LocalTime.of(9, 0));
         model.addAttribute("requestedServiceName", "");
 
-        // 🔥 QUAN TRỌNG
-        model.addAttribute("services", services);
+        // ===== LOAD medical record nếu đã tồn tại
+        MedicalRecord record =
+                medicalRecordService
+                        .findByAppointmentId(id)
+                        .orElse(null);
 
+        if (record != null) {
+            model.addAttribute("diagnosis", record.getDiagnosis());
+            model.addAttribute("treatmentNote", record.getTreatmentNote());
+        } else {
+            model.addAttribute("diagnosis", "");
+            model.addAttribute("treatmentNote", "");
+        }
+
+        // ===== history (sau làm tiếp)
         model.addAttribute("historyRecords", List.of());
-        model.addAttribute("diagnosis", "");
-        model.addAttribute("treatmentNote", "");
 
         return "Dentist/examination";
     }
+
+    /**
+     * SAVE examination
+     * - UPSERT theo appointment
+     * - KHÔNG tạo record mới nếu đã tồn tại
+     */
     @PostMapping("/{id}/examination")
     public String saveExamination(
             @PathVariable Long id,
@@ -60,14 +96,21 @@ public class DentistAppointmentController {
             @RequestParam String treatmentNote,
             RedirectAttributes redirect
     ) {
-        // TODO: gọi service lưu MedicalRecord
+        medicalRecordService.saveOrUpdate(
+                id,
+                diagnosis,
+                treatmentNote
+        );
 
-        redirect.addFlashAttribute("successMessage", "Examination saved successfully");
+        redirect.addFlashAttribute(
+                "successMessage",
+                "Examination saved successfully"
+        );
+
         return "redirect:/dentist/appointments/" + id
                 + "/examination?customerUserId=" + customerUserId
                 + "&dentistUserId=" + dentistUserId;
     }
-
 
     // ================= BILLING =================
 
@@ -90,7 +133,6 @@ public class DentistAppointmentController {
         model.addAttribute("endTime", LocalTime.of(9, 0));
         model.addAttribute("requestedServiceName", "");
 
-        // 🔥 QUAN TRỌNG
         model.addAttribute("services", services);
 
         model.addAttribute("note", "");
@@ -99,6 +141,7 @@ public class DentistAppointmentController {
 
         return "Dentist/billing-note";
     }
+
     @PostMapping("/{id}/billing-transfer")
     public String saveBillingTransfer(
             @PathVariable Long id,
@@ -109,12 +152,21 @@ public class DentistAppointmentController {
             @RequestParam String prescriptionNote,
             RedirectAttributes redirect
     ) {
-        // TODO: gọi service xử lý billing
+        // 🔒 KHÓA APPOINTMENT SAU KHI BILLING
+        Appointment appointment = appointmentRepository
+                .findById(id)
+                .orElseThrow();
 
-        redirect.addFlashAttribute("successMessage", "Billing note saved successfully");
-        return "redirect:/dentist/appointments/" + id
-                + "/billing-transfer?customerUserId=" + customerUserId
-                + "&dentistUserId=" + dentistUserId;
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+        appointmentRepository.save(appointment);
+
+        redirect.addFlashAttribute(
+                "successMessage",
+                "Billing note saved successfully"
+        );
+
+        return "redirect:/dentist/work-schedule";
     }
+
 
 }

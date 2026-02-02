@@ -110,11 +110,14 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .modal{
     background:#fff;border-radius:16px;border:1px solid var(--line);
     box-shadow:0 18px 60px rgba(2,6,23,.3);
-    padding:16px;max-width:420px;width:100%;
+    padding:16px;
+    max-width:560px;   /* 🔥 MỞ RỘNG RA ĐỂ ĐỦ CHỖ */
+    width:100%;
 }
+
 .modal-title{font-weight:900;font-size:18px}
 .modal-sub{color:var(--muted);margin-top:4px}
-.modal-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.modal-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:nowrap}
 
 /* ✅ Nút X dùng trong MODAL (trên nền trắng) */
 .modal .icon-btn{
@@ -124,4 +127,35 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 }
 .modal .icon-btn:hover{
     background:rgba(15,23,42,.05);
+}
+/* FIX modal action buttons overflow */
+.modal-actions .btn{
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;   /* 🔥 GIỮ CÙNG 1 DÒNG */
+    text-align: center;
+}
+
+#btnExamination{
+    order: 1;   /* bên trái */
+}
+
+#btnBillingTransfer{
+    order: 2;   /* bên phải */
+}
+/* ===== APPOINTMENT COMPLETED ===== */
+.appt-completed {
+    background: #e5e7eb;          /* xám nhạt */
+    border: 1px solid #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.appt-completed .appt-name {
+    color: #374151;
+    text-decoration: line-through;
+}
+
+.appt-completed .appt-sub {
+    color: #6b7280;
 }

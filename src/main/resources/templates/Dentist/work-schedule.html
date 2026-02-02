@@ -11,8 +11,10 @@
 <div class="app-shell">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-top">
+  <aside class="sidebar" id="sidebar"
+         style="display:flex;flex-direction:column;height:100vh;">
+
+  <div class="sidebar-top">
       <div class="brand-mini">
         <div class="brand-badge">D+</div>
         <div style="font-weight:800">DentalPlus</div>
@@ -23,6 +25,7 @@
     <nav class="nav">
       <a class="nav-item active">Work Schedule</a>
       <a class="nav-item" href="/dentist/profile">Profile</a>
+      <a class="nav-item" href="/dentist/support">Support Ticket</a>
     </nav>
 
     <div style="margin-top:auto;">
@@ -87,14 +90,17 @@
               ">
                 <div th:if="${ev != null}"
                      class="appt"
+                     th:classappend="${ev.status == 'COMPLETED'} ? ' appt-completed' : ''"
                      th:attr="
-                       data-appointment-id=${ev.appointmentId},
-                       data-patient-name=${ev.patientName},
-                       data-service-name=${ev.serviceName},
-                       data-customer-user-id=${ev.customerUserId},
-                       data-dentist-user-id=${dentistUserId}
-                     ">
-                  <div class="appt-name" th:text="${ev.patientName}"></div>
+                        data-appointment-id=${ev.appointmentId},
+                        data-patient-name=${ev.patientName},
+                        data-service-name=${ev.serviceName},
+                        data-customer-user-id=${ev.customerUserId},
+                        data-dentist-user-id=${dentistUserId},
+                        data-status=${ev.status}
+                        ">
+
+                <div class="appt-name" th:text="${ev.patientName}"></div>
                   <div class="appt-sub" th:text="${ev.serviceName}"></div>
                 </div>
               </th:block>
@@ -119,10 +125,30 @@
       <button id="btnCloseModal" class="icon-btn">✕</button>
     </div>
 
-    <div class="modal-actions">
-      <a id="btnBillingTransfer" class="btn">Service & Billing Transfer</a>
-      <a id="btnExamination" class="btn primary">Clinical Examination Process</a>
+    <div class="modal-actions"
+         style="
+       display:flex;
+       gap:12px;
+       justify-content:space-between;
+       align-items:center;
+       width:100%;
+       box-sizing:border-box;
+     ">
+
+    <a id="btnBillingTransfer"
+         class="btn"
+         style="width:auto;white-space:nowrap;">
+        Service & Billing Transfer
+      </a>
+
+      <a id="btnExamination"
+         class="btn primary"
+         style="width:auto;white-space:nowrap;">
+        Clinical Examination Process
+      </a>
+
     </div>
+
   </div>
 </div>
 
@@ -149,6 +175,13 @@
     document.querySelectorAll('.appt').forEach(el => {
       el.addEventListener('click', () => {
 
+        const status = el.dataset.status;
+
+        // 🔒 nếu đã billing xong → không cho vào
+        if (status === 'COMPLETED') {
+          return; // không mở modal
+        }
+
         const appointmentId = el.dataset.appointmentId;
         const patientName = el.dataset.patientName;
         const serviceName = el.dataset.serviceName;
@@ -169,6 +202,7 @@
         backdrop.hidden = false;
       });
     });
+
 
     document.getElementById('weekSelect')?.addEventListener('change', e => {
       const weekStart = e.target.value;
