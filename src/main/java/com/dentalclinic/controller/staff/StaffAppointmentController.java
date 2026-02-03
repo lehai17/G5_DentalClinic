@@ -1,5 +1,6 @@
 package com.dentalclinic.controller.staff;
 
+import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.service.staff.StaffAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.dentalclinic.service.mail.EmailService;
 import java.time.LocalDate;
 import java.time.DayOfWeek;
-
+import java.util.List;
 
 
 @Controller
@@ -89,14 +90,18 @@ public class StaffAppointmentController {
     }
 
     @GetMapping("/appointments")
-    public String appointments(Model model) {
+    public String appointments(@RequestParam(required = false) String keyword,
+                               @RequestParam(required = false) String sort,
+                               Model model) {
 
         model.addAttribute("pageTitle", "Quản lý lịch khám");
         model.addAttribute("staffName", "Staff");
-        model.addAttribute(
-                "appointments",
-                staffAppointmentService.getAllAppointments()
-        );
+
+        List<Appointment> appointments =
+                staffAppointmentService.searchAndSort(keyword, sort);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("sort", sort);
+        model.addAttribute("appointments", appointments);
 
         return "staff/appointments";
     }
