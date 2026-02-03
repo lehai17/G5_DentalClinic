@@ -300,3 +300,19 @@ button {
     background: #c9302c;
 }
 
+.filter-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.filter-form input,
+.filter-form select {
+    padding: 6px 10px;
+    font-size: 14px;
+}
+
+.filter-form button {
+    padding: 6px 14px;
+    cursor: pointer;
+}

@@ -79,4 +79,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
+    List<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword);
+
 }

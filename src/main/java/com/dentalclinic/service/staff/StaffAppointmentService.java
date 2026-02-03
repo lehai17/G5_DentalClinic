@@ -90,4 +90,25 @@ public class StaffAppointmentService {
         appt.setNotes(reason);
         appointmentRepository.save(appt);
     }
+
+    public List<Appointment> searchAndSort(String keyword, String sort) {
+
+        List<Appointment> list;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            list = appointmentRepository
+                    .findByCustomer_FullNameContainingIgnoreCase(keyword);
+        } else {
+            list = appointmentRepository.findAll();
+        }
+
+        if ("newest".equals(sort)) {
+            list.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+        } else if ("oldest".equals(sort)) {
+            list.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+        }
+
+        return list;
+    }
+
 }
