@@ -65,7 +65,17 @@
             <h2 style="color: #2B3674; margin: 10px 0 0;">Add New Dentist Profile</h2>
         </div>
     </div>
+    <div th:if="${error}" class="alert alert-danger"
+         style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+        <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
+        <span th:text="${error}">Thông báo lỗi ở đây</span>
+    </div>
 
+    <div th:if="${success}" class="alert alert-success"
+         style="color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+        <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+        <span th:text="${success}">Thành công!</span>
+    </div>
     <form th:action="@{/admin/dentists/save}" th:object="${dentistDTO}" method="POST">
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
 

@@ -56,9 +56,16 @@ public class AdminUserController {
 
     // 3. Xử lý lưu dữ liệu
     @PostMapping("/save")
-    public String processAddDentist(@ModelAttribute("dentistDTO") DentistDTO dto) {
-        dentistService.saveDentist(dto);
-        return "redirect:/admin/dentists";
+    public String processAddDentist(@ModelAttribute("dentistDTO") DentistDTO dto, RedirectAttributes ra) {
+        try {
+            dentistService.saveDentist(dto);
+            ra.addFlashAttribute("success", "Thêm bác sĩ thành công!");
+            return "redirect:/admin/dentists";
+        } catch (RuntimeException e) {
+            // Gửi thông báo lỗi quay lại màn hình Add
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/dentists/add";
+        }
     }
 
     // 4. Xử lý khóa tài khoản bác sĩ
