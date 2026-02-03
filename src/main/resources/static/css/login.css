@@ -23,7 +23,7 @@ body{
 
 /* Background image + overlay blur (giống ảnh) */
 .login-body{
-    background-image: url("static/images/login.jpg");
+    background-image: url("/images/login-bg.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -34,16 +34,20 @@ body{
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(255,255,255,.65);
-    backdrop-filter: blur(2px);
+    background: rgba(255,255,255,.18); /* giảm trắng */
+    backdrop-filter: blur(1px);         /* blur nhẹ */
 }
+
 .login-body::after{
-    /* nhẹ nhàng hơn ở giữa */
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at center, rgba(255,255,255,.35), rgba(255,255,255,.70));
+    background: radial-gradient(circle at center,
+    rgba(255,255,255,.05),
+    rgba(255,255,255,.22)
+    );
 }
+
 
 /* Brand top-left */
 .brand{
@@ -268,4 +272,23 @@ body{
     .brand{ left: 14px; top: 14px; }
     .card{ padding: 22px 18px 18px; }
     .btns{ grid-template-columns: 1fr; }
+}
+.toast{
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    background: rgba(17,24,39,.92);
+    color: #fff;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    box-shadow: 0 18px 45px rgba(17,24,39,.25);
+    z-index: 9999;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity .25s ease, transform .25s ease;
+}
+.toast.hide{
+    opacity: 0;
+    transform: translateY(-8px);
 }

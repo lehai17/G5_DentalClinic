@@ -13,10 +13,21 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, RoleBasedSuccessHandler successHandler) throws Exception {
+    SecurityFilterChain filterChain(
+            HttpSecurity http,
+            RoleBasedSuccessHandler successHandler,
+            GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler
+    ) throws Exception {
+
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/homepage","/login", "/register", "/css/**", "/images/**", "/js/**").permitAll()
+                        .requestMatchers(
+                                "/", "/homepage",
+                                "/login", "/register",
+                                "/css/**", "/images/**", "/js/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**","forgot-password"
+                        ).permitAll()
 
                         .requestMatchers("/staff/**").hasRole("STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -24,18 +35,26 @@ public class SecurityConfig {
                         .requestMatchers("/customer/**").hasRole("CUSTOMER")
                         .anyRequest().authenticated()
                 )
+
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/do-login")
-//                        .defaultSuccessUrl("/homepage", true)
                         .successHandler(successHandler)
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
+
+                // ✅ BẬT GOOGLE LOGIN Ở ĐÂY
+                .oauth2Login(oauth -> oauth
+                        .loginPage("/login")
+                        .successHandler(googleOAuth2SuccessHandler) //
+                )
+
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout=true")
                         .permitAll()
                 )
+
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
@@ -55,7 +74,7 @@ public class SecurityConfig {
 
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getEmail())
-                    .password(user.getPassword()) // plaintext
+                    .password(user.getPassword())
                     .roles(user.getRole().name())
                     .build();
         };

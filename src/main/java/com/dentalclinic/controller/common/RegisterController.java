@@ -1,14 +1,18 @@
 package com.dentalclinic.controller.common;
 
+import com.dentalclinic.dto.customer.RegisterRequest;
+import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.user.Gender;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import com.dentalclinic.model.profile.CustomerProfile;
 
 import java.time.LocalDate;
 
@@ -24,49 +28,57 @@ public class RegisterController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Hiện form
     @GetMapping("/register")
-    public String registerPage() {
+    public String registerPage(Model model,
+                               @RequestParam(value = "success", required = false) String success) {
+
+        if (!model.containsAttribute("form")) {
+            model.addAttribute("form", new RegisterRequest());
+        }
+        model.addAttribute("success", success != null);
         return "customer/register";
     }
 
-    // Xử lý submit
     @PostMapping("/register")
-    public String handleRegister(
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam String gender,
-            @RequestParam String dateOfBirth,
-            @RequestParam String fullName,
-            @RequestParam String phone
-    ) {
-        // Check email tồn tại
-        if (userRepository.findByEmail(email).isPresent()) {
-            return "redirect:/register?error=true";
+    public String handleRegister(@Valid @ModelAttribute("form") RegisterRequest form,
+                                 BindingResult bindingResult,
+                                 Model model) {
+
+        // 1) lỗi validate cơ bản (trống, email format, phone 10 số...)
+        if (bindingResult.hasErrors()) {
+            return "customer/register";
         }
 
-        // ========== USER ==========
+        // 2) check trùng email
+        if (userRepository.existsByEmail(form.getEmail())) {
+            bindingResult.rejectValue("email", "duplicate", "Email đã tồn tại");
+            return "customer/register";
+        }
+
+        // 3) check trùng phone
+        if (userRepository.existsByCustomerProfile_Phone(form.getPhone())) {
+            bindingResult.rejectValue("phone", "duplicate", "Số điện thoại đã tồn tại");
+            return "customer/register";
+        }
+
+        // 4) save
         User user = new User();
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
+        user.setEmail(form.getEmail());
+        user.setPassword(passwordEncoder.encode(form.getPassword()));
         user.setRole(Role.CUSTOMER);
         user.setStatus(UserStatus.ACTIVE);
-        user.setGender(Gender.valueOf(gender.toUpperCase()));
-        user.setDateOfBirth(LocalDate.parse(dateOfBirth));
+        user.setGender(Gender.valueOf(form.getGender().toUpperCase()));
+        user.setDateOfBirth(LocalDate.parse(form.getDateOfBirth()));
 
-        // ========== CUSTOMER PROFILE ==========
         CustomerProfile profile = new CustomerProfile();
-        profile.setFullName(fullName);
-        profile.setPhone(phone);
-        profile.setAddress(null); // có thể để trống cho user update sau
+        profile.setFullName(form.getFullName());
+        profile.setPhone(form.getPhone());
+        profile.setAddress(null);
 
-        // Gắn 2 chiều
         user.setCustomerProfile(profile);
-
-        // Save 1 lần -> lưu cả user + profile
         userRepository.save(user);
 
+        // 5) đăng ký xong -> chuyển sang login kèm flag để popup
         return "redirect:/login?registered=true";
     }
-
 }

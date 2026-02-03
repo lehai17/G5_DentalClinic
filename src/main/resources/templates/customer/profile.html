@@ -4,64 +4,219 @@
     <meta charset="UTF-8">
     <title>Profile</title>
     <link rel="stylesheet" th:href="@{/css/home.css}">
+
+    <!-- CSS riêng cho trang profile (giữ nguyên logic, chỉ làm đẹp) -->
+    <style>
+        /* container */
+        .profile-container{
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 18px 16px 42px;
+        }
+
+        /* header line */
+        .profile-top{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 12px;
+            margin: 14px 0 14px;
+        }
+
+        .profile-title{
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0;
+            color:#111827;
+        }
+
+        .btn-edit{
+            padding: 10px 14px;
+            border-radius: 12px;
+            background:#4f46e5;
+            color:#fff;
+            text-decoration:none;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 10px 22px rgba(79,70,229,.18);
+            transition: transform .08s ease, filter .15s ease;
+            white-space: nowrap;
+        }
+        .btn-edit:hover{ filter: brightness(.98); }
+        .btn-edit:active{ transform: translateY(1px); }
+
+        /* card */
+        .profile-card{
+            background: rgba(255,255,255,.96);
+            border: 1px solid rgba(17,24,39,.10);
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(17,24,39,.10);
+            overflow:hidden;
+        }
+
+        .profile-card__header{
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(17,24,39,.08);
+            background: linear-gradient(180deg, rgba(79,70,229,.06), rgba(255,255,255,0));
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 10px;
+        }
+
+        .profile-card__subtitle{
+            margin:0;
+            font-size: 13px;
+            color: rgba(17,24,39,.65);
+        }
+
+        /* status pill */
+        .status-pill{
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            border: 1px solid rgba(17,24,39,.10);
+            background: rgba(17,24,39,.02);
+            color:#111827;
+        }
+        .status-dot{
+            width: 8px; height: 8px; border-radius: 999px;
+            background: rgba(17,24,39,.35);
+        }
+        /* ACTIVE -> xanh */
+        .status-pill.is-active{
+            border-color: rgba(34,197,94,.25);
+            background: rgba(34,197,94,.10);
+            color: #15803d;
+        }
+        .status-pill.is-active .status-dot{ background: #22c55e; }
+
+        /* grid */
+        .profile-grid{
+            padding: 16px;
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .info-box{
+            border: 1px solid rgba(17,24,39,.08);
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: #fff;
+            transition: transform .08s ease, box-shadow .2s ease;
+        }
+        .info-box:hover{
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(17,24,39,.06);
+        }
+
+        .info-label{
+            color:#6b7280;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .info-value{
+            color:#111827;
+            font-size: 14px;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        /* address span full width */
+        .span-2{ grid-column: 1 / -1; }
+
+        /* responsive */
+        @media (max-width: 900px){
+            .profile-grid{ grid-template-columns: 1fr; }
+            .span-2{ grid-column: auto; }
+            .profile-top{ flex-direction: column; align-items:flex-start; }
+        }
+    </style>
 </head>
+
 <body>
 <div class="app-wrapper">
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <h2 style="font-size:22px;font-weight:700;margin:0;">Thông tin cá nhân</h2>
+    <div class="profile-container">
 
-        <a th:href="@{/profile/edit}"
-           style="padding:8px 14px;border-radius:10px;background:#4f46e5;color:#fff;text-decoration:none;font-weight:600;">
-            Chỉnh sửa
-        </a>
-    </div>
+        <div class="profile-top">
+            <h2 class="profile-title">Thông tin cá nhân</h2>
 
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Email</div>
-                <div th:text="${user.email}">email</div>
-            </div>
-
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Role</div>
-                <div th:text="${user.role}">CUSTOMER</div>
-            </div>
-
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Status</div>
-                <div th:text="${user.status}">ACTIVE</div>
-            </div>
-
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Ngày sinh</div>
-                <div th:text="${user.dateOfBirth}">-</div>
-            </div>
-
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Giới tính</div>
-                <div th:text="${user.gender}">OTHER</div>
-            </div>
-
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Họ tên</div>
-                <div th:text="${profile != null ? profile.fullName : 'Chưa cập nhật'}">fullname</div>
-            </div>
-
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Số điện thoại</div>
-                <div th:text="${profile != null ? profile.phone : 'Chưa cập nhật'}">phone</div>
-            </div>
-
-            <div>
-                <div style="color:#6b7280;font-size:13px;">Địa chỉ</div>
-                <div th:text="${profile != null ? profile.address : 'Chưa cập nhật'}">address</div>
-            </div>
+            <a th:href="@{/profile/edit}" class="btn-edit">
+                Chỉnh sửa
+            </a>
         </div>
+
+        <section class="profile-card">
+            <div class="profile-card__header">
+                <p class="profile-card__subtitle">Thông tin tài khoản & hồ sơ khách hàng</p>
+
+                <!-- status pill (giữ nguyên logic: chỉ lấy user.status) -->
+                <span class="status-pill"
+                      th:classappend="${user.status != null and user.status.toString() == 'ACTIVE'} ? ' is-active' : ''">
+                    <span class="status-dot"></span>
+                    <span th:text="${user.status}">ACTIVE</span>
+                </span>
+            </div>
+
+            <div class="profile-grid">
+
+                <div class="info-box">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" th:text="${user.email}">email</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Role</div>
+                    <div class="info-value" th:text="${user.role}">CUSTOMER</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Status</div>
+                    <div class="info-value" th:text="${user.status}">ACTIVE</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Ngày sinh</div>
+                    <div class="info-value" th:text="${user.dateOfBirth}">-</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Giới tính</div>
+                    <div class="info-value" th:text="${user.gender}">OTHER</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Họ tên</div>
+                    <div class="info-value"
+                         th:text="${profile != null ? profile.fullName : 'Chưa cập nhật'}">fullname</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Số điện thoại</div>
+                    <div class="info-value"
+                         th:text="${profile != null ? profile.phone : 'Chưa cập nhật'}">phone</div>
+                </div>
+
+                <div class="info-box span-2">
+                    <div class="info-label">Địa chỉ</div>
+                    <div class="info-value"
+                         th:text="${profile != null ? profile.address : 'Chưa cập nhật'}">address</div>
+                </div>
+
+            </div>
+        </section>
+
     </div>
 </div>
+
 <script th:src="@{/js/user-dropdown.js}" defer></script>
 </body>
 </html>

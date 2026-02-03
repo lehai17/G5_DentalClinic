@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <body>
 <nav th:fragment="header" class="navbar">
     <div class="navbar-container">
@@ -17,19 +17,16 @@
         <div class="navbar-actions" style="display:flex; align-items:center; gap:10px;">
 
             <!-- CHƯA LOGIN: hiện Đăng nhập / Đăng ký -->
-            <div th:if="${!(isAuthenticated ?: false)}" style="display:flex; gap:10px;">
-                <a th:href="@{/login}" class="navbar-cta" style="text-decoration:none;">
-                    Đăng nhập
-                </a>
-                <a th:href="@{/register}" class="navbar-cta" style="text-decoration:none;">
-                    Đăng ký
-                </a>
+            <div sec:authorize="isAnonymous()" style="display:flex; gap:10px;">
+                <a th:href="@{/login}" class="navbar-cta" style="text-decoration:none;">Đăng nhập</a>
+                <a th:href="@{/register}" class="navbar-cta" style="text-decoration:none;">Đăng ký</a>
             </div>
 
             <!-- ĐÃ LOGIN: hiện avatar -->
-            <div th:if="${(isAuthenticated ?: false) and (showUserMenu ?: false)}" class="user-menu">
+            <div sec:authorize="isAuthenticated()" class="user-menu">
                 <button type="button" class="avatar-btn" onclick="toggleUserMenu(event)">
-                    <span th:text="${avatarLetter}">A</span>
+                    <!-- hiển thị chữ cái đầu của email/username -->
+                    <span th:text="${#strings.substring(#authentication.name,0,1)}">A</span>
                 </button>
 
                 <div id="userDropdown" class="dropdown hidden">
@@ -43,6 +40,7 @@
                     </form>
                 </div>
             </div>
+
 
 
             <a th:href="@{/appointments/book}" class="navbar-cta" style="text-decoration:none;">
