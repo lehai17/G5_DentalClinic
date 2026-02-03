@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+<body>
+<div class="app-wrapper">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h2 style="font-size:22px;font-weight:700;margin:0;">Thông tin cá nhân</h2>
+
+        <a th:href="@{/profile/edit}"
+           style="padding:8px 14px;border-radius:10px;background:#4f46e5;color:#fff;text-decoration:none;font-weight:600;">
+            Chỉnh sửa
+        </a>
+    </div>
+
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Email</div>
+                <div th:text="${user.email}">email</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Role</div>
+                <div th:text="${user.role}">CUSTOMER</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Status</div>
+                <div th:text="${user.status}">ACTIVE</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Ngày sinh</div>
+                <div th:text="${user.dateOfBirth}">-</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Giới tính</div>
+                <div th:text="${user.gender}">OTHER</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Họ tên</div>
+                <div th:text="${profile != null ? profile.fullName : 'Chưa cập nhật'}">fullname</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Số điện thoại</div>
+                <div th:text="${profile != null ? profile.phone : 'Chưa cập nhật'}">phone</div>
+            </div>
+
+            <div>
+                <div style="color:#6b7280;font-size:13px;">Địa chỉ</div>
+                <div th:text="${profile != null ? profile.address : 'Chưa cập nhật'}">address</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/js/user-dropdown.js}" defer></script>
+</body>
+</html>

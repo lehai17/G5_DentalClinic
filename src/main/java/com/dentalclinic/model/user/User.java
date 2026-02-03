@@ -47,11 +47,12 @@ public class User {
     private UserStatus status = UserStatus.ACTIVE;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 10)
+    @Column(nullable = false, length = 10)
     private Gender gender;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "date_of_birth", nullable = true)
     private LocalDate dateOfBirth;
+
 
     @Column(
             name = "created_at",

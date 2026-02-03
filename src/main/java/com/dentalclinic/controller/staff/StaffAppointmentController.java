@@ -6,6 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import com.dentalclinic.service.mail.EmailService;
+import java.time.LocalDate;
+import java.time.DayOfWeek;
+
+
 
 @Controller
 @RequestMapping("/staff")
@@ -14,19 +19,69 @@ public class StaffAppointmentController {
     @Autowired
     private StaffAppointmentService staffAppointmentService;
 
+    @Autowired
+    private EmailService emailService;
+
+
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
+    public String dashboard(@RequestParam(required = false, defaultValue = "today") String view,
+                            Model model) {
 
         var appointments = staffAppointmentService.getAllAppointments();
+
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = today;
+        LocalDate endDate = today;
+
+        // Xác định khoảng thời gian
+        switch (view) {
+            case "week" -> {
+                startDate = today.with(DayOfWeek.MONDAY);
+                endDate = today.with(DayOfWeek.SUNDAY);
+            }
+            case "month" -> {
+                startDate = today.withDayOfMonth(1);
+                endDate = today.withDayOfMonth(today.lengthOfMonth());
+            }
+            default -> {
+                // today
+                startDate = today;
+                endDate = today;
+            }
+        }
+
+        final LocalDate fromDate = startDate;
+        final LocalDate toDate = endDate;
+
+        var filtered = appointments.stream()
+                .filter(a ->
+                        !a.getDate().isBefore(fromDate)
+                                && !a.getDate().isAfter(toDate)
+                )
+                .toList();
 
         model.addAttribute("pageTitle", "Dashboard");
         model.addAttribute("staffName", "Staff");
 
-        model.addAttribute("todayCount", appointments.size());
+        model.addAttribute("view", view);
+
+        model.addAttribute("totalCount", filtered.size());
         model.addAttribute(
                 "pendingCount",
-                appointments.stream()
+                filtered.stream()
                         .filter(a -> a.getStatus() == AppointmentStatus.PENDING)
+                        .count()
+        );
+        model.addAttribute(
+                "completedCount",
+                filtered.stream()
+                        .filter(a -> a.getStatus() == AppointmentStatus.COMPLETED)
+                        .count()
+        );
+        model.addAttribute(
+                "cancelledCount",
+                filtered.stream()
+                        .filter(a -> a.getStatus() == AppointmentStatus.CANCELLED)
                         .count()
         );
 
@@ -74,4 +129,7 @@ public class StaffAppointmentController {
             @RequestParam String reason) {
         staffAppointmentService.cancelAppointment(id, reason);
     }
+
+
+
 }

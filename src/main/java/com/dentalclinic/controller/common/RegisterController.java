@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import com.dentalclinic.model.profile.CustomerProfile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Controller
 public class RegisterController {

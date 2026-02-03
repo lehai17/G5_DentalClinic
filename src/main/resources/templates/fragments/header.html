@@ -14,11 +14,43 @@
             <li><a href="#contact">Liên Hệ</a></li>
         </ul>
 
-        <div class="navbar-actions">
-            <a th:href="@{/appointments/book}" class="navbar-cta" style="text-decoration: none; display: inline-block;">
+        <div class="navbar-actions" style="display:flex; align-items:center; gap:10px;">
+
+            <!-- CHƯA LOGIN: hiện Đăng nhập / Đăng ký -->
+            <div th:if="${!(isAuthenticated ?: false)}" style="display:flex; gap:10px;">
+                <a th:href="@{/login}" class="navbar-cta" style="text-decoration:none;">
+                    Đăng nhập
+                </a>
+                <a th:href="@{/register}" class="navbar-cta" style="text-decoration:none;">
+                    Đăng ký
+                </a>
+            </div>
+
+            <!-- ĐÃ LOGIN: hiện avatar -->
+            <div th:if="${(isAuthenticated ?: false) and (showUserMenu ?: false)}" class="user-menu">
+                <button type="button" class="avatar-btn" onclick="toggleUserMenu(event)">
+                    <span th:text="${avatarLetter}">A</span>
+                </button>
+
+                <div id="userDropdown" class="dropdown hidden">
+                    <a class="dropdown-item" th:href="@{/profile}">Profile</a>
+                    <a class="dropdown-item" th:href="@{/change-password}">Change Password</a>
+
+                    <div class="dropdown-divider"></div>
+
+                    <form th:action="@{/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="dropdown-item danger">Logout</button>
+                    </form>
+                </div>
+            </div>
+
+
+            <a th:href="@{/appointments/book}" class="navbar-cta" style="text-decoration:none;">
                 Đặt Lịch Ngay
             </a>
+
         </div>
+
     </div>
 </nav>
 </body>

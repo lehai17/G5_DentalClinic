@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa Profile</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+<body>
+<div class="app-wrapper">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div style="max-width:720px;margin:30px auto;background:#fff;padding:22px;border-radius:14px;border:1px solid #e5e7eb;">
+        <h2 style="font-size:22px;font-weight:700;margin-bottom:14px;">Chỉnh sửa thông tin</h2>
+
+        <div th:if="${error}" style="padding:10px 12px;border-radius:10px;background:#fee2e2;color:#991b1b;margin-bottom:12px;">
+            <span th:text="${error}"></span>
+        </div>
+
+        <div th:if="${success}" style="padding:10px 12px;border-radius:10px;background:#dcfce7;color:#166534;margin-bottom:12px;">
+            <span th:text="${success}"></span>
+        </div>
+
+        <form th:action="@{/profile/edit}" method="post" style="display:grid;gap:12px;">
+            <!-- Full name -->
+            <div>
+                <label style="display:block;color:#6b7280;font-size:13px;margin-bottom:6px;">Họ tên</label>
+                <input name="fullName" type="text" required
+                       th:value="${profile != null ? profile.fullName : ''}"
+                       style="width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;">
+            </div>
+
+            <!-- Phone -->
+            <div>
+                <label style="display:block;color:#6b7280;font-size:13px;margin-bottom:6px;">Số điện thoại</label>
+                <input name="phone" type="text"
+                       th:value="${profile != null ? profile.phone : ''}"
+                       style="width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;">
+            </div>
+
+            <!-- Date of birth -->
+            <div>
+                <label style="display:block;color:#6b7280;font-size:13px;margin-bottom:6px;">Ngày sinh</label>
+                <input name="dateOfBirth" type="date"
+                       th:value="${user != null && user.dateOfBirth != null ? user.dateOfBirth : ''}"
+                       style="width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;">
+            </div>
+
+            <!-- Address -->
+            <div>
+                <label style="display:block;color:#6b7280;font-size:13px;margin-bottom:6px;">Địa chỉ</label>
+                <input name="address" type="text"
+                       th:value="${profile != null ? profile.address : ''}"
+                       style="width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;">
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:6px;">
+                <button type="submit"
+                        style="padding:10px 14px;border-radius:10px;border:0;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;">
+                    Lưu thay đổi
+                </button>
+
+                <a th:href="@{/profile}"
+                   style="padding:10px 14px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#111827;text-decoration:none;font-weight:600;">
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/user-dropdown.js}"></script>
+</body>
+</html>

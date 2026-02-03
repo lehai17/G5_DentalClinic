@@ -13,8 +13,6 @@ public class ScheduleEventResponse {
     private LocalTime startTime;
     private LocalTime endTime;
     private String status;
-    private String examinationLink;
-    private String billingNoteLink;
 
     public ScheduleEventResponse(
             Long appointmentId,
@@ -24,9 +22,7 @@ public class ScheduleEventResponse {
             LocalDate date,
             LocalTime startTime,
             LocalTime endTime,
-            String status,
-            String examinationLink,
-            String billingNoteLink
+            String status
     ) {
         this.appointmentId = appointmentId;
         this.customerUserId = customerUserId;
@@ -36,8 +32,6 @@ public class ScheduleEventResponse {
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
-        this.examinationLink = examinationLink;
-        this.billingNoteLink = billingNoteLink;
     }
 
     public Long getAppointmentId() { return appointmentId; }
@@ -48,6 +42,4 @@ public class ScheduleEventResponse {
     public LocalTime getStartTime() { return startTime; }
     public LocalTime getEndTime() { return endTime; }
     public String getStatus() { return status; }
-    public String getExaminationLink() { return examinationLink; }
-    public String getBillingNoteLink() { return billingNoteLink; }
 }

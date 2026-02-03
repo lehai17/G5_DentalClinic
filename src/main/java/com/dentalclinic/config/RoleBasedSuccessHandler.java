@@ -46,7 +46,7 @@ public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
                     redirectUrl = "/staff/dashboard";
                     break;
                 case "ROLE_DENTIST":
-                    redirectUrl = "/dentist/dashboard";
+                    redirectUrl = "/dentist/work-schedule";
                     break;
                 case "ROLE_CUSTOMER":
                     redirectUrl = "/customer/homepage";

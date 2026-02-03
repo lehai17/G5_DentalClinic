@@ -79,27 +79,50 @@
                         </div>
                     </div>
                     <div class="form-grid">
-                        <div style="grid-row: span 2; text-align: center;">
-                            <div class="avatar-circle">
-                                <i class="fas fa-user" style="font-size: 35px; color: #D1D9E8;"></i>
-                                <button type="button" class="camera-btn"><i class="fas fa-camera" style="font-size: 12px;"></i></button>
-                            </div>
+                        <div style="grid-row: span 3; text-align: center;"> <div class="avatar-circle">
+                            <i class="fas fa-user" style="font-size: 35px; color: #D1D9E8;"></i>
+                            <button type="button" class="camera-btn"><i class="fas fa-camera" style="font-size: 12px;"></i></button>
+                        </div>
                             <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">UPLOAD PHOTO</small>
                         </div>
+
                         <div class="input-group">
                             <label>Full Name</label>
                             <div class="input-wrapper"><i class="far fa-user"></i><input type="text" th:field="*{fullName}" placeholder="Dr. Nguyen Van A" required></div>
                         </div>
+
                         <div class="input-group">
                             <label>Email Address</label>
                             <div class="input-wrapper"><i class="far fa-envelope"></i><input type="email" th:field="*{email}" placeholder="doctor@genzclinic.vn" required></div>
                         </div>
+
                         <div class="input-group">
                             <label>Phone Number</label>
                             <div class="input-wrapper"><i class="fas fa-phone-alt"></i><input type="text" th:field="*{phone}" placeholder="+84 ..."></div>
                         </div>
+
+                        <div style="display: flex; gap: 20px;">
+                            <div class="input-group" style="flex: 1;">
+                                <label>Date of Birth</label>
+                                <div class="input-wrapper">
+                                    <i class="far fa-calendar-alt"></i>
+                                    <input type="date" th:field="*{dob}" required>
+                                </div>
+                            </div>
+                            <div class="input-group" style="width: 120px;">
+                                <label>Gender</label>
+                                <div class="input-wrapper">
+                                    <select th:field="*{gender}" style="border:none; background:transparent; width:100%; outline:none;">
+                                        <option value="MALE">Male</option>
+                                        <option value="FEMALE">Female</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
 
                 <div class="form-card">
                     <div class="card-title">
@@ -133,21 +156,29 @@
 
                 <div class="form-card">
                     <div class="card-title">
-                        <div class="icon-box" style="background: #E3F2FD; color: #1976D2;"><i class="far fa-clock"></i></div>
-                        <h4 style="margin:0; color: #2B3674;">Work Schedule</h4>
+                        <div class="icon-box"><i class="far fa-clock"></i></div>
+                        <h4 style="margin:0;">Work Schedule</h4>
                     </div>
-                    <label style="font-size: 11px; font-weight: 700; color: #A3AED0; margin-bottom: 15px; display: block;">AVAILABLE WORKING DAYS</label>
 
-                    <div style="display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap;">
+                    <label class="filter-label" style="display: block; margin-top: 15px; margin-bottom: 10px;">
+                        AVAILABLE WORKING DAYS
+                    </label>
+
+                    <div class="days-container">
                         <div th:each="day : ${T(java.time.DayOfWeek).values()}">
-                            <input type="checkbox" th:value="${day.name()}" th:field="*{availableDays}" th:id="${day.name()}" style="display:none;">
-                            <label th:for="${day.name()}" class="day-label">
-                                <span th:text="${#strings.substring(day.name(), 0, 3)}"></span>
+                            <input type="checkbox"
+                                   th:id="|day-${day.name()}|"
+                                   th:value="${day.name()}"
+                                   th:field="*{availableDays}"
+                                   class="day-checkbox">
+
+                            <label th:for="|day-${day.name()}|" class="day-label">
+                                <span th:text="${#strings.substring(day.name(), 0, 3)}">Mon</span>
                             </label>
                         </div>
                     </div>
 
-                    <div class="form-grid">
+                    <div class="form-grid" style="margin-top: 20px;">
                         <div class="input-group">
                             <label>Shift Start Time</label>
                             <div class="input-wrapper"><i class="far fa-clock"></i><input type="time" th:field="*{shiftStartTime}"></div>
@@ -158,7 +189,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
             <div class="right-col">
                 <div class="access-card">
@@ -184,6 +214,7 @@
                 </div>
             </div>
         </div>
+<!--        </div>-->
     </form>
 </div>
 
