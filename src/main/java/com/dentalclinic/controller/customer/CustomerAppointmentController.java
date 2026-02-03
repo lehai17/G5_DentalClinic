@@ -31,7 +31,7 @@ public class CustomerAppointmentController {
         this.userRepository = userRepository;
     }
 
-    /** Lấy userId từ session (user đăng nhập sau khi đăng ký). Chỉ trả về userId nếu user tồn tại trong DB. */
+    /** Lấy userId từ session. Chỉ trả về userId nếu user tồn tại trong DB. */
     private Long getCurrentUserId(HttpSession session) {
         Object uid = session.getAttribute(SESSION_USER_ID);
         Long userId = null;
@@ -49,11 +49,13 @@ public class CustomerAppointmentController {
             @RequestParam(required = false) Long dentistId,
             @RequestParam(required = false) String date,
             HttpSession session) {
+
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
-        LocalDate parsedDate = date != null && !date.isBlank() ? LocalDate.parse(date) : LocalDate.now();
+
+        LocalDate parsedDate = (date != null && !date.isBlank()) ? LocalDate.parse(date) : LocalDate.now();
         List<SlotDto> slots = customerAppointmentService.getAvailableSlots(serviceId, dentistId, parsedDate);
         return ResponseEntity.ok(slots);
     }
@@ -65,11 +67,12 @@ public class CustomerAppointmentController {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
+
         try {
             AppointmentDto created = customerAppointmentService.createAppointment(userId, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (IllegalArgumentException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "";
+            String msg = e.getMessage() != null ? e.getMessage() : "Dữ liệu không hợp lệ.";
             if (msg.contains("User not found") || msg.contains("đăng nhập")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."));
