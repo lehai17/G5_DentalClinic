@@ -26,6 +26,9 @@ public class DentistService {
 
     @Transactional
     public void saveDentist(DentistDTO dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email này đã được sử dụng trong hệ thống!");
+        }
         // 1. Tạo tài khoản User đăng nhập
         User user = new User();
         user.setEmail(dto.getEmail());
