@@ -40,16 +40,16 @@ public class DentistAppointmentController {
     public String examinationPage(
             @PathVariable Long id,
             @RequestParam Long customerUserId,
-            @RequestParam Long dentistUserId,
+            @RequestParam(required = false) String weekStart,
             Model model
     ) {
         model.addAttribute("services", servicesRepository.findAll());
 
         Appointment appt = appointmentRepository.findById(id).orElseThrow();
 
+        model.addAttribute("weekStart", weekStart);
         model.addAttribute("appointmentId", id);
         model.addAttribute("customerUserId", customerUserId);
-        model.addAttribute("dentistUserId", dentistUserId);
         model.addAttribute("patientName", appt.getCustomer().getFullName());
         model.addAttribute("apptDate", appt.getDate());
         model.addAttribute("startTime", appt.getStartTime());
@@ -73,12 +73,15 @@ public class DentistAppointmentController {
             @RequestParam Long customerUserId,
             @RequestParam String diagnosis,
             @RequestParam String treatmentNote,
+            @RequestParam(required = false) String weekStart, // ✅ THÊM
             RedirectAttributes redirect
     ) {
         medicalRecordService.saveOrUpdate(id, diagnosis, treatmentNote);
         redirect.addFlashAttribute("successMessage", "Examination saved");
+
         return "redirect:/dentist/appointments/" + id +
-                "/examination?customerUserId=" + customerUserId + "&dentistUserId=1";
+                "/examination?customerUserId=" + customerUserId +
+                "&weekStart=" + weekStart;
     }
 
     /* ================= BILLING ================= */
@@ -87,6 +90,7 @@ public class DentistAppointmentController {
     public String billingPage(
             @PathVariable Long id,
             @RequestParam Long customerUserId,
+            @RequestParam(required = false) String weekStart,
             Model model
     ) {
         Appointment appt = appointmentRepository.findById(id).orElseThrow();
@@ -94,13 +98,13 @@ public class DentistAppointmentController {
         model.addAttribute("services", servicesRepository.findAll());
         model.addAttribute("appointmentId", id);
         model.addAttribute("customerUserId", customerUserId);
-        model.addAttribute("dentistUserId", 1L);
         model.addAttribute("patientName", appt.getCustomer().getFullName());
         model.addAttribute("apptDate", appt.getDate());
         model.addAttribute("startTime", appt.getStartTime());
         model.addAttribute("endTime", appt.getEndTime());
         model.addAttribute("requestedServiceName", appt.getService().getName());
         model.addAttribute("appointmentStatus", appt.getStatus().name());
+        model.addAttribute("weekStart", weekStart);
 
         var billing = dentistSessionService.loadBilling(id, customerUserId);
         model.addAttribute("note", billing.note());
@@ -117,6 +121,7 @@ public class DentistAppointmentController {
             @RequestParam String note,
             @RequestParam String performedServicesJson,
             @RequestParam String prescriptionNote,
+            @RequestParam String weekStart,
             RedirectAttributes redirect
     ) {
         dentistSessionService.saveBilling(
@@ -128,6 +133,6 @@ public class DentistAppointmentController {
         );
 
         redirect.addFlashAttribute("successMessage", "Billing saved");
-        return "redirect:/dentist/work-schedule";
+        return "redirect:/dentist/work-schedule?weekStart=" + weekStart;
     }
 }

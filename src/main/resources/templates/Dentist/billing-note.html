@@ -42,6 +42,7 @@
     <!-- hidden payloads -->
     <input type="hidden" id="performedServicesJson" name="performedServicesJson" th:value="${performedServicesJson}">
     <input type="hidden" id="prescriptionNote" name="prescriptionNote" th:value="${prescriptionNote}">
+    <input type="hidden" name="weekStart" th:value="${weekStart}">
 
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:end;">
@@ -85,7 +86,11 @@
 
     <div style="display:flex;gap:10px;margin-top:14px;">
       <button class="btn primary" type="submit">SAVE</button>
-      <a class="btn" th:href="@{/dentist/work-schedule(dentistUserId=${dentistUserId})}">Back</a>
+      <a class="btn"
+         th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">
+        Back
+      </a>
+
     </div>
   </form>
 </div>

@@ -2,7 +2,11 @@ package com.dentalclinic.controller.dentist;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.repository.DentistProfileRepository;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,9 +21,17 @@ import java.util.*;
 public class DentistWebController {
 
     private final AppointmentRepository appointmentRepository;
+    private final UserRepository userRepository;
+    private final DentistProfileRepository dentistProfileRepository;
 
-    public DentistWebController(AppointmentRepository appointmentRepository) {
+    public DentistWebController(
+            AppointmentRepository appointmentRepository,
+            UserRepository userRepository,
+            DentistProfileRepository dentistProfileRepository
+    ) {
         this.appointmentRepository = appointmentRepository;
+        this.userRepository = userRepository;
+        this.dentistProfileRepository = dentistProfileRepository;
     }
 
     @GetMapping("/dentist/work-schedule")
@@ -30,29 +42,47 @@ public class DentistWebController {
             Model model
     ) {
 
-        // ✅ FIX CỨNG để test
-        Long dentistUserId = 1L;
+        /* ===== LẤY USER ĐANG LOGIN ===== */
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-        // ===== SNAP TUẦN
-        LocalDate base = (weekStart != null) ? weekStart : LocalDate.now();
+        String email = authentication.getName();
+
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Long dentistUserId = user.getId();
+
+        /* ===== LẤY DENTIST_PROFILE ID (CHUẨN) ===== */
+        Long dentistProfileId = dentistProfileRepository
+                .findByUser_Id(dentistUserId)
+                .orElseThrow(() -> new RuntimeException("Dentist profile not found"))
+                .getId();
+
+        /* ===== SNAP TUẦN ===== */
+        LocalDate base = (weekStart != null)
+                ? weekStart
+                : LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
         LocalDate start = base.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate end = start.plusDays(6);
 
-        // ===== DAYS
+        /* ===== DAYS ===== */
         List<LocalDate> days = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             days.add(start.plusDays(i));
         }
 
-        // ===== TIME SLOTS
+        /* ===== TIME SLOTS ===== */
         List<LocalTime> timeSlots = new ArrayList<>();
         for (int h = 8; h <= 17; h++) {
             timeSlots.add(LocalTime.of(h, 0));
         }
 
-        // ===== WEEK DROPDOWN
+        /* ===== WEEK DROPDOWN ===== */
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
         List<Map<String, String>> weekOptions = new ArrayList<>();
+
         for (int i = -6; i <= 6; i++) {
             LocalDate ws = start.plusWeeks(i);
             Map<String, String> opt = new HashMap<>();
@@ -61,24 +91,19 @@ public class DentistWebController {
             weekOptions.add(opt);
         }
 
-        // ===== LOAD APPOINTMENTS
+        /* ===== LOAD APPOINTMENTS (THEO DENTIST_PROFILE) ===== */
         List<Appointment> appts =
-                appointmentRepository.findScheduleForWeek(dentistUserId, start, end);
+                appointmentRepository.findScheduleForWeek(
+                        dentistProfileId,
+                        start,
+                        end
+                );
 
         Map<String, ScheduleEventResponse> eventMap = new HashMap<>();
         DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
 
         for (Appointment a : appts) {
             String key = a.getDate() + "_" + a.getStartTime().format(tf);
-
-            if (eventMap.containsKey(key)) {
-                ScheduleEventResponse existing = eventMap.get(key);
-
-                // 🔒 COMPLETED luôn thắng
-                if ("COMPLETED".equals(existing.getStatus())) {
-                    continue;
-                }
-            }
 
             eventMap.put(key, new ScheduleEventResponse(
                     a.getId(),
@@ -92,8 +117,7 @@ public class DentistWebController {
             ));
         }
 
-
-        // ===== MODEL
+        /* ===== MODEL ===== */
         model.addAttribute("dentistUserId", dentistUserId);
         model.addAttribute("dentistName", "Dentist");
         model.addAttribute("weekStart", start);

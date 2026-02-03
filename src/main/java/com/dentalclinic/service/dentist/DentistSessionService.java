@@ -25,17 +25,6 @@ public class DentistSessionService {
         this.billingNoteRepository = billingNoteRepository;
     }
 
-    /* =========================================================
-       LOGIN / SESSION
-       ========================================================= */
-
-    /**
-     * Tạm thời chưa nối login → controller bắt buộc truyền dentistUserId
-     * Khi có Spring Security → sửa method này là đủ
-     */
-    public Long getCurrentDentistUserId() {
-        return 1L;
-    }
 
     /* =========================================================
        EXAMINATION
