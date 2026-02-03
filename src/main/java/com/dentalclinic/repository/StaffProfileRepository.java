@@ -23,9 +23,17 @@ public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long
      * Lọc danh sách nhân viên theo Trạng thái tài khoản và Vị trí công việc
      * Sử dụng JOIN để truy cập thuộc tính status nằm trong thực thể User
      */
+//    @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
+//            "(:status IS NULL OR u.status = :status) AND " +
+//            "(:position IS NULL OR s.position = :position OR :position = '')")
+//    List<StaffProfile> filterStaffs(@Param("status") UserStatus status,
+//                                    @Param("position") String position);
     @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
-            "(:status IS NULL OR u.status = :status) AND " +
-            "(:position IS NULL OR s.position = :position OR :position = '')")
+            "(:status IS NULL OR u.status = :status) AND (" + // Bổ sung lọc status
+            "(:position = 'Other' AND s.position != 'Receptionist') OR " +
+            "(:position != 'Other' AND s.position = :position) OR " +
+            "(:position IS NULL OR :position = '')" +
+            ")")
     List<StaffProfile> filterStaffs(@Param("status") UserStatus status,
                                     @Param("position") String position);
 

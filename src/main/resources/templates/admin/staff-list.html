@@ -123,7 +123,7 @@
                 <select name="position" onchange="this.form.submit()">
                     <option value="">All Positions</option>
                     <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Receptionist</option>
-                    <option value="Nurse" th:selected="${selectedPos == 'Nurse'}">Nurse</option>
+                    <option value="Other" th:selected="${selectedPos == 'Other'}">Other</option>
                 </select>
             </div>
             <div class="filter-item">
@@ -175,7 +175,15 @@
                 <td>
                     <div style="display: flex; gap: 12px; align-items: center;">
                         <a th:href="@{/admin/staff/edit/{id}(id=${staff.id})}" class="action-btn"><i class="far fa-edit"></i></a>
-                        <form th:action="@{/admin/staff/lock/{id}(id=${staff.user.id})}" method="POST" style="display:inline;">
+                        <form th:if="${staff.user.status.name() == 'LOCKED'}"
+                              th:action="@{/admin/staff/unlock/{id}(id=${staff.user.id})}" method="POST">
+                            <button type="submit" class="action-btn" style="color: #4CAF50; border:none; background:none; cursor:pointer;"
+                                    onclick="return confirm('Mở khóa nhân viên này?')">
+                                <i class="fas fa-user-check"></i>
+                            </button>
+                        </form>
+                        <form th:if="${staff.user.status.name() == 'ACTIVE'}"
+                                th:action="@{/admin/staff/lock/{id}(id=${staff.user.id})}" method="POST" style="display:inline;">
                             <button type="submit" class="action-btn" style="color: #F44336;"
                                     onclick="return confirm('Khóa nhân viên này?')">
                                 <i class="fas fa-user-lock"></i>

@@ -52,6 +52,26 @@
         .status-locked { background: #FFEBEE; color: #F44336; }
         .action-btn { color: #A3AED0; cursor: pointer; font-size: 18px; transition: 0.2s; border: none; background: none; padding: 5px; }
         .action-btn:hover { color: #1A237E; }
+        /* CSS CHO MODAL */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background-color: white; margin: 5% auto; padding: 0;
+            width: 550px; border-radius: 20px; animation: slideDown 0.3s;
+            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid #F4F7FE; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 25px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-item { background: #F4F7FE; padding: 12px; border-radius: 12px; }
+        .info-item label { display: block; font-size: 10px; color: #A3AED0; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        .info-item span { color: #1B2559; font-weight: 700; font-size: 14px; }
+        .close-btn { font-size: 24px; color: #A3AED0; cursor: pointer; transition: 0.2s; }
+        .close-btn:hover { color: #F44336; }
     </style>
 </head>
 <body>
@@ -195,20 +215,40 @@
                           ACTIVE
                     </span>
                 </td>
-
                 <td>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <i class="far fa-eye action-btn"></i>
-                        <a th:href="@{/admin/dentists/edit/{id}(id=${dentist.id})}" class="action-btn">
-                            <i class="far fa-edit"></i>
-                        </a>
-                        <form th:action="@{/admin/dentists/lock/{id}(id=${dentist.user.id})}" method="POST" style="display:inline;">
-                            <button type="submit" class="action-btn" style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                    onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
-                                <i class="fas fa-user-lock"></i>
-                            </button>
-                        </form>
-                    </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+<!--                    <button class="action-btn" type="button"-->
+<!--                            th:data-name="${dentist.fullName}"-->
+<!--                            th:data-email="${dentist.user.email}"-->
+<!--                            th:data-phone="${dentist.phone}"-->
+<!--                            th:data-spec="${dentist.specialization}"-->
+<!--                            th:data-exp="${dentist.experienceYears}"-->
+<!--                            th:data-dob="${dentist.dob}"-->
+<!--                            th:data-gender="${dentist.gender}"-->
+<!--                            onclick="viewDentistDetails(this)">-->
+<!--                        <i class="far fa-eye"></i>-->
+<!--                    </button>-->
+
+                    <a th:href="@{/admin/dentists/edit/{id}(id=${dentist.id})}" class="action-btn">
+                        <i class="far fa-edit"></i>
+                    </a>
+
+                    <form th:if="${#strings.equals(dentist.user.status, 'LOCKED')}"
+                          th:action="@{/admin/dentists/unlock/{id}(id=${dentist.user.id})}" method="POST" style="display:inline;">
+                        <button type="submit" class="action-btn" style="color: #4CAF50; border:none; background:none; cursor:pointer;"
+                                onclick="return confirm('Mở khóa tài khoản bác sĩ này?')">
+                            <i class="fas fa-user-check"></i>
+                        </button>
+                    </form>
+
+                    <form th:if="${#strings.equals(dentist.user.status, 'ACTIVE')}"
+                          th:action="@{/admin/dentists/lock/{id}(id=${dentist.user.id})}" method="POST" style="display:inline;">
+                        <button type="submit" class="action-btn" style="color: #F44336; border:none; background:none; cursor:pointer;"
+                                onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
+                            <i class="fas fa-user-lock"></i>
+                        </button>
+                    </form>
+                </div>
                 </td>
             </tr>
             </tbody>
@@ -217,6 +257,25 @@
         <div class="empty-state" th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 50px;">
             <i class="fas fa-user-slash" style="font-size: 40px; color: #A3AED0; margin-bottom: 15px;"></i>
             <h3 style="color: #A3AED0;">No dentists found</h3>
+        </div>
+    </div>
+</div>
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 style="margin:0; color:#1B2559;"><i class="fas fa-id-card" style="margin-right:10px;"></i> Dentist Profile</h4>
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="info-grid">
+                <div class="info-item"><label>Full Name</label><span id="m-name"></span></div>
+                <div class="info-item"><label>Specialty</label><span id="m-spec"></span></div>
+                <div class="info-item"><label>Email</label><span id="m-email"></span></div>
+                <div class="info-item"><label>Phone</label><span id="m-phone"></span></div>
+                <div class="info-item"><label>Date of Birth</label><span id="m-dob"></span></div>
+                <div class="info-item"><label>Gender</label><span id="m-gender"></span></div>
+                <div class="info-item" style="grid-column: span 2;"><label>Experience</label><span id="m-exp"></span> years</div>
+            </div>
         </div>
     </div>
 </div>

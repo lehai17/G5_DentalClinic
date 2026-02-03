@@ -78,4 +78,10 @@ public class StaffService {
             return 0;
         }
     }
+    public void updateStaffStatus(Long userId, UserStatus status) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setStatus(status);
+        userRepository.save(user);
+    }
 }
