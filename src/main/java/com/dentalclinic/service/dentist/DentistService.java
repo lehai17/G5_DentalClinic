@@ -113,4 +113,11 @@ public class DentistService {
             System.out.println("Đã khóa tài khoản bác sĩ có User ID: " + userId);
         });
     }
+
+    public void updateDentistStatus(Long userId, UserStatus status) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setStatus(status);
+        userRepository.save(user);
+    }
 }

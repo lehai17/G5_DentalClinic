@@ -2,12 +2,14 @@ package com.dentalclinic.controller.admin;
 
 import com.dentalclinic.dto.StaffDTO;
 import com.dentalclinic.model.profile.StaffProfile;
+import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.StaffProfileRepository;
 import com.dentalclinic.service.staff.StaffService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -34,7 +36,7 @@ public class AdminStaffController {
         model.addAttribute("staffs", staffs);
         model.addAttribute("selectedStatus", status); // Giữ trạng thái dropdown sau khi lọc
         model.addAttribute("selectedPos", position);
-        model.addAttribute("activePage", "staff"); // Làm sáng menu Sidebar
+        model.addAttribute("activePage", "staff");
 
         // Cập nhật dữ liệu cho các thẻ thống kê (Stat Cards)
         model.addAttribute("totalStaff", staffService.countTotal());
@@ -64,6 +66,17 @@ public class AdminStaffController {
     public String lockStaff(@PathVariable("id") Long userId) {
         // userId này là ID của bảng User để khớp với hàm trong Service của bạn
         staffService.deactivateStaff(userId);
+        return "redirect:/admin/staff";
+    }
+    @PostMapping("/unlock/{id}")
+    public String unlockStaff(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            // Gọi hàm dùng chung để đưa trạng thái về ACTIVE
+            staffService.updateStaffStatus(id, UserStatus.ACTIVE);
+            ra.addFlashAttribute("success", "Đã mở khóa nhân viên thành công!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
         return "redirect:/admin/staff";
     }
 }

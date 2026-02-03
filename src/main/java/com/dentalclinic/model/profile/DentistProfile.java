@@ -43,7 +43,7 @@ public class DentistProfile {
         this.schedules = schedules;
     }
 
-    // 1. Quan hệ với lịch làm việc (Sửa lỗi "Cannot resolve symbol schedules")
+    // 1. Quan hệ với lịch làm việc
     @JsonIgnore
     @OneToMany(mappedBy = "dentist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DentistSchedule> schedules;
