@@ -2,57 +2,133 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - GenZ Clinic</title>
-    <link rel="stylesheet" th:href="@{/css/login.css}">
+
+    <link rel="stylesheet" th:href="@{/css/register.css}">
+    <script defer th:src="@{/js/register.js}"></script>
 </head>
-<body>
-<div class="page">
-    <div class="card">
-        <h2>Create Account</h2>
-        <p class="sub">Register as a patient</p>
+<body class="auth-body">
 
-        <div class="alert" th:if="${error}">
-            Email đã tồn tại!
+<main class="auth">
+    <!-- LEFT: Image -->
+    <aside class="auth__left">
+        <div class="hero">
+            <div class="hero__brand">
+                <span class="hero__logo">🦷</span>
+                <div>
+                    <div class="hero__name">GENZ CLINIC</div>
+                    <div class="hero__tagline">Brighten the Vietnamese smile</div>
+                </div>
+            </div>
         </div>
+    </aside>
 
-        <form th:action="@{/register}" method="post">
+    <!-- RIGHT: Form -->
+    <section class="auth__right">
+        <div class="form-card">
+            <h1 class="title">Create an Account</h1>
 
-            <label>Full Name</label>
-            <input type="text" name="fullName" required>
-
-            <label>Email</label>
-            <input type="email" name="email" required>
-
-            <label>Password</label>
-            <input type="password" name="password" required>
-
-            <label>Phone</label>
-            <input type="text" name="phone" required>
-
-            <label>Date of Birth</label>
-            <input type="date" name="dateOfBirth" required>
-
-            <label>Gender</label>
-            <select name="gender" required>
-                <option value="">-- Select --</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-            </select>
-
-            <div class="btns">
-                <button class="btn primary" type="submit">
-                    Register
-                </button>
+            <!-- Error -->
+            <div class="alert alert--error" th:if="${error}">
+                Email đã tồn tại!
             </div>
 
-            <p class="bottom">
-                Already have an account?
-                <a th:href="@{/login}">Login</a>
-            </p>
+            <form id="registerForm" th:action="@{/register}" method="post"
+                  th:object="${form}" class="form" novalidate>
+            <div class="field">
+                    <label class="label" for="fullName">Full name</label>
+                    <div class="input-wrap">
+                        <input id="fullName" class="input" type="text" name="fullName"
+                               placeholder="Ex: Nguyen Duc Lam" required>
+                    </div>
+                </div>
 
-        </form>
-    </div>
+                <div class="field">
+                    <label class="label" for="phone">Phone number</label>
+                    <div class="input-wrap" th:classappend="${#fields.hasErrors('phone')} ? ' is-invalid' : ''">
+                        <input id="phone" class="input" type="text" th:field="*{phone}"
+                               placeholder="Ex: 0412341231" required inputmode="numeric" maxlength="10">
+                    </div>
+                    <small class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></small>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="email">Email</label>
+                    <div class="input-wrap" th:classappend="${#fields.hasErrors('email')} ? ' is-invalid' : ''">
+                        <input id="email" class="input" type="email" th:field="*{email}"
+                               placeholder="Ex: abc@gmail.com" required>
+                    </div>
+                    <small class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="password">Password</label>
+                    <div class="input-wrap">
+                        <input id="password" class="input" type="password" name="password"
+                               placeholder="Ex: fastdfa32ss2!" required>
+                    </div>
+                </div>
+
+                <div class="grid2">
+                    <div class="field">
+                        <label class="label" for="dateOfBirth">Date of Birth</label>
+                        <div class="input-wrap">
+                            <input id="dateOfBirth" class="input" type="date" th:field="*{dateOfBirth}" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="gender">Gender</label>
+                        <div class="input-wrap">
+                            <select id="gender" class="input" th:field="*{gender}" required>
+                            <option value="">-- Select --</option>
+                                <option value="MALE">Male</option>
+                                <option value="FEMALE">Female</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <label class="check">
+                    <input type="checkbox" th:field="*{agree}">
+                    <span>I agree with the Terms and Conditions</span>
+                </label>
+                <small class="error" th:if="${#fields.hasErrors('agree')}" th:errors="*{agree}"></small>
+
+                <button id="signupBtn" class="btn btn--primary" type="submit">
+                    <span class="btn__text">Sign Up</span>
+                    <span class="btn__spinner" aria-hidden="true"></span>
+                </button>
+
+                <div class="divider">
+                    <span>OR SIGN UP</span>
+                </div>
+
+                <a class="btn btn--google" th:href="@{/oauth2/authorization/google}">
+                    <span class="g">G</span>
+                    <span>Sign up with Google</span>
+                </a>
+
+                <p class="bottom">
+                    Already have an account?
+                    <a class="link" th:href="@{/login}">Sign in</a>
+                </p>
+            </form>
+        </div>
+    </section>
+</main>
+<div id="toast" class="toast" th:if="${param.registered}">
+    Đăng ký thành công! Vui lòng đăng nhập.
 </div>
+<script>
+    // auto hide
+    setTimeout(() => {
+        const t = document.getElementById('toast');
+        if (t) t.classList.add('hide');
+    }, 2500);
+</script>
+
 </body>
 </html>
