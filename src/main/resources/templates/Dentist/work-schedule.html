@@ -24,8 +24,8 @@
 
     <nav class="nav">
       <a class="nav-item active">Work Schedule</a>
-      <a class="nav-item" href="/dentist/profile">Profile</a>
       <a class="nav-item" href="/dentist/support">Support Ticket</a>
+      <a class="nav-item" href="/dentist/profile">Profile</a>
     </nav>
 
     <div style="margin-top:auto;">
@@ -64,6 +64,9 @@
                     th:selected="${w.value == selectedWeekStart}">
             </option>
           </select>
+          <input type="hidden" id="weekStartHidden"
+                 th:value="${selectedWeekStart}">
+
         </div>
         <input type="hidden" id="dentistUserIdHidden" th:value="${dentistUserId}">
       </div>
@@ -152,65 +155,9 @@
   </div>
 </div>
 
-<!-- ================= JS INLINE (QUAN TRỌNG) ================= -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
+<!-- ================= JS INLINE  ================= -->
+<script src="/js/app.js"></script>
 
-    const backdrop = document.getElementById('apptModalBackdrop');
-    const btnClose = document.getElementById('btnCloseModal');
-    const title = document.getElementById('apptModalTitle');
-    const sub = document.getElementById('apptModalSub');
-    const btnExam = document.getElementById('btnExamination');
-    const btnBilling = document.getElementById('btnBillingTransfer');
-
-    function closeModal() {
-      backdrop.hidden = true;
-    }
-
-    btnClose.addEventListener('click', closeModal);
-    backdrop.addEventListener('click', e => {
-      if (e.target === backdrop) closeModal();
-    });
-
-    document.querySelectorAll('.appt').forEach(el => {
-      el.addEventListener('click', () => {
-
-        const status = el.dataset.status;
-
-
-        const appointmentId = el.dataset.appointmentId;
-        const patientName = el.dataset.patientName;
-        const serviceName = el.dataset.serviceName;
-        const customerUserId = el.dataset.customerUserId;
-        const dentistUserId = el.dataset.dentistUserId;
-
-        title.textContent = patientName;
-        sub.textContent = serviceName;
-
-        btnExam.href =
-                `/dentist/appointments/${appointmentId}/examination`
-                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
-
-        btnBilling.href =
-                `/dentist/appointments/${appointmentId}/billing-transfer`
-                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
-
-        backdrop.hidden = false;
-      });
-    });
-
-
-    document.getElementById('weekSelect')?.addEventListener('change', e => {
-      const weekStart = e.target.value;
-      const dentistUserId =
-              document.getElementById('dentistUserIdHidden').value;
-      window.location.href =
-              `/dentist/work-schedule?weekStart=${weekStart}`;
-
-    });
-
-  });
-</script>
 
 </body>
 </html>
