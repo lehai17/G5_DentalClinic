@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +31,12 @@ public class CustomerAppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final DentistScheduleRepository dentistScheduleRepository;
     private final ServiceRepository serviceRepository;
+
+    // ===== Contact validation patterns =====
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern VN_PHONE_PATTERN =
+            Pattern.compile("^(0|\\+84)\\d{9,10}$");
 
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
                                       UserRepository userRepository,
@@ -56,6 +63,71 @@ public class CustomerAppointmentService {
                 });
     }
 
+    /** Validate request payload cơ bản + contact format. */
+    private void validateCreateRequest(CreateAppointmentRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Dữ liệu đặt lịch không hợp lệ.");
+        }
+        if (request.getSlotId() == null || request.getSlotId() <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn khung giờ hợp lệ.");
+        }
+        if (request.getServiceId() == null || request.getServiceId() <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn dịch vụ hợp lệ.");
+        }
+
+        // Note length
+        if (request.getPatientNote() != null && request.getPatientNote().length() > 500) {
+            throw new IllegalArgumentException("Ghi chú tối đa 500 ký tự.");
+        }
+
+        // Contact channel/value
+        String channel = request.getContactChannel();
+        String value = request.getContactValue();
+
+        if (channel == null || channel.isBlank()) {
+            throw new IllegalArgumentException("Vui lòng chọn kênh liên hệ.");
+        }
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Vui lòng nhập thông tin liên hệ.");
+        }
+
+        channel = channel.trim().toUpperCase();
+        value = value.trim();
+
+        switch (channel) {
+            case "PHONE":
+            case "ZALO": {
+                String v = value.replaceAll("\\s+", "");
+                if (!VN_PHONE_PATTERN.matcher(v).matches()) {
+                    throw new IllegalArgumentException("Số điện thoại/Zalo không hợp lệ (VD: 0xxxxxxxxx hoặc +84xxxxxxxxx).");
+                }
+                break;
+            }
+            case "EMAIL": {
+                if (!EMAIL_PATTERN.matcher(value).matches()) {
+                    throw new IllegalArgumentException("Email không hợp lệ.");
+                }
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Kênh liên hệ chỉ được: PHONE, ZALO, EMAIL.");
+        }
+    }
+
+    /** Validate rule nghiệp vụ của slot. */
+    private void validateSlotBusinessRules(DentistSchedule slot) {
+        if (slot == null) {
+            throw new IllegalArgumentException("Khung giờ không tồn tại.");
+        }
+        if (!slot.isAvailable()) {
+            throw new IllegalArgumentException("Khung giờ này hiện không khả dụng. Vui lòng chọn khung giờ khác.");
+        }
+        LocalDate today = LocalDate.now();
+        if (slot.getDate() == null || slot.getDate().isBefore(today)) {
+            throw new IllegalArgumentException("Không thể đặt lịch cho ngày trong quá khứ.");
+        }
+    }
+
     /**
      * Get available slots for a given date, optionally filtered by service and dentist.
      * serviceId and dentistId can be null (no filter).
@@ -80,8 +152,7 @@ public class CustomerAppointmentService {
                     dto.setDentistId(slot.getDentist().getId());
                     dto.setDentistName(slot.getDentist().getFullName());
 
-                    // ✅ Slot được coi là bận nếu đã có appointment "còn hiệu lực"
-                    // (không tính CANCELLED -> hủy xong đặt lại được)
+                    // Slot bận nếu đã có appointment còn hiệu lực (không tính CANCELLED)
                     boolean busy = appointmentRepository.existsBySlot_IdAndStatusNot(
                             slot.getId(),
                             AppointmentStatus.CANCELLED
@@ -95,33 +166,42 @@ public class CustomerAppointmentService {
 
     @Transactional
     public AppointmentDto createAppointment(Long userId, CreateAppointmentRequest request) {
+        // 1) validate request
+        validateCreateRequest(request);
+
+        // 2) customer profile
         CustomerProfile customer = getOrCreateCustomerProfile(userId);
 
+        // 3) slot
         DentistSchedule slot = dentistScheduleRepository.findById(request.getSlotId())
-                .orElseThrow(() -> new IllegalArgumentException("Slot not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Khung giờ không tồn tại."));
+        validateSlotBusinessRules(slot);
 
+        // 4) service
         Services service = serviceRepository.findById(request.getServiceId())
-                .orElseThrow(() -> new IllegalArgumentException("Service not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Dịch vụ không tồn tại."));
 
-        // ✅ Không cho phép đặt trùng slot nếu đã có appointment còn hiệu lực (không tính CANCELLED)
+        // 5) không cho trùng slot (không tính CANCELLED)
         if (appointmentRepository.existsBySlot_IdAndStatusNot(slot.getId(), AppointmentStatus.CANCELLED)) {
             throw new IllegalArgumentException("Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.");
         }
 
+        // 6) create
         Appointment appointment = new Appointment();
         appointment.setCustomer(customer);
         appointment.setSlot(slot);
 
-        // Chưa gán bác sĩ ngay sau khi đặt – staff sẽ gán sau
+        // Staff sẽ gán bác sĩ sau
         appointment.setService(service);
         appointment.setDate(slot.getDate());
         appointment.setStartTime(slot.getStartTime());
         appointment.setEndTime(slot.getEndTime());
         appointment.setStatus(AppointmentStatus.PENDING);
 
-        appointment.setNotes(request.getPatientNote());
-        appointment.setContactChannel(request.getContactChannel());
-        appointment.setContactValue(request.getContactValue());
+        // normalize text
+        appointment.setNotes(request.getPatientNote() != null ? request.getPatientNote().trim() : null);
+        appointment.setContactChannel(request.getContactChannel().trim().toUpperCase());
+        appointment.setContactValue(request.getContactValue().trim());
 
         appointment = appointmentRepository.save(appointment);
         return toDto(appointment);
@@ -161,7 +241,6 @@ public class CustomerAppointmentService {
 
         Appointment a = opt.get();
 
-        // Không hủy lại lịch đã hoàn thành / đã hủy
         if (a.getStatus() == AppointmentStatus.COMPLETED || a.getStatus() == AppointmentStatus.CANCELLED) {
             return Optional.empty();
         }
