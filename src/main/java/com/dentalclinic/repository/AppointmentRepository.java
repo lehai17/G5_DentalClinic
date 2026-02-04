@@ -73,6 +73,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
+              AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
     """)
     List<Appointment> findScheduleForWeek(
             @Param("dentistProfileId") Long dentistProfileId,
