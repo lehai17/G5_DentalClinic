@@ -7,6 +7,10 @@ import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.service.mail.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -54,15 +58,17 @@ public class StaffAppointmentService {
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (appointmentRepository.countBusyAppointments(
+        int busy = appointmentRepository.countBusyAppointmentsExcludeSelf(
                 dentistId,
                 appt.getDate(),
                 appt.getStartTime(),
-                appt.getEndTime()
-        ) > 0 ) {
+                appt.getEndTime(),
+                appt.getId()
+        );
+
+        if (busy > 0) {
             throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
         }
-
 
         DentistProfile dentist = dentistProfileRepository.findById(dentistId)
                 .orElseThrow(() -> new RuntimeException("Dentist not found"));
@@ -70,6 +76,7 @@ public class StaffAppointmentService {
         appt.setDentist(dentist);
         appointmentRepository.save(appt);
     }
+
 
     public void completeAppointment(Long id) {
         Appointment a = appointmentRepository.findById(id).orElseThrow();
@@ -91,24 +98,27 @@ public class StaffAppointmentService {
         appointmentRepository.save(appt);
     }
 
-    public List<Appointment> searchAndSort(String keyword, String sort) {
-
-        List<Appointment> list;
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            list = appointmentRepository
-                    .findByCustomer_FullNameContainingIgnoreCase(keyword);
-        } else {
-            list = appointmentRepository.findAll();
-        }
+    public Page<Appointment> searchAndSort(
+            String keyword,
+            String sort,
+            int page
+    ) {
+        Sort s = Sort.by("date").ascending();
 
         if ("newest".equals(sort)) {
-            list.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+            s = Sort.by("date").descending();
         } else if ("oldest".equals(sort)) {
-            list.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+            s = Sort.by("date").ascending();
         }
 
-        return list;
+        Pageable pageable = PageRequest.of(page, 3, s);
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return appointmentRepository
+                    .findByCustomer_FullNameContainingIgnoreCase(keyword, pageable);
+        }
+
+        return appointmentRepository.findAll(pageable);
     }
 
 }

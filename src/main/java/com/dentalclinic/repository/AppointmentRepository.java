@@ -2,6 +2,8 @@ package com.dentalclinic.repository;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -81,6 +83,26 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("end") LocalDate end
     );
 
-    List<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword);
+    Page<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword, Pageable pageable);
+
+    @Query(
+            value = """
+    SELECT COUNT(*)
+    FROM appointment
+    WHERE dentist_id = :dentistId
+      AND appointment_date = :date
+      AND id <> :appointmentId
+      AND start_time < CAST(:endTime AS time)
+      AND end_time > CAST(:startTime AS time)
+    """,
+            nativeQuery = true
+    )
+    int countBusyAppointmentsExcludeSelf(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("appointmentId") Long appointmentId
+    );
 
 }

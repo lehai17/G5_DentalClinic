@@ -51,3 +51,13 @@ window.addEventListener('click', function(event) {
         event.target.classList.remove('active');
     }
 });
+
+window.toggleSidebar = function () {
+    const sidebar = document.getElementById("sidebar");
+    const mainContent = document.querySelector(".main-content");
+
+    sidebar.classList.toggle("collapsed");
+    mainContent.classList.toggle("sidebar-collapsed");
+};
+
+

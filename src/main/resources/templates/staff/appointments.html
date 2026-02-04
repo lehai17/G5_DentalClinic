@@ -3,7 +3,7 @@
 <head>
     <title>Staff Appointments</title>
     <link rel="stylesheet" href="/css/staff/staff.css">
-    <script src="/js/staff/staff.js"></script>
+    <script src="/js/staff/staff.js" defer></script>
 </head>
 <body>
 <div class="app-wrapper">
@@ -61,12 +61,14 @@
                     <td th:text="${a.status}"></td>
 
                     <td>
-                        <button th:if="${a.status.name() == 'PENDING' and a.dentist != null}"
+                        <button type="button"
+                                th:if="${a.status.name() == 'PENDING' and a.dentist != null}"
                                 th:onclick="'confirmAppointment(' + ${a.id} + ')'">
                             Xác nhận
                         </button>
 
-                        <button th:if="${a.status.name() == 'PENDING'}"
+                        <button type="button"
+                                th:if="${a.status.name() == 'PENDING'}"
                                 th:onclick="'assignDentist(' + ${a.id} + ')'">
                             Gán BS
                         </button>
@@ -86,6 +88,25 @@
                 </tr>
                 </tbody>
             </table>
+
+            <div class="pagination" th:if="${totalPages > 1}">
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/staff/appointments(page=${currentPage - 1}, keyword=${keyword}, sort=${sort})}">
+                    ◀ Trước
+                </a>
+
+                <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                    <a th:href="@{/staff/appointments(page=${i}, keyword=${keyword}, sort=${sort})}"
+                        th:text="${i + 1}"
+                        th:classappend="${i == currentPage} ? 'active'">
+                    </a>
+                </span>
+
+                <a th:if="${currentPage < totalPages - 1}"
+                   th:href="@{/staff/appointments(page=${currentPage + 1}, keyword=${keyword}, sort=${sort})}">
+                    Sau ▶
+                </a>
+            </div>
 
         </div>
     </div>
