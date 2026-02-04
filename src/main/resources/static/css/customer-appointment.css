@@ -16,136 +16,274 @@
 }
 
 .cap-item-chevron {
-    color: rgba(100, 116, 139, 0.75);
-    transition: transform 120ms ease;
+    color: rgba(100, 116, 139, 0.6) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-size: 1.1rem !important;
+}
+
+.cap-item-side:hover .cap-item-chevron {
+    color: #667eea !important;
+    transform: scale(1.2) !important;
 }
 
 #customer-appointments-list li.cap-item-active .cap-item-chevron {
-    transform: rotate(180deg);
+    transform: rotate(180deg) scale(1.2) !important;
+    color: #667eea !important;
 }
 
 .cap-inline-detail {
-    margin: 12px 0 18px;
+    margin: 16px 0 24px !important;
+    animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* ===== Card ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== Enhanced Inline Detail Card ===== */
 /* ✅ FIX: JS tạo div class="cap-inline-card", nên phải style thêm class này */
 .cap-inline-detail-card,
 .cap-inline-card {
-    background: rgba(248, 250, 252, 0.97);
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    border-radius: 18px;
-    padding: 16px 16px 14px;
-    box-shadow: 0 12px 30px rgba(2, 6, 23, 0.07);
+    background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%) !important;
+    border: 2px solid rgba(102, 126, 234, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    animation: slideInDetail 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* ===== Header ===== */
+@keyframes slideInDetail {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.cap-inline-detail-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ===== Enhanced Detail Header ===== */
 .cap-inline-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 16px !important;
+    border-bottom: 2px solid rgba(148, 163, 184, 0.15) !important;
 }
 
 .cap-inline-title {
-    font-weight: 900;
-    font-size: 1rem;
-    color: #0f172a;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    font-weight: 800 !important;
+    font-size: 1.15rem !important;
+    color: #1f2937 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 0 !important;
+}
+
+.cap-inline-title i {
+    color: #667eea !important;
+    font-size: 1.2rem !important;
 }
 
 .cap-inline-close {
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: #fff;
-    border-radius: 12px;
-    padding: 7px 9px;
-    cursor: pointer;
-    transition: transform 120ms ease, box-shadow 120ms ease;
+    border: 2px solid rgba(239, 68, 68, 0.3) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%) !important;
+    border-radius: 12px !important;
+    padding: 10px 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .cap-inline-close:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(2, 6, 23, 0.08);
+    transform: translateY(-2px) scale(1.1) !important;
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
 }
 
-/* ===== Loading ===== */
+.cap-inline-close i {
+    color: #ef4444 !important;
+    font-size: 1.1rem !important;
+    transition: transform 0.3s ease !important;
+}
+
+.cap-inline-close:hover i {
+    transform: rotate(90deg) !important;
+}
+
+/* ===== Enhanced Loading ===== */
 .cap-inline-loading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #475569;
-    padding: 10px 0 12px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    color: #64748b !important;
+    padding: 24px 0 !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
 }
 
-/* ===== Detail grid ===== */
+.cap-inline-loading .cap-spinner {
+    width: 20px !important;
+    height: 20px !important;
+    border-width: 2px !important;
+}
+
+/* ===== Enhanced Detail Grid ===== */
 .cap-inline-grid {
-    display: grid;
-    gap: 8px;
+    display: grid !important;
+    gap: 0 !important;
+    background: rgba(248, 250, 252, 0.5) !important;
+    border-radius: 16px !important;
+    padding: 4px !important;
+    margin-bottom: 8px !important;
 }
 
 .cap-inline-row {
-    display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 12px;
-    padding: 8px 0;
-    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    display: grid !important;
+    grid-template-columns: 140px 1fr !important;
+    gap: 16px !important;
+    padding: 16px 20px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
+    transition: background 0.2s ease !important;
 }
 
-.cap-inline-row:first-child {
-    border-top: none;
-    padding-top: 0;
+.cap-inline-row:last-child {
+    border-bottom: none !important;
+}
+
+.cap-inline-row:hover {
+    background: rgba(102, 126, 234, 0.05) !important;
+    border-radius: 12px !important;
 }
 
 .cap-inline-label {
-    color: #64748b;
-    font-weight: 900;
+    color: #64748b !important;
+    font-weight: 800 !important;
+    font-size: 0.9rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
 }
 
 .cap-inline-value {
-    color: #0f172a;
-    font-weight: 700;
+    color: #1f2937 !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    line-height: 1.4 !important;
 }
 
 .cap-inline-notes .cap-inline-value {
-    font-weight: 600;
-    color: #475569;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    font-style: italic !important;
 }
 
-/* ===== Actions ===== */
+/* Enhanced status badge in detail */
+.cap-inline-row .cap-status-badge {
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+    border-radius: 20px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ===== Enhanced Actions ===== */
 .cap-inline-actions {
-    display: flex;
-    flex-direction: column; /* 🔥 Hủy lịch nằm riêng 1 hàng */
-    gap: 14px;
-    margin-top: 18px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    margin-top: 24px !important;
+    padding-top: 20px !important;
+    border-top: 2px solid rgba(148, 163, 184, 0.15) !important;
 }
 
-/* ===== Button base ===== */
+/* ===== Enhanced Button Base ===== */
 .cap-btn {
-    min-height: 50px;
+    min-height: 56px !important;
     border-radius: 16px !important;
-    padding: 14px 18px !important;
-    font-weight: 900 !important;
-    font-size: 15px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    padding: 16px 24px !important;
+    font-weight: 800 !important;
+    font-size: 1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 2px solid transparent !important;
+    position: relative !important;
+    overflow: hidden !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
 }
 
-/* ===== Check-in (nhẹ hơn) ===== */
+.cap-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.cap-btn:hover::before {
+    left: 100%;
+}
+
+/* ===== Enhanced Check-in Button ===== */
 .cap-btn-primary {
-    border: 1px solid rgba(99, 102, 241, 0.35);
-    background: rgba(99, 102, 241, 0.14);
-    color: #3730a3;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    border: 2px solid rgba(99, 102, 241, 0.3) !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3) !important;
 }
 
 .cap-btn-primary:hover {
-    background: rgba(99, 102, 241, 0.2);
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4) !important;
+}
+
+.cap-btn-primary:active {
+    transform: translateY(0) scale(0.98) !important;
 }
 
 .cap-inline-detail .cap-inline-detail-card .cap-inline-actions .cap-btn.cap-btn-danger {
@@ -224,13 +362,551 @@
 }
 
 /* ===== Status badge ===== */
+/* ===== Enhanced Status Badge ===== */
 .cap-status-badge {
-    display: inline-flex;
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-weight: 800 !important;
+    font-size: 0.85rem !important;
+    border: 2px solid rgba(148, 163, 184, 0.3) !important;
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.1) 0%, rgba(148, 163, 184, 0.05) 100%) !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.cap-status-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.cap-status-badge:hover::before {
+    left: 100%;
+}
+
+/* ===== Responsive Design for Mobile ===== */
+@media (max-width: 768px) {
+    .cap-head {
+        flex-direction: column !important;
+        gap: 16px !important;
+        padding: 20px 24px !important;
+        text-align: center !important;
+    }
+    
+    .customer-page-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .cap-subtitle {
+        font-size: 0.95rem !important;
+    }
+    
+    .cap-refresh-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 14px 20px !important;
+        font-size: 1rem !important;
+    }
+    
+    .cap-card-head {
+        padding: 16px 20px !important;
+    }
+    
+    .cap-card-title {
+        font-size: 1.1rem !important;
+    }
+    
+    .cap-appointments-list li {
+        padding: 16px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    .apt-date {
+        font-size: 1rem !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+    }
+    
+    .apt-service {
+        font-size: 0.9rem !important;
+        margin-top: 4px !important;
+    }
+    
+    .cap-item-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    
+    .cap-item-side {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    
+    .cap-inline-detail-card,
+    .cap-inline-card {
+        padding: 20px !important;
+        margin: 0 -8px !important;
+        border-radius: 16px !important;
+    }
+    
+    .cap-inline-head {
+        flex-direction: column !important;
+        gap: 12px !important;
+        padding-bottom: 12px !important;
+    }
+    
+    .cap-inline-title {
+        font-size: 1.05rem !important;
+        align-self: flex-start !important;
+    }
+    
+    .cap-inline-close {
+        align-self: flex-end !important;
+    }
+    
+    .cap-inline-row {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+    }
+    
+    .cap-inline-label {
+        font-size: 0.85rem !important;
+        margin-bottom: 4px !important;
+    }
+    
+    .cap-inline-value {
+        font-size: 0.95rem !important;
+    }
+    
+    .cap-btn {
+        min-height: 52px !important;
+        padding: 14px 20px !important;
+        font-size: 0.95rem !important;
+    }
+    
+    .cap-inline-actions {
+        gap: 12px !important;
+        margin-top: 20px !important;
+        padding-top: 16px !important;
+    }
+    
+    .cap-empty {
+        padding: 40px 16px !important;
+    }
+    
+    .cap-empty-icon {
+        font-size: 3rem !important;
+        margin-bottom: 12px !important;
+    }
+    
+    .cap-empty-title {
+        font-size: 1.1rem !important;
+    }
+    
+    .cap-empty-desc {
+        font-size: 0.95rem !important;
+        margin-bottom: 16px !important;
+    }
+    
+    .cap-primary-link {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 14px 20px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .cap-head {
+        padding: 16px 20px !important;
+    }
+    
+    .customer-page-title {
+        font-size: 1.3rem !important;
+    }
+    
+    .cap-appointments-list li {
+        padding: 14px !important;
+    }
+    
+    .cap-inline-detail-card,
+    .cap-inline-card {
+        padding: 16px !important;
+    }
+    
+    .apt-status {
+        font-size: 0.75rem !important;
+        padding: 4px 8px !important;
+    }
+}
+
+/* ===== Enhanced Header Section ===== */
+.cap-head {
+    display: flex;
     align-items: center;
-    padding: 7px 12px;
-    border-radius: 999px;
-    font-weight: 900;
-    font-size: 0.85rem;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    background: rgba(148, 163, 184, 0.14);
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 32px;
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.cap-head::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white" opacity="0.1"/><circle cx="80" cy="40" r="1.5" fill="white" opacity="0.08"/><circle cx="40" cy="80" r="1" fill="white" opacity="0.12"/><circle cx="60" cy="60" r="0.8" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.cap-head > div {
+    position: relative;
+    z-index: 1;
+}
+
+.customer-page-title {
+    color: #ffffff !important;
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 8px !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+}
+
+.cap-subtitle {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 1.05rem !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+}
+
+.cap-refresh-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 12px 20px !important;
+    border-radius: 16px !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(10px) !important;
+    position: relative !important;
+    z-index: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.cap-refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.cap-refresh-btn:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+.cap-refresh-btn i {
+    font-size: 1.1rem !important;
+    transition: transform 0.3s ease !important;
+}
+
+.cap-refresh-btn:hover i {
+    transform: rotate(180deg) !important;
+}
+
+/* ===== Enhanced Layout ===== */
+.cap-layout {
+    display: grid;
+    gap: 24px;
+    position: relative;
+    width: 100%;
+}
+
+/* ===== Enhanced Card Styles ===== */
+.cap-card {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    width: 100%;
+}
+
+.cap-card:hover {
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12) !important;
+    transform: translateY(-2px) !important;
+}
+
+.cap-card-head {
+    padding: 20px 24px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15) !important;
+    background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%) !important;
+}
+
+.cap-card-title {
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    color: #1f2937 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 4px !important;
+}
+
+.cap-card-title i {
+    font-size: 1.3rem !important;
+    color: #667eea !important;
+}
+
+.cap-card-hint {
+    color: #64748b !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+}
+
+/* ===== Enhanced Loading ===== */
+.cap-loading {
+    padding: 40px 20px !important;
+    text-align: center !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-size: 1.05rem !important;
+}
+
+.cap-spinner {
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    border: 3px solid rgba(148, 163, 184, 0.3) !important;
+    border-top-color: #667eea !important;
+    border-radius: 50% !important;
+    animation: spin 1s linear infinite !important;
+    margin-right: 12px !important;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== Enhanced Empty State ===== */
+.cap-empty {
+    text-align: center !important;
+    padding: 60px 20px !important;
+    color: #64748b !important;
+}
+
+.cap-empty-icon {
+    font-size: 4rem !important;
+    color: #cbd5e1 !important;
+    margin-bottom: 16px !important;
+    display: block !important;
+}
+
+.cap-empty-title {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: #374151 !important;
+    margin-bottom: 8px !important;
+}
+
+.cap-empty-desc {
+    font-size: 1rem !important;
+    color: #6b7280 !important;
+    margin-bottom: 20px !important;
+    line-height: 1.5 !important;
+}
+
+.cap-primary-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 12px 24px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    border-radius: 16px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+.cap-primary-link:hover {
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+    text-decoration: none !important;
+    color: #ffffff !important;
+}
+
+/* ===== Enhanced List Wrapper ===== */
+.cap-list-wrap {
+    padding: 16px !important;
+    width: 100%;
+}
+
+.cap-appointments-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ===== Enhanced Appointment List Items ===== */
+.cap-appointments-list li {
+    background: #ffffff !important;
+    border: 2px solid rgba(148, 163, 184, 0.15) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    margin-bottom: 16px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.cap-appointments-list li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.cap-appointments-list li:hover::before {
+    left: 100%;
+}
+
+.cap-appointments-list li:hover {
+    border-color: #667eea !important;
+    transform: translateX(8px) translateY(-2px) !important;
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.2) !important;
+    background: linear-gradient(135deg, #fafbff 0%, #f8faff 100%) !important;
+}
+
+.cap-appointments-list li:active {
+    transform: translateX(4px) translateY(-1px) scale(0.98) !important;
+}
+
+.cap-appointments-list li.highlight-new {
+    border-color: #667eea !important;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25) !important;
+}
+
+.cap-appointments-list li.highlight-new::after {
+    content: 'MỚI' !important;
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    letter-spacing: 0.5px !important;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+.cap-appointments-list li.cap-item-active {
+    border-color: #667eea !important;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Enhanced Date and Service Info */
+.apt-date {
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+    color: #1f2937 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 6px !important;
+}
+
+.apt-date i {
+    color: #667eea !important;
+    font-size: 1.1rem !important;
+}
+
+.apt-service {
+    color: #64748b !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+}
+
+.apt-status {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    background: rgba(148, 163, 184, 0.1) !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+}
+
+/* Status Color Variations */
+.apt-status[data-status="PENDING"],
+.apt-status:has(~ .cap-item-main) {
+    background: rgba(251, 191, 36, 0.1) !important;
+    border-color: rgba(251, 191, 36, 0.3) !important;
+    color: #92400e !important;
+}
+
+.apt-status[data-status="CONFIRMED"] {
+    background: rgba(34, 197, 94, 0.1) !important;
+    border-color: rgba(34, 197, 94, 0.3) !important;
+    color: #166534 !important;
+}
+
+.apt-status[data-status="COMPLETED"] {
+    background: rgba(99, 102, 241, 0.1) !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+    color: #3730a3 !important;
+}
+
+.apt-status[data-status="CANCELLED"] {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: #991b1b !important;
 }
