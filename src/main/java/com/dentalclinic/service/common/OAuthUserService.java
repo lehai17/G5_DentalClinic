@@ -32,26 +32,26 @@ public class OAuthUserService {
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User u = new User();
             u.setEmail(email);
-            u.setPassword("GOOGLE");          // dummy
+            u.setPassword("GOOGLE");          // pass ngẫu nhiên vì kh cần pass
             u.setRole(Role.CUSTOMER);
             u.setStatus(UserStatus.ACTIVE);
 
-            // vì Google không trả DOB/Gender
-            u.setGender(Gender.OTHER);        // hoặc nullable=true nếu bạn muốn
-            u.setDateOfBirth(null);           // bạn đã set nullable=true rồi
-            return userRepository.save(u);    // save trong cùng transaction
+            // GG kh có DOB/Gender
+            u.setGender(Gender.OTHER);        // trả other hoặc null
+            u.setDateOfBirth(null);
+            return userRepository.save(u);
         });
 
-        // 2) Upsert CUSTOMER_PROFILE (tạo nếu chưa có)
+        // 2) Tạo luôn profile mới
         CustomerProfile profile = customerProfileRepository
-                .findByUser_Id(user.getId())      // bạn đang dùng method này
+                .findByUser_Id(user.getId())
                 .orElseGet(() -> {
                     CustomerProfile p = new CustomerProfile();
                     p.setUser(user);
                     return p;
                 });
 
-        // cập nhật name (nếu muốn)
+        // lấy fullName
         profile.setFullName(fullName);
         customerProfileRepository.save(profile);
     }
