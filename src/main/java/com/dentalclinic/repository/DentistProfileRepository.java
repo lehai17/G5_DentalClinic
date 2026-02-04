@@ -41,4 +41,11 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
     // 4. Đếm số lượng bác sĩ theo trạng thái để hiển thị Stat Cards
     @Query("SELECT COUNT(d) FROM DentistProfile d WHERE d.user.status = :status")
     long countByUserStatus(@Param("status") UserStatus status);
+    @Query("SELECT p FROM DentistProfile p JOIN p.user u ORDER BY u.createdAt DESC")
+    List<DentistProfile> findAllOrderByNewest();
+    // Tìm kiếm theo tên hoặc chuyên khoa, sắp xếp người mới nhất lên đầu
+//    @Query("SELECT p FROM DentistProfile p JOIN p.user u " +
+//            "WHERE p.fullName LIKE %:keyword% OR p.specialization LIKE %:keyword% " +
+//            "ORDER BY u.createdAt DESC")
+//    List<DentistProfile> findByKeyword(@Param("keyword") String keyword);
 }

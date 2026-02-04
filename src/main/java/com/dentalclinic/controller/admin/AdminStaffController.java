@@ -56,9 +56,16 @@ public class AdminStaffController {
 
     // 3. Xử lý lưu dữ liệu
     @PostMapping("/save")
-    public String processAddStaff(@ModelAttribute("staffDTO") StaffDTO dto) {
-        staffService.saveStaff(dto);
-        return "redirect:/admin/staff";
+    public String processAddStaff(@ModelAttribute("staffDTO") StaffDTO dto, RedirectAttributes ra) {
+        try {
+            staffService.saveStaff(dto);
+            ra.addFlashAttribute("success", "Thêm nhân viên thành công!");
+            return "redirect:/admin/staff";
+        } catch (RuntimeException e) {
+            // Gửi thông báo lỗi quay lại màn hình Add
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/staff/add";
+        }
     }
 
     // 4. Xử lý khóa tài khoản nhân viên

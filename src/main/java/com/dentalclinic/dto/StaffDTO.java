@@ -1,5 +1,7 @@
 package com.dentalclinic.dto;
 
+import java.time.LocalDate;
+
 public class StaffDTO {
     public String getFullName() {
         return fullName;
@@ -44,6 +46,26 @@ public class StaffDTO {
     private String fullName;
     private String email;
     private String phone;
-    private String position; // Ví dụ: Lễ tân, Quản lý kho...
+    private String position;
     private String tempPassword;
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    private LocalDate dateOfBirth;
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    private String gender;
 }
