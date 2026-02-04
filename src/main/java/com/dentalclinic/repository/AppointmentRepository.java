@@ -73,6 +73,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
+              AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
     """)
     List<Appointment> findScheduleForWeek(
             @Param("dentistProfileId") Long dentistProfileId,
@@ -81,5 +82,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     );
 
     List<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword);
+    /* ================= CHECK OVERLAP (JPQL) ================= */
+
+    @Query("""
+    SELECT COUNT(a) > 0
+    FROM Appointment a
+    WHERE a.dentist.id = :dentistId
+      AND a.date = :date
+      AND :start < a.endTime
+      AND :end > a.startTime
+      AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+""")
+    boolean existsOverlap(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date,
+            @Param("start") LocalTime start,
+            @Param("end") LocalTime end
+    );
+    // ================= FOLLOW-UP =================
+
 
 }
