@@ -76,23 +76,23 @@
         <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
         <span th:text="${success}">Thành công!</span>
     </div>
+    <div th:if="${errorMessage}" class="alert alert-danger shadow-sm rounded-4 mb-4 d-flex align-items-center">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${errorMessage}">Nội dung lỗi sẽ hiển thị ở đây</span>
+    </div>
+
+
     <form th:action="@{/admin/dentists/save}" th:object="${dentistDTO}" method="POST">
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
 
             <div class="left-col">
                 <div class="form-card">
-                    <div class="card-title">
-                        <div class="icon-box"><i class="fas fa-user-md"></i></div>
-                        <div>
-                            <h4 style="margin:0; color: #2B3674;">Personal Information</h4>
-                            <small style="color: #A3AED0;">Identity and contact details</small>
-                        </div>
-                    </div>
                     <div class="form-grid">
-                        <div style="grid-row: span 3; text-align: center;"> <div class="avatar-circle">
-                            <i class="fas fa-user" style="font-size: 35px; color: #D1D9E8;"></i>
-                            <button type="button" class="camera-btn"><i class="fas fa-camera" style="font-size: 12px;"></i></button>
-                        </div>
+                        <div style="grid-row: span 3; text-align: center;">
+                            <div class="avatar-circle">
+                                <i class="fas fa-user" style="font-size: 35px; color: #D1D9E8;"></i>
+                                <button type="button" class="camera-btn"><i class="fas fa-camera" style="font-size: 12px;"></i></button>
+                            </div>
                             <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">UPLOAD PHOTO</small>
                         </div>
 
@@ -116,7 +116,10 @@
                                 <label>Date of Birth</label>
                                 <div class="input-wrapper">
                                     <i class="far fa-calendar-alt"></i>
-                                    <input type="date" th:field="*{dob}" required>
+                                    <input type="date" th:field="*{dateOfBirth}"
+                                           class="form-control"
+                                           th:max="${#temporals.format(#temporals.createNow().minusYears(25), 'yyyy-MM-dd')}"
+                                           required>
                                 </div>
                             </div>
                             <div class="input-group" style="width: 120px;">
@@ -132,7 +135,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
                 <div class="form-card">
                     <div class="card-title">
@@ -143,7 +145,7 @@
                         <div class="input-group">
                             <label>Medical Specialty</label>
                             <div class="input-wrapper">
-                                <select th:field="*{specialty}">
+                                <select th:field="*{specialization}">
                                     <option value="Orthodontics">Orthodontics (Niềng răng)</option>
                                     <option value="Endodontics">Endodontics (Nội nha)</option>
                                     <option value="Periodontics">Periodontics (Chu nha)</option>
@@ -153,7 +155,10 @@
                         </div>
                         <div class="input-group">
                             <label>Years of Experience</label>
-                            <div class="input-wrapper"><i class="fas fa-history"></i><input type="number" th:field="*{experience}" min="0"></div>
+                            <div class="input-wrapper">
+                                <i class="fas fa-history"></i>
+                                <input type="number" th:field="*{experienceYears}" min="0">
+                            </div>
                         </div>
                         <div class="input-group" style="grid-column: span 2;">
                             <label>Qualifications & Certifications</label>
@@ -163,16 +168,16 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="form-card">
+            <div class="right-col">
+                <div class="form-card" style="margin-bottom: 20px;">
                     <div class="card-title">
                         <div class="icon-box"><i class="far fa-clock"></i></div>
                         <h4 style="margin:0;">Work Schedule</h4>
                     </div>
 
-                    <label class="filter-label" style="display: block; margin-top: 15px; margin-bottom: 10px;">
-                        AVAILABLE WORKING DAYS
-                    </label>
+                    <label class="filter-label" style="display: block; margin-top: 15px; margin-bottom: 10px;">AVAILABLE WORKING DAYS</label>
 
                     <div class="days-container">
                         <div th:each="day : ${T(java.time.DayOfWeek).values()}">
@@ -181,7 +186,6 @@
                                    th:value="${day.name()}"
                                    th:field="*{availableDays}"
                                    class="day-checkbox">
-
                             <label th:for="|day-${day.name()}|" class="day-label">
                                 <span th:text="${#strings.substring(day.name(), 0, 3)}">Mon</span>
                             </label>
@@ -200,7 +204,6 @@
                     </div>
                 </div>
 
-            <div class="right-col">
                 <div class="access-card">
                     <div class="card-title">
                         <div class="icon-box" style="background: rgba(255,255,255,0.2); color: white;"><i class="fas fa-shield-alt"></i></div>
@@ -218,13 +221,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-discard" onclick="window.history.back()">Discard</button>
-                    <button type="submit" class="btn-create">Create Profile</button>
+
+                <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button type="button" class="btn-discard" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #E0E7FF; background: white;" onclick="window.history.back()">Discard</button>
+                    <button type="submit" class="btn-create" style="flex: 1; padding: 12px; border-radius: 12px; background: #1A237E; color: white; border: none;">Create Profile</button>
                 </div>
             </div>
         </div>
-<!--        </div>-->
     </form>
 </div>
 

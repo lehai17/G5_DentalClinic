@@ -86,4 +86,36 @@ public class AdminUserController {
         }
         return "redirect:/admin/dentists";
     }
+    @GetMapping("/detail/{id}")
+    public String showDentistDetail(@PathVariable("id") Long id, Model model) {
+        // Log ra để kiểm tra xem request đã vào tới đây chưa
+        System.out.println("Đang xem chi tiết bác sĩ có ID: " + id);
+
+        DentistDTO dentist = dentistService.getDentistById(id);
+        model.addAttribute("dentist", dentist);
+
+        // Trả về file HTML tại: src/main/resources/templates/admin/dentist-detail.html
+        return "admin/dentist-detail";
+    }
+//    @GetMapping("/admin/dentists")
+//    public String listDentists(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
+//        // Gọi hàm search mới từ Service
+//        List<DentistDTO> dentists = dentistService.searchByKeyword(keyword);
+//
+//        model.addAttribute("dentists", dentists);
+//
+//        // BẮT BUỘC: Gửi keyword về View để ô input giữ lại nội dung đã gõ
+//        model.addAttribute("keyword", keyword != null ? keyword : "");
+//
+//        // (Các logic đếm số lượng Total, On Duty... vẫn giữ nguyên)
+//        return "admin/dentist-list";
+//    }
+//    @GetMapping("/admin/dentists/api/search")
+//    public String searchApi(@RequestParam String keyword, Model model) {
+//        // Phải nạp vào biến mang tên "dentists"
+//        List<DentistDTO> dentists = dentistService.searchByKeyword(keyword);
+//        model.addAttribute("dentists", dentists);
+//
+//        return "admin/fragments/dentist-table :: dentist-list";
+//    }
 }
