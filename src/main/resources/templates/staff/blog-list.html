@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Blogs</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+</head>
+<body>
+<div class="app-wrapper">
+    <th:block th:replace="~{staff/fragments/sidebar :: sidebar}"></th:block>
+    <div class="main-content">
+        <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
+
+        <div class="content">
+            <h2>Health Blogs</h2>
+            <a th:href="@{/staff/blogs/new}" class="btn">+ Create Blog</a>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Title</th><th>Created At</th><th>Status</th><th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${blogPage.content}">
+                    <td th:text="${b.title}"></td>
+                    <td th:text="${#temporals.format(b.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${b.published} ? 'Published' : 'Pending'"></td>
+                    <td>
+                        <a th:if="${!b.published}" th:href="@{'/staff/blogs/' + ${b.id} + '/edit'}">Edit</a>
+                        <form th:if="${!b.published}" th:action="@{'/staff/blogs/' + ${b.id} + '/delete'}" method="post" style="display:inline;">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

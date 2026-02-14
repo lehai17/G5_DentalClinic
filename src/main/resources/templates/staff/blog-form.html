@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create/Edit Blog</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+</head>
+<body>
+<div class="app-wrapper">
+    <th:block th:replace="~{staff/fragments/sidebar :: sidebar}"></th:block>
+    <div class="main-content">
+        <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
+
+        <div class="content">
+            <h2 th:text="${blog.id == null} ? 'Create Health Blog' : 'Edit Health Blog'"></h2>
+
+            <form th:action="${blog.id == null} ? @{/staff/blogs} : @{'/staff/blogs/' + ${blog.id}}" method="post">
+                <label>Title</label>
+                <input type="text" name="title" th:value="${blog.title}" required>
+
+                <label>Summary</label>
+                <textarea name="summary" rows="3" required th:text="${blog.summary}"></textarea>
+
+                <label>Image URL</label>
+                <input type="text" name="imageUrl" th:value="${blog.imageUrl}">
+
+                <label>Content</label>
+                <textarea name="content" rows="12" required th:text="${blog.content}"></textarea>
+
+                <button type="submit">Submit for Review</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
