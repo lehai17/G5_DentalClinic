@@ -1,9 +1,14 @@
 package com.dentalclinic.controller.admin;
 
 import com.dentalclinic.model.blog.Blog;
+import com.dentalclinic.model.blog.BlogStatus;
+import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.BlogRepository;
+import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.service.BlogWorkflowService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,44 +18,57 @@ import org.springframework.web.bind.annotation.*;
 public class AdminBlogController {
 
     private final BlogRepository blogRepository;
+    private final UserRepository userRepository;
+    private final BlogWorkflowService workflowService;
 
-    public AdminBlogController(BlogRepository blogRepository) {
+    public AdminBlogController(BlogRepository blogRepository,
+                               UserRepository userRepository,
+                               BlogWorkflowService workflowService) {
         this.blogRepository = blogRepository;
+        this.userRepository = userRepository;
+        this.workflowService = workflowService;
     }
 
-    @GetMapping("/pending")
-    public String pending(@RequestParam(defaultValue = "0") int page, Model model) {
+    @GetMapping
+    public String dashboard(@RequestParam(defaultValue = "PENDING") BlogStatus status,
+                            @RequestParam(defaultValue = "0") int page,
+                            Model model) {
         Pageable pageable = PageRequest.of(page, 10);
-        model.addAttribute("blogPage", blogRepository.findByIsPublishedFalseOrderByCreatedAtDesc(pageable));
-        return "admin/blog-pending";
+
+        model.addAttribute("blogPage", blogRepository.findByStatusOrderByUpdatedAtDesc(status, pageable));
+        model.addAttribute("status", status);
+        model.addAttribute("draftCount", blogRepository.countByStatus(BlogStatus.DRAFT));
+        model.addAttribute("pendingCount", blogRepository.countByStatus(BlogStatus.PENDING));
+        model.addAttribute("approvedCount", blogRepository.countByStatus(BlogStatus.APPROVED));
+        model.addAttribute("rejectedCount", blogRepository.countByStatus(BlogStatus.REJECTED));
+        model.addAttribute("activePage", "blogs");
+
+        return "admin/blog/dashboard";
     }
 
-    @GetMapping("/published")
-    public String published(@RequestParam(defaultValue = "0") int page, Model model) {
-        Pageable pageable = PageRequest.of(page, 10);
-        model.addAttribute("blogPage", blogRepository.findByIsPublishedTrueOrderByCreatedAtDesc(pageable));
-        return "admin/blog-published";
+    @GetMapping("/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        Blog blog = blogRepository.findById(id).orElseThrow();
+        model.addAttribute("blog", blog);
+        model.addAttribute("activePage", "blogs");
+        return "admin/blog/detail";
     }
 
     @PostMapping("/{id}/approve")
-    public String approve(@PathVariable Long id) {
+    public String approve(@PathVariable Long id, Authentication authentication) {
+        User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
         Blog blog = blogRepository.findById(id).orElseThrow();
-        blog.setPublished(true);
-        blogRepository.save(blog);
-        return "redirect:/admin/blogs/pending?approved=true";
+        workflowService.approve(blog, admin);
+        return "redirect:/admin/blogs?status=PENDING&approved=true";
     }
 
-    @PostMapping("/{id}/unpublish")
-    public String unpublish(@PathVariable Long id) {
+    @PostMapping("/{id}/reject")
+    public String reject(@PathVariable Long id,
+                         @RequestParam String rejectionReason,
+                         Authentication authentication) {
+        User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
         Blog blog = blogRepository.findById(id).orElseThrow();
-        blog.setPublished(false);
-        blogRepository.save(blog);
-        return "redirect:/admin/blogs/published?unpublished=true";
-    }
-
-    @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id) {
-        blogRepository.deleteById(id);
-        return "redirect:/admin/blogs/pending?deleted=true";
+        workflowService.reject(blog, admin, rejectionReason);
+        return "redirect:/admin/blogs?status=PENDING&rejected=true";
     }
 }

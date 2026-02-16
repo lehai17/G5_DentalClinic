@@ -25,5 +25,12 @@ public class AdminDashboardController {
         return "admin/admindashboard";
     }
 
+    @GetMapping("/admin/dashboard")
+    public String adminDashboard(Model model) {
+        model.addAttribute("activePage", "dashboard");
+        return "admin/admindashboard";
+    }
+
+
     // Bạn có thể thêm các Route khác cho phân hệ Dashboard tại đây nếu cần
 }

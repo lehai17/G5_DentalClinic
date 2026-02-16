@@ -1,6 +1,7 @@
 package com.dentalclinic.repository;
 
 import com.dentalclinic.model.blog.Blog;
+import com.dentalclinic.model.blog.BlogStatus;
 import com.dentalclinic.model.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,11 +9,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BlogRepository extends JpaRepository<Blog, Long> {
 
-    Page<Blog> findByIsPublishedTrueOrderByCreatedAtDesc(Pageable pageable);
+    // Staff
+    Page<Blog> findByCreatedByOrderByUpdatedAtDesc(User createdBy, Pageable pageable);
+    Page<Blog> findByCreatedByAndStatusOrderByUpdatedAtDesc(User createdBy, BlogStatus status, Pageable pageable);
 
-    // Blog chờ duyệt cho admin
-    Page<Blog> findByIsPublishedFalseOrderByCreatedAtDesc(Pageable pageable);
+    // Admin
+    Page<Blog> findByStatusOrderByUpdatedAtDesc(BlogStatus status, Pageable pageable);
+    long countByStatus(BlogStatus status);
 
-    // Blog staff tự tạo (để staff quản lý bài của mình)
-    Page<Blog> findByCreatedByOrderByCreatedAtDesc(User user, Pageable pageable);
+    // Public
+    Page<Blog> findByStatusOrderByApprovedAtDesc(BlogStatus status, Pageable pageable);
 }
