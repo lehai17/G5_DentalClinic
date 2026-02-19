@@ -1,40 +1,125 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Blogs</title>
-    <link rel="stylesheet" href="/css/staff/staff.css">
+    <link rel="stylesheet" th:href="@{/css/staff/staff.css}">
+    <style>
+        .content { padding: 24px; }
+        .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .title { margin:0; font-size:36px; font-weight:700; }
+        .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+        .btn { border:0; border-radius:8px; padding:8px 12px; cursor:pointer; font-weight:600; text-decoration:none; display:inline-block; }
+        .btn-primary { background:#1d4ed8; color:#fff; }
+        .btn-light { background:#e5e7eb; color:#111827; }
+        .table-wrap { background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.06); overflow:hidden; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px 14px; text-align:left; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+        th { font-size:12px; text-transform:uppercase; color:#6b7280; }
+        .badge { padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; display:inline-block; }
+        .DRAFT { background:#e5e7eb; color:#111827; }
+        .PENDING { background:#fef3c7; color:#92400e; }
+        .APPROVED { background:#dcfce7; color:#166534; }
+        .REJECTED { background:#fee2e2; color:#991b1b; }
+        .actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .inline { display:inline; }
+        .empty { padding:22px; color:#6b7280; }
+        .pagination { margin-top:14px; display:flex; gap:8px; }
+    </style>
 </head>
 <body>
 <div class="app-wrapper">
     <th:block th:replace="~{staff/fragments/sidebar :: sidebar}"></th:block>
+
     <div class="main-content">
         <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
 
         <div class="content">
-            <h2>Health Blogs</h2>
-            <a th:href="@{/staff/blogs/new}" class="btn">+ Create Blog</a>
+            <div class="topbar">
+                <h2 class="title">My Blogs</h2>
+                <a th:href="@{/staff/blogs/new}" class="btn btn-primary">+ Create Blog</a>
+            </div>
 
-            <table>
-                <thead>
-                <tr>
-                    <th>Title</th><th>Created At</th><th>Status</th><th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="b : ${blogPage.content}">
-                    <td th:text="${b.title}"></td>
-                    <td th:text="${#temporals.format(b.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td th:text="${b.published} ? 'Published' : 'Pending'"></td>
-                    <td>
-                        <a th:if="${!b.published}" th:href="@{'/staff/blogs/' + ${b.id} + '/edit'}">Edit</a>
-                        <form th:if="${!b.published}" th:action="@{'/staff/blogs/' + ${b.id} + '/delete'}" method="post" style="display:inline;">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="toolbar">
+                <a th:href="@{/staff/blogs}" class="btn btn-light">All</a>
+                <a th:href="@{/staff/blogs(status='DRAFT')}" class="btn btn-light">Draft</a>
+                <a th:href="@{/staff/blogs(status='PENDING')}" class="btn btn-light">Pending</a>
+                <a th:href="@{/staff/blogs(status='APPROVED')}" class="btn btn-light">Approved</a>
+                <a th:href="@{/staff/blogs(status='REJECTED')}" class="btn btn-light">Rejected</a>
+            </div>
 
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Updated At</th>
+                        <th>Status</th>
+                        <th>Rejection Reason</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${blogPage == null or blogPage.isEmpty()}">
+                        <td colspan="5" class="empty">Chưa có blog nào.</td>
+                    </tr>
+
+                    <tr th:each="b : ${blogPage.content}">
+                        <td th:text="${b.title}">Title</td>
+                        <td th:text="${#temporals.format(b.updatedAt, 'dd/MM/yyyy HH:mm')}">time</td>
+
+                        <!-- Dùng status thay published -->
+                        <td>
+                            <span class="badge"
+                                  th:text="${b.status}"
+                                  th:classappend="${b.status}">
+                            </span>
+                        </td>
+
+                        <td th:text="${b.status.name() == 'REJECTED' ? (b.rejectionReason ?: '-') : '-'}">-</td>
+
+                        <td>
+                            <div class="actions">
+                                <!-- Edit: chỉ DRAFT/REJECTED -->
+                                <a th:if="${b.status.name() == 'DRAFT' or b.status.name() == 'REJECTED'}"
+                                   th:href="@{'/staff/blogs/' + ${b.id} + '/edit'}"
+                                   class="btn btn-light">Edit</a>
+
+                                <!-- Submit: chỉ DRAFT/REJECTED -->
+                                <form th:if="${b.status.name() == 'DRAFT' or b.status.name() == 'REJECTED'}"
+                                      th:action="@{'/staff/blogs/' + ${b.id} + '/submit'}"
+                                      method="post" class="inline">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </form>
+
+                                <!-- Withdraw: chỉ PENDING -->
+                                <form th:if="${b.status.name() == 'PENDING'}"
+                                      th:action="@{'/staff/blogs/' + ${b.id} + '/withdraw'}"
+                                      method="post" class="inline">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="btn btn-light">Withdraw</button>
+                                </form>
+
+                                <!-- Approved: view only -->
+                                <span th:if="${b.status.name() == 'APPROVED'}">Approved</span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" th:if="${blogPage != null and blogPage.totalPages > 1}">
+                <a th:if="${blogPage.hasPrevious()}"
+                   th:href="@{/staff/blogs(page=${blogPage.number - 1}, status=${status})}"
+                   class="btn btn-light">← Prev</a>
+
+                <a th:if="${blogPage.hasNext()}"
+                   th:href="@{/staff/blogs(page=${blogPage.number + 1}, status=${status})}"
+                   class="btn btn-light">Next →</a>
+            </div>
         </div>
     </div>
 </div>

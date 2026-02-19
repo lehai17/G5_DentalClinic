@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Create Blog - Admin</title>
+
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root { --bg:#F4F7FE; --card:#fff; --text:#1B2559; --muted:#707EAE; --border:#E6ECF5; }
+        body { margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); display:flex; }
+        .main-content { flex:1; padding:20px; }
+        .card { background:var(--card); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,.05); padding:18px; }
+        .label { font-size:12px; color:var(--muted); margin: 10px 0 6px; }
+        .input, textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:12px; outline:none; }
+        textarea { resize: vertical; min-height: 160px; white-space: pre-wrap; }
+        .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top: 12px; }
+        .btn { border:none; border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:700; text-decoration:none; display:inline-block; }
+        .btn-primary { background:#1A237E; color:#fff; }
+        .btn-light { background:#EEF2FF; color:#1A237E; }
+        .muted { color:var(--muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+
+<div class="main-content">
+    <div class="card" style="margin-bottom:14px;">
+        <h2 style="margin:0; color:var(--text);">Create Blog</h2>
+    </div>
+
+    <div class="card">
+        <form th:action="@{/admin/blogs/create}" method="post" enctype="multipart/form-data">
+        <div class="label">Title</div>
+            <input class="input" type="text" name="title" required>
+
+            <div class="label">Summary</div>
+            <textarea class="input" name="summary" rows="4" required></textarea>
+
+            <div class="label">Blog Image</div>
+            <input class="input" type="file" name="imageFile" accept="image/*" id="imageFile">
+
+            <img id="preview" style="margin-top:10px; max-width:320px; display:none; border-radius:12px; border:1px solid #E6ECF5;">
+            <script>
+                const input = document.getElementById('imageFile');
+                const preview = document.getElementById('preview');
+                if (input) {
+                    input.addEventListener('change', (e) => {
+                        const file = e.target.files && e.target.files[0];
+                        if (!file) { preview.style.display='none'; return; }
+                        preview.src = URL.createObjectURL(file);
+                        preview.style.display = 'block';
+                    });
+                }
+            </script>
+
+
+            <div class="label">Content</div>
+            <textarea class="input" name="content" rows="10" required></textarea>
+
+            <div class="btn-row">
+                <a class="btn btn-light" th:href="@{/admin/blogs(status='APPROVED')}">Cancel</a>
+                <button class="btn btn-primary" type="submit">
+                    <i class="fa-solid fa-floppy-disk"></i> Create
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

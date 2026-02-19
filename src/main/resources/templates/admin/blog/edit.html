@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Edit Blog - Admin</title>
+
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root { --bg:#F4F7FE; --card:#fff; --text:#1B2559; --muted:#707EAE; --border:#E6ECF5; }
+        body { margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); display:flex; }
+        .main-content { flex:1; padding:20px; }
+        .card { background:var(--card); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,.05); padding:18px; }
+        .grid { display:grid; grid-template-columns: 360px 1fr; gap:16px; }
+        .label { font-size:12px; color:var(--muted); margin: 10px 0 6px; }
+        .input, textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:12px; outline:none; }
+        textarea { resize: vertical; min-height: 160px; white-space: pre-wrap; }
+        .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top: 12px; }
+        .btn { border:none; border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:700; text-decoration:none; display:inline-block; }
+        .btn-primary { background:#1A237E; color:#fff; }
+        .btn-light { background:#EEF2FF; color:#1A237E; }
+        .preview img { width:100%; border-radius:14px; border:1px solid var(--border); max-height: 360px; object-fit: cover; background:#f1f5f9; }
+        .muted { color:var(--muted); font-size: 13px; }
+        .warn { background:#FFF7ED; border:1px solid #FED7AA; padding:12px; border-radius:14px; color:#9A3412; }
+    </style>
+</head>
+<body>
+
+<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+
+<div class="main-content">
+
+    <div class="card" style="margin-bottom:14px;">
+        <h2 style="margin:0; color:var(--text);">Edit Blog</h2>
+        <div class="muted">Admin chỉ được sửa khi blog ở trạng thái <b>PENDING</b> hoặc <b>APPROVED</b>. Ảnh được giữ nguyên.</div>
+    </div>
+
+    <!-- Chặn UI nếu không hợp lệ (phòng trường hợp ai đó gõ URL) -->
+    <div class="warn" th:if="${blog.status.name() != 'PENDING' and blog.status.name() != 'APPROVED'}">
+        Blog đang ở trạng thái <b th:text="${blog.status}">REJECTED</b> nên không thể chỉnh sửa.
+        <div style="margin-top:10px;">
+            <a class="btn btn-light" th:href="@{/admin/blogs(status=${blog.status})}">← Back</a>
+            <a class="btn btn-primary" th:href="@{'/admin/blogs/' + ${blog.id}}">View Detail</a>
+        </div>
+    </div>
+
+    <div class="grid" th:if="${blog.status.name() == 'PENDING' or blog.status.name() == 'APPROVED'}">
+        <div class="card preview">
+            <div class="label">Image preview (read-only)</div>
+            <img th:src="${blog.imageUrl}" alt="Blog image"
+                 onerror="this.style.display='none'">
+            <div class="label">Image URL (read-only)</div>
+            <input class="input" th:value="${blog.imageUrl}" readonly>
+        </div>
+
+        <div class="card">
+            <form th:action="@{'/admin/blogs/' + ${blog.id} + '/update'}" method="post">
+                <div class="label">Title</div>
+                <input class="input" type="text" name="title" th:value="${blog.title}" required>
+
+                <div class="label">Summary</div>
+                <textarea class="input" name="summary" rows="4" required th:text="${blog.summary}"></textarea>
+
+                <div class="label">Content</div>
+                <textarea class="input" name="content" rows="10" required th:text="${blog.content}"></textarea>
+
+                <div class="btn-row">
+                    <a class="btn btn-light" th:href="@{'/admin/blogs/' + ${blog.id}}">Cancel</a>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

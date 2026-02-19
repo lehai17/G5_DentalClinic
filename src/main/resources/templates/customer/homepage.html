@@ -98,46 +98,66 @@
         <div class="bg-light">
             <section class="section" id="blog">
                 <div class="section-inner">
-                <h2 class="section-title">Tin Tức Mới Nhất</h2>
+                    <h2 class="section-title">Tin Tức Mới Nhất</h2>
 
-                <div class="blog-grid">
-                    <article th:each="blog : ${blogs}" class="blog-card">
-                        <div class="blog-thumb"
-                             th:style="'background-image: url(' + @{${blog.imageUrl}} + ');'">
-                        </div>
-                        <div class="blog-content">
-                            <span class="blog-date" th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy')}"></span>
-                            <h3 th:text="${blog.title}"></h3>
-                            <p class="line-clamp-3" th:text="${blog.summary}"></p>
-                            <a th:href="@{/public/blogs/{id}(id=${blog.id})}" class="read-more">Đọc thêm →</a>
-                        </div>
-                    </article>
-
-                </div>
-
-                <div class="pagination-wrapper" th:if="${totalPages > 1}">
-                    <div class="pagination">
-                        <a href="javascript:void(0)"
-                           th:onclick="'loadBlogPage(' + (${currentPage - 1}) + ')'"
-                           th:if="${currentPage > 0}" class="btn-page">← Trước</a>
-
-                        <div class="page-numbers">
-                            <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-                                <a href="javascript:void(0)"
-                                   th:onclick="'loadBlogPage(' + ${i} + ')'"
-                                   th:text="${i + 1}"
-                                   th:class="${i == currentPage} ? 'page-num active' : 'page-num'"></a>
-                            </th:block>
-                        </div>
-
-                        <a href="javascript:void(0)"
-                           th:onclick="'loadBlogPage(' + (${currentPage + 1}) + ')'"
-                           th:if="${currentPage < totalPages - 1}" class="btn-page">Sau →</a>
+                    <!-- Empty state -->
+                    <div th:if="${blogs == null or blogs.isEmpty()}" class="text-center py-5">
+                        <p class="text-muted">Hiện chưa có bài viết sức khỏe nào.</p>
                     </div>
-                </div>
+
+                    <!-- Blog list -->
+                    <div class="blog-grid" th:if="${blogs != null and !blogs.isEmpty()}">
+                        <article th:each="blog : ${blogs}" class="blog-card">
+                            <div class="blog-thumb"
+                                 th:style="${#strings.isEmpty(blog.imageUrl)
+        ? 'background-image:url(/images/default-blog.jpg);'
+        : 'background-image:url(' + blog.imageUrl + ');'}">
+                            </div>
+
+                            <div class="blog-content">
+                        <span class="blog-date"
+                              th:text="${#temporals.format(blog.approvedAt != null ? blog.approvedAt : blog.createdAt   , 'dd/MM/yyyy')}">
+                        </span>
+
+                                <h3 th:text="${blog.title}">Tiêu đề bài viết</h3>
+
+                                <p class="line-clamp-3"
+                                   th:text="${#strings.isEmpty(blog.summary) ? #strings.abbreviate(blog.content, 140) : blog.summary}">
+                                </p>
+
+                                <a th:href="@{/public/blogs/{id}(id=${blog.id})}" class="read-more">Đọc thêm →</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-wrapper" th:if="${totalPages != null and totalPages > 1}">
+                        <div class="pagination">
+                            <a href="javascript:void(0)"
+                               th:if="${currentPage > 0}"
+                               th:onclick="'loadBlogPage(' + (${currentPage - 1}) + ')'"
+                               class="btn-page">← Trước</a>
+
+                            <div class="page-numbers">
+                                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                                    <a href="javascript:void(0)"
+                                       th:onclick="'loadBlogPage(' + ${i} + ')'"
+                                       th:text="${i + 1}"
+                                       th:class="${i == currentPage} ? 'page-num active' : 'page-num'">
+                                    </a>
+                                </th:block>
+                            </div>
+
+                            <a href="javascript:void(0)"
+                               th:if="${currentPage < totalPages - 1}"
+                               th:onclick="'loadBlogPage(' + (${currentPage + 1}) + ')'"
+                               class="btn-page">Sau →</a>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
+
 
         <div th:replace="~{fragments/footer :: footer}"></div>
     </main>

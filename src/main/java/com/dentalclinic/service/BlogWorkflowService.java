@@ -76,8 +76,8 @@ public class BlogWorkflowService {
     }
 
     public Blog reject(Blog blog, User admin, String reason) {
-        if (blog.getStatus() != BlogStatus.PENDING) {
-            throw new IllegalStateException("Only PENDING blog can be rejected.");
+        if (!(blog.getStatus() == BlogStatus.PENDING || blog.getStatus() == BlogStatus.APPROVED)) {
+            throw new IllegalStateException("Only PENDING/APPROVED blog can be rejected.");
         }
         if (reason == null || reason.trim().isEmpty()) {
             throw new IllegalArgumentException("Rejection reason is required.");

@@ -1,12 +1,12 @@
 package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.model.blog.Blog;
+import com.dentalclinic.model.blog.BlogStatus; // NEW
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.repository.BlogRepository;
 import com.dentalclinic.service.customer.CustomerProfileService;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +27,8 @@ public class CustomerHomepageController {
 
     public CustomerHomepageController(CustomerProfileService profileService,
                                       ServiceRepository serviceRepo,
-                                      DentistProfileRepository dentistRepo, BlogRepository blogRepo) {
+                                      DentistProfileRepository dentistRepo,
+                                      BlogRepository blogRepo) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
@@ -41,11 +42,10 @@ public class CustomerHomepageController {
 
     @GetMapping({"/homepage", "/customer/homepage"})
     public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
-        // Sử dụng một ID giả lập hoặc lấy từ Security nếu có
-        Long currentCustomerId = 3L;
+        Long currentCustomerId = 3L; // TODO: lấy từ SecurityContext nếu có
 
         try {
-            // 1. Lấy dữ liệu Profile khách hàng
+            // 1) Customer profile + appointments
             CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
             if (profile == null) {
                 profile = new CustomerProfile();
@@ -56,22 +56,21 @@ public class CustomerHomepageController {
             }
             model.addAttribute("customer", profile);
 
-            // 2. Lấy danh sách Dịch vụ và Bác sĩ
+            // 2) Services + dentists
             model.addAttribute("services", serviceRepo.findAll());
             model.addAttribute("dentists", dentistRepo.findAll());
 
-            // 3. Xử lý phân trang Blog (Lấy 2 bài mỗi trang)
+            // 3) Blogs: chỉ lấy APPROVED (đúng nghiệp vụ mới)
             Pageable pageable = PageRequest.of(page, 2);
-            Page<Blog> blogPage = blogRepo.findByIsPublishedTrueOrderByCreatedAtDesc(pageable);
+            Page<Blog> blogPage = blogRepo.findByStatusOrderByApprovedAtDesc(BlogStatus.APPROVED, pageable);
 
             model.addAttribute("blogs", blogPage.getContent());
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", blogPage.getTotalPages());
 
             return "customer/homepage";
-
         } catch (Exception e) {
-            // Fallback: Trả về trang chủ với danh sách rỗng nếu có lỗi xảy ra
+            // fallback
             model.addAttribute("customer", new CustomerProfile());
             model.addAttribute("appointments", new ArrayList<>());
             model.addAttribute("services", new ArrayList<>());
@@ -83,14 +82,12 @@ public class CustomerHomepageController {
         }
     }
 
-    /** Trang đặt lịch khám (cùng layout với trang chủ) */
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
         model.addAttribute("services", serviceRepo.findAll());
         return "customer/booking";
     }
 
-    /** Trang lịch hẹn của tôi (cùng layout với trang chủ). Dùng /my-appointments để tránh trùng GET /customer/appointments (API JSON). */
     @GetMapping("/customer/my-appointments")
     public String appointmentsPage() {
         return "customer/appointments";

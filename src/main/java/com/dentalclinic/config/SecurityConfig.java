@@ -26,7 +26,7 @@ public class SecurityConfig {
                                 "/login", "/register",
                                 "/css/**", "/images/**", "/js/**",
                                 "/oauth2/**",
-                                "/login/oauth2/**","/forgot-password","/verify-code","/reset-password"
+                                "/login/oauth2/**","/forgot-password","/verify-code","/reset-password","/public/**","/uploads/**"
                         ).permitAll()
 
                         .requestMatchers("/staff/**").hasRole("STAFF")
