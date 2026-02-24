@@ -79,11 +79,15 @@ public class StaffAppointmentService {
 
 
     public void completeAppointment(Long id) {
-        Appointment a = appointmentRepository.findById(id).orElseThrow();
-        if (a.getStatus() == AppointmentStatus.CONFIRMED) {
-            a.setStatus(AppointmentStatus.COMPLETED);
-            appointmentRepository.save(a);
+        Appointment a = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (a.getStatus() != AppointmentStatus.CHECKED_IN) {
+            throw new RuntimeException("Only CHECKED_IN appointment can be completed");
         }
+
+        a.setStatus(AppointmentStatus.COMPLETED);
+        appointmentRepository.save(a);
     }
 
 
@@ -119,6 +123,17 @@ public class StaffAppointmentService {
         }
 
         return appointmentRepository.findAll(pageable);
+    }
+    public void checkInAppointment(Long id) {
+        Appointment a = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (a.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
+        }
+
+        a.setStatus(AppointmentStatus.CHECKED_IN);
+        appointmentRepository.save(a);
     }
 
 }

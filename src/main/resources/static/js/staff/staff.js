@@ -94,3 +94,13 @@ function cancelAppointment(id) {
         method: 'POST'
     }).then(() => location.reload());
 }
+function checkInAppointment(id) {
+    fetch('/staff/appointments/checkin', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({ id })
+    }).then(res => {
+        if (!res.ok) throw new Error("Check-in failed");
+        window.location.reload();
+    }).catch(err => alert(err.message));
+}
