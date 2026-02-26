@@ -1,6 +1,7 @@
 package com.dentalclinic.service.staff;
 
 import com.dentalclinic.dto.StaffDTO;
+import com.dentalclinic.model.user.Gender;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.UserStatus;
@@ -22,11 +23,23 @@ public class StaffService {
     // 1. Lưu nhân viên mới
     @Transactional
     public void saveStaff(StaffDTO dto) {
+        // KIỂM TRA EMAIL TỒN TẠI TRƯỚC
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email này đã được sử dụng trong hệ thống!");
+        }
         User user = new User();
         user.setEmail(dto.getEmail());
         user.setPassword("123456");
         user.setRole(Role.STAFF);
         user.setStatus(UserStatus.ACTIVE);
+        user.setDateOfBirth(dto.getDateOfBirth());
+
+        // Ép kiểu String từ DTO sang Enum Gender của User Entity
+        if (dto.getGender() != null) {
+            user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
+        }
+
+        userRepository.save(user);
         userRepository.save(user);
 
         StaffProfile profile = new StaffProfile();

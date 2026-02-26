@@ -1,122 +1,95 @@
 package com.dentalclinic.dto;
 
-import jakarta.persistence.Column;
+import com.dentalclinic.model.schedule.DentistSchedule;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public class DentistDTO {
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public String getSpecialty() {
-        return specialty;
-    }
-
-    public int getExperience() {
-        return experience;
-    }
-
-    public String getTempPassword() {
-        return tempPassword;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
+    private Long id;
     private String fullName;
     private String email;
     private String phone;
 
-    public void setSpecialty(String specialty) {
-        this.specialty = specialty;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public void setExperience(int experience) {
-        this.experience = experience;
+    public String getTempPassword() {
+        return tempPassword;
     }
 
     public void setTempPassword(String tempPassword) {
         this.tempPassword = tempPassword;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    private String specialty;
-    private int experience;
     private String tempPassword;
-    private String role; // Mặc định sẽ là 'DENTIST'
-    private String qualifications; // Bằng cấp & Chứng chỉ
-
-    public String getQualifications() {
-        return qualifications;
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
     }
 
-    public String getShiftStartTime() {
-        return shiftStartTime;
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
 
-    public List<String> getAvailableDays() {
-        return availableDays;
+    private LocalDate dateOfBirth;
+    private String gender;
+    private String specialization;
+    private int experienceYears;
+    private String qualifications;
+    private String bio;
+
+    // Các trường phục vụ hiển thị lịch trực
+    private List<String> availableDays;
+    private String shiftStartTime;
+    private String shiftEndTime;
+
+    public List<DentistSchedule> getSchedules() {
+        return schedules;
     }
 
+    public void setSchedules(List<DentistSchedule> schedules) {
+        this.schedules = schedules;
+    }
+
+    private List<DentistSchedule> schedules;
     public String getShiftEndTime() {
         return shiftEndTime;
-    }
-
-    public void setAvailableDays(List<String> availableDays) {
-        this.availableDays = availableDays;
-    }
-
-    public void setQualifications(String qualifications) {
-        this.qualifications = qualifications;
-    }
-
-    public void setShiftStartTime(String shiftStartTime) {
-        this.shiftStartTime = shiftStartTime;
     }
 
     public void setShiftEndTime(String shiftEndTime) {
         this.shiftEndTime = shiftEndTime;
     }
 
-    private List<String> availableDays; // List các ngày như "Mon", "Tue"...
-    private String shiftStartTime;
-    private String shiftEndTime;
-    @Column(name = "date_of_birth")
-    private LocalDate dob;
-
-    public LocalDate getDob() {
-        return dob;
+    public Long getId() {
+        return id;
     }
 
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
+    public void setId(Long id) {
+        this.id = id;
     }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+
 
     public String getGender() {
         return gender;
@@ -126,6 +99,51 @@ public class DentistDTO {
         this.gender = gender;
     }
 
-    @Column(name = "gender")
-    private String gender;
+    public String getSpecialization() {
+        return specialization;
+    }
+
+    public void setSpecialization(String specialization) {
+        this.specialization = specialization;
+    }
+
+    public int getExperienceYears() {
+        return experienceYears;
+    }
+
+    public void setExperienceYears(int experienceYears) {
+        this.experienceYears = experienceYears;
+    }
+
+    public String getQualifications() {
+        return qualifications;
+    }
+
+    public void setQualifications(String qualifications) {
+        this.qualifications = qualifications;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public List<String> getAvailableDays() {
+        return availableDays;
+    }
+
+    public void setAvailableDays(List<String> availableDays) {
+        this.availableDays = availableDays;
+    }
+
+    public String getShiftStartTime() {
+        return shiftStartTime;
+    }
+
+    public void setShiftStartTime(String shiftStartTime) {
+        this.shiftStartTime = shiftStartTime;
+    }
 }
