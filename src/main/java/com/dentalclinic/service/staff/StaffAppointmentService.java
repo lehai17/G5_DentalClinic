@@ -5,6 +5,7 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.mail.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,13 +29,14 @@ public class StaffAppointmentService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private CustomerAppointmentService customerAppointmentService;
 
-    /* VIEW ALL APPOINTMENTS (STAFF) */
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
 
-    /* CONFIRM APPOINTMENT */
+    @Transactional
     public void confirmAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
@@ -52,13 +55,12 @@ public class StaffAppointmentService {
         emailService.sendAppointmentConfirmed(appointment);
     }
 
-    /* ASSIGN / REASSIGN DENTIST */
+    @Transactional
     public void assignDentist(Long appointmentId, Long dentistId) {
-
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        int busy = appointmentRepository.countBusyAppointmentsExcludeSelf(
+        boolean hasOverlap = customerAppointmentService.checkDentistOverlap(
                 dentistId,
                 appt.getDate(),
                 appt.getStartTime(),
@@ -66,7 +68,7 @@ public class StaffAppointmentService {
                 appt.getId()
         );
 
-        if (busy > 0) {
+        if (hasOverlap) {
             throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
         }
 
@@ -77,7 +79,7 @@ public class StaffAppointmentService {
         appointmentRepository.save(appt);
     }
 
-
+    @Transactional
     public void completeAppointment(Long id) {
         Appointment a = appointmentRepository.findById(id).orElseThrow();
         if (a.getStatus() == AppointmentStatus.CONFIRMED) {
@@ -86,16 +88,22 @@ public class StaffAppointmentService {
         }
     }
 
-
-    /* CANCEL APPOINTMENT */
+    @Transactional
     public void cancelAppointment(Long appointmentId, String reason) {
-
-        Appointment appt = appointmentRepository.findById(appointmentId)
+        Appointment appt = appointmentRepository.findByIdWithSlots(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appt.getStatus() == AppointmentStatus.CANCELLED || 
+            appt.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new RuntimeException("Cannot cancel appointment in status: " + appt.getStatus());
+        }
 
         appt.setStatus(AppointmentStatus.CANCELLED);
         appt.setNotes(reason);
         appointmentRepository.save(appt);
+
+        // reuse internal cancel logic from customer service
+        customerAppointmentService.cancelAppointmentInternal(appointmentId);
     }
 
     public Page<Appointment> searchAndSort(
@@ -120,5 +128,4 @@ public class StaffAppointmentService {
 
         return appointmentRepository.findAll(pageable);
     }
-
 }
