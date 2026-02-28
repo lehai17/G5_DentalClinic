@@ -2,31 +2,31 @@ package com.dentalclinic.service.customer;
 
 import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
+import com.dentalclinic.dto.customer.RescheduleAppointmentRequest;
 import com.dentalclinic.dto.customer.SlotDto;
+import com.dentalclinic.exception.BookingErrorCode;
+import com.dentalclinic.exception.BookingException;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentSlot;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.appointment.Slot;
 import com.dentalclinic.model.profile.CustomerProfile;
-import com.dentalclinic.model.profile.DentistProfile;
-import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.service.Services;
+import com.dentalclinic.model.user.Role;
+import com.dentalclinic.model.user.User;
+import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.SlotRepository;
-import com.dentalclinic.exception.BusinessException;
 import com.dentalclinic.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,8 +35,23 @@ import java.util.stream.Collectors;
 
 @Service
 public class CustomerAppointmentService {
+    private static final ZoneId CLINIC_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final LocalTime OPEN = LocalTime.of(8, 0);
+    private static final LocalTime LUNCH_START = LocalTime.of(12, 0);
+    private static final LocalTime LUNCH_END = LocalTime.of(13, 0);
+    private static final LocalTime CLOSE = LocalTime.of(17, 0);
+    private static final int SLOT_MIN = 30;
+    private static final int CANCEL_MIN_HOURS_BEFORE = 2;
+    private static final double DEFAULT_DEPOSIT_RATE = 0d;
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomerAppointmentService.class);
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern VN_PHONE_PATTERN = Pattern.compile("^(0|\\+84)\\d{9,10}$");
+    private static final List<String> ACTIVE_BOOKING_STATUSES = List.of(
+            AppointmentStatus.PENDING.name(),
+            AppointmentStatus.PENDING_DEPOSIT.name(),
+            AppointmentStatus.CONFIRMED.name(),
+            AppointmentStatus.CHECKED_IN.name()
+    );
 
     private final CustomerProfileRepository customerProfileRepository;
     private final UserRepository userRepository;
@@ -44,22 +59,11 @@ public class CustomerAppointmentService {
     private final ServiceRepository serviceRepository;
     private final SlotRepository slotRepository;
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
-    private static final Pattern VN_PHONE_PATTERN =
-            Pattern.compile("^(0|\\+84)\\d{9,10}$");
-
-        // clinic hours and slot constants (previously in BookingService)
-        private static final LocalTime CLINIC_OPEN_TIME = LocalTime.of(8, 0);
-        private static final LocalTime CLINIC_CLOSE_TIME = LocalTime.of(17, 0);
-        private static final int SLOT_DURATION_MINUTES = 30;
-        private static final int SLOTS_PER_DAY = 18;
-
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
-                                       UserRepository userRepository,
-                                       AppointmentRepository appointmentRepository,
-                                       ServiceRepository serviceRepository,
-                                       SlotRepository slotRepository) {
+                                      UserRepository userRepository,
+                                      AppointmentRepository appointmentRepository,
+                                      ServiceRepository serviceRepository,
+                                      SlotRepository slotRepository) {
         this.customerProfileRepository = customerProfileRepository;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
@@ -67,620 +71,365 @@ public class CustomerAppointmentService {
         this.slotRepository = slotRepository;
     }
 
-    private CustomerProfile getOrCreateCustomerProfile(Long userId) {
-        return customerProfileRepository.findByUser_Id(userId)
-                .orElseGet(() -> {
-                    User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new IllegalArgumentException("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."));
-                    CustomerProfile profile = new CustomerProfile();
-                    profile.setUser(user);
-                    profile.setFullName(user.getEmail() != null ? user.getEmail() : "Khách hàng");
-                    return customerProfileRepository.save(profile);
-                });
+    public static int calculateSlotsNeeded(int durationMinutes) {
+        return (int) Math.ceil((double) durationMinutes / SLOT_MIN);
     }
 
-    private void validateCreateRequest(CreateAppointmentRequest request) {
-        if (request == null) {
-            throw new IllegalArgumentException("Dữ liệu đặt lịch không hợp lệ.");
-        }
-        
-        if (request.getServiceId() == null || request.getServiceId() <= 0) {
-            throw new IllegalArgumentException("Vui lòng chọn dịch vụ hợp lệ.");
-        }
+    public List<SlotDto> getAvailableSlots(Long userId, Long serviceId, LocalDate date) {
+        validateBookingUser(userId);
+        Services service = validateService(serviceId);
+        validateSelectedDate(date);
 
-        // Support both old format (slotId) and new format (selectedDate + selectedTime)
-        boolean hasOldFormat = request.isOldFormat();
-        boolean hasNewFormat = request.isNewFormat();
-        
-        if (!hasOldFormat && !hasNewFormat) {
-            throw new IllegalArgumentException("Vui lòng chọn ngày và giờ hợp lệ.");
-        }
-
-        if (request.getPatientNote() != null && request.getPatientNote().length() > 500) {
-            throw new IllegalArgumentException("Ghi chú tối đa 500 ký tự.");
-        }
-
-        String channel = request.getContactChannel();
-        String value = request.getContactValue();
-
-        if (channel == null || channel.isBlank()) {
-            throw new IllegalArgumentException("Vui lòng chọn kênh liên hệ.");
-        }
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Vui lòng nhập thông tin liên hệ.");
-        }
-
-        channel = channel.trim().toUpperCase();
-        value = value.trim();
-
-        switch (channel) {
-            case "PHONE":
-            case "ZALO": {
-                String v = value.replaceAll("\\s+", "");
-                if (!VN_PHONE_PATTERN.matcher(v).matches()) {
-                    throw new IllegalArgumentException("Số điện thoại/Zalo không hợp lệ (VD: 0xxxxxxxxx hoặc +84xxxxxxxxx).");
-                }
-                break;
-            }
-            case "EMAIL": {
-                if (!EMAIL_PATTERN.matcher(value).matches()) {
-                    throw new IllegalArgumentException("Email không hợp lệ.");
-                }
-                break;
-            }
-            default:
-                throw new IllegalArgumentException("Kênh liên hệ chỉ được: PHONE, ZALO, EMAIL.");
-        }
-    }
-
-    /**
-     * Get available slots for a given date.
-     * Returns slots that have enough consecutive available slots for the selected service.
-     */
-    public List<SlotDto> getAvailableSlots(Long serviceId, LocalDate date) {
-        // determine how many 30‑minute slots the service requires
-        Services service = null;
-        int durationMinutes = 30;
-
-        if (serviceId != null) {
-            service = serviceRepository.findById(serviceId).orElse(null);
-            if (service != null) {
-                durationMinutes = service.getDurationMinutes();
-            }
-        }
-
-        int slotsNeeded = calculateSlotsNeeded(durationMinutes);
-
-        /*
-         * NEW LOGIC: return every slot that the booking page should display and
-         * compute the number of free spots for the selected service at that
-         * start time.  The previous implementation filtered out start times
-         * where the consecutive window was missing or one of the slots was
-         * already full, which resulted in "no slots" being sent back when the
-         * database contained any fully-booked time in the middle of the day.
-         *
-         * By delivering all (future) slots with an `availableSpots` count, the
-         * frontend can show "Còn X chỗ" or "Hết chỗ" and the user still can
-         * only select times where at least one spot remains.
-         */
-
-        List<Slot> allSlots = fetchAllSlotsForDate(date);
-
-        List<SlotDto> result = allSlots.stream().map(slot -> {
-            SlotDto dto = new SlotDto();
-            dto.setId(slot.getId());
-            dto.setDate(slot.getSlotTime().toLocalDate());
-            dto.setStartTime(slot.getSlotTime().toLocalTime());
-            dto.setEndTime(slot.getSlotTime().toLocalTime().plusMinutes(30));
-            dto.setCapacity(slot.getCapacity());
-            dto.setBookedCount(slot.getBookedCount());
-
-            // compute minimum available spots across the required window
-            int minSpots = slot.getAvailableSpots();
-            for (int j = 1; j < slotsNeeded; j++) {
-                int idx = allSlots.indexOf(slot) + j;
-                if (idx >= allSlots.size()) {
-                    // window exceeds end of day
-                    minSpots = 0;
-                    break;
-                }
-                Slot next = allSlots.get(idx);
-                minSpots = Math.min(minSpots, next.getAvailableSpots());
-            }
-
-            dto.setAvailableSpots(minSpots);
-            dto.setAvailable(minSpots > 0);
+        int slotsNeeded = calculateSlotsNeeded(service.getDurationMinutes());
+        List<Slot> slots = getAvailableSlotsForService(date, service.getDurationMinutes());
+        return slots.stream().map(s -> {
+            SlotDto dto = toSlotDto(s);
+            LocalDateTime end = s.getSlotTime().plusMinutes((long) slotsNeeded * SLOT_MIN);
+            dto.setDisabled(hasCustomerOverlap(userId, s.getSlotTime().toLocalDate(), s.getSlotTime().toLocalTime(), end.toLocalTime(), null));
             return dto;
         }).collect(Collectors.toList());
-
-        return result;
     }
 
-    /**
-     * Get all slots for a given date with their availability status and overlap detection.
-     */
     public List<SlotDto> getAllSlotsForDate(LocalDate date) {
-        List<Slot> slots = fetchAllSlotsForDate(date);
-
-        return slots.stream()
-                .map(slot -> {
-                    SlotDto dto = new SlotDto();
-                    dto.setId(slot.getId());
-                    dto.setDate(slot.getSlotTime().toLocalDate());
-                    dto.setStartTime(slot.getSlotTime().toLocalTime());
-                    dto.setEndTime(slot.getSlotTime().toLocalTime().plusMinutes(30));
-                    dto.setAvailable(slot.isAvailable());
-                    dto.setCapacity(slot.getCapacity());
-                    dto.setBookedCount(slot.getBookedCount());
-                    dto.setAvailableSpots(slot.getAvailableSpots());
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        validateSelectedDate(date);
+        return getAllSlotsEntitiesForDate(date).stream().map(this::toSlotDto).collect(Collectors.toList());
     }
 
-    /**
-     * Get available slots with overlap status for the current user.
-     * Include information about which slots the user already has bookings for.
-     */
-    public List<SlotDto> getAvailableSlotsWithOverlapStatus(Long userId, Long serviceId, LocalDate date) {
-        List<SlotDto> slots = getAvailableSlots(serviceId, date);
-        
-        // Get user's existing appointments for this date
-        List<Appointment> userAppointments = appointmentRepository.findByCustomer_User_IdAndDate(userId, date);
-        
-        // Filter to only PENDING and CONFIRMED
-        List<Appointment> activeAppointments = userAppointments.stream()
-            .filter(a -> a.getStatus() == AppointmentStatus.PENDING || 
-                        a.getStatus() == AppointmentStatus.CONFIRMED)
-            .collect(Collectors.toList());
-        
-        // Mark overlapping slots as disabled
-        for (SlotDto slot : slots) {
-            slot.setDisabled(isSlotOverlapWithAppointments(slot, activeAppointments));
-        }
-        
-        return slots;
-    }
-
-    /**
-     * Check if a slot overlaps with any of the user's existing appointments.
-     */
-    private boolean isSlotOverlapWithAppointments(SlotDto slot, List<Appointment> appointments) {
-        LocalTime slotStart = slot.getStartTime();
-        LocalTime slotEnd = slot.getEndTime();
-        
-        for (Appointment appt : appointments) {
-            // Check if appointment times overlap with slot
-            if (slotStart.isBefore(appt.getEndTime()) && slotEnd.isAfter(appt.getStartTime())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Create appointment with slot reservation.
-     * Supports both old format (slotId) and new format (selectedDate + selectedTime).
-     * CRITICAL: Validates that selected time is in the future - this prevents booking of past slots
-     * even if called via API directly.
-     */
     @Transactional
     public AppointmentDto createAppointment(Long userId, CreateAppointmentRequest request) {
-        try {
-            validateCreateRequest(request);
+        validateCreateRequest(request);
+        User user = validateBookingUser(userId);
+        CustomerProfile customer = getOrCreateCustomerProfile(user);
+        Services service = validateService(request.getServiceId());
+        validateClientDeposit(request.getDepositAmount(), service);
 
-            CustomerProfile customer = getOrCreateCustomerProfile(userId);
+        int slotsNeeded = calculateSlotsNeeded(service.getDurationMinutes());
+        LocalDateTime start = resolveStartDateTime(request);
+        LocalDateTime end = start.plusMinutes((long) slotsNeeded * SLOT_MIN);
+        validateNotInPast(start);
+        validateWorkingWindow(start, end);
+        validateNoCustomerOverlap(user.getId(), start.toLocalDate(), start.toLocalTime(), end.toLocalTime(), null);
 
-            Services service = serviceRepository.findById(request.getServiceId())
-                .orElseThrow(() -> new IllegalArgumentException("Dịch vụ không tồn tại."));
-
-            int slotsNeeded = calculateSlotsNeeded(service.getDurationMinutes());
-
-            List<Slot> reservedSlots;
-            LocalDateTime startDateTime = null;
-            
-            // Support both old format (slotId) and new format (selectedDate + selectedTime)
-            if (request.isOldFormat()) {
-            // Old format: use slotId
-            Long slotId = request.getSlotId();
-            Optional<Slot> slotOpt = getSlotById(slotId);
-            
-            if (slotOpt.isEmpty()) {
-                throw new IllegalArgumentException("Khung giờ không tồn tại.");
-            }
-            
-            startDateTime = slotOpt.get().getSlotTime();
-
-            // VALIDATION: patient cannot book overlapping appointments
-            enforceNoPatientOverlap(userId, startDateTime, slotsNeeded);
-            
-            // CRITICAL FIX: Validate slot time is in the future (applies to old format too)
-            if (startDateTime.isBefore(LocalDateTime.now()) || startDateTime.equals(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Khung giờ này đã qua. Vui lòng chọn khung giờ khác.");
-            }
-            
-            reservedSlots = reserveSlotById(slotId, slotsNeeded);
-        } else {
-            // New format: use selectedDate + selectedTime
-            LocalDate selectedDate = request.getSelectedDate();
-            LocalTime selectedTime = request.getSelectedTime();
-            
-            // CRITICAL FIX: Validate selectedDate is not in the past
-            if (selectedDate.isBefore(LocalDate.now())) {
-                throw new IllegalArgumentException("Không thể đặt lịch cho ngày trong quá khứ. Vui lòng chọn ngày trong tương lai.");
-            }
-            
-            startDateTime = LocalDateTime.of(selectedDate, selectedTime);
-
-            // VALIDATION: patient cannot book overlapping appointments
-            enforceNoPatientOverlap(userId, startDateTime, slotsNeeded);
-
-            // CRITICAL FIX: Validate both date and time are in the future
-            if (startDateTime.isBefore(LocalDateTime.now()) || startDateTime.equals(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Không thể đặt lịch trong quá khứ. Vui lòng chọn thời gian trong tương lai.");
-            }
-
-            if (selectedTime.isBefore(LocalTime.of(8, 0)) || selectedTime.isAfter(LocalTime.of(16, 30))) {
-                throw new IllegalArgumentException("Thời gian phải trong khoảng 08:00 - 17:00.");
-            }
-
-            reservedSlots = reserveSlots(startDateTime, slotsNeeded);
-        }
-
-        if (reservedSlots.isEmpty()) {
-            throw new IllegalArgumentException("Khung giờ này đã đầy. Vui lòng chọn thời gian khác.");
-        }
-
-        Appointment appointment = createPendingAppointment(
-            customer,
-            service,
-            reservedSlots,
-            request.getContactChannel().trim().toUpperCase(),
-            request.getContactValue().trim(),
-            request.getPatientNote()
-        );
-
-        return toDto(appointment);
-        } catch (BusinessException | IllegalArgumentException e) {
-            // propagate known problems so controller can handle them
-            throw e;
-        } catch (Exception e) {
-            // unexpected failure - log and convert to business exception
-            logger.error("Unexpected error while creating appointment", e);
-            throw new BusinessException("Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại.");
-        }
+        List<Slot> reserved = reserveSlots(start, slotsNeeded);
+        if (reserved.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Slot đã hết chỗ.");
+        return toDto(createPendingAppointment(customer, service, reserved,
+                request.getContactChannel().trim().toUpperCase(), request.getContactValue().trim(), request.getPatientNote()));
     }
 
-    /**
-     * Confirm appointment after successful payment.
-     */
     @Transactional
-    public AppointmentDto confirmAppointment(Long appointmentId) {
-        Appointment appointment = confirmAppointmentInternal(appointmentId);
-        return toDto(appointment);
+    public AppointmentDto rescheduleAppointment(Long userId, Long appointmentId, RescheduleAppointmentRequest request) {
+        if (request == null || request.getSelectedDate() == null || request.getSelectedTime() == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ngày và giờ đổi lịch là bắt buộc.");
+        }
+        Appointment a = appointmentRepository.findByIdWithSlotsAndCustomerUserId(appointmentId, userId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+        ensureRescheduleAllowed(a);
+
+        Services service = validateService(a.getService() != null ? a.getService().getId() : null);
+        int slotsNeeded = calculateSlotsNeeded(service.getDurationMinutes());
+        LocalDateTime newStart = LocalDateTime.of(request.getSelectedDate(), request.getSelectedTime());
+        LocalDateTime newEnd = newStart.plusMinutes((long) slotsNeeded * SLOT_MIN);
+        validateNotInPast(newStart);
+        validateWorkingWindow(newStart, newEnd);
+        validateNoCustomerOverlap(userId, newStart.toLocalDate(), newStart.toLocalTime(), newEnd.toLocalTime(), a.getId());
+
+        List<Slot> oldSlots = a.getAppointmentSlots().stream().map(AppointmentSlot::getSlot).collect(Collectors.toCollection(ArrayList::new));
+        List<Slot> newSlots = reserveSlots(newStart, slotsNeeded);
+        if (newSlots.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Slot đã hết chỗ.");
+
+        a.setDate(newStart.toLocalDate());
+        a.setStartTime(newStart.toLocalTime());
+        a.setEndTime(newEnd.toLocalTime());
+        a.clearAppointmentSlots();
+        for (int i = 0; i < newSlots.size(); i++) a.addAppointmentSlot(new AppointmentSlot(a, newSlots.get(i), i));
+        Appointment saved = appointmentRepository.save(a);
+        releaseSlots(oldSlots);
+        return toDto(saved);
     }
 
-    /**
-     * Cancel appointment and release slots.
-     */
+    @Transactional
+    public AppointmentDto confirmAppointment(Long appointmentId) { return toDto(confirmAppointmentEntity(appointmentId)); }
+
     @Transactional
     public AppointmentDto cancelAppointment(Long userId, Long appointmentId) {
-        Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Lịch hẹn không tồn tại."));
-
-        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new IllegalArgumentException("Không thể hủy lịch hẹn đã hoàn thành.");
-        }
-
-        Appointment cancelled = cancelAppointmentInternal(appointmentId);
-        return toDto(cancelled);
+        Appointment a = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+        ensureCancelAllowed(a);
+        return toDto(cancelAppointmentEntity(appointmentId, null));
     }
 
+    @Transactional
+    public Appointment cancelAppointmentByStaff(Long appointmentId, String reason) { return cancelAppointmentEntity(appointmentId, reason); }
+
     public List<AppointmentDto> getMyAppointments(Long userId) {
-        List<Appointment> list = appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId);
-        return list.stream().map(this::toDto).collect(Collectors.toList());
+        return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream().map(this::toDto).collect(Collectors.toList());
     }
 
     public Optional<AppointmentDto> getAppointmentDetail(Long userId, Long appointmentId) {
-        return appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
-                .map(this::toDto);
+        return appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId).map(this::toDto);
     }
 
     @Transactional
     public Optional<AppointmentDto> checkIn(Long userId, Long appointmentId) {
         Optional<Appointment> opt = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId);
         if (opt.isEmpty()) return Optional.empty();
-
         Appointment a = opt.get();
-        LocalDate today = LocalDate.now();
-
-        if (!a.getDate().equals(today) || a.getStatus() != AppointmentStatus.CONFIRMED) {
-            return Optional.empty();
-        }
-
+        if (!a.getDate().equals(nowDateTime().toLocalDate()) || a.getStatus() != AppointmentStatus.CONFIRMED) return Optional.empty();
         a.setStatus(AppointmentStatus.CHECKED_IN);
-        appointmentRepository.save(a);
-        return Optional.of(toDto(a));
+        return Optional.of(toDto(appointmentRepository.save(a)));
     }
 
-    private AppointmentDto toDto(Appointment a) {
-        AppointmentDto dto = new AppointmentDto();
-        dto.setId(a.getId());
-        dto.setDate(a.getDate());
-        dto.setStartTime(a.getStartTime());
-        dto.setEndTime(a.getEndTime());
-        dto.setStatus(a.getStatus().name());
-        dto.setNotes(a.getNotes());
-        dto.setContactChannel(a.getContactChannel());
-        dto.setContactValue(a.getContactValue());
+    public boolean checkDentistOverlap(Long dentistProfileId, LocalDate date, LocalTime startTime, LocalTime endTime, Long excludeAppointmentId) {
+        return excludeAppointmentId == null
+                ? appointmentRepository.hasOverlappingAppointment(dentistProfileId, date, startTime, endTime)
+                : appointmentRepository.hasOverlappingAppointmentExcludingSelf(dentistProfileId, date, startTime, endTime, excludeAppointmentId);
+    }
 
-        if (a.getService() != null) {
-            dto.setServiceId(a.getService().getId());
-            dto.setServiceName(a.getService().getName());
+    private List<Slot> getAvailableSlotsForService(LocalDate date, int durationMinutes) {
+        int slotsNeeded = calculateSlotsNeeded(durationMinutes);
+        LocalDateTime now = nowDateTime();
+        LocalDateTime dayStart = LocalDateTime.of(date, OPEN);
+        LocalDateTime dayEnd = LocalDateTime.of(date, CLOSE);
+        if (date.isBefore(now.toLocalDate()) || dayEnd.isBefore(now)) return new ArrayList<>();
+
+        List<Slot> all = date.equals(now.toLocalDate())
+                ? slotRepository.findAvailableSlotsForToday(findNextSlotStart(now), dayEnd)
+                : slotRepository.findAvailableSlotsBetweenTimes(dayStart, dayEnd);
+
+        List<Slot> ok = new ArrayList<>();
+        for (int i = 0; i <= all.size() - slotsNeeded; i++) {
+            boolean good = true;
+            for (int j = 0; j < slotsNeeded; j++) {
+                Slot s = all.get(i + j);
+                if (!s.getSlotTime().equals(all.get(i).getSlotTime().plusMinutes((long) j * SLOT_MIN)) || !s.isAvailable()) { good = false; break; }
+            }
+            if (good) {
+                LocalDateTime st = all.get(i).getSlotTime();
+                if (isInsideWorkingWindow(st, st.plusMinutes((long) slotsNeeded * SLOT_MIN))) ok.add(all.get(i));
+            }
         }
+        return ok;
+    }
 
-        if (a.getDentist() != null) {
-            dto.setDentistId(a.getDentist().getId());
-            dto.setDentistName(a.getDentist().getFullName());
+    private List<Slot> getAllSlotsEntitiesForDate(LocalDate date) {
+        LocalDateTime now = nowDateTime();
+        LocalDateTime dayStart = LocalDateTime.of(date, OPEN);
+        LocalDateTime dayEnd = LocalDateTime.of(date, CLOSE);
+        if (date.isBefore(now.toLocalDate()) || dayEnd.isBefore(now)) return new ArrayList<>();
+
+        List<Slot> list = date.equals(now.toLocalDate())
+                ? slotRepository.findAllSlotsForToday(findNextSlotStart(now), dayEnd)
+                : slotRepository.findAllSlotsBetweenTimes(dayStart, dayEnd);
+        return list.stream().filter(s -> isInsideWorkingWindow(s.getSlotTime(), s.getSlotTime().plusMinutes(SLOT_MIN))).toList();
+    }
+
+    @Transactional
+    private List<Slot> reserveSlots(LocalDateTime startDateTime, int slotsNeeded) {
+        if (!startDateTime.isAfter(nowDateTime())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
+        if (slotsNeeded <= 0) throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thời lượng đặt lịch không hợp lệ.");
+        LocalDateTime endDateTime = startDateTime.plusMinutes((long) slotsNeeded * SLOT_MIN);
+        if (!isInsideWorkingWindow(startDateTime, endDateTime)) throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngoài giờ làm việc.");
+
+        List<Slot> locked = slotRepository.findActiveSlotsForUpdate(startDateTime, endDateTime);
+        if (locked.size() != slotsNeeded) return new ArrayList<>();
+        for (int i = 0; i < locked.size(); i++) {
+            if (!locked.get(i).getSlotTime().equals(startDateTime.plusMinutes((long) i * SLOT_MIN)) || !locked.get(i).isAvailable()) return new ArrayList<>();
         }
+        for (Slot s : locked) { s.setBookedCount(s.getBookedCount() + 1); slotRepository.save(s); }
+        return locked;
+    }
 
-        dto.setCanCheckIn(a.getDate().equals(LocalDate.now()) && a.getStatus() == AppointmentStatus.CONFIRMED);
+    @Transactional
+    private void releaseSlots(List<Slot> slots) {
+        for (Slot s : slots) {
+            Slot locked = slotRepository.findBySlotTimeAndActiveTrueForUpdate(s.getSlotTime())
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
+            if (locked.getBookedCount() <= 0) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dữ liệu slot không hợp lệ.");
+            locked.setBookedCount(locked.getBookedCount() - 1);
+            slotRepository.save(locked);
+        }
+    }
 
+    @Transactional
+    private Appointment createPendingAppointment(CustomerProfile customer, Services service, List<Slot> reservedSlots,
+                                                 String contactChannel, String contactValue, String notes) {
+        if (reservedSlots.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Không có slot được giữ.");
+        Slot first = reservedSlots.get(0), last = reservedSlots.get(reservedSlots.size() - 1);
+        Appointment a = new Appointment();
+        a.setCustomer(customer); a.setService(service);
+        a.setDate(first.getSlotTime().toLocalDate()); a.setStartTime(first.getStartTime()); a.setEndTime(last.getEndTime());
+        a.setStatus(AppointmentStatus.PENDING); a.setContactChannel(contactChannel); a.setContactValue(contactValue);
+        a.setNotes(notes != null ? notes.trim() : null);
+        for (int i = 0; i < reservedSlots.size(); i++) a.addAppointmentSlot(new AppointmentSlot(a, reservedSlots.get(i), i));
+        return appointmentRepository.save(a);
+    }
+
+    @Transactional
+    private Appointment confirmAppointmentEntity(Long appointmentId) {
+        Appointment a = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+        if (a.getStatus() != AppointmentStatus.PENDING && a.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể xác nhận lịch hẹn ở trạng thái hiện tại.");
+        }
+        a.setStatus(AppointmentStatus.CONFIRMED);
+        return appointmentRepository.save(a);
+    }
+
+    @Transactional
+    private Appointment cancelAppointmentEntity(Long appointmentId, String reason) {
+        Appointment a = appointmentRepository.findByIdWithSlots(appointmentId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+        if (a.getStatus() == AppointmentStatus.CANCELLED || a.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
+        }
+        List<Slot> toRelease = a.getAppointmentSlots().stream().map(AppointmentSlot::getSlot).toList();
+        a.setStatus(AppointmentStatus.CANCELLED);
+        if (reason != null && !reason.isBlank()) a.setNotes(reason.trim());
+        Appointment saved = appointmentRepository.save(a);
+        releaseSlots(toRelease);
+        return saved;
+    }
+
+    private SlotDto toSlotDto(Slot slot) {
+        SlotDto dto = new SlotDto();
+        dto.setId(slot.getId()); dto.setDate(slot.getSlotTime().toLocalDate());
+        dto.setStartTime(slot.getSlotTime().toLocalTime()); dto.setEndTime(slot.getSlotTime().toLocalTime().plusMinutes(SLOT_MIN));
+        dto.setAvailable(slot.isAvailable()); dto.setCapacity(slot.getCapacity()); dto.setBookedCount(slot.getBookedCount()); dto.setAvailableSpots(slot.getAvailableSpots());
         return dto;
     }
 
-    // ------------------------------------------------------------------
-    // Internal helpers originally part of BookingService
-    // ------------------------------------------------------------------
+    private void validateCreateRequest(CreateAppointmentRequest request) {
+        if (request == null) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dữ liệu đặt lịch không hợp lệ.");
+        if (request.getServiceId() == null || request.getServiceId() <= 0) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn dịch vụ hợp lệ.");
+        if (!request.isOldFormat() && !request.isNewFormat()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn ngày và giờ hợp lệ.");
+        if (request.getPatientNote() != null && request.getPatientNote().length() > 500) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ghi chú tối đa 500 ký tự.");
+        if (request.getContactChannel() == null || request.getContactChannel().isBlank()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn kênh liên hệ.");
+        if (request.getContactValue() == null || request.getContactValue().isBlank()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng nhập thông tin liên hệ.");
 
-    /**
-     * Internal entity-level retrieval; does not convert to DTO.
-     */
-    private List<Slot> fetchAllSlotsForDate(LocalDate date) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = LocalDate.now();
-        LocalDateTime dayStart = LocalDateTime.of(date, CLINIC_OPEN_TIME);
-        LocalDateTime dayEnd = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
-
-        // validation: no past dates
-        if (date.isBefore(today)) {
-            logger.warn("Requested slots for past date {}", date);
-            return new ArrayList<>();
-        }
-        if (dayEnd.isBefore(now)) {
-            return new ArrayList<>();
-        }
-
-        List<Slot> slots;
-        if (date.equals(today)) {
-            LocalDateTime currentSlotStart = findSlotStartTime(now);
-            slots = slotRepository.findAllSlotsForToday(currentSlotStart, dayEnd);
-        } else {
-            slots = slotRepository.findAllSlotsBetweenTimes(dayStart, dayEnd);
-        }
-        return slots;
-    }
-
-    /**
-     * Calculate number of 30‑minute slots needed for given duration.
-     */
-    public static int calculateSlotsNeeded(int durationMinutes) {
-        return (int) Math.ceil((double) durationMinutes / SLOT_DURATION_MINUTES);
-    }
-
-    /**
-     * Ensure that the given user does not already have a pending/confirmed
-     * appointment overlapping the window starting at startDateTime and
-     * lasting slotsNeeded slots.  Throws BusinessException if an overlap exists.
-    /**
-     * Ensure that the given user does not already have a pending/confirmed
-     * appointment overlapping the window starting at startDateTime and
-     * lasting slotsNeeded slots.  Throws BusinessException if an overlap exists.
-     */
-    private void enforceNoPatientOverlap(Long userId, LocalDateTime startDateTime, int slotsNeeded) {
-        LocalDate date = startDateTime.toLocalDate();
-        LocalTime startTime = startDateTime.toLocalTime();
-        LocalTime endTime = startDateTime.plusMinutes((long) slotsNeeded * SLOT_DURATION_MINUTES).toLocalTime();
-
-        // use native query with explicit time casting to avoid SQL Server type mismatch
-        // convert enum names to strings for SQL Server native query
-        logger.debug("Checking overlap for user={}, date={}, start={}, end={}",
-                 userId, date, startTime, endTime);
-        boolean exists = appointmentRepository
-            .existsPatientOverlap(
-                userId,
-                date,
-                List.of(
-                    com.dentalclinic.model.appointment.AppointmentStatus.PENDING.name(),
-                    com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED.name()
-                ),
-                endTime,
-                startTime);
-        logger.debug("Overlap exists? {}", exists);
-        if (exists) {
-            throw new com.dentalclinic.exception.BusinessException("Bạn đã có lịch khám trùng thời gian này");
+        String channel = request.getContactChannel().trim().toUpperCase();
+        String value = request.getContactValue().trim();
+        if (("PHONE".equals(channel) || "ZALO".equals(channel)) && !VN_PHONE_PATTERN.matcher(value.replaceAll("\\s+", "")).matches())
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số điện thoại/Zalo không hợp lệ.");
+        if ("EMAIL".equals(channel) && !EMAIL_PATTERN.matcher(value).matches())
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Email không hợp lệ.");
+        if (!List.of("PHONE", "ZALO", "EMAIL").contains(channel))
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Kênh liên hệ chỉ được: PHONE, ZALO, EMAIL.");
+        if (request.getDepositAmount() != null && request.getDepositAmount() < 0)
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiền cọc không được âm.");
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            String status = request.getStatus().trim().toUpperCase();
+            if (!"PENDING".equals(status) && !"CONFIRMED".equals(status))
+                throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ được khởi tạo với trạng thái PENDING hoặc CONFIRMED.");
         }
     }
 
-    private LocalDateTime findSlotStartTime(LocalDateTime now) {
-        LocalTime time = now.toLocalTime();
-        int minute = time.getMinute();
-        int slotMinute = (minute / 30) * 30;
-        LocalDateTime slotStart = LocalDateTime.of(now.toLocalDate(), LocalTime.of(time.getHour(), slotMinute));
-        if (now.isAfter(slotStart)) {
-            slotStart = slotStart.plusMinutes(30);
-        }
-        return slotStart;
+    private User validateBookingUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Người dùng không tồn tại."));
+        if (user.getRole() != Role.CUSTOMER) throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Chỉ bệnh nhân mới được đặt lịch.");
+        if (user.getStatus() != UserStatus.ACTIVE) throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Tài khoản đang bị khóa.");
+        return user;
     }
 
-    @Transactional
-    public List<Slot> reserveSlots(LocalDateTime startDateTime, int slotsNeeded) {
-        LocalDateTime now = LocalDateTime.now();
-        if (startDateTime.isBefore(now) || startDateTime.equals(now)) {
-            throw new IllegalArgumentException("Không thể đặt lịch trong quá khứ. Vui lòng chọn thời gian trong tương lai.");
-        }
-        List<Slot> reservedSlots = new ArrayList<>();
-        for (int i = 0; i < slotsNeeded; i++) {
-            LocalDateTime slotTime = startDateTime.plusMinutes((long) i * SLOT_DURATION_MINUTES);
-            if (slotTime.isBefore(now) || slotTime.equals(now)) {
-                rollbackReservedSlots(reservedSlots);
-                throw new IllegalArgumentException("Khung giờ đã qua. Vui lòng chọn thời gian khác.");
-            }
-            int updatedRows = slotRepository.incrementBookedCountIfAvailable(slotTime);
-            if (updatedRows == 0) {
-                rollbackReservedSlots(reservedSlots);
-                return new ArrayList<>();
-            }
-            Optional<Slot> slotOpt = slotRepository.findBySlotTimeAndActiveTrue(slotTime);
-            if (slotOpt.isPresent()) {
-                reservedSlots.add(slotOpt.get());
-            } else {
-                rollbackReservedSlots(reservedSlots);
-                return new ArrayList<>();
-            }
-        }
-        return reservedSlots;
+    private CustomerProfile getOrCreateCustomerProfile(User user) {
+        return customerProfileRepository.findByUser_Id(user.getId()).orElseGet(() -> {
+            CustomerProfile p = new CustomerProfile();
+            p.setUser(user); p.setFullName(user.getEmail() != null ? user.getEmail() : "Khách hàng");
+            return customerProfileRepository.save(p);
+        });
     }
 
-    private void rollbackReservedSlots(List<Slot> reservedSlots) {
-        for (Slot slot : reservedSlots) {
-            try {
-                slotRepository.decrementBookedCount(slot.getSlotTime());
-            } catch (Exception e) {
-                logger.error("Failed to rollback slot at {}: {}", slot.getSlotTime(), e.getMessage());
-            }
+    private Services validateService(Long serviceId) {
+        if (serviceId == null || serviceId <= 0) throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Dịch vụ không tồn tại.");
+        Services service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Dịch vụ không tồn tại."));
+        if (!service.isActive()) throw new BookingException(BookingErrorCode.SERVICE_INACTIVE, "Dịch vụ đang tạm ngưng.");
+        if (service.getDurationMinutes() <= 0) throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thời lượng dịch vụ không hợp lệ.");
+        return service;
+    }
+
+    private void validateClientDeposit(Double clientDeposit, Services service) {
+        if (clientDeposit == null) return;
+        double expected = Math.max(0d, service.getPrice() * DEFAULT_DEPOSIT_RATE);
+        if (Math.abs(clientDeposit - expected) > 0.0001d)
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiền cọc không hợp lệ theo cấu hình dịch vụ.");
+    }
+
+    private LocalDateTime resolveStartDateTime(CreateAppointmentRequest request) {
+        if (request.isOldFormat()) {
+            Slot slot = slotRepository.findById(request.getSlotId())
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
+            return slot.getSlotTime();
         }
+        return LocalDateTime.of(request.getSelectedDate(), request.getSelectedTime());
     }
 
-    @Transactional
-    public Optional<Slot> getSlotById(Long slotId) {
-        return slotRepository.findById(slotId);
+    private void validateSelectedDate(LocalDate date) {
+        if (date == null) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ngày không hợp lệ.");
+        if (date.isBefore(nowDateTime().toLocalDate())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
     }
 
-    @Transactional
-    public List<Slot> reserveSlotById(Long slotId, int slotsNeeded) {
-        Optional<Slot> slotOpt = slotRepository.findById(slotId);
-        if (slotOpt.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return reserveSlots(slotOpt.get().getSlotTime(), slotsNeeded);
+    private void validateNotInPast(LocalDateTime startDateTime) {
+        if (!startDateTime.isAfter(nowDateTime())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
     }
 
-    @Transactional
-    public void releaseSlots(List<Slot> slots) {
-        for (Slot slot : slots) {
-            try {
-                slotRepository.decrementBookedCount(slot.getSlotTime());
-            } catch (Exception e) {
-                logger.error("Failed to release slot at {}: {}", slot.getSlotTime(), e.getMessage());
-            }
-        }
+    private void validateWorkingWindow(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        LocalTime start = startDateTime.toLocalTime(), end = endDateTime.toLocalTime();
+        if (endDateTime.toLocalDate().isAfter(startDateTime.toLocalDate()))
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngoài giờ làm việc.");
+        if (start.isBefore(OPEN) || !end.isAfter(start) || end.isAfter(CLOSE) || start.equals(CLOSE))
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngoài giờ làm việc.");
+        if (start.isBefore(LUNCH_END) && end.isAfter(LUNCH_START))
+            throw new BookingException(BookingErrorCode.LUNCH_BREAK_CONFLICT, "Khung giờ cắt ngang thời gian nghỉ trưa 12:00-13:00.");
     }
 
-    /**
-     * Appointment lifecycle helpers moved from BookingService.
-     */
-    @Transactional
-    public Appointment createPendingAppointment(
-            CustomerProfile customer,
-            Services service,
-            List<Slot> reservedSlots,
-            String channel,
-            String value,
-            String notes) {
-        Appointment a = new Appointment();
-        a.setCustomer(customer);
-        a.setService(service);
-        a.setDate(reservedSlots.get(0).getSlotTime().toLocalDate());
-        a.setStartTime(reservedSlots.get(0).getSlotTime().toLocalTime());
-        a.setEndTime(reservedSlots.get(reservedSlots.size() - 1).getSlotTime()
-                .toLocalTime().plusMinutes(SLOT_DURATION_MINUTES));
-        a.setContactChannel(channel);
-        a.setContactValue(value);
-        a.setNotes(notes);
-        a.setStatus(AppointmentStatus.PENDING);
-
-        // convert each Slot into an AppointmentSlot and attach
-        a.clearAppointmentSlots(); // just in case
-        for (int i = 0; i < reservedSlots.size(); i++) {
-            AppointmentSlot as = new AppointmentSlot(a, reservedSlots.get(i), i);
-            a.addAppointmentSlot(as);
-        }
-
-        return appointmentRepository.save(a);
+    private void validateNoCustomerOverlap(Long userId, LocalDate date, LocalTime startTime, LocalTime endTime, Long excludeAppointmentId) {
+        if (hasCustomerOverlap(userId, date, startTime, endTime, excludeAppointmentId))
+            throw new BookingException(BookingErrorCode.BOOKING_CONFLICT, "Bạn đã có lịch hẹn trùng thời điểm này.");
     }
 
-    @Transactional
-    public Appointment confirmAppointmentInternal(Long appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
-        appointment.setStatus(AppointmentStatus.CONFIRMED);
-        return appointmentRepository.save(appointment);
+    private boolean hasCustomerOverlap(Long userId, LocalDate date, LocalTime startTime, LocalTime endTime, Long excludeAppointmentId) {
+        return excludeAppointmentId == null
+                ? appointmentRepository.existsCustomerOverlap(userId, date, startTime, endTime, ACTIVE_BOOKING_STATUSES)
+                : appointmentRepository.existsCustomerOverlapExcludingAppointment(userId, excludeAppointmentId, date, startTime, endTime, ACTIVE_BOOKING_STATUSES);
     }
 
-    @Transactional
-    public Appointment cancelAppointmentInternal(Long appointmentId) {
-        Optional<Appointment> opt = appointmentRepository.findByIdWithSlots(appointmentId);
-        if (opt.isEmpty()) {
-            throw new IllegalArgumentException("Appointment not found");
-        }
-        Appointment a = opt.get();
-        // release booked slots via appointmentSlots relationship
-        List<Slot> slotsToRelease = new ArrayList<>();
-        for (AppointmentSlot as : a.getAppointmentSlots()) {
-            if (as.getSlot() != null) {
-                slotsToRelease.add(as.getSlot());
-            }
-        }
-        releaseSlots(slotsToRelease);
-        a.setStatus(AppointmentStatus.CANCELLED);
-        return appointmentRepository.save(a);
+    private void ensureRescheduleAllowed(Appointment appointment) {
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELLED)
+            throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED, "Không thể đổi lịch với trạng thái hiện tại.");
+        if (!LocalDateTime.of(appointment.getDate(), appointment.getStartTime()).isAfter(nowDateTime()))
+            throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED, "Không thể đổi lịch sau giờ check-in.");
     }
 
-    public boolean checkDentistOverlap(Long dentistProfileId, LocalDate date,
-                                       LocalTime startTime, LocalTime endTime, Long excludeAppointmentId) {
-        if (excludeAppointmentId == null) {
-            return appointmentRepository.hasOverlappingAppointment(dentistProfileId, date, startTime, endTime);
-        } else {
-            return appointmentRepository.hasOverlappingAppointmentExcludingSelf(
-                    dentistProfileId, date, startTime, endTime, excludeAppointmentId);
-        }
+    private void ensureCancelAllowed(Appointment appointment) {
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELLED)
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
+        if (nowDateTime().isAfter(LocalDateTime.of(appointment.getDate(), appointment.getStartTime()).minusHours(CANCEL_MIN_HOURS_BEFORE)))
+            throw new BookingException(BookingErrorCode.CANCEL_WINDOW_CLOSED, "Không thể hủy lịch trong vòng 2 giờ trước giờ hẹn.");
     }
 
-    public Optional<Appointment> getAppointmentWithDetails(Long appointmentId) {
-        return appointmentRepository.findByIdWithDetails(appointmentId);
+    private LocalDateTime findNextSlotStart(LocalDateTime now) {
+        int slotMinute = (now.getMinute() / SLOT_MIN) * SLOT_MIN;
+        LocalDateTime currentSlotStart = LocalDateTime.of(now.toLocalDate(), LocalTime.of(now.getHour(), slotMinute));
+        return now.isAfter(currentSlotStart) ? currentSlotStart.plusMinutes(SLOT_MIN) : currentSlotStart;
     }
 
-    @Transactional
-    public void initializeSlotsForDate(LocalDate date, int capacity) {
-        LocalDateTime current = LocalDateTime.of(date, CLINIC_OPEN_TIME);
-        LocalDateTime end = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
-        int slotsCreated = 0;
-        while (current.isBefore(end)) {
-            Optional<Slot> existing = slotRepository.findBySlotTimeAndActiveTrue(current);
-            if (existing.isEmpty()) {
-                Slot slot = new Slot(current, capacity);
-                slotRepository.save(slot);
-                slotsCreated++;
-            }
-            current = current.plusMinutes(SLOT_DURATION_MINUTES);
-        }
-        logger.info("Initialized {} slots for date {} with capacity {}", slotsCreated, date, capacity);
+    private boolean isInsideWorkingWindow(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        if (endDateTime.toLocalDate().isAfter(startDateTime.toLocalDate())) return false;
+        LocalTime start = startDateTime.toLocalTime(), end = endDateTime.toLocalTime();
+        if (start.isBefore(OPEN) || !end.isAfter(start) || end.isAfter(CLOSE) || start.equals(CLOSE)) return false;
+        return !(start.isBefore(LUNCH_END) && end.isAfter(LUNCH_START));
     }
 
-    @Transactional
-    public void updateCapacityForDate(LocalDate date, int newCapacity) {
-        List<Slot> slots = fetchAllSlotsForDate(date);
-        for (Slot slot : slots) {
-            if (slot.getBookedCount() > newCapacity) {
-                throw new IllegalStateException(
-                    "Cannot reduce capacity to " + newCapacity + 
-                    " as slot at " + slot.getSlotTime() + " already has " + 
-                    slot.getBookedCount() + " bookings");
-            }
-            slot.setCapacity(newCapacity);
-            slotRepository.save(slot);
-        }
-        logger.info("Updated capacity to {} for all slots on {}", newCapacity, date);
+    private LocalDateTime nowDateTime() { return LocalDateTime.now(CLINIC_ZONE); }
+
+    private AppointmentDto toDto(Appointment a) {
+        AppointmentDto dto = new AppointmentDto();
+        dto.setId(a.getId()); dto.setDate(a.getDate()); dto.setStartTime(a.getStartTime()); dto.setEndTime(a.getEndTime());
+        dto.setStatus(a.getStatus().name()); dto.setNotes(a.getNotes()); dto.setContactChannel(a.getContactChannel()); dto.setContactValue(a.getContactValue());
+        if (a.getService() != null) { dto.setServiceId(a.getService().getId()); dto.setServiceName(a.getService().getName()); }
+        if (a.getDentist() != null) { dto.setDentistId(a.getDentist().getId()); dto.setDentistName(a.getDentist().getFullName()); }
+        dto.setCanCheckIn(a.getDate().equals(nowDateTime().toLocalDate()) && a.getStatus() == AppointmentStatus.CONFIRMED);
+        return dto;
     }
 }

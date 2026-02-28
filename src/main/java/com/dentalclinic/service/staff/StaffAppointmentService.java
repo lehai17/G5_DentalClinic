@@ -90,20 +90,7 @@ public class StaffAppointmentService {
 
     @Transactional
     public void cancelAppointment(Long appointmentId, String reason) {
-        Appointment appt = appointmentRepository.findByIdWithSlots(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        if (appt.getStatus() == AppointmentStatus.CANCELLED || 
-            appt.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new RuntimeException("Cannot cancel appointment in status: " + appt.getStatus());
-        }
-
-        appt.setStatus(AppointmentStatus.CANCELLED);
-        appt.setNotes(reason);
-        appointmentRepository.save(appt);
-
-        // reuse internal cancel logic from customer service
-        customerAppointmentService.cancelAppointmentInternal(appointmentId);
+        customerAppointmentService.cancelAppointmentByStaff(appointmentId, reason);
     }
 
     public Page<Appointment> searchAndSort(

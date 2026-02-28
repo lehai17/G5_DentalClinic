@@ -80,66 +80,44 @@ public class SlotSeeder {
      * Also check for any other completely missing time slots.
      */
     private void fillMissingLastSlots(SlotRepository slotRepository, LocalDate fromDate, LocalDate toDate) {
-            logger.info("Checking and filling missing slots (all incomplete dates)...");
+        logger.info("Checking and filling missing slots (all incomplete dates)...");
         
-            LocalDate current = fromDate;
-            int slotsAdded = 0;
+        LocalDate current = fromDate;
+        int slotsAdded = 0;
         
-            while (!current.isAfter(toDate)) {
-                if (current.getDayOfWeek().getValue() != 7) {  // Skip Sunday
-                    LocalDateTime dayStart = LocalDateTime.of(current, CLINIC_OPEN_TIME);
-                    LocalDateTime dayEnd = LocalDateTime.of(current, CLINIC_CLOSE_TIME);
+        while (!current.isAfter(toDate)) {
+            if (current.getDayOfWeek().getValue() != 7) {  // Skip Sunday
+                LocalDateTime dayStart = LocalDateTime.of(current, CLINIC_OPEN_TIME);
+                LocalDateTime dayEnd = LocalDateTime.of(current, CLINIC_CLOSE_TIME);
                 
-                    // Count existing VALID slots for this day (08:00-17:00 range)
-                    List<Slot> existingDaySlots = slotRepository.findAllSlotsBetweenTimes(dayStart, dayEnd);
+                // Count existing slots for this day
+                List<Slot> existingDaySlots = slotRepository.findAllSlotsBetweenTimes(dayStart, dayEnd);
                 
-                    // If day doesn't have full 18 slots, fill missing ones
-                    if (existingDaySlots.size() < 18) {
-                        logger.warn("Day {} only has {} slots, expected 18. Filling missing slots...", current, existingDaySlots.size());
+                // If day doesn't have full 18 slots, fill missing ones
+                if (existingDaySlots.size() < 18) {
+                    logger.warn("Day {} only has {} slots, expected 18. Filling missing slots...", current, existingDaySlots.size());
                     
-                        // Create all missing slots for this day
-                        LocalDateTime slotTime = dayStart;
-                        while (slotTime.isBefore(dayEnd) || slotTime.equals(dayEnd.minusMinutes(30))) {
-                            // Check if this slot exists
-                            java.util.Optional<Slot> existingSlot = slotRepository.findBySlotTimeAndActiveTrue(slotTime);
+                    // Create all missing slots for this day
+                    LocalDateTime slotTime = dayStart;
+                    while (slotTime.isBefore(dayEnd) || slotTime.equals(dayEnd.minusMinutes(30))) {
+                        // Check if this slot exists
+                        java.util.Optional<Slot> existingSlot = slotRepository.findBySlotTimeAndActiveTrue(slotTime);
                         
-                            if (existingSlot.isEmpty()) {
-                                // Create missing slot with proper defaults
-                                Slot slot = new Slot(slotTime, DEFAULT_CAPACITY);
-                                slot.setActive(true);
-                                slot.setBookedCount(0);
-                                slotRepository.save(slot);
-                                slotsAdded++;
-                                logger.info("Created missing slot: {}", slotTime);
-                            } else {
-                                // Ensure existing slot is properly configured
-                                Slot existing = existingSlot.get();
-                                boolean changed = false;
-                                if (!existing.isActive() || existing.getCapacity() <= 0) {
-                                    existing.setActive(true);
-                                    if (existing.getCapacity() <= 0) {
-                                        existing.setCapacity(DEFAULT_CAPACITY);
-                                    }
-                                    changed = true;
-                                }
-                                // bookedCount must be within [0, capacity]
-                                if (existing.getBookedCount() < 0 || existing.getBookedCount() > existing.getCapacity()) {
-                                    existing.setBookedCount(0);
-                                    changed = true;
-                                }
-                                if (changed) {
-                                    slotRepository.save(existing);
-                                    logger.info("Fixed existing slot: {} (repaired properties)", slotTime);
-                                }
-                            }
-                        
-                            slotTime = slotTime.plusMinutes(30);
+                        if (existingSlot.isEmpty()) {
+                            // Create missing slot
+                            Slot slot = new Slot(slotTime, DEFAULT_CAPACITY);
+                            slotRepository.save(slot);
+                            slotsAdded++;
+                            logger.info("Created missing slot: {}", slotTime);
                         }
+                        
+                        slotTime = slotTime.plusMinutes(30);
                     }
                 }
-            
-                current = current.plusDays(1);
             }
+            
+            current = current.plusDays(1);
+        }
         
         if (slotsAdded > 0) {
             logger.info("Added {} missing slots total", slotsAdded);

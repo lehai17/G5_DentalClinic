@@ -12,7 +12,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "appointment")
+@Table(
+        name = "appointment",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_appointment_customer_date_start",
+                        columnNames = {"customer_id", "appointment_date", "start_time"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_appointment_date_start", columnList = "appointment_date, start_time"),
+                @Index(name = "idx_appointment_customer_date", columnList = "customer_id, appointment_date"),
+                @Index(name = "idx_appointment_status", columnList = "status")
+        }
+)
 public class Appointment {
 
     @Id

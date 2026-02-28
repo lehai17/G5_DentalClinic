@@ -14,7 +14,7 @@ public class SlotDto {
     private int capacity;
     private int bookedCount;
     private int availableSpots;
-    private boolean disabled; // true if user already has overlapping appointment
+    private boolean disabled;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
