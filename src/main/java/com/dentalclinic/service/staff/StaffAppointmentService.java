@@ -5,7 +5,7 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
-import com.dentalclinic.service.customer.CustomerAppointmentService;
+import com.dentalclinic.service.booking.BookingService;
 import com.dentalclinic.service.mail.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,7 @@ public class StaffAppointmentService {
     private EmailService emailService;
 
     @Autowired
-    private CustomerAppointmentService customerAppointmentService;
+    private BookingService bookingService;
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
@@ -60,7 +60,7 @@ public class StaffAppointmentService {
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        boolean hasOverlap = customerAppointmentService.checkDentistOverlap(
+        boolean hasOverlap = bookingService.checkDentistOverlap(
                 dentistId,
                 appt.getDate(),
                 appt.getStartTime(),
@@ -102,8 +102,7 @@ public class StaffAppointmentService {
         appt.setNotes(reason);
         appointmentRepository.save(appt);
 
-        // reuse internal cancel logic from customer service
-        customerAppointmentService.cancelAppointmentInternal(appointmentId);
+        bookingService.cancelAppointment(appointmentId);
     }
 
     public Page<Appointment> searchAndSort(

@@ -25,6 +25,12 @@ public class CreateAppointmentRequest {
     @NotBlank(message = "contactValue is required")
     private String contactValue;
 
+    // Optional client-side value; server always validates and decides real deposit.
+    private Double depositAmount;
+
+    // Optional client-side status; server only accepts PENDING/CONFIRMED and still enforces status itself.
+    private String status;
+
     public Long getServiceId() { return serviceId; }
     public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
     public LocalDate getSelectedDate() { return selectedDate; }
@@ -39,6 +45,10 @@ public class CreateAppointmentRequest {
     public void setContactChannel(String contactChannel) { this.contactChannel = contactChannel; }
     public String getContactValue() { return contactValue; }
     public void setContactValue(String contactValue) { this.contactValue = contactValue; }
+    public Double getDepositAmount() { return depositAmount; }
+    public void setDepositAmount(Double depositAmount) { this.depositAmount = depositAmount; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     // Helper methods
     public boolean isNewFormat() {

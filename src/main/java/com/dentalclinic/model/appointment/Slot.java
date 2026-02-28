@@ -5,7 +5,16 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "slot")
+@Table(
+        name = "slot",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_slot_time", columnNames = "slot_time")
+        },
+        indexes = {
+                @Index(name = "idx_slot_time", columnList = "slot_time"),
+                @Index(name = "idx_slot_time_active", columnList = "slot_time, is_active")
+        }
+)
 public class Slot {
 
     @Id
