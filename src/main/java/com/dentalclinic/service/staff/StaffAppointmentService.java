@@ -5,7 +5,7 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
-import com.dentalclinic.service.booking.BookingService;
+import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.mail.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,7 @@ public class StaffAppointmentService {
     private EmailService emailService;
 
     @Autowired
-    private BookingService bookingService;
+    private CustomerAppointmentService customerAppointmentService;
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
@@ -60,7 +60,7 @@ public class StaffAppointmentService {
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        boolean hasOverlap = bookingService.checkDentistOverlap(
+        boolean hasOverlap = customerAppointmentService.checkDentistOverlap(
                 dentistId,
                 appt.getDate(),
                 appt.getStartTime(),
@@ -90,19 +90,7 @@ public class StaffAppointmentService {
 
     @Transactional
     public void cancelAppointment(Long appointmentId, String reason) {
-        Appointment appt = appointmentRepository.findByIdWithSlots(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        if (appt.getStatus() == AppointmentStatus.CANCELLED || 
-            appt.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new RuntimeException("Cannot cancel appointment in status: " + appt.getStatus());
-        }
-
-        appt.setStatus(AppointmentStatus.CANCELLED);
-        appt.setNotes(reason);
-        appointmentRepository.save(appt);
-
-        bookingService.cancelAppointment(appointmentId);
+        customerAppointmentService.cancelAppointmentByStaff(appointmentId, reason);
     }
 
     public Page<Appointment> searchAndSort(
