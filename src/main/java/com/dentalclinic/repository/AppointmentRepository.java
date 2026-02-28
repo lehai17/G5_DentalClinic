@@ -2,6 +2,8 @@ package com.dentalclinic.repository;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,17 +18,18 @@ import java.util.Optional;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    @Query(
-            value = """
-        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+    // =========================
+    // DENTIST OVERLAP CHECK
+    // =========================
+
+    @Query(value = """
+        SELECT COUNT(*)
         FROM appointment
         WHERE dentist_id = :dentistId
           AND appointment_date = :date
           AND start_time < CAST(:endTime AS time)
           AND end_time > CAST(:startTime AS time)
-        """,
-            nativeQuery = true
-    )
+        """, nativeQuery = true)
     int countBusyAppointments(
             @Param("dentistId") Long dentistId,
             @Param("date") LocalDate date,
@@ -77,33 +80,30 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("appointmentId") Long appointmentId
     );
 
-    @Query("""
-        SELECT a FROM Appointment a
-        WHERE a.dentist.id = :dentistId
-          AND a.date = :date
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
-          AND a.startTime < :endTime
-          AND a.endTime > :startTime
-        """)
-    List<Appointment> findOverlappingAppointments(
+    @Query(value = """
+        SELECT COUNT(*)
+        FROM appointment
+        WHERE dentist_id = :dentistId
+          AND appointment_date = :date
+          AND id <> :appointmentId
+          AND start_time < CAST(:endTime AS time)
+          AND end_time > CAST(:startTime AS time)
+        """, nativeQuery = true)
+    int countBusyAppointmentsExcludeSelf(
             @Param("dentistId") Long dentistId,
             @Param("date") LocalDate date,
             @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime
+            @Param("endTime") LocalTime endTime,
+            @Param("appointmentId") Long appointmentId
     );
 
-    /**
-     * Native query to detect overlapping appointments for a patient.
-     * We purposely use CAST to TIME to avoid the time/datetime incompatibility
-     * error that occurred with the derived query.
-     * We also convert enum statuses to string names for SQL Server.
-     */
+    // =========================
+    // PATIENT OVERLAP CHECK
+    // =========================
+
     @Query(value = """
         SELECT CASE WHEN COUNT(*)>0 THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END
         FROM appointment a
-        /* customer_id stores the profile id which is the same as user id
-           because CustomerProfile uses @MapsId.  Therefore we can compare
-           directly to avoid extra joins. */
         WHERE a.customer_id = :userId
           AND a.appointment_date = :date
           AND a.status IN (:statuses)
@@ -118,9 +118,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("startTime") LocalTime startTime
     );
 
-    boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
+    List<Appointment> findByCustomer_User_IdAndDate(
+            Long userId,
+            LocalDate date
+    );
 
-    boolean existsBySlot_Id(Long slotId);
+    // =========================
+    // CUSTOMER APPOINTMENTS
+    // =========================
 
     Optional<Appointment> findByIdAndCustomer_User_Id(
             Long appointmentId,
@@ -138,57 +143,22 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByCustomerId(Long customerId);
 
-    /**
-     * Find all appointments for a user on a specific date.
-     * Used to check for overlapping appointments when displaying available slots.
-     */
-    List<Appointment> findByCustomer_User_IdAndDate(
-            Long userId,
-            LocalDate date
+    Page<Appointment> findByCustomer_FullNameContainingIgnoreCase(
+            String keyword,
+            Pageable pageable
     );
 
-    @Query("""
-        SELECT a FROM Appointment a
-        JOIN FETCH a.customer c
-        JOIN FETCH c.user cu
-        JOIN FETCH a.service s
-        LEFT JOIN FETCH a.dentist d
-        WHERE d.id = :dentistProfileId
-          AND a.date BETWEEN :start AND :end
-<<<<<<< Updated upstream
-=======
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
->>>>>>> Stashed changes
-    """)
-    List<Appointment> findScheduleForWeek(
-            @Param("dentistProfileId") Long dentistProfileId,
-            @Param("start") LocalDate start,
-            @Param("end") LocalDate end
-    );
-<<<<<<< Updated upstream
-=======
+    // =========================
+    // SLOT CHECK
+    // =========================
 
-    Page<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword, Pageable pageable);
+    boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
 
-    @Query(
-            value = """
-    SELECT COUNT(*)
-    FROM appointment
-    WHERE dentist_id = :dentistId
-      AND appointment_date = :date
-      AND id <> :appointmentId
-      AND start_time < CAST(:endTime AS time)
-      AND end_time > CAST(:startTime AS time)
-    """,
-            nativeQuery = true
-    )
-    int countBusyAppointmentsExcludeSelf(
-            @Param("dentistId") Long dentistId,
-            @Param("date") LocalDate date,
-            @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime,
-            @Param("appointmentId") Long appointmentId
-    );
+    boolean existsBySlot_Id(Long slotId);
+
+    // =========================
+    // ADMIN / STAFF QUERIES
+    // =========================
 
     List<Appointment> findByStatus(AppointmentStatus status);
 
@@ -210,9 +180,27 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         JOIN FETCH c.user cu
         JOIN FETCH a.service s
         LEFT JOIN FETCH a.dentist d
+        WHERE d.id = :dentistProfileId
+          AND a.date BETWEEN :start AND :end
+          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+    """)
+    List<Appointment> findScheduleForWeek(
+            @Param("dentistProfileId") Long dentistProfileId,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
+    );
+
+    @Query("""
+        SELECT a FROM Appointment a
+        JOIN FETCH a.customer c
+        JOIN FETCH c.user cu
+        JOIN FETCH a.service s
+        LEFT JOIN FETCH a.dentist d
         WHERE a.id = :appointmentId
     """)
-    Optional<Appointment> findByIdWithDetails(@Param("appointmentId") Long appointmentId);
+    Optional<Appointment> findByIdWithDetails(
+            @Param("appointmentId") Long appointmentId
+    );
 
     @Query("""
         SELECT a FROM Appointment a
@@ -220,15 +208,30 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         LEFT JOIN FETCH ass.slot
         WHERE a.id = :appointmentId
     """)
-    Optional<Appointment> findByIdWithSlots(@Param("appointmentId") Long appointmentId);
+    Optional<Appointment> findByIdWithSlots(
+            @Param("appointmentId") Long appointmentId
+    );
 
-    // Methods merged from AppointmentSlotRepository - using @Query for custom operations
-    @Query("SELECT aslot FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId ORDER BY aslot.slotOrder ASC")
-    List<Object[]> findAppointmentSlotDetailsByAppointmentId(@Param("appointmentId") Long appointmentId);
+    // =========================
+    // APPOINTMENT SLOT OPERATIONS
+    // =========================
+
+    @Query("""
+        SELECT aslot
+        FROM AppointmentSlot aslot
+        WHERE aslot.appointment.id = :appointmentId
+        ORDER BY aslot.slotOrder ASC
+    """)
+    List<Object[]> findAppointmentSlotDetailsByAppointmentId(
+            @Param("appointmentId") Long appointmentId
+    );
 
     @Modifying
-    @Query("DELETE FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId")
-    void deleteAppointmentSlotsByAppointmentId(@Param("appointmentId") Long appointmentId);
->>>>>>> Stashed changes
+    @Query("""
+        DELETE FROM AppointmentSlot aslot
+        WHERE aslot.appointment.id = :appointmentId
+    """)
+    void deleteAppointmentSlotsByAppointmentId(
+            @Param("appointmentId") Long appointmentId
+    );
 }
-
