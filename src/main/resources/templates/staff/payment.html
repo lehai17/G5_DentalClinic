@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Payment</title>
+    <link rel="stylesheet" th:href="@{/css/staff/payment.css}">
+</head>
+<body>
+
+<div class="app-wrapper">
+
+    <!-- Sidebar -->
+    <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div th:replace="staff/fragments/header :: header"></div>
+
+        <div class="payment-wrapper">
+
+            <h2>Payment</h2>
+
+            <p>
+                <strong>Customer:</strong>
+                <span th:text="${appointment.customer.fullName}"></span>
+            </p>
+
+            <p>
+                <strong>Date:</strong>
+                <span th:text="${appointment.date}"></span>
+                |
+                <strong>Time:</strong>
+                <span th:text="${appointment.startTime}"></span>
+            </p>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Unit Price</th>
+                    <th>Qty</th>
+                    <th>Amount</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                    <td th:text="${item.qty}"></td>
+                    <td th:text="${#numbers.formatDecimal(item.amount, 0, 'COMMA', 0, 'POINT')} + ' VND'"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="total-box">
+                Total:
+                <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+            </div>
+
+            <div class="action-buttons">
+                <a th:href="@{/staff/appointments}" class="btn btn-back">
+                    Back
+                </a>
+
+                <form th:action="@{/staff/payments/confirm/{id}(id=${appointment.id})}"
+                      method="post"
+                      style="display:inline;">
+                    <button type="submit" class="btn btn-confirm">
+                        Confirm Payment
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

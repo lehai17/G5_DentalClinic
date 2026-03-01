@@ -60,12 +60,11 @@ public class StaffAppointmentService {
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        boolean hasOverlap = customerAppointmentService.checkDentistOverlap(
+        boolean hasOverlap = appointmentRepository.hasOverlappingAppointment(
                 dentistId,
                 appt.getDate(),
                 appt.getStartTime(),
-                appt.getEndTime(),
-                appt.getId()
+                appt.getEndTime()
         );
 
         if (hasOverlap) {
@@ -95,6 +94,7 @@ public class StaffAppointmentService {
 
     public Page<Appointment> searchAndSort(
             String keyword,
+            String serviceKeyword,
             String sort,
             int page
     ) {
@@ -108,9 +108,23 @@ public class StaffAppointmentService {
 
         Pageable pageable = PageRequest.of(page, 3, s);
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
+        boolean hasCustomer = keyword != null && !keyword.trim().isEmpty();
+        boolean hasService = serviceKeyword != null && !serviceKeyword.trim().isEmpty();
+
+        if (hasCustomer && hasService) {
+            return appointmentRepository
+                    .findByCustomer_FullNameContainingIgnoreCaseAndService_NameContainingIgnoreCase(
+                            keyword, serviceKeyword, pageable);
+        }
+
+        if (hasCustomer) {
             return appointmentRepository
                     .findByCustomer_FullNameContainingIgnoreCase(keyword, pageable);
+        }
+
+        if (hasService) {
+            return appointmentRepository
+                    .findByService_NameContainingIgnoreCase(serviceKeyword, pageable);
         }
 
         return appointmentRepository.findAll(pageable);
