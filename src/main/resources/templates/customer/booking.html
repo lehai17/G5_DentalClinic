@@ -59,7 +59,7 @@
                 </label>
                 <select id="customer-booking-service" class="form-select">
                   <option value="">-- Chọn dịch vụ --</option>
-                  <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}">Dịch vụ</option>
+                  <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}" th:attr="data-duration=${s.durationMinutes}">Dịch vụ</option>
                 </select>
               </div>
 

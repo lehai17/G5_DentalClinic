@@ -309,7 +309,14 @@
       serviceEl.innerHTML = serviceName ? serviceName : '<span class="empty">Chưa chọn</span>';
     }
 
-    if (durationEl) durationEl.innerHTML = '<span class="empty">--</span>';
+    if (durationEl) {
+      var durationMinutes = 0;
+      if (selectedService && selectedService.selectedIndex > 0) {
+        var selectedOption = selectedService.options[selectedService.selectedIndex];
+        durationMinutes = parseInt(selectedOption.getAttribute('data-duration') || '0', 10);
+      }
+      durationEl.innerHTML = durationMinutes > 0 ? (durationMinutes + ' phút') : '<span class="empty">--</span>';
+    }
     if (depositEl) depositEl.innerHTML = '<span class="empty">--</span>';
 
     if (incomplete) {
