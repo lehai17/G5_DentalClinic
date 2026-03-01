@@ -200,39 +200,43 @@
 </script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+
     const status = document.getElementById('appointmentStatus')?.value;
+    const locked = (status === 'DONE' || status === 'COMPLETED');
 
-    if (status === 'DONE' || status === 'COMPLETED') {
+    if (locked) {
 
-      // 🔒 Disable form fields
-      document.querySelectorAll('input, textarea, select, button')
-              .forEach(el => {
-                el.disabled = true;
-              });
+      // Disable tất cả input (trừ hidden)
+      document.querySelectorAll('input:not([type=hidden]), textarea, select')
+              .forEach(el => el.disabled = true);
 
-      // 🔥 Remove submit button completely
+      // Xóa nút save
       const saveBtn = document.querySelector('button[type="submit"]');
       if (saveBtn) saveBtn.remove();
 
-      // 🔥 Remove all add buttons
-      document.querySelectorAll('#btnAddRx')
-              .forEach(btn => btn.remove());
-
+      // Xóa nút add medicine
+      const addBtn = document.getElementById('btnAddRx');
+      if (addBtn) addBtn.remove();
     }
-    document.querySelectorAll('.service-item').forEach(row => {
-      const check = row.querySelector('.svc-check');
-      const qty = row.querySelector('.svc-qty');
-      const tooth = row.querySelector('.svc-tooth');
 
-      function toggle() {
-        const enabled = check.checked;
-        qty.disabled = !enabled;
-        tooth.disabled = !enabled;
-      }
+    // Toggle chỉ chạy nếu chưa locked
+    if (!locked) {
+      document.querySelectorAll('.service-item').forEach(row => {
+        const check = row.querySelector('.svc-check');
+        const qty = row.querySelector('.svc-qty');
+        const tooth = row.querySelector('.svc-tooth');
 
-      check.addEventListener('change', toggle);
-      toggle();
-  });
+        function toggle() {
+          const enabled = check.checked;
+          qty.disabled = !enabled;
+          tooth.disabled = !enabled;
+        }
+
+        check.addEventListener('change', toggle);
+        toggle();
+      });
+    }
+
   });
 </script>
 

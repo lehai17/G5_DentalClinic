@@ -77,14 +77,21 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 
 /* ================= APP SHELL ================= */
 
-.app-shell{display:flex;min-height:100vh}
-
+.app-shell{
+    display:flex;
+}
 .sidebar{
+    position:fixed;
+    top:0;
+    left:0;
     width:260px;
+    height:100vh;
     background:linear-gradient(180deg,var(--sidebar),var(--sidebar2));
     color:#fff;
     padding:14px;
-    transition:width .2s;
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
 }
 .sidebar.collapsed{width:84px}
 
@@ -96,7 +103,13 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .nav-item:hover{background:rgba(255,255,255,.08)}
 .nav-item.active{background:rgba(255,255,255,.14)}
 
-.main{flex:1;display:flex;flex-direction:column}
+.main{
+    margin-left:260px;
+    width:calc(100vw - 260px);   /* 🔥 chiếm toàn bộ phần còn lại */
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+}
 .topbar{
     display:flex;
     justify-content:space-between;
@@ -109,7 +122,11 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .user-name{font-weight:800}
 .user-sub{color:var(--muted);font-size:12px}
 
-.content{padding:18px}
+.content{
+    padding:24px;
+    width:100%;
+    flex:1;
+}
 
 /* ================= SCHEDULE GRID ================= */
 
@@ -118,6 +135,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     border:1px solid var(--line);
     border-radius:16px;
     overflow:hidden;
+    width:100%;
 }
 
 /* ===== HEADER ===== */

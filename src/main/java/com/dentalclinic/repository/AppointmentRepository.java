@@ -5,7 +5,6 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -77,21 +76,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
             @Param("appointmentId") Long appointmentId
-    );
-
-    @Query("""
-        SELECT a FROM Appointment a
-        WHERE a.dentist.id = :dentistId
-AND a.date = :date
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
-          AND a.startTime < :endTime
-          AND a.endTime > :startTime
-        """)
-    List<Appointment> findOverlappingAppointments(
-            @Param("dentistId") Long dentistId,
-            @Param("date") LocalDate date,
-            @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime
     );
 
     boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
@@ -180,50 +164,6 @@ AND a.date = :date
 
     Page<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword, Pageable pageable);
 
-    @Query(
-            value = """
-    SELECT COUNT(*)
-    FROM appointment
-    WHERE dentist_id = :dentistId
-      AND appointment_date = :date
-      AND id <> :appointmentId
-      AND start_time < CAST(:endTime AS time)
-      AND end_time > CAST(:startTime AS time)
-    """,
-            nativeQuery = true
-    )
-    int countBusyAppointmentsExcludeSelf(
-            @Param("dentistId") Long dentistId,
-            @Param("date") LocalDate date,
-            @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime,
-            @Param("appointmentId") Long appointmentId
-    );
-
-    List<Appointment> findByStatus(AppointmentStatus status);
-
-    List<Appointment> findByDate(LocalDate date);
-
-    @Query("""
-        SELECT a FROM Appointment a
-        WHERE a.date = :date
-          AND a.status IN :statuses
-        """)
-    List<Appointment> findByDateAndStatusIn(
-            @Param("date") LocalDate date,
-            @Param("statuses") List<AppointmentStatus> statuses
-    );
-
-    @Query("""
-        SELECT a FROM Appointment a
-        JOIN FETCH a.customer c
-        JOIN FETCH c.user cu
-        JOIN FETCH a.service s
-        LEFT JOIN FETCH a.dentist d
-        WHERE a.id = :appointmentId
-    """)
-    Optional<Appointment> findByIdWithDetails(@Param("appointmentId") Long appointmentId);
-
     @Query("""
         SELECT a FROM Appointment a
         LEFT JOIN FETCH a.appointmentSlots ass
@@ -248,7 +188,29 @@ AND a.date = :date
     @Query("SELECT aslot FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId ORDER BY aslot.slotOrder ASC")
     List<Object[]> findAppointmentSlotDetailsByAppointmentId(@Param("appointmentId") Long appointmentId);
 
-    @Modifying
-    @Query("DELETE FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId")
-    void deleteAppointmentSlotsByAppointmentId(@Param("appointmentId") Long appointmentId);
+    @Query("""
+    SELECT COUNT(a)
+    FROM Appointment a
+    WHERE a.dentist.id = :dentistId
+      AND a.date = :date
+      AND a.status IN (
+            com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+            com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+      )
+""")
+    long countCompletedByDentistAndDate(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date
+    );
+    @Query("""
+    SELECT COUNT(a)
+    FROM Appointment a
+    WHERE a.dentist.id = :dentistId
+      AND a.date = :date
+      AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+""")
+    long countTotalByDentistAndDate(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date
+    );
 }

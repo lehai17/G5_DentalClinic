@@ -120,8 +120,23 @@ public class DentistAppointmentController {
         model.addAttribute("weekStart", weekStart);
 
         var billing = dentistSessionService.loadBilling(id, customerUserId);
+
+        String performedJson = billing.performedServicesJson();
+
+        if (performedJson == null
+                || performedJson.isBlank()
+                || performedJson.equals("[]")) {
+            if (appt.getService() != null) {
+                performedJson = """
+        [
+          {"serviceId": %d, "qty": 1, "toothNo": ""}
+        ]
+        """.formatted(appt.getService().getId());
+            }
+        }
+
         model.addAttribute("note", billing.note());
-        model.addAttribute("performedServicesJson", billing.performedServicesJson());
+        model.addAttribute("performedServicesJson", performedJson);
         model.addAttribute("prescriptionNote", billing.prescriptionNote());
 
         return "Dentist/billing-note";
