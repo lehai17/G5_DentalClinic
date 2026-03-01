@@ -23,6 +23,8 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
 
     Optional<Slot> findBySlotTimeAndActiveTrue(LocalDateTime slotTime);
 
+    Optional<Slot> findBySlotTime(LocalDateTime slotTime);
+
     @Query("SELECT s FROM Slot s WHERE s.slotTime >= :startDate AND s.slotTime < :endDate AND s.active = true ORDER BY s.slotTime ASC")
     List<Slot> findActiveSlotsForDateRange(@Param("startDate") LocalDateTime startDate, 
                                             @Param("endDate") LocalDateTime endDate);

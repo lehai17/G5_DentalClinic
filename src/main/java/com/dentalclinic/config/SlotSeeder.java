@@ -33,22 +33,10 @@ public class SlotSeeder {
         return (ApplicationArguments args) -> {
             LocalDate today = LocalDate.now();
             LocalDate endDate = today.plusDays(DAYS_TO_SEED - 1);
-            
-            LocalDateTime dayStart = LocalDateTime.of(today, CLINIC_OPEN_TIME);
-            LocalDateTime dayEnd = LocalDateTime.of(today, CLINIC_CLOSE_TIME);
-            
-            List<Slot> existingSlots = slotRepository.findActiveSlotsForDateRange(dayStart, dayEnd);
-            
-            if (!existingSlots.isEmpty()) {
-                logger.info("Slots already exist for today, skipping seed");
-                // But still check and fill missing last slots
-                fillMissingLastSlots(slotRepository, today, endDate);
-                return;
-            }
-            
-            logger.info("Seeding slots for next {} days with capacity {}", DAYS_TO_SEED, DEFAULT_CAPACITY);
-            
+
+            logger.info("Seeding/repairing slots for next {} days with capacity {}", DAYS_TO_SEED, DEFAULT_CAPACITY);
             int totalSlotsCreated = 0;
+            int totalSlotsUpdated = 0;
             
             for (int day = 0; day < DAYS_TO_SEED; day++) {
                 LocalDate date = today.plusDays(day);
@@ -60,17 +48,36 @@ public class SlotSeeder {
                 LocalDateTime current = LocalDateTime.of(date, CLINIC_OPEN_TIME);
                 LocalDateTime end = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
                 
-                // FIX: Include the last slot (16:30-17:00) by using <= instead of <
                 while (current.isBefore(end) || current.equals(end.minusMinutes(30))) {
-                    Slot slot = new Slot(current, DEFAULT_CAPACITY);
-                    slotRepository.save(slot);
-                    totalSlotsCreated++;
+                    java.util.Optional<Slot> existing = slotRepository.findBySlotTime(current);
+                    if (existing.isPresent()) {
+                        Slot slot = existing.get();
+                        boolean changed = false;
+                        if (!slot.isActive()) {
+                            slot.setActive(true);
+                            changed = true;
+                        }
+                        if (slot.getCapacity() <= 0) {
+                            slot.setCapacity(DEFAULT_CAPACITY);
+                            changed = true;
+                        }
+                        if (changed) {
+                            slotRepository.save(slot);
+                            totalSlotsUpdated++;
+                        }
+                    } else {
+                        Slot slot = new Slot(current, DEFAULT_CAPACITY);
+                        slotRepository.save(slot);
+                        totalSlotsCreated++;
+                    }
                     
                     current = current.plusMinutes(30);
                 }
             }
-            
-            logger.info("Successfully seeded {} slots", totalSlotsCreated);
+
+            logger.info("Slot seeding done. created={}, updated={}", totalSlotsCreated, totalSlotsUpdated);
+            // Backward-compat safety pass for partially seeded data
+            fillMissingLastSlots(slotRepository, today, endDate);
         };
     }
 
@@ -101,7 +108,7 @@ public class SlotSeeder {
                     LocalDateTime slotTime = dayStart;
                     while (slotTime.isBefore(dayEnd) || slotTime.equals(dayEnd.minusMinutes(30))) {
                         // Check if this slot exists
-                        java.util.Optional<Slot> existingSlot = slotRepository.findBySlotTimeAndActiveTrue(slotTime);
+                        java.util.Optional<Slot> existingSlot = slotRepository.findBySlotTime(slotTime);
                         
                         if (existingSlot.isEmpty()) {
                             // Create missing slot
@@ -109,6 +116,14 @@ public class SlotSeeder {
                             slotRepository.save(slot);
                             slotsAdded++;
                             logger.info("Created missing slot: {}", slotTime);
+                        } else if (!existingSlot.get().isActive()) {
+                            Slot slot = existingSlot.get();
+                            slot.setActive(true);
+                            if (slot.getCapacity() <= 0) {
+                                slot.setCapacity(DEFAULT_CAPACITY);
+                            }
+                            slotRepository.save(slot);
+                            logger.info("Re-activated existing slot: {}", slotTime);
                         }
                         
                         slotTime = slotTime.plusMinutes(30);
