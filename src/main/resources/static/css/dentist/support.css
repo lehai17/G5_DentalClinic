@@ -1,0 +1,130 @@
+/* ================= SUPPORT PAGE ================= */
+
+.support-wrapper{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:20px;
+    box-shadow:0 12px 40px rgba(2,6,23,.08);
+    padding:28px;
+}
+
+.support-title{
+    font-size:22px;
+    font-weight:900;
+}
+
+.support-sub{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:6px;
+}
+
+/* ================= TABLE ================= */
+
+.support-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:24px;
+}
+
+.support-table th{
+    text-align:left;
+    font-size:12px;
+    letter-spacing:.5px;
+    color:var(--muted);
+    font-weight:800;
+    padding:16px 14px;
+    background:#f8fafc;
+    border-bottom:1px solid var(--line);
+}
+
+.support-table td{
+    padding:18px 14px;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+}
+
+.support-table tr:hover{
+    background:#f9fbff;
+}
+
+/* ================= STATUS BADGE ================= */
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:700;
+    padding:6px 14px;
+    border-radius:999px;
+}
+
+.badge.open{
+    background:#fff7ed;
+    color:#c2410c;
+    border:1px solid #fdba74;
+}
+
+.badge.closed{
+    background:#ecfdf5;
+    color:#166534;
+    border:1px solid #86efac;
+}
+
+/* ================= ACTION LINK ================= */
+
+.action-link{
+    font-weight:700;
+    color:var(--primary);
+}
+
+.action-link:hover{
+    text-decoration:underline;
+}
+
+/* ================= DETAIL PAGE ================= */
+
+.detail-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:22px;
+    box-shadow:0 12px 40px rgba(2,6,23,.08);
+    padding:30px;
+    max-width:850px;
+}
+
+.detail-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.detail-name{
+    font-size:22px;
+    font-weight:900;
+}
+
+.detail-meta{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:4px;
+}
+
+.detail-section{
+    margin-top:24px;
+}
+
+.detail-section-title{
+    font-weight:800;
+    font-size:14px;
+    margin-bottom:10px;
+}
+
+.detail-box{
+    background:#f8fafc;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    font-size:14px;
+}
