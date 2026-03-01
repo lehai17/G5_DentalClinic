@@ -29,6 +29,11 @@
         <span class="ml-3 text-gray-500" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
       </div>
 
+      <div class="rounded-xl p-4 bg-white border border-gray-200 mb-4">
+        <h2 class="font-semibold mb-1">Tiêu đề</h2>
+        <p class="text-gray-800" th:text="${ticket.title != null && !#strings.isEmpty(ticket.title) ? ticket.title : 'Không có tiêu đề'}"></p>
+      </div>
+
       <div class="rounded-xl p-4 bg-blue-50 border border-blue-100">
         <h2 class="font-semibold mb-2">Câu hỏi</h2>
         <p class="whitespace-pre-wrap" th:text="${ticket.question}"></p>

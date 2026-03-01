@@ -42,7 +42,7 @@ public class SupportService {
 
     @Transactional
     public SupportTicket createTicket(Long customerUserId, String question) {
-        return createTicket(customerUserId, null, "Ho tro chuyen mon", question);
+        return createTicket(customerUserId, null, "Hỗ trợ chuyên môn", question);
     }
 
     @Transactional
@@ -55,7 +55,7 @@ public class SupportService {
         User assignedResponder = null;
         if (appointmentId != null) {
             appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, customerUserId)
-                    .orElseThrow(() -> new BusinessException("Khong tim thay ca kham phu hop de ho tro."));
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy ca khám phù hợp để hỗ trợ."));
             if (appointment.getDentist() != null && appointment.getDentist().getUser() != null) {
                 assignedResponder = appointment.getDentist().getUser();
             }
@@ -258,13 +258,13 @@ public class SupportService {
 
     private void validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
-            throw new BusinessException("Tieu de khong duoc de trong.");
+            throw new BusinessException("Tiêu đề không được để trống.");
         }
     }
 
     private void validateQuestion(String question) {
         if (question == null || question.trim().isEmpty()) {
-            throw new BusinessException("Noi dung cau hoi khong duoc de trong.");
+            throw new BusinessException("Nội dung câu hỏi không được để trống.");
         }
     }
 

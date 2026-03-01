@@ -130,7 +130,8 @@ public class CustomerPaymentController {
 
                     // Cập nhật Database
                     Appointment appointment = appointmentRepository.findById(appointmentId).orElseThrow();
-                    appointment.setStatus(AppointmentStatus.CONFIRMED);
+                    // Sau khi đặt cọc thành công vẫn giữ trạng thái PENDING theo business rule.
+                    appointment.setStatus(AppointmentStatus.PENDING);
                     appointmentRepository.save(appointment);
 
                     // CHUYỂN HƯỚNG VỀ STEP 4: Gửi status=success

@@ -56,8 +56,10 @@
       <div class="support-ticket-list" th:if="${tickets != null and !#lists.isEmpty(tickets)}">
         <article class="support-ticket-card" th:each="ticket : ${tickets}">
           <div class="support-ticket-main">
-            <h2 class="support-ticket-question"
-                th:text="${ticket.question != null && ticket.question.length() > 240 ? ticket.question.substring(0,240) + '...' : ticket.question}"></h2>
+            <h2 class="support-ticket-title"
+                th:text="${ticket.title != null && !#strings.isEmpty(ticket.title) ? ticket.title : 'Không có tiêu đề'}"></h2>
+            <p class="support-ticket-preview"
+               th:text="${ticket.question != null && ticket.question.length() > 180 ? ticket.question.substring(0,180) + '...' : ticket.question}"></p>
 
             <div class="support-ticket-meta">
               <div class="support-ticket-badge-wrap">
