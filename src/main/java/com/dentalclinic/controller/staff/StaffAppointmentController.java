@@ -93,15 +93,16 @@ public class StaffAppointmentController {
 
     @GetMapping("/appointments")
     public String appointments(@RequestParam(required = false) String keyword,
+                               @RequestParam(defaultValue = "") String serviceKeyword,
                                @RequestParam(required = false) String sort,
                                @RequestParam(defaultValue = "0") int page,
                                Model model) {
 
-        model.addAttribute("pageTitle", "Quản lý lịch khám");
+        model.addAttribute("pageTitle", "Appointment Management");
         model.addAttribute("staffName", "Staff");
 
         Page<Appointment> appointmentPage =
-                staffAppointmentService.searchAndSort(keyword, sort, page);
+                staffAppointmentService.searchAndSort(keyword, serviceKeyword, sort, page);
 
         model.addAttribute("appointments", appointmentPage.getContent());
 
@@ -109,6 +110,7 @@ public class StaffAppointmentController {
         model.addAttribute("totalPages", appointmentPage.getTotalPages());
 
         model.addAttribute("keyword", keyword);
+        model.addAttribute("serviceKeyword", serviceKeyword);
         model.addAttribute("sort", sort);
 
         return "staff/appointments";

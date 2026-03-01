@@ -94,3 +94,7 @@ function cancelAppointment(id) {
         method: 'POST'
     }).then(() => location.reload());
 }
+
+function goToPayment(id) {
+    window.location.href = "/staff/payments/" + id;
+}
