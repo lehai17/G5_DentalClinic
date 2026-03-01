@@ -1,0 +1,412 @@
+:root{
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --primary:#2563eb;
+    --sidebar:#0b1736;
+    --sidebar2:#0e2148;
+}
+
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    color:var(--text);
+    background:var(--bg)
+}
+a{color:var(--primary);text-decoration:none}
+pre{background:#0b1220;color:#e5e7eb;padding:12px;border-radius:10px;overflow:auto}
+
+/* ================= COMMON ================= */
+
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px rgba(2,6,23,.08);padding:18px;max-width:900px;width:100%}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 40px rgba(2,6,23,.12);padding:20px;width:420px}
+
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.brand-badge{width:40px;height:40px;border-radius:10px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.brand-title{font-weight:800}
+.brand-sub{color:var(--muted);font-size:13px}
+
+label{display:block;margin-top:10px;font-size:13px;color:var(--muted)}
+input,textarea{
+    width:100%;
+}
+
+select{
+    width:auto;
+    min-width:180px;
+    padding:8px 14px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+select:hover{
+    border-color:var(--primary);
+}
+
+select:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(37,99,235,.15);
+}
+textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+.btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border:1px solid var(--line);
+    padding:10px 12px;
+    border-radius:10px;
+    background:#fff;
+    color:var(--text);
+    cursor:pointer;
+    margin-top:10px
+}
+.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn.ghost{background:transparent}
+.nav-item.danger{color:#fff;background:rgba(255,255,255,.06);border-radius:10px;padding:10px}
+
+/* ================= APP SHELL ================= */
+
+.app-shell{
+    display:flex;
+}
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:260px;
+    height:100vh;
+    background:linear-gradient(180deg,var(--sidebar),var(--sidebar2));
+    color:#fff;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+}
+.sidebar.collapsed{width:84px}
+
+.sidebar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.brand-mini{display:flex;align-items:center;gap:10px}
+
+.nav{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.nav-item{color:#fff;opacity:.9;padding:10px;border-radius:10px}
+.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.14)}
+
+.main{
+    margin-left:260px;
+    width:calc(100vw - 260px);   /* 🔥 chiếm toàn bộ phần còn lại */
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 18px;
+    background:#fff;
+    border-bottom:1px solid var(--line)
+}
+.user-chip{text-align:right}
+.user-name{font-weight:800}
+.user-sub{color:var(--muted);font-size:12px}
+
+.content{
+    padding:24px;
+    width:100%;
+    flex:1;
+}
+
+/* ================= SCHEDULE GRID ================= */
+
+.schedule-grid{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    width:100%;
+}
+
+/* ===== HEADER ===== */
+
+.grid-head{
+    display:grid;
+    grid-template-columns:90px repeat(7,1fr);
+    border-bottom:1px solid var(--line);
+    background:#f8fafc;
+}
+
+.grid-head .time-col,
+.grid-head .day-col{
+    padding:12px;
+    font-weight:700;
+    color:var(--muted);
+    text-align:center;
+}
+
+/* ===== BODY ===== */
+
+.grid-body{
+    display:grid;
+    grid-template-columns:90px repeat(7,1fr);
+    grid-auto-rows:48px; /* 30 phút / slot */
+    background:#fff;
+    position:relative; /* 🔥 thêm dòng này */
+}
+
+/* Cột giờ bên trái */
+.grid-body .time-col{
+    padding:10px 8px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--muted);
+    background:#f8fafc;
+    border-bottom:1px solid var(--line);
+}
+
+/* Ô trống */
+.cell{
+    border-left:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    position:relative;
+    min-height:48px;
+    padding:0;
+    overflow:visible;
+}
+/* ===== APPOINTMENT BLOCK ===== */
+
+.appt{
+    position:absolute;
+    top:2px;
+    left:2px;
+    right:2px;
+    z-index:5;
+
+    border-radius:12px;
+    padding:10px 12px;
+
+    background:#eef5ff;
+    border:1px solid #cfe1ff;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+
+    box-sizing:border-box;
+
+    /* 🔥 QUAN TRỌNG */
+    overflow:hidden;
+}
+
+.appt:hover{
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.appt-name{
+    font-weight:800;
+    font-size:14px;
+    color:#1e3a8a;
+}
+
+.appt-sub{
+    font-size:12px;
+    color:var(--muted);
+}
+
+/* Completed */
+.appt-completed{
+    background:#ecfdf5;
+    border:1px solid #22c55e;
+}
+
+.appt-completed .appt-name{
+    color:#166534;
+}
+
+.appt-completed .appt-sub{
+    color:#15803d;
+}
+
+/* ================= MODAL ================= */
+
+.modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.45);
+    backdrop-filter:blur(3px); /* 🔥 làm mờ nền */
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    z-index:9999;
+    animation:fadeIn .2s ease;
+}
+
+.modal-backdrop[hidden]{
+    display:none !important;
+}
+
+.modal{
+    background:#fff;
+    border-radius:22px;
+    border:1px solid rgba(0,0,0,.08);
+    box-shadow:0 30px 90px rgba(0,0,0,.18);
+    padding:32px;
+    max-width:650px;   /* 🔥 TO HƠN */
+    width:100%;
+    animation:scaleIn .18s ease;
+}
+
+.modal-title{
+    font-weight:800;
+    font-size:18px;
+}
+
+.modal-sub{
+    color:var(--muted);
+    margin-top:4px;
+    font-size:13px;
+}
+
+/* Close button */
+.icon-btn{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    border:none;
+    background:#f1f5f9;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    transition:.2s;
+}
+
+.icon-btn:hover{
+    background:#e2e8f0;
+}
+
+/* Buttons row */
+.modal-actions{
+    display:flex;
+    gap:12px;
+    margin-top:18px;
+}
+
+/* Nút trong modal */
+.modal-actions .btn{
+    flex:1;
+    height:44px;
+    font-weight:600;
+    border-radius:12px;
+    transition:.2s ease;
+}
+
+.modal-actions .btn.primary{
+    box-shadow:0 4px 12px rgba(37,99,235,.25);
+}
+
+.modal-actions .btn.primary:hover{
+    transform:translateY(-1px);
+    box-shadow:0 6px 16px rgba(37,99,235,.35);
+}
+
+/* Animations */
+@keyframes fadeIn{
+    from{opacity:0}
+    to{opacity:1}
+}
+
+@keyframes scaleIn{
+    from{transform:scale(.96);opacity:0}
+    to{transform:scale(1);opacity:1}
+}
+/* 🔵 EXAMINING – đang khám */
+.appt-examining{
+    background:#e0f2fe;
+    border:2px solid #0284c7;
+}
+.appt-examining .appt-name{
+    color:#075985;
+}
+.appt-examining .appt-sub{
+    color:#0369a1;
+}
+
+/* ⚫ DONE – đã chốt */
+.appt-done{
+    background:#f1f5f9;
+    border:2px solid #334155;
+}
+.appt-done .appt-name{
+    color:#0f172a;
+}
+.appt-done .appt-sub{
+    color:#475569;
+}
+
+/* 🟢 COMPLETED – hoàn tất thanh toán */
+.appt-completed{
+    background:#dcfce7;
+    border:2px solid #16a34a;
+}
+.appt-completed .appt-name{
+    color:#166534;
+}
+.appt-completed .appt-sub{
+    color:#15803d;
+}
+
+/* 🟡 CONFIRMED – đã xác nhận */
+.appt-confirmed{
+    background:#fef9c3;
+    border:2px solid #ca8a04;
+}
+.appt-confirmed .appt-name{
+    color:#92400e;
+}
+.appt-confirmed .appt-sub{
+    color:#a16207;
+}
+.modal-title{
+    font-weight:900;
+    font-size:22px;
+}
+
+.modal-sub{
+    font-size:14px;
+    margin-top:6px;
+}
+
+.modal-id{
+    margin-top:6px;
+    font-size:13px;
+    font-weight:600;
+    color:#64748b;
+}
+
+.modal-actions{
+    display:flex;
+    gap:16px;
+    margin-top:26px;
+}
+
+.modal-btn{
+    flex:1;
+    height:52px;
+    font-size:15px;
+    border-radius:14px;
+}

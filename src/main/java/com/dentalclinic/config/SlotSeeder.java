@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-
+import java.util.Optional;
 /**
  * Seed slots cho hệ thống đặt lịch mới.
  * Mỗi ngày có 18 slots (08:00 - 17:00, mỗi slot 30 phút).
@@ -49,6 +49,9 @@ public class SlotSeeder {
                 LocalDateTime end = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
                 
                 while (current.isBefore(end) || current.equals(end.minusMinutes(30))) {
+                    Optional<Slot> existingSlot = slotRepository.findBySlotTimeAndActiveTrue(current);
+
+                    if (existingSlot.isEmpty()) {
                     java.util.Optional<Slot> existing = slotRepository.findBySlotTime(current);
                     if (existing.isPresent()) {
                         Slot slot = existing.get();

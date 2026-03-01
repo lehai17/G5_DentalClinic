@@ -5,7 +5,6 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -67,6 +66,39 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("appointmentId") Long appointmentId
     );
 
+    boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
+
+    boolean existsBySlot_Id(Long slotId);
+
+    Optional<Appointment> findByIdAndCustomer_User_Id(
+            Long appointmentId,
+            Long customerUserId
+    );
+
+    List<Appointment> findByCustomer_User_IdAndStatus(
+            Long customerUserId,
+            AppointmentStatus status
+    );
+
+    List<Appointment> findByCustomer_User_IdOrderByDateDesc(
+            Long customerUserId
+    );
+
+    List<Appointment> findByCustomerId(Long customerId);
+
+    @Query(
+            value = """
+            SELECT CASE WHEN COUNT(*) > 0 THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END
+            FROM appointment a
+            WHERE a.customer_id = :userId
+              AND a.status IN (:activeStatuses)
+              AND a.appointment_date = :date
+              AND a.start_time < CAST(:endTime AS time)
+              AND a.end_time > CAST(:startTime AS time)
+            """,
+            nativeQuery = true
+    )
+    boolean existsCustomerOverlap(
     @Query(value = """
             SELECT COUNT(*) FROM appointment
             WHERE customer_id = :userId
@@ -137,21 +169,28 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     );
 
     @Query("""
-        SELECT a FROM Appointment a
-        JOIN FETCH a.customer c
-        JOIN FETCH c.user cu
-        JOIN FETCH a.service s
-        LEFT JOIN FETCH a.dentist d
-        WHERE d.id = :dentistProfileId
-          AND a.date BETWEEN :start AND :end
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
-    """)
+    SELECT a FROM Appointment a
+    JOIN FETCH a.customer c
+    JOIN FETCH c.user cu
+    JOIN FETCH a.service s
+    LEFT JOIN FETCH a.dentist d
+    WHERE d.id = :dentistProfileId
+      AND a.date BETWEEN :start AND :end
+      AND a.status IN (
+            com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
+            com.dentalclinic.model.appointment.AppointmentStatus.EXAMINING,
+            com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+            com.dentalclinic.model.appointment.AppointmentStatus.REEXAM,
+            com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+      )
+""")
     List<Appointment> findScheduleForWeek(
             @Param("dentistProfileId") Long dentistProfileId,
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
 
+    Page<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword, Pageable pageable);
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.customer c
@@ -185,6 +224,31 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT aslot FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId ORDER BY aslot.slotOrder ASC")
     List<Object[]> findAppointmentSlotDetailsByAppointmentId(@Param("appointmentId") Long appointmentId);
 
+    @Query("""
+    SELECT COUNT(a)
+    FROM Appointment a
+    WHERE a.dentist.id = :dentistId
+      AND a.date = :date
+      AND a.status IN (
+            com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+            com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+      )
+""")
+    long countCompletedByDentistAndDate(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date
+    );
+    @Query("""
+    SELECT COUNT(a)
+    FROM Appointment a
+    WHERE a.dentist.id = :dentistId
+      AND a.date = :date
+      AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+""")
+    long countTotalByDentistAndDate(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date
+    );
     @Query("SELECT a FROM Appointment a WHERE a.date = :date AND a.status IN :statuses")
     List<Appointment> findByDateAndStatusIn(
             @Param("date") LocalDate date,

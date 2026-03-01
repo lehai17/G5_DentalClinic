@@ -9,8 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -42,7 +41,6 @@ public class DentistWebController {
             Model model
     ) {
 
-        /* ===== LẤY USER ĐANG LOGIN ===== */
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
@@ -53,13 +51,11 @@ public class DentistWebController {
 
         Long dentistUserId = user.getId();
 
-        /* ===== LẤY DENTIST_PROFILE ID (CHUẨN) ===== */
         Long dentistProfileId = dentistProfileRepository
                 .findByUser_Id(dentistUserId)
                 .orElseThrow(() -> new RuntimeException("Dentist profile not found"))
                 .getId();
 
-        /* ===== SNAP TUẦN ===== */
         LocalDate base = (weekStart != null)
                 ? weekStart
                 : LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -67,19 +63,20 @@ public class DentistWebController {
         LocalDate start = base.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate end = start.plusDays(6);
 
-        /* ===== DAYS ===== */
         List<LocalDate> days = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             days.add(start.plusDays(i));
         }
 
-        /* ===== TIME SLOTS ===== */
         List<LocalTime> timeSlots = new ArrayList<>();
-        for (int h = 8; h <= 17; h++) {
+
+        for (int h = 8; h < 17; h++) {
             timeSlots.add(LocalTime.of(h, 0));
+            timeSlots.add(LocalTime.of(h, 30));
         }
 
-        /* ===== WEEK DROPDOWN ===== */
+        timeSlots.add(LocalTime.of(17, 0));
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
         List<Map<String, String>> weekOptions = new ArrayList<>();
 
@@ -91,7 +88,6 @@ public class DentistWebController {
             weekOptions.add(opt);
         }
 
-        /* ===== LOAD APPOINTMENTS (THEO DENTIST_PROFILE) ===== */
         List<Appointment> appts =
                 appointmentRepository.findScheduleForWeek(
                         dentistProfileId,
@@ -103,7 +99,15 @@ public class DentistWebController {
         DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
 
         for (Appointment a : appts) {
+
             String key = a.getDate() + "_" + a.getStartTime().format(tf);
+
+            long duration = Duration.between(
+                    a.getStartTime(),
+                    a.getEndTime()
+            ).toMinutes();
+
+            int span = (int) Math.ceil(duration / 30.0);
 
             eventMap.put(key, new ScheduleEventResponse(
                     a.getId(),
@@ -113,11 +117,11 @@ public class DentistWebController {
                     a.getDate(),
                     a.getStartTime(),
                     a.getEndTime(),
-                    a.getStatus().name()
+                    a.getStatus().name(),
+                    span
             ));
         }
 
-        /* ===== MODEL ===== */
         model.addAttribute("dentistUserId", dentistUserId);
         model.addAttribute("dentistName", "Dentist");
         model.addAttribute("weekStart", start);
@@ -129,5 +133,46 @@ public class DentistWebController {
         model.addAttribute("eventMap", eventMap);
 
         return "Dentist/work-schedule";
+    }
+
+    @GetMapping("/dentist/dashboard")
+    public String dashboard(Model model) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Long dentistUserId = user.getId();
+
+        Long dentistProfileId = dentistProfileRepository
+                .findByUser_Id(dentistUserId)
+                .orElseThrow(() -> new RuntimeException("Dentist profile not found"))
+                .getId();
+
+        LocalDate today = LocalDate.now();
+
+        long total = appointmentRepository
+                .countTotalByDentistAndDate(dentistProfileId, today);
+
+        long completed = appointmentRepository
+                .countCompletedByDentistAndDate(dentistProfileId, today);
+
+        long remaining = total - completed;
+
+        int completionRate = 0;
+        if (total > 0) {
+            completionRate = (int) ((completed * 100.0) / total);
+        }
+
+        model.addAttribute("totalToday", total);
+        model.addAttribute("completedToday", completed);
+        model.addAttribute("remainingToday", remaining);
+        model.addAttribute("completionRate", completionRate);
+
+        return "Dentist/dashboard";
     }
 }
