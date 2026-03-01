@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -159,4 +160,25 @@ public class CustomerAppointmentController {
                 "slots", slots
         ));
     }
+
+    @GetMapping("/appointments/detail/{id}")
+    public ResponseEntity<?> getAppointmentDetailForSuccess(@PathVariable Long id, HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+
+        // Sử dụng service hiện có của bạn để lấy dữ liệu (đảm bảo tính bảo mật theo userId)
+        Optional<AppointmentDto> detail = customerAppointmentService.getAppointmentDetail(userId, id);
+
+        return detail.map(dto -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("id", dto.getId());
+            data.put("serviceName", dto.getServiceName());
+            data.put("date", dto.getDate().toString());
+            data.put("startTime", dto.getStartTime());
+            data.put("endTime", dto.getEndTime());
+            data.put("dentistName", dto.getDentistName() != null ? dto.getDentistName() : "Sẽ được gán sau");
+            return ResponseEntity.ok(data);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
 }
