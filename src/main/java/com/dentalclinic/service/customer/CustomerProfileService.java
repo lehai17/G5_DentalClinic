@@ -29,6 +29,7 @@ public class CustomerProfileService {
         return 1;
     }
 
+
 //    public List<Appointment> getCustomerAppointments(Long customerId) {
 //        // customerId is the CustomerProfile.id (which equals user.id due to @MapsId)
 //        return appointmentRepository.findByCustomerId(customerId);

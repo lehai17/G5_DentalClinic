@@ -3,6 +3,7 @@ package com.dentalclinic.service.dentist;
 import com.dentalclinic.dto.DentistDTO;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.model.schedule.DentistSchedule;
+import com.dentalclinic.model.user.Gender;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.user.UserStatus;
@@ -14,8 +15,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Period;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DentistService {
@@ -29,6 +34,27 @@ public class DentistService {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email này đã được sử dụng trong hệ thống!");
         }
+        // 1. Kiểm tra ngày sinh và tính tuổi
+        if (dto.getDateOfBirth() == null) {
+            throw new IllegalArgumentException("Ngày sinh không được để trống.");
+        }
+
+        LocalDate today = LocalDate.now();
+        int age = Period.between(dto.getDateOfBirth(), today).getYears();
+
+        // ĐIỀU KIỆN 1: Bác sĩ phải từ 25 tuổi trở lên
+        if (age < 25) {
+            throw new IllegalArgumentException("Bác sĩ phải từ 25 tuổi trở lên (Hiện tại: " + age + " tuổi).");
+        }
+
+        // ĐIỀU KIỆN 2: Kiểm tra năm kinh nghiệm (không quá tuổi trừ đi 22 năm học đại học)
+        int experienceYears = dto.getExperienceYears();
+        int maxAllowedExperience = age - 22;
+
+        if (experienceYears > maxAllowedExperience) {
+            throw new IllegalArgumentException("Số năm kinh nghiệm (" + experienceYears +
+                    ") không hợp lệ cho bác sĩ " + age + " tuổi. (Tối đa cho phép: " + maxAllowedExperience + " năm).");
+        }
         // 1. Tạo tài khoản User đăng nhập
         User user = new User();
         user.setEmail(dto.getEmail());
@@ -41,11 +67,17 @@ public class DentistService {
         DentistProfile profile = new DentistProfile();
         profile.setUser(user);
         profile.setFullName(dto.getFullName());
-        profile.setSpecialization(dto.getSpecialty()); // Lấy từ dropdown Specialty
-        profile.setExperienceYears(dto.getExperience());
+        profile.setSpecialization(dto.getSpecialization());
+        profile.setExperienceYears(dto.getExperienceYears());
         profile.setPhone(dto.getPhone());
         dentistProfileRepository.save(profile);
+        // ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT: Lưu dữ liệu vào bảng users
+        user.setDateOfBirth(dto.getDateOfBirth());
 
+        userRepository.save(user);
+        if (dto.getGender() != null) {
+            user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
+        }
         // 3. Xử lý lịch làm việc dựa trên Enum DayOfWeek
         if (dto.getAvailableDays() != null && !dto.getAvailableDays().isEmpty()) {
             LocalTime startTime = parseTimeSafe(dto.getShiftStartTime());
@@ -98,7 +130,24 @@ public class DentistService {
         String specialtyParam = (specialty != null && !specialty.isEmpty()) ? specialty : null;
 
         return dentistProfileRepository.filterDentists(specialtyParam, status);
+
     }
+//    public List<DentistDTO> searchByKeyword(String keyword) {
+//        List<DentistProfile> profiles;
+//
+//        if (keyword != null && !keyword.trim().isEmpty()) {
+//            // Gọi hàm tìm kiếm từ Repository đã làm ở bước trước
+//            profiles = dentistProfileRepository.findByKeyword(keyword);
+//        } else {
+//            // Trả về danh sách mặc định sắp xếp mới nhất lên đầu
+//            profiles = dentistProfileRepository.findAllOrderByNewest();
+//        }
+//
+//        // Đảm bảo hàm convertToDTO đã tồn tại và hoạt động đúng
+//        return profiles.stream()
+//                .map(this::convertToDTO)
+//                .collect(Collectors.toList());
+//    }
 
     // Hàm đếm số lượng cho Stat Cards
     public long countByStatus(String statusStr) {
@@ -123,4 +172,52 @@ public class DentistService {
         user.setStatus(status);
         userRepository.save(user);
     }
+    public DentistDTO getDentistById(Long id) {
+        DentistProfile profile = dentistProfileRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bác sĩ!"));
+
+        return convertToDTO(profile);
+    }
+
+    private DentistDTO convertToDTO(DentistProfile profile) {
+        DentistDTO dto = new DentistDTO();
+
+        // 1. Dữ liệu từ DentistProfile
+        dto.setId(profile.getId());
+        dto.setFullName(profile.getFullName() != null ? profile.getFullName() : "N/A");
+        dto.setPhone(profile.getPhone() != null ? profile.getPhone() : "N/A");
+        dto.setSpecialization(profile.getSpecialization() != null ? profile.getSpecialization() : "N/A");
+        dto.setExperienceYears(profile.getExperienceYears());
+        dto.setBio(profile.getBio() != null ? profile.getBio() : "Chưa có tiểu sử.");
+        // 2. Dữ liệu từ User (Phải dùng đúng tên hàm trong User.java)
+        if (profile.getUser() != null) {
+            dto.setEmail(profile.getUser().getEmail());
+            // Đảm bảo tên hàm này khớp với User.java (getDateOfBirth hoặc getDob)
+            dto.setDateOfBirth(profile.getUser().getDateOfBirth());
+            if (profile.getUser().getGender() != null) {
+                dto.setGender(profile.getUser().getGender().name());
+            }
+        }
+
+        // 3. Xử lý Lịch trực an toàn
+        if (profile.getSchedules() != null) {
+            dto.setSchedules(profile.getSchedules());
+        } else {
+            dto.setSchedules(new ArrayList<>());
+        }
+
+        System.out.println("DEBUG: Đã lấy xong dữ liệu cho email: " + dto.getEmail()); // Sẽ hiện nếu code chạy hết
+        return dto;
+    }
+    public List<DentistDTO> getAllDentists() {
+        // Gọi hàm truy vấn tùy chỉnh để đưa bác sĩ Tuấn lên đầu
+        List<DentistProfile> profiles = dentistProfileRepository.findAllOrderByNewest();
+
+        // Chuyển đổi List Entity sang List DTO
+        return profiles.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
 }
+

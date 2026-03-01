@@ -69,6 +69,17 @@
             <h2 style="color: #2B3674; margin-top: 10px;">Add New Staff</h2>
         </div>
     </div>
+    <div th:if="${error}" class="alert alert-danger"
+         style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+        <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
+        <span th:text="${error}">Thông báo lỗi ở đây</span>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success"
+         style="color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+        <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+        <span th:text="${success}">Thành công!</span>
+    </div>
     <form th:action="@{/admin/staff/save}" th:object="${staffDTO}" method="POST">
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
 
@@ -118,6 +129,29 @@
                             <div class="input-wrapper">
                                 <i class="fas fa-phone-alt"></i>
                                 <input type="text" th:field="*{phone}" placeholder="+84 000 000 000">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 20px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label>Date of Birth</label>
+                            <div class="input-wrapper">
+                                <i class="far fa-calendar-alt"></i>
+                                <input type="date" th:field="*{dateOfBirth}"
+                                       class="form-control"
+                                       th:max="${#temporals.format(#temporals.createNow().minusYears(18), 'yyyy-MM-dd')}"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="input-group" style="width: 120px;">
+                            <label>Gender</label>
+                            <div class="input-wrapper">
+                                <select th:field="*{gender}" style="border:none; background:transparent; width:100%; outline:none;">
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
                             </div>
                         </div>
                     </div>

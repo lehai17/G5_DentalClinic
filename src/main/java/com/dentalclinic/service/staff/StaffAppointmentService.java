@@ -5,9 +5,15 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.mail.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,13 +29,14 @@ public class StaffAppointmentService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private CustomerAppointmentService customerAppointmentService;
 
-    /* VIEW ALL APPOINTMENTS (STAFF) */
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
 
-    /* CONFIRM APPOINTMENT */
+    @Transactional
     public void confirmAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
@@ -48,21 +55,22 @@ public class StaffAppointmentService {
         emailService.sendAppointmentConfirmed(appointment);
     }
 
-    /* ASSIGN / REASSIGN DENTIST */
+    @Transactional
     public void assignDentist(Long appointmentId, Long dentistId) {
-
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (appointmentRepository.countBusyAppointments(
+        boolean hasOverlap = customerAppointmentService.checkDentistOverlap(
                 dentistId,
                 appt.getDate(),
                 appt.getStartTime(),
-                appt.getEndTime()
-        ) > 0 ) {
+                appt.getEndTime(),
+                appt.getId()
+        );
+
+        if (hasOverlap) {
             throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
         }
-
 
         DentistProfile dentist = dentistProfileRepository.findById(dentistId)
                 .orElseThrow(() -> new RuntimeException("Dentist not found"));
@@ -71,6 +79,7 @@ public class StaffAppointmentService {
         appointmentRepository.save(appt);
     }
 
+    @Transactional
     public void completeAppointment(Long id) {
         Appointment a = appointmentRepository.findById(id).orElseThrow();
         if (a.getStatus() == AppointmentStatus.CONFIRMED) {
@@ -79,36 +88,31 @@ public class StaffAppointmentService {
         }
     }
 
-
-    /* CANCEL APPOINTMENT */
+    @Transactional
     public void cancelAppointment(Long appointmentId, String reason) {
-
-        Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        appt.setStatus(AppointmentStatus.CANCELLED);
-        appt.setNotes(reason);
-        appointmentRepository.save(appt);
+        customerAppointmentService.cancelAppointmentByStaff(appointmentId, reason);
     }
 
-    public List<Appointment> searchAndSort(String keyword, String sort) {
-
-        List<Appointment> list;
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            list = appointmentRepository
-                    .findByCustomer_FullNameContainingIgnoreCase(keyword);
-        } else {
-            list = appointmentRepository.findAll();
-        }
+    public Page<Appointment> searchAndSort(
+            String keyword,
+            String sort,
+            int page
+    ) {
+        Sort s = Sort.by("date").ascending();
 
         if ("newest".equals(sort)) {
-            list.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+            s = Sort.by("date").descending();
         } else if ("oldest".equals(sort)) {
-            list.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+            s = Sort.by("date").ascending();
         }
 
-        return list;
-    }
+        Pageable pageable = PageRequest.of(page, 3, s);
 
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return appointmentRepository
+                    .findByCustomer_FullNameContainingIgnoreCase(keyword, pageable);
+        }
+
+        return appointmentRepository.findAll(pageable);
+    }
 }

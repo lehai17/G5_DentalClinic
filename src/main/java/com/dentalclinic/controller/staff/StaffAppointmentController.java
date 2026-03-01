@@ -4,6 +4,8 @@ import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.service.staff.StaffAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -92,16 +94,22 @@ public class StaffAppointmentController {
     @GetMapping("/appointments")
     public String appointments(@RequestParam(required = false) String keyword,
                                @RequestParam(required = false) String sort,
+                               @RequestParam(defaultValue = "0") int page,
                                Model model) {
 
         model.addAttribute("pageTitle", "Quản lý lịch khám");
         model.addAttribute("staffName", "Staff");
 
-        List<Appointment> appointments =
-                staffAppointmentService.searchAndSort(keyword, sort);
+        Page<Appointment> appointmentPage =
+                staffAppointmentService.searchAndSort(keyword, sort, page);
+
+        model.addAttribute("appointments", appointmentPage.getContent());
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", appointmentPage.getTotalPages());
+
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sort);
-        model.addAttribute("appointments", appointments);
 
         return "staff/appointments";
     }
@@ -114,11 +122,18 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/assign")
     @ResponseBody
-    public void assign(
+    public ResponseEntity<?> assign(
             @RequestParam Long appointmentId,
             @RequestParam Long dentistId) {
-        staffAppointmentService.assignDentist(appointmentId, dentistId);
+
+        try {
+            staffAppointmentService.assignDentist(appointmentId, dentistId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+
 
     @PostMapping("/appointments/complete")
     @ResponseBody

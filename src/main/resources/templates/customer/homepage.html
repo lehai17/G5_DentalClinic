@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nha Khoa ABC - Chăm Sóc Răng Chuyên Nghiệp</title>
+    <title>GENZ CLINIC - Chăm Sóc Răng Chuyên Nghiệp</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
@@ -20,6 +20,7 @@
         <div th:replace="~{fragments/header :: header}"></div>
 
         <section class="hero">
+            <div class="section-inner">
             <div class="hero-content">
                 <h1 class="hero-title">Chăm Sóc Răng Chuyên Nghiệp</h1>
                 <p class="hero-subtitle">Nếp sống khỏe mạnh bắt đầu từ nụ cười đẹp. Hãy để chúng tôi giúp bạn!</p>
@@ -29,9 +30,11 @@
                     </a>
                 </div>
             </div>
+            </div>
         </section>
 
         <section class="section" id="intro">
+            <div class="section-inner">
             <div class="intro-container">
                 <div class="intro-image">
                     <img th:src="@{/images/phong-kham.jpg}" alt="Phòng khám Nha Khoa ABC">
@@ -46,9 +49,11 @@
                     </ul>
                 </div>
             </div>
+            </div>
         </section>
 
         <section class="section" id="services">
+            <div class="section-inner">
             <div class="section-subtitle">DỊCH VỤ NỔI BẬT</div>
             <h2 class="section-title">Các Dịch Vụ Chăm Sóc Răng Tuyệt Vời</h2>
             <div class="services-grid">
@@ -67,9 +72,11 @@
                     <div class="service-duration"> Xem chi tiết →</div>
                 </div>
             </div>
+            </div>
         </section>
 
         <section class="section" id="dentists">
+            <div class="section-inner">
             <div class="section-subtitle">ĐỘI NGŨ CHUYÊN NGHIỆP</div>
             <h2 class="section-title">Các Bác Sĩ Giàu Kinh Nghiệm</h2>
             <div class="dentist-grid">
@@ -85,10 +92,12 @@
                     </div>
                 </div>
             </div>
+            </div>
         </section>
 
         <div class="bg-light">
             <section class="section" id="blog">
+                <div class="section-inner">
                 <h2 class="section-title">Tin Tức Mới Nhất</h2>
 
                 <div class="blog-grid">
@@ -103,6 +112,7 @@
                             <a th:href="@{/public/blogs/{id}(id=${blog.id})}" class="read-more">Đọc thêm →</a>
                         </div>
                     </article>
+
                 </div>
 
                 <div class="pagination-wrapper" th:if="${totalPages > 1}">
@@ -125,6 +135,7 @@
                            th:if="${currentPage < totalPages - 1}" class="btn-page">Sau →</a>
                     </div>
                 </div>
+                </div>
             </section>
         </div>
 
@@ -132,5 +143,7 @@
     </main>
 </div>
 <script th:src="@{/js/user-dropdown.js}" defer></script>
+<script th:src="@{/js/home.js}"></script>
+
 </body>
 </html>
