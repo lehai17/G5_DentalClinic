@@ -82,9 +82,24 @@ public class CustomerAppointmentController {
     }
 
     @GetMapping("/appointments")
-    public ResponseEntity<?> getMyAppointments(HttpSession session) {
+    public ResponseEntity<?> getMyAppointments(@RequestParam(required = false) Integer page,
+                                               @RequestParam(required = false) Integer size,
+                                               HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+
+        if (page != null || size != null) {
+            int p = page == null ? 0 : page;
+            int s = size == null ? 5 : size;
+            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s);
+            return ResponseEntity.ok(Map.of(
+                    "content", resultPage.getContent(),
+                    "page", resultPage.getNumber(),
+                    "size", resultPage.getSize(),
+                    "totalPages", resultPage.getTotalPages(),
+                    "totalElements", resultPage.getTotalElements()
+            ));
+        }
 
         List<AppointmentDto> list = customerAppointmentService.getMyAppointments(userId);
         return ResponseEntity.ok(list);

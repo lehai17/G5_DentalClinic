@@ -86,6 +86,27 @@
           </div>
         </article>
       </div>
+
+      <nav class="support-pagination"
+           th:if="${tickets != null and !#lists.isEmpty(tickets) and totalPages != null and totalPages > 1}"
+           aria-label="Phân trang phiếu hỗ trợ">
+        <a class="support-page-btn"
+           th:classappend="${currentPage == 0} ? ' disabled'"
+           th:href="${currentPage > 0} ? @{/support/my(page=${currentPage - 1})} : '#'"
+           aria-label="Trang trước">Trước</a>
+
+        <th:block th:each="p : ${#numbers.sequence(0, totalPages - 1)}">
+          <a class="support-page-btn"
+             th:classappend="${p == currentPage} ? ' active'"
+             th:href="@{/support/my(page=${p})}"
+             th:text="${p + 1}">1</a>
+        </th:block>
+
+        <a class="support-page-btn"
+           th:classappend="${currentPage + 1 >= totalPages} ? ' disabled'"
+           th:href="${currentPage + 1 < totalPages} ? @{/support/my(page=${currentPage + 1})} : '#'"
+           aria-label="Trang sau">Sau</a>
+      </nav>
     </section>
   </main>
 </div>

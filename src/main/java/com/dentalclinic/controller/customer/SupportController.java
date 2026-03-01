@@ -26,9 +26,13 @@ public class SupportController {
     }
 
     @GetMapping("/create")
-    public String createPage(Model model) {
+    public String createPage(Model model, @AuthenticationPrincipal UserDetails principal) {
+        User currentUser = supportService.getCurrentUser(principal);
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new TicketCreateForm());
+        }
+        if (!model.containsAttribute("appointments")) {
+            model.addAttribute("appointments", supportService.getAppointmentsForSupport(currentUser.getId()));
         }
         model.addAttribute("active", "support");
         return "customer/support-create";
@@ -42,25 +46,36 @@ public class SupportController {
         if (form == null) {
             form = new TicketCreateForm();
         }
+        if (form.getTitle() == null || form.getTitle().trim().isEmpty()) {
+            bindingResult.rejectValue("title", "title.blank", "Vui lòng nhập tiêu đề.");
+        }
         if (form.getQuestion() == null || form.getQuestion().trim().isEmpty()) {
             bindingResult.rejectValue("question", "question.blank", "Vui lòng nhập câu hỏi.");
         }
+
+        User currentUser = supportService.getCurrentUser(principal);
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.form", bindingResult);
             redirectAttributes.addFlashAttribute("form", form);
+            redirectAttributes.addFlashAttribute("appointments", supportService.getAppointmentsForSupport(currentUser.getId()));
             return "redirect:/support/create";
         }
 
-        User currentUser = supportService.getCurrentUser(principal);
-        supportService.createTicket(currentUser.getId(), form.getQuestion());
+        supportService.createTicket(currentUser.getId(), form.getAppointmentId(), form.getTitle(), form.getQuestion());
         redirectAttributes.addFlashAttribute("successMessage", "Gửi phiếu hỗ trợ thành công.");
         return "redirect:/support/my";
     }
 
     @GetMapping("/my")
-    public String myTickets(@AuthenticationPrincipal UserDetails principal, Model model) {
+    public String myTickets(@AuthenticationPrincipal UserDetails principal,
+                            @RequestParam(defaultValue = "0") int page,
+                            Model model) {
         User currentUser = supportService.getCurrentUser(principal);
-        model.addAttribute("tickets", supportService.getMyTickets(currentUser.getId()));
+        int pageSize = 5;
+        var ticketsPage = supportService.getMyTicketsPage(currentUser.getId(), page, pageSize);
+        model.addAttribute("tickets", ticketsPage.getContent());
+        model.addAttribute("currentPage", ticketsPage.getNumber());
+        model.addAttribute("totalPages", ticketsPage.getTotalPages());
         model.addAttribute("active", "support");
         return "customer/support-my";
     }
@@ -68,7 +83,6 @@ public class SupportController {
     @GetMapping("/{id}")
     public String ticketDetail(@PathVariable Long id,
                                @AuthenticationPrincipal UserDetails principal,
-                               RedirectAttributes redirectAttributes,
                                Model model) {
         User currentUser = supportService.getCurrentUser(principal);
         SupportTicket ticket = supportService.getTicketDetail(currentUser.getId(), id);
@@ -84,8 +98,29 @@ public class SupportController {
     }
 
     public static class TicketCreateForm {
+        private Long appointmentId;
+
+        @NotBlank
+        private String title;
+
         @NotBlank
         private String question;
+
+        public Long getAppointmentId() {
+            return appointmentId;
+        }
+
+        public void setAppointmentId(Long appointmentId) {
+            this.appointmentId = appointmentId;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
 
         public String getQuestion() {
             return question;

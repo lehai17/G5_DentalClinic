@@ -82,7 +82,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("""
         SELECT a FROM Appointment a
         WHERE a.dentist.id = :dentistId
-          AND a.date = :date
+AND a.date = :date
           AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
           AND a.startTime < :endTime
           AND a.endTime > :startTime
@@ -111,6 +111,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByCustomer_User_IdOrderByDateDesc(
             Long customerUserId
     );
+
+    Page<Appointment> findByCustomer_User_Id(Long customerUserId, Pageable pageable);
 
     List<Appointment> findByCustomerId(Long customerId);
 
@@ -157,15 +159,21 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     );
 
     @Query("""
-        SELECT a FROM Appointment a
-        JOIN FETCH a.customer c
-        JOIN FETCH c.user cu
-        JOIN FETCH a.service s
-        LEFT JOIN FETCH a.dentist d
-        WHERE d.id = :dentistProfileId
-          AND a.date BETWEEN :start AND :end
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
-    """)
+    SELECT a FROM Appointment a
+    JOIN FETCH a.customer c
+    JOIN FETCH c.user cu
+    JOIN FETCH a.service s
+    LEFT JOIN FETCH a.dentist d
+    WHERE d.id = :dentistProfileId
+      AND a.date BETWEEN :start AND :end
+      AND a.status IN (
+            com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
+            com.dentalclinic.model.appointment.AppointmentStatus.EXAMINING,
+            com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+            com.dentalclinic.model.appointment.AppointmentStatus.REEXAM,
+            com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+      )
+""")
     List<Appointment> findScheduleForWeek(
             @Param("dentistProfileId") Long dentistProfileId,
             @Param("start") LocalDate start,

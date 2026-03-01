@@ -4,33 +4,39 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Service & Billing Transfer</title>
-  <link rel="stylesheet" href="/css/app.css"/>
-  <style>
-    .alert-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:10px 12px;border-radius:12px;margin:10px 0;font-weight:600;}
-    .section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .mini{font-size:12px;color:var(--muted)}
-    .svc-row{display:grid;grid-template-columns:22px 1fr 90px 120px;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:#fff}
-    .svc-name{font-weight:700}
-    .tbl{width:100%;border-collapse:collapse;margin-top:10px}
-    .tbl th,.tbl td{border-bottom:1px solid var(--line);padding:8px;text-align:left;font-size:14px}
-    .tbl th{color:var(--muted);font-weight:700}
-    .icon-mini{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
-  </style>
+  <link rel="stylesheet" href="/css/dentist/app.css"/>
+  <link rel="stylesheet" href="/css/dentist/billing.css"/>
 </head>
-<body class="page">
+<body class="billing-page">
+<div class="billing-container">
+  <div class="billing-header">
+    <div class="billing-title">Service & Billing Transfer</div>
 
-<div class="card">
-  <h2>Service &amp; Billing Transfer</h2>
+    <div class="billing-meta">
+      <div>
+        <div class="meta-label">Appointment</div>
+        <div class="meta-value" th:text="${appointmentId}">68</div>
+      </div>
 
-  <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}">Saved successfully.</div>
+      <div>
+        <div class="meta-label">Patient</div>
+        <div class="meta-value" th:text="${patientName}">Nguyễn Văn A</div>
+      </div>
 
-  <div class="meta">
-    <div><b>Appointment ID:</b> <span th:text="${appointmentId}">1</span></div>
-    <div><b>Patient:</b> <span th:text="${patientName}">Robert Wilson</span></div>
-    <div><b>Date:</b> <span th:text="${apptDate}">2026-02-01</span></div>
-    <div><b>Time:</b> <span th:text="${#temporals.format(startTime,'HH:mm')}">09:00</span> - <span th:text="${#temporals.format(endTime,'HH:mm')}">10:00</span></div>
-    <div><b>Requested:</b> <span th:text="${requestedServiceName}">Scaling</span></div>
+      <div>
+        <div class="meta-label">Date</div>
+        <div class="meta-value" th:text="${apptDate}">2026-02-26</div>
+      </div>
+
+      <div>
+        <div class="meta-label">Time</div>
+        <div class="meta-value">
+          <span th:text="${#temporals.format(startTime,'HH:mm')}"></span>
+          -
+          <span th:text="${#temporals.format(endTime,'HH:mm')}"></span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <form id="billingForm" method="post" th:action="@{/dentist/appointments/{id}/billing-transfer(id=${appointmentId})}">
@@ -44,26 +50,36 @@
     <input type="hidden" id="prescriptionNote" name="prescriptionNote" th:value="${prescriptionNote}">
     <input type="hidden" name="weekStart" th:value="${weekStart}">
 
-    <div class="section">
+    <div class="billing-section">
       <div style="display:flex;justify-content:space-between;align-items:end;">
         <div>
-          <div style="font-weight:900;">A) Performed Services</div>
+          <div class="billing-section-title">
+            A) Performed Services
+          </div>
           <div class="mini">Tick the services actually performed (qty, tooth optional).</div>
         </div>
       </div>
 
       <div id="servicesBox">
-        <div class="svc-row" th:each="s : ${services}"
-             th:attr="data-service-id=${s.id}, data-service-name=${s.name}">
-          <input type="checkbox" class="svc-check">
-          <div class="svc-name" th:text="${s.name}">Scaling</div>
-          <input class="svc-qty" type="number" min="1" value="1">
-          <input class="svc-tooth" type="text" placeholder="Tooth (e.g. 36)">
+        <div class="service-item"
+             th:each="s : ${services}"
+             th:attr="data-service-id=${s.id}">
+
+          <div class="service-left">
+            <input type="checkbox" class="svc-check">
+            <span th:text="${s.name}">Scaling</span>
+          </div>
+
+          <div class="service-right">
+            <input class="svc-qty" type="number" min="1" value="1">
+            <input class="svc-tooth" type="text" placeholder="Tooth (e.g. 36)">
+          </div>
+
         </div>
       </div>
     </div>
 
-    <div class="section">
+    <div class="billing-section">
       <div style="font-weight:900;">B) Digital Prescription</div>
       <div class="mini">Enter medications, dosage, duration, instruction (saved as JSON for staff).</div>
 
@@ -79,14 +95,14 @@
       <button type="button" class="icon-mini" id="btnAddRx">+ Add medicine</button>
     </div>
 
-    <div class="section">
+    <div class="billing-section">
       <div style="font-weight:900;">C) Note to Staff (optional)</div>
       <textarea name="note" rows="4" th:text="${note}" placeholder="Any note for billing/dispensing..."></textarea>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:14px;">
-      <button class="btn primary" type="submit">SAVE</button>
-      <a class="btn"
+      <button class="btn-primary" type="submit">SAVE</button>
+      <a class="btn-secondary"
          th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">
         Back
       </a>
@@ -107,7 +123,7 @@
     const arr = safeJsonParse(raw);
     if(!Array.isArray(arr)) return;
 
-    const rows = document.querySelectorAll('#servicesBox .svc-row');
+    const rows = document.querySelectorAll('#servicesBox .service-item');
     rows.forEach(r => {
       const serviceId = Number(r.dataset.serviceId);
       const hit = arr.find(x => Number(x.serviceId) === serviceId);
@@ -157,7 +173,7 @@
   document.getElementById('billingForm').addEventListener('submit', (e) => {
     // performed services
     const out = [];
-    document.querySelectorAll('#servicesBox .svc-row').forEach(r => {
+    document.querySelectorAll('#servicesBox .service-item').forEach(r => {
       const checked = r.querySelector('.svc-check').checked;
       if(!checked) return;
       out.push({
@@ -186,14 +202,37 @@
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
 
-    if (status === 'COMPLETED') {
-      document.querySelectorAll('input, textarea, select').forEach(el => {
-        el.disabled = true;
-      });
+    if (status === 'DONE' || status === 'COMPLETED') {
 
+      // 🔒 Disable form fields
+      document.querySelectorAll('input, textarea, select, button')
+              .forEach(el => {
+                el.disabled = true;
+              });
+
+      // 🔥 Remove submit button completely
       const saveBtn = document.querySelector('button[type="submit"]');
-      if (saveBtn) saveBtn.style.display = 'none';
+      if (saveBtn) saveBtn.remove();
+
+      // 🔥 Remove all add buttons
+      document.querySelectorAll('#btnAddRx')
+              .forEach(btn => btn.remove());
+
     }
+    document.querySelectorAll('.service-item').forEach(row => {
+      const check = row.querySelector('.svc-check');
+      const qty = row.querySelector('.svc-qty');
+      const tooth = row.querySelector('.svc-tooth');
+
+      function toggle() {
+        const enabled = check.checked;
+        qty.disabled = !enabled;
+        tooth.disabled = !enabled;
+      }
+
+      check.addEventListener('change', toggle);
+      toggle();
+  });
   });
 </script>
 
