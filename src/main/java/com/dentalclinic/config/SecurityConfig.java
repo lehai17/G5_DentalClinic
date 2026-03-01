@@ -4,12 +4,14 @@ import com.dentalclinic.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -29,9 +31,11 @@ public class SecurityConfig {
                                 "/login/oauth2/**","/forgot-password","/verify-code","/reset-password"
                         ).permitAll()
 
+                        .requestMatchers("/staff/support/**").hasAnyRole("STAFF", "ADMIN")
                         .requestMatchers("/staff/**").hasRole("STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/dentist/**").hasRole("DENTIST")
+                        .requestMatchers("/support/**").hasRole("CUSTOMER")
                         .requestMatchers("/customer/**").hasRole("CUSTOMER")
                         .anyRequest().authenticated()
                 )

@@ -17,7 +17,8 @@ xmlns:th="http://www.w3.org/1999/xhtml">
     </div>
 
     <nav class="flex-grow-1 px-3 py-4 d-flex flex-column gap-1 sidebar-nav">
-        <a th:href="@{/customer/book}" class="menu-item">
+        <a th:href="@{/customer/book}"
+           th:classappend="${active == 'booking'} ? ' active'" class="menu-item">
             <i class="bi bi-calendar-plus"></i>
             <span>Đặt lịch khám</span>
         </a>
@@ -45,7 +46,7 @@ xmlns:th="http://www.w3.org/1999/xhtml">
             <span>Tái khám</span>
         </a>
 
-        <a th:href="@{/patient/support}"
+        <a th:href="@{/support/my}"
            th:classappend="${active == 'support'} ? ' active'" class="menu-item">
             <i class="bi bi-headset"></i>
             <span>Hỗ trợ chuyên môn</span>
@@ -68,3 +69,5 @@ xmlns:th="http://www.w3.org/1999/xhtml">
     </div>
 
 </aside>
+
+
