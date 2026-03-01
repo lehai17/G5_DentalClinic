@@ -79,8 +79,19 @@
 .menu-item:active { transform: translateX(0); }
 
 .menu-item.active {
-    background: #667eea;
-    color: white !important;
+    background: linear-gradient(135deg, #667eea 0%, #4f63d2 100%);
+    color: #ffffff !important;
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-item.active i {
+    color: #ffffff !important;
+}
+
+.menu-item.active:hover {
+    transform: none;
+    background: linear-gradient(135deg, #667eea 0%, #4f63d2 100%);
 }
 
 .menu-item.logout:hover {
