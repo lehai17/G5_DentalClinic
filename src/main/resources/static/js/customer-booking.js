@@ -17,6 +17,72 @@
     renderCalendar();
     setStep(1);
     updateSummary();
+
+    // Kiểm tra xem có phải vừa thanh toán từ VNPay về không
+    checkReturnStatus();
+  }
+
+  // MỚI: Kiểm tra tham số URL để hiển thị trang thành công sau khi thanh toán
+  function checkReturnStatus() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        const appointmentId = urlParams.get('id');
+
+        if (status === 'success') {
+          // 1. Chuyển trạng thái sang Step 4
+          setStep(4);
+
+          // 2. Ẩn cột tóm tắt bên phải và các nút điều hướng
+          var summaryCol = document.getElementById('booking-summary');
+          var actions = document.getElementById('step-actions');
+          if (summaryCol) summaryCol.style.display = 'none';
+          if (actions) actions.style.display = 'none';
+
+          // 3. Căn giữa nội dung Step 4
+          var bookingCard = document.querySelector('.booking-card');
+          var leftCol = document.querySelector('.booking-left');
+          if (bookingCard) bookingCard.style.display = 'block';
+          if (leftCol) {
+              leftCol.style.width = '100%';
+              leftCol.style.textAlign = 'center';
+          }
+
+          // 4. Hiển thị ID lịch hẹn ngay lập tức
+          var summaryEl = document.getElementById('success-summary');
+          if (summaryEl && appointmentId) {
+              summaryEl.innerHTML = `
+                  <div style="background: #f0fff4; border: 1px solid #c6f6d5; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                      <p style="color: #2f855a; margin-bottom: 5px;">Mã số lịch hẹn của bạn</p>
+                      <h2 style="color: #22543d; margin: 0;">#${appointmentId}</h2>
+                  </div>
+              `;
+          }
+
+          // 5. Gọi API lấy chi tiết nếu cần (giữ nguyên logic fetch của bạn)
+          if (appointmentId) {
+            fetch('/customer/appointments/detail/' + appointmentId)
+              .then(res => res.json())
+              .then(data => updateSuccessSummary(data))
+              .catch(() => console.log("Thanh toán thành công!"));
+          }
+        }
+  }
+
+  // MỚI: Cập nhật nội dung tóm tắt ở bước 4
+  function updateSuccessSummary(data) {
+    var summaryEl = document.getElementById('success-summary');
+    if (summaryEl) {
+      var dateText = data.date ? formatDateDisplay(data.date) : '';
+      var timeText = data.startTime && data.endTime
+        ? formatTime(data.startTime) + ' - ' + formatTime(data.endTime)
+        : '';
+      summaryEl.innerHTML =
+        '<p><strong>Mã lịch hẹn:</strong> #' + (data.id || '') + '</p>' +
+        '<p><strong>Dịch vụ:</strong> ' + (data.serviceName || 'N/A') + '</p>' +
+        '<p><strong>Ngày:</strong> ' + dateText + '</p>' +
+        '<p><strong>Giờ:</strong> ' + timeText + '</p>' +
+        '<p><span class="badge bg-success" style="color: green; font-weight: bold;">✓ Đã thanh toán tiền cọc 50%</span></p>';
+    }
   }
 
   function bindStaticEvents() {
@@ -73,7 +139,7 @@
           return;
         }
         if (state.currentStep === 3) {
-          submitBooking(nextStepBtn);
+          submitBooking(nextStepBtn); // Sẽ gọi VNPay ở đây
         }
       });
     }
@@ -280,7 +346,8 @@
     if (actions) actions.style.display = step >= 4 ? 'none' : 'flex';
     if (backBtn) backBtn.style.display = step > 1 && step < 4 ? '' : 'none';
     if (nextBtn) {
-      nextBtn.textContent = step === 3 ? 'Xác nhận đặt lịch' : 'Tiếp tục';
+      // Đổi chữ nút ở Step 3 để khách hàng biết là sẽ đi thanh toán
+      nextBtn.textContent = step === 3 ? 'Thanh toán cọc 50%' : 'Tiếp tục';
       nextBtn.disabled = step === 1 && !state.selectedDate;
     }
   }
@@ -309,8 +376,23 @@
       serviceEl.innerHTML = serviceName ? serviceName : '<span class="empty">Chưa chọn</span>';
     }
 
-    if (durationEl) durationEl.innerHTML = '<span class="empty">--</span>';
-    if (depositEl) depositEl.innerHTML = '<span class="empty">--</span>';
+    if (durationEl) {
+      var durationMinutes = 0;
+      if (selectedService && selectedService.selectedIndex > 0) {
+        var selectedOption = selectedService.options[selectedService.selectedIndex];
+        durationMinutes = parseInt(selectedOption.getAttribute('data-duration') || '0', 10);
+      }
+      durationEl.innerHTML = durationMinutes > 0 ? (durationMinutes + ' phút') : '<span class="empty">--</span>';
+    }
+
+    // Cập nhật dòng phí đặt cọc ở Summary
+    if (depositEl) {
+       if (selectedService && selectedService.value) {
+         depositEl.innerHTML = '<span style="color: #e67e22; font-weight: bold;">50% giá dịch vụ</span>';
+       } else {
+         depositEl.innerHTML = '<span class="empty">--</span>';
+       }
+    }
 
     if (incomplete) {
       var ok = !!state.selectedDate && !!state.selectedSlot && !!(selectedService && selectedService.value);
@@ -318,6 +400,7 @@
     }
   }
 
+  // SỬA ĐỔI CHÍNH: Thay vì hiện Step 4, hàm này sẽ chuyển hướng sang VNPay
   function submitBooking(nextStepBtn) {
     var slotId = (document.getElementById('customer-booking-slot-id') || {}).value;
     var serviceId = (document.getElementById('customer-booking-service') || {}).value;
@@ -326,12 +409,14 @@
     var note = (document.getElementById('customer-booking-note') || {}).value;
 
     if (!slotId || !serviceId || !contactChannel || !contactValue) {
-      alert('Vui lòng điền đầy đủ thông tin.');
+      alert('Vui lòng điền đầy đủ thông tin liên hệ.');
       return;
     }
 
     nextStepBtn.disabled = true;
+    nextStepBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
 
+    // 1. Lưu lịch hẹn tạm thời (Status mặc định ở Backend nên là WAITING_PAYMENT)
     fetch('/customer/appointments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -348,6 +433,7 @@
         if (r.status === 401) {
           alert('Bạn cần đăng nhập.');
           nextStepBtn.disabled = false;
+          nextStepBtn.textContent = 'Thanh toán cọc 50%';
           return null;
         }
         if (!r.ok) {
@@ -358,25 +444,15 @@
         return r.json();
       })
       .then(function (data) {
-        nextStepBtn.disabled = false;
-        if (!data) return;
+        if (!data || !data.id) return;
 
-        var summaryEl = document.getElementById('success-summary');
-        if (summaryEl) {
-          var dateText = data.date ? formatDateDisplay(data.date) : '';
-          var timeText = data.startTime && data.endTime
-            ? formatTime(data.startTime) + ' - ' + formatTime(data.endTime)
-            : '';
-          summaryEl.innerHTML =
-            '<p><strong>Dịch vụ:</strong> ' + (data.serviceName || 'N/A') + '</p>' +
-            '<p><strong>Bác sĩ:</strong> ' + (data.dentistName || 'Sẽ được gán sau') + '</p>' +
-            '<p><strong>Ngày:</strong> ' + dateText + '</p>' +
-            '<p><strong>Giờ:</strong> ' + timeText + '</p>';
-        }
-        setStep(4);
+        // 2. CHUYỂN HƯỚNG SANG VNPAY
+        // Client-side chuyển hướng sang controller thanh toán với ID vừa nhận
+        window.location.href = '/customer/payment/create-deposit/' + data.id;
       })
       .catch(function (err) {
         nextStepBtn.disabled = false;
+        nextStepBtn.textContent = 'Thanh toán cọc 50%';
         alert(err.message || 'Đặt lịch thất bại.');
       });
   }

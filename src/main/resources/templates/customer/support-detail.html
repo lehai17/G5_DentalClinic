@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết phiếu hỗ trợ</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="p-6 max-w-4xl mx-auto w-full">
+      <div class="flex justify-between items-center mb-5">
+        <h1 class="text-2xl font-semibold">Chi tiết phiếu hỗ trợ #<span th:text="${ticket.id}"></span></h1>
+        <a th:href="@{/support/my}" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">Quay lại</a>
+      </div>
+
+      <div class="mb-3">
+        <span th:if="${ticket.status == 'OPEN'}" class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700">Đang mở</span>
+        <span th:if="${ticket.status == 'ANSWERED'}" class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">Đã trả lời</span>
+        <span th:if="${ticket.status == 'CLOSED'}" class="px-2 py-1 rounded text-xs font-semibold bg-gray-200 text-gray-700">Đã đóng</span>
+        <span class="ml-3 text-gray-500" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+      </div>
+
+      <div class="rounded-xl p-4 bg-blue-50 border border-blue-100">
+        <h2 class="font-semibold mb-2">Câu hỏi</h2>
+        <p class="whitespace-pre-wrap" th:text="${ticket.question}"></p>
+      </div>
+
+      <div class="rounded-xl p-4 bg-gray-100 border border-gray-200 mt-4">
+        <h2 class="font-semibold mb-2">Trả lời</h2>
+        <p th:if="${ticket.answer == null || #strings.isEmpty(ticket.answer)}" class="text-gray-500">Phiếu hỗ trợ chưa có phần trả lời.</p>
+        <p th:if="${ticket.answer != null && !#strings.isEmpty(ticket.answer)}" class="whitespace-pre-wrap" th:text="${ticket.answer}"></p>
+      </div>
+
+      <div class="mt-4 text-sm text-gray-600">
+        Nhân viên phụ trách:
+        <span class="font-medium" th:text="${ticket.staff != null ? ticket.staff.email : 'Chưa có'}"></span>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

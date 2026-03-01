@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý phiếu hỗ trợ</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+    <style>
+        .status-open { background: #dbeafe; color: #1d4ed8; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .status-answered { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .status-closed { background: #e5e7eb; color: #374151; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .action-col form { margin-bottom: 8px; }
+        .answer-input { width: 100%; min-width: 220px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+        .flash { margin-bottom: 12px; padding: 10px 12px; border-radius: 8px; }
+        .flash-ok { background: #dcfce7; color: #166534; }
+        .flash-error { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+    <div class="main-content">
+        <div th:replace="staff/fragments/header :: header"></div>
+        <div class="content">
+            <h2>Quản lý phiếu hỗ trợ</h2>
+
+            <div th:if="${successMessage}" class="flash flash-ok" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="flash flash-error" th:text="${errorMessage}"></div>
+
+            <form method="get" th:action="@{/staff/support}" class="filter-form">
+                <select name="status">
+                    <option value="" th:selected="${selectedStatus == ''}">Tất cả trạng thái</option>
+                    <option value="OPEN" th:selected="${selectedStatus == 'OPEN'}">Đang mở</option>
+                    <option value="ANSWERED" th:selected="${selectedStatus == 'ANSWERED'}">Đã trả lời</option>
+                    <option value="CLOSED" th:selected="${selectedStatus == 'CLOSED'}">Đã đóng</option>
+                </select>
+                <button type="submit">Lọc</button>
+            </form>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Khách hàng</th>
+                    <th>Câu hỏi</th>
+                    <th>Trạng thái</th>
+                    <th>Tạo lúc</th>
+                    <th>Nhân viên xử lý</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(tickets)}">
+                    <td colspan="6">Không có phiếu hỗ trợ.</td>
+                </tr>
+                <tr th:each="ticket : ${tickets}">
+                    <td th:text="${ticket.customer != null ? ticket.customer.email : '-'}"></td>
+                    <td th:text="${ticket.question != null && ticket.question.length() > 100 ? ticket.question.substring(0,100) + '...' : ticket.question}"></td>
+                    <td>
+                        <span th:if="${ticket.status == 'OPEN'}" class="status-open">Đang mở</span>
+                        <span th:if="${ticket.status == 'ANSWERED'}" class="status-answered">Đã trả lời</span>
+                        <span th:if="${ticket.status == 'CLOSED'}" class="status-closed">Đã đóng</span>
+                    </td>
+                    <td th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${ticket.staff != null ? ticket.staff.email : '-'}"></td>
+                    <td class="action-col">
+                        <form th:if="${ticket.status != 'CLOSED' && (ticket.answer == null || #strings.isEmpty(ticket.answer))}"
+                              th:action="@{/staff/support/{id}/answer(id=${ticket.id})}"
+                              method="post">
+                            <input type="text" name="answer" class="answer-input" placeholder="Nhập câu trả lời">
+                            <button type="submit">Trả lời</button>
+                        </form>
+                        <form th:if="${ticket.status != 'CLOSED'}"
+                              th:action="@{/staff/support/{id}/close(id=${ticket.id})}"
+                              method="post">
+                            <button type="submit">Đóng</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

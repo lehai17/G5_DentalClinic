@@ -87,12 +87,14 @@ public class CustomerHomepageController {
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
         model.addAttribute("services", serviceRepo.findAll());
+        model.addAttribute("active", "booking");
         return "customer/booking";
     }
 
     /** Trang lịch hẹn của tôi (cùng layout với trang chủ). Dùng /my-appointments để tránh trùng GET /customer/appointments (API JSON). */
     @GetMapping("/customer/my-appointments")
-    public String appointmentsPage() {
+    public String appointmentsPage(Model model) {
+        model.addAttribute("active", "appointments");
         return "customer/appointments";
     }
 }
