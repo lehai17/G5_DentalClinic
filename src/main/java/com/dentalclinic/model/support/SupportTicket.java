@@ -3,7 +3,6 @@ package com.dentalclinic.model.support;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,21 +13,21 @@ public class SupportTicket {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id")
     private Appointment appointment;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
     private User customer;
 
-    /**
-     * Nhân viên / bác sĩ xử lý ticket.
-     * Map trực tiếp tới cột DB `staff_id`.
-     */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "staff_id")
     private User staff;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dentist_id")
+    private User dentist;
 
     @Column(name = "title", columnDefinition = "NVARCHAR(255)")
     private String title;
@@ -46,11 +45,11 @@ public class SupportTicket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // ================== CONSTRUCTORS ==================
+    // --- Constructors ---
     public SupportTicket() {
     }
 
-    // ================== GETTERS & SETTERS ==================
+    // --- Getters and Setters ---
     public Long getId() {
         return id;
     }
@@ -84,10 +83,11 @@ public class SupportTicket {
     }
 
     /**
-     * Alias để tương thích với code cũ (dentist = staff).
+     * Alias cho Dentist/Staff để tương thích với các logic cũ.
+     * Thường dùng khi Dentist là người trả lời ticket trực tiếp.
      */
     public User getDentist() {
-        return staff;
+        return dentist;
     }
 
     public void setDentist(User dentist) {
@@ -132,5 +132,12 @@ public class SupportTicket {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Phương thức tiện ích để kiểm tra xem Ticket đã đóng chưa
+     */
+    public boolean isClosed() {
+        return SupportStatus.CLOSED.equals(this.status);
     }
 }

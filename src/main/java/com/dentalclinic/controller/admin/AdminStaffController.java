@@ -54,7 +54,7 @@ public class AdminStaffController {
     // 3. Xử lý lưu dữ liệu
     @PostMapping("/save")
     public String processAddStaff(@jakarta.validation.Valid @ModelAttribute("staffDTO") StaffDTO dto,
-            org.springframework.validation.BindingResult bindingResult, Model model, RedirectAttributes ra) {
+                                  org.springframework.validation.BindingResult bindingResult, Model model, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("activePage", "staff");
             return "admin/add-staff";
@@ -107,8 +107,8 @@ public class AdminStaffController {
 
     @PostMapping("/update/{id}")
     public String updateStaff(@PathVariable("id") Long id,
-            @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
-            org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
+                              @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
+                              org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
             ra.addFlashAttribute("error", "Kiểm tra lại thông tin cập nhật (có thể do lỗi định dạng).");
             return "redirect:/admin/staff";

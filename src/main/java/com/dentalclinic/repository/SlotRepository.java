@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -102,4 +103,11 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
     @Query("SELECT s FROM Slot s WHERE s.slotTime >= :fromTime AND s.slotTime < :toTime AND s.active = true ORDER BY s.slotTime ASC")
     List<Slot> findAllSlotsForToday(@Param("fromTime") LocalDateTime fromTime,
                                      @Param("toTime") LocalDateTime toTime);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Slot s SET s.active = false " +
+            "WHERE s.slotTime >= :start AND s.slotTime <= :end")
+    void disableSlotsInPeriod(@Param("start") LocalDateTime start,
+                              @Param("end") LocalDateTime end);
 }
