@@ -32,19 +32,20 @@ public class GlobalModelAdvice {
 
     @ModelAttribute("avatarLetter")
     public String avatarLetter(Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "U";
+        }
+
         String email = extractEmail(authentication);
         if (email == null) return "U";
 
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isEmpty()) return "U";
-
-        User user = userOpt.get();
-        CustomerProfile profile = profileService.getCurrentCustomerProfile(user.getId());
-
-        String fullName = (profile != null) ? profile.getFullName() : null;
-        if (fullName == null || fullName.trim().isEmpty()) return "U";
-
-        return fullName.trim().substring(0, 1).toUpperCase();
+        return userRepository.findByEmail(email)
+                .map(user -> profileService.getCurrentCustomerProfile(user.getId()))
+                .map(profile -> profile.getFullName())
+                .filter(name -> name != null && !name.trim().isEmpty())
+                .map(name -> name.trim().substring(0, 1).toUpperCase())
+                .orElse("U");
     }
 
     private String extractEmail(Authentication auth) {

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phiếu hỗ trợ của tôi</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-support-my-page.css}">
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="support-my-page">
+      <div class="support-my-head">
+        <div class="support-my-title-wrap">
+          <h1 class="support-my-title">Phiếu hỗ trợ của tôi</h1>
+          <p class="support-my-subtitle">Theo dõi quá trình xử lý và xem phản hồi từ phòng khám.</p>
+        </div>
+        <a th:href="@{/support/create}" class="support-create-btn">
+          <i class="bi bi-plus-circle"></i>
+          <span>Tạo phiếu hỗ trợ</span>
+        </a>
+      </div>
+
+      <div th:if="${successMessage}" class="support-flash support-flash-success" th:text="${successMessage}"></div>
+      <div th:if="${errorMessage}" class="support-flash support-flash-error" th:text="${errorMessage}"></div>
+
+      <div class="support-future-tools" aria-hidden="true">
+        <div class="support-tool-placeholder"></div>
+        <div class="support-tool-placeholder"></div>
+      </div>
+
+      <div class="support-loading" th:if="${tickets == null}">
+        <span class="support-loading-spinner" aria-hidden="true"></span>
+        <span>Đang tải dữ liệu phiếu hỗ trợ...</span>
+      </div>
+
+      <div class="support-empty" th:if="${#lists.isEmpty(tickets)}">
+        <div class="support-empty-icon">
+          <i class="bi bi-chat-square-dots"></i>
+        </div>
+        <h3>Bạn chưa có phiếu hỗ trợ nào</h3>
+        <p>Hãy tạo phiếu hỗ trợ để được đội ngũ phòng khám tư vấn nhanh chóng.</p>
+        <a th:href="@{/support/create}" class="support-empty-cta">
+          <i class="bi bi-plus-circle"></i>
+          <span>Tạo phiếu hỗ trợ</span>
+        </a>
+      </div>
+
+      <div class="support-ticket-list" th:if="${tickets != null and !#lists.isEmpty(tickets)}">
+        <article class="support-ticket-card" th:each="ticket : ${tickets}">
+          <div class="support-ticket-main">
+            <h2 class="support-ticket-title"
+                th:text="${ticket.title != null && !#strings.isEmpty(ticket.title) ? ticket.title : 'Không có tiêu đề'}"></h2>
+            <p class="support-ticket-preview"
+               th:text="${ticket.question != null && ticket.question.length() > 180 ? ticket.question.substring(0,180) + '...' : ticket.question}"></p>
+
+            <div class="support-ticket-meta">
+              <div class="support-ticket-badge-wrap">
+                <span th:if="${ticket.status == 'OPEN'}" class="support-ticket-badge support-badge-open">Đang mở</span>
+                <span th:if="${ticket.status == 'ANSWERED'}" class="support-ticket-badge support-badge-answered">Đã trả lời</span>
+                <span th:if="${ticket.status == 'CLOSED'}" class="support-ticket-badge support-badge-closed">Đã đóng</span>
+              </div>
+
+              <div class="support-ticket-info">
+                <i class="bi bi-clock-history"></i>
+                <span th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+              </div>
+
+              <div class="support-ticket-info">
+                <i class="bi bi-person-circle"></i>
+                <span th:text="${ticket.staff != null ? ticket.staff.email : 'Chưa phân công'}"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="support-ticket-action">
+            <a th:href="@{/support/{id}(id=${ticket.id})}" class="support-detail-btn">
+              <span>Xem chi tiết</span>
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+      </div>
+
+      <nav class="support-pagination"
+           th:if="${tickets != null and !#lists.isEmpty(tickets) and totalPages != null and totalPages > 1}"
+           aria-label="Phân trang phiếu hỗ trợ">
+        <a class="support-page-btn"
+           th:classappend="${currentPage == 0} ? ' disabled'"
+           th:href="${currentPage > 0} ? @{/support/my(page=${currentPage - 1})} : '#'"
+           aria-label="Trang trước">Trước</a>
+
+        <th:block th:each="p : ${#numbers.sequence(0, totalPages - 1)}">
+          <a class="support-page-btn"
+             th:classappend="${p == currentPage} ? ' active'"
+             th:href="@{/support/my(page=${p})}"
+             th:text="${p + 1}">1</a>
+        </th:block>
+
+        <a class="support-page-btn"
+           th:classappend="${currentPage + 1 >= totalPages} ? ' disabled'"
+           th:href="${currentPage + 1 < totalPages} ? @{/support/my(page=${currentPage + 1})} : '#'"
+           aria-label="Trang sau">Sau</a>
+      </nav>
+    </section>
+  </main>
+</div>
+</body>
+</html>

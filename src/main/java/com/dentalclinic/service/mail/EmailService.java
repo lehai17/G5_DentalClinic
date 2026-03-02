@@ -20,13 +20,13 @@ public class EmailService {
 
         SimpleMailMessage message = new SimpleMailMessage();
 
-        // ⚠️ FROM PHẢI TRÙNG USERNAME SMTP
+        //  FROM PHẢI TRÙNG USERNAME SMTP
         message.setFrom("lenguyendaihai17@gmail.com");
 
         String toEmail = appointment.getCustomer().getUser().getEmail();
         message.setTo(toEmail);
 
-        message.setSubject("Xác nhận lịch khám - Dental Clinic");
+        message.setSubject("Xác nhận lịch khám - GENZ CLINIC");
 
         message.setText("""
             Xin chào %s,
@@ -39,7 +39,7 @@ public class EmailService {
             ⏰ Thời gian: %s - %s
 
             Trân trọng,
-            Dental Clinic
+            GENZ CLINIC
             """.formatted(
                 appointment.getCustomer().getFullName(),
                 appointment.getService().getName(),

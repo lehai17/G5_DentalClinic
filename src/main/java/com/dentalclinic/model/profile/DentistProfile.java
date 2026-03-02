@@ -14,6 +14,7 @@ public class DentistProfile {
     @Id
     private Long id;
 
+    @JsonIgnore
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")

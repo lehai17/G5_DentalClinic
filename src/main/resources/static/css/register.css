@@ -283,3 +283,15 @@ body{
     .title{ text-align:left; }
 }
 
+/* Error message */
+.error {
+    color: #dc2626;        /* đỏ */
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Input viền đỏ */
+.input-wrap.is-invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}

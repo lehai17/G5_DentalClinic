@@ -8,7 +8,7 @@
   <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
   <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
   <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" th:href="@{/css/customer-booking-page.css}">
 </head>
 <body>
 <div class="app-wrapper">
@@ -16,104 +16,260 @@
   <main class="main-content">
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <section class="customer-page-section">
-      <h1 class="customer-page-title">Đặt lịch khám</h1>
-
-      <div class="customer-booking-stepper">
-        <div class="customer-stepper-indicator">
-          <span class="customer-stepper-step active" data-step="1">1</span>
-          <span class="customer-stepper-line"></span>
-          <span class="customer-stepper-step" data-step="2">2</span>
-          <span class="customer-stepper-line"></span>
-          <span class="customer-stepper-step" data-step="3">3</span>
-          <span class="customer-stepper-line"></span>
-          <span class="customer-stepper-step" data-step="4">4</span>
-        </div>
-        <p class="customer-stepper-label" data-step-label="1">Chọn ngày</p>
-        <p class="customer-stepper-label" data-step-label="2" style="display:none;">Chọn giờ</p>
-        <p class="customer-stepper-label" data-step-label="3" style="display:none;">Thông tin & xác nhận</p>
-        <p class="customer-stepper-label" data-step-label="4" style="display:none;">Hoàn tất</p>
+    <section class="booking-container">
+      <!-- Header -->
+      <div class="booking-header">
+        <h1>Đặt lịch khám</h1>
+        <p>Chỉ cần vài phút để đặt lịch khám. Chọn ngày, giờ và dịch vụ phù hợp, chúng tôi sẽ chăm sóc phần còn lại.</p>
       </div>
 
-      <div class="customer-booking-step" id="customer-booking-step-1">
-        <div class="customer-form-row">
-          <label>Dịch vụ <span class="required">*</span></label>
-          <select id="customer-booking-service" class="customer-input" required>
-            <option value="">-- Chọn dịch vụ --</option>
-            <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}">Dịch vụ</option>
-          </select>
+      <!-- Step Progress Bar -->
+      <div class="step-progress">
+        <div class="step-item" data-step="1">
+          <div class="step-circle active" id="step-1-circle">1</div>
+          <div class="step-label active" id="step-1-label">Chọn ngày</div>
         </div>
-        <div class="customer-calendar-wrap">
-          <div class="customer-calendar-nav">
-            <button type="button" id="customer-calendar-prev" class="customer-calendar-nav-btn"><i class="bi bi-chevron-left"></i></button>
-            <span id="customer-calendar-month-label" class="customer-calendar-month-label">Tháng 1 / 2025</span>
-            <button type="button" id="customer-calendar-next" class="customer-calendar-nav-btn"><i class="bi bi-chevron-right"></i></button>
+        <div class="step-item" data-step="2">
+          <div class="step-circle" id="step-2-circle">2</div>
+          <div class="step-label" id="step-2-label">Chọn dịch vụ</div>
+        </div>
+        <div class="step-item" data-step="3">
+          <div class="step-circle" id="step-3-circle">3</div>
+          <div class="step-label" id="step-3-label">Thông tin</div>
+        </div>
+        <div class="step-item" data-step="4">
+          <div class="step-circle" id="step-4-circle">4</div>
+          <div class="step-label" id="step-4-label">Xác nhận</div>
+        </div>
+      </div>
+
+      <!-- Main Booking Card -->
+      <div class="booking-card">
+        <!-- Left Column: Calendar & Time Slots -->
+        <div class="booking-left">
+          <!-- Step 1: Calendar -->
+          <div id="booking-step-1" class="booking-step active">
+            <div class="calendar-section">
+              <h2>Chọn ngày khám</h2>
+              
+              <!-- Service Selection -->
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">
+                  Dịch vụ <span class="required">*</span>
+                </label>
+                <select id="customer-booking-service" class="form-select">
+                  <option value="">-- Chọn dịch vụ --</option>
+                  <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}" th:attr="data-duration=${s.durationMinutes}">Dịch vụ</option>
+                </select>
+              </div>
+
+              <!-- Calendar Navigation -->
+              <div class="calendar-nav">
+                <button type="button" id="customer-calendar-prev" class="calendar-nav-btn">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="calendar-month" id="customer-calendar-month-label">Tháng 1 / 2025</span>
+                <button type="button" id="customer-calendar-next" class="calendar-nav-btn">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
+
+              <!-- Calendar Table -->
+              <table class="calendar-table" id="customer-calendar-table">
+                <thead>
+                  <tr>
+                    <th>CN</th>
+                    <th>T2</th>
+                    <th>T3</th>
+                    <th>T4</th>
+                    <th>T5</th>
+                    <th>T6</th>
+                    <th>T7</th>
+                  </tr>
+                </thead>
+                <tbody id="customer-calendar-body"></tbody>
+              </table>
+            </div>
           </div>
-          <table class="customer-calendar-table" id="customer-calendar-table">
-            <thead>
-              <tr><th>CN</th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th></tr>
-            </thead>
-            <tbody id="customer-calendar-body"></tbody>
-          </table>
-        </div>
-      </div>
 
-      <div class="customer-booking-step" id="customer-booking-step-2" style="display:none;">
-        <p class="customer-step-date-label">Ngày đã chọn: <strong id="customer-selected-date-label"></strong></p>
-        <div id="customer-times-loading" class="customer-loading">Đang tải khung giờ...</div>
-        <div id="customer-times-wrap" style="display:none;">
-          <table class="customer-times-table" id="customer-times-table">
-            <thead><tr><th>Khung giờ</th><th>Trạng thái</th></tr></thead>
-            <tbody id="customer-times-body"></tbody>
-          </table>
-          <p id="customer-times-empty" class="customer-empty" style="display:none;">Không có khung giờ trống.</p>
-        </div>
-        <div class="customer-modal-actions" style="margin-top:16px;">
-          <button type="button" class="customer-btn" data-back-step="1">Quay lại chọn ngày</button>
-        </div>
-      </div>
+          <!-- Step 2: Time Slots -->
+          <div id="booking-step-2" class="booking-step">
+            <div class="time-slots-section">
+              <h2 class="time-slots-header">
+                Chọn giờ khám
+                <span id="selected-date-display" style="font-size: 0.875rem; font-weight: 400; color: var(--gray-400);"></span>
+              </h2>
 
-      <div class="customer-booking-step" id="customer-booking-step-3" style="display:none;">
-        <input type="hidden" id="customer-booking-slot-id" value="">
-        <div class="customer-form-row">
-          <label>Kênh liên hệ <span class="required">*</span></label>
-          <select id="customer-booking-contact-channel" class="customer-input" required>
-            <option value="">-- Chọn --</option>
-            <option value="ZALO">Zalo</option>
-            <option value="EMAIL">Email</option>
-            <option value="PHONE">Điện thoại</option>
-          </select>
-        </div>
-        <div class="customer-form-row">
-          <label>Số / Email / Zalo <span class="required">*</span></label>
-          <input type="text" id="customer-booking-contact-value" class="customer-input" placeholder="Số điện thoại, email hoặc ID Zalo" required>
-        </div>
-        <div class="customer-form-row">
-          <label>Ghi chú (tùy chọn)</label>
-          <textarea id="customer-booking-note" class="customer-input" rows="2" placeholder="Ghi chú cho phòng khám"></textarea>
-        </div>
-        <div class="customer-modal-actions">
-          <button type="button" class="customer-btn" data-back-step="2">Quay lại</button>
-          <button type="button" id="customer-booking-submit" class="customer-btn customer-btn-primary">Xác nhận đặt lịch</button>
-        </div>
-      </div>
+              <!-- Loading Skeleton -->
+              <div id="time-slots-loading" class="time-slots-grid" style="display: none;">
+                <div class="time-slot-btn skeleton" style="height: 60px;"></div>
+                <div class="time-slot-btn skeleton" style="height: 60px;"></div>
+                <div class="time-slot-btn skeleton" style="height: 60px;"></div>
+                <div class="time-slot-btn skeleton" style="height: 60px;"></div>
+              </div>
 
-      <div class="customer-booking-step" id="customer-booking-step-4" style="display:none;">
-        <div class="customer-success-message">
-          <i class="bi bi-check-circle-fill"></i>
-          <p class="customer-success-title">Đặt lịch thành công!</p>
-          <p class="customer-success-desc">Lịch hẹn của bạn đã được ghi nhận.</p>
-          <p class="customer-success-cta">Xem chi tiết tại <strong>Lịch hẹn của tôi</strong>.</p>
-          <div id="customer-success-summary" class="customer-success-summary"></div>
+              <!-- Time Slots Grid -->
+              <div id="time-slots-grid" class="time-slots-grid" style="display: none;"></div>
+
+              <!-- Empty State -->
+              <div id="time-slots-empty" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">
+                  <i class="bi bi-calendar-x"></i>
+                </div>
+                <div class="empty-state-title">Không có khung giờ trống</div>
+                <div class="empty-state-text">Vui lòng chọn ngày khác</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Contact Information -->
+          <div id="booking-step-3" class="booking-step">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--gray-600); margin-bottom: 1.5rem;">
+              Thông tin liên hệ
+            </h2>
+            <form class="contact-form">
+              <div class="form-group">
+                <label class="form-label">
+                  Kênh liên hệ <span class="required">*</span>
+                </label>
+                <select id="customer-booking-contact-channel" class="form-select">
+                  <option value="">-- Chọn kênh --</option>
+                  <option value="ZALO">Zalo</option>
+                  <option value="EMAIL">Email</option>
+                  <option value="PHONE">Điện thoại</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  Số / Email / Zalo <span class="required">*</span>
+                </label>
+                <input type="text" id="customer-booking-contact-value" class="form-input" 
+                       placeholder="Nhập số điện thoại, email hoặc ID Zalo">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Ghi chú (tùy chọn)</label>
+                <textarea id="customer-booking-note" class="form-textarea" 
+                          placeholder="Chia sẻ bất kỳ thông tin quan trọng nào với phòng khám"></textarea>
+              </div>
+            </form>
+          </div>
+
+          <!-- Step 4: Success -->
+          <div id="booking-step-4" class="booking-step">
+            <div class="success-container">
+              <div class="success-icon">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <h2 class="success-title">Đặt lịch thành công!</h2>
+              <p class="success-text">Lịch hẹn của bạn đã được xác nhận. Chúng tôi đã gửi email xác nhận đến địa chỉ của bạn.</p>
+              
+              <div class="success-summary" id="success-summary">
+                <!-- Summary will be populated by JS -->
+              </div>
+
+              <div class="action-buttons">
+                <a th:href="@{/customer/my-appointments}" class="summary-cta" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                  Xem lịch hẹn của tôi
+                </a>
+                <a th:href="@{/homepage}" class="btn-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                  Về trang chủ
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation Buttons -->
+          <div class="action-buttons" id="step-actions" style="margin-top: 2rem;">
+            <button type="button" class="btn-secondary" id="btn-back" style="display: none;">
+              <i class="bi bi-arrow-left"></i> Quay lại
+            </button>
+            <button type="button" class="summary-cta" id="btn-next" style="flex: 1;">
+              Tiếp tục
+            </button>
+          </div>
         </div>
-        <div class="customer-modal-actions">
-          <a th:href="@{/customer/my-appointments}" id="customer-booking-open-appointments" class="customer-btn customer-btn-primary" style="text-decoration:none;">Xem lịch hẹn của tôi</a>
-          <a th:href="@{/homepage}" class="customer-btn" style="text-decoration:none;">Về trang chủ</a>
+
+        <!-- Right Column: Booking Summary -->
+        <div class="booking-summary" id="booking-summary">
+          <h3 class="summary-title">Tóm tắt đặt lịch</h3>
+
+          <!-- Ngày khám -->
+          <div class="summary-item">
+            <div class="summary-item-label">
+              <i class="bi bi-calendar-event"></i> Ngày khám
+            </div>
+            <div class="summary-item-value" id="summary-date">
+              <span class="empty">Chưa chọn</span>
+            </div>
+          </div>
+
+          <!-- Giờ khám -->
+          <div class="summary-item">
+            <div class="summary-item-label">
+              <i class="bi bi-clock"></i> Giờ khám
+            </div>
+            <div class="summary-item-value" id="summary-time">
+              <span class="empty">Chưa chọn</span>
+            </div>
+          </div>
+
+          <!-- Dịch vụ -->
+          <div class="summary-item">
+            <div class="summary-item-label">
+              <i class="bi bi-hospital"></i> Dịch vụ
+            </div>
+            <div class="summary-item-value" id="summary-service">
+              <span class="empty">Chưa chọn</span>
+            </div>
+          </div>
+
+          <!-- Thời lượng -->
+          <div class="summary-item">
+            <div class="summary-item-label">
+              <i class="bi bi-hourglass-split"></i> Thời lượng
+            </div>
+            <div class="summary-item-value" id="summary-duration">
+              <span class="empty">--</span>
+            </div>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <!-- Phí đặt cọc -->
+          <div class="summary-item">
+            <div class="summary-item-label">Phí đặt cọc</div>
+            <div class="summary-item-value" id="summary-deposit">
+              <span class="empty">--</span>
+            </div>
+          </div>
+
+          <!-- Chính sách hủy -->
+          <div class="summary-policy">
+            <div class="summary-policy-title">
+              <i class="bi bi-exclamation-circle"></i> Chính sách hủy
+            </div>
+            <div class="summary-policy-text">
+              Bạn có thể hủy hoặc thay đổi lịch hẹn miễn phí lên đến 24 giờ trước khi đặt lịch.
+            </div>
+          </div>
+
+          <button type="button" class="summary-cta" id="summary-cta-main" style="display: none;">
+            Tiếp tục đặt lịch
+          </button>
+
+          <div id="summary-incomplete" class="empty-state-text" style="text-align: center; padding: 1rem; color: var(--gray-400);">
+            Vui lòng hoàn tất lựa chọn
+          </div>
         </div>
       </div>
     </section>
   </main>
 </div>
+
+<input type="hidden" id="customer-booking-slot-id" value="">
+
 <script th:src="@{/js/customer-booking.js}"></script>
 </body>
 </html>

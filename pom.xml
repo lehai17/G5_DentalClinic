@@ -70,6 +70,7 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Validation -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

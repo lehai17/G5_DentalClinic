@@ -34,13 +34,14 @@
 
 /* ĐIỀU CHỈNH NỘI DUNG CHÍNH (Main Content) */
 .main-content {
-    margin-left: 260px !important;
+    flex: 1;
+    min-width: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Khi sidebar thụt vào, nội dung chính thò ra */
 .main-content.expanded {
-    margin-left: 80px !important;
+
 }
 
 /* Nút Toggle 3 gạch */
@@ -78,8 +79,19 @@
 .menu-item:active { transform: translateX(0); }
 
 .menu-item.active {
-    background: #667eea;
-    color: white !important;
+    background: linear-gradient(135deg, #667eea 0%, #4f63d2 100%);
+    color: #ffffff !important;
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-item.active i {
+    color: #ffffff !important;
+}
+
+.menu-item.active:hover {
+    transform: none;
+    background: linear-gradient(135deg, #667eea 0%, #4f63d2 100%);
 }
 
 .menu-item.logout:hover {

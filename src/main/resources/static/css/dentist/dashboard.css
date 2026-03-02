@@ -1,0 +1,139 @@
+/* ================= HERO ================= */
+
+.dashboard-hero {
+    text-align: center;
+    margin: 50px 0 70px 0;
+}
+
+.clinic-name {
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.clinic-slogan {
+    color: var(--muted);
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
+
+/* ================= STATS GRID ================= */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 90px;
+}
+
+/* CARD */
+
+.stat-card {
+    background: var(--card);
+    border-radius: 22px;
+    padding: 50px 30px;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+    transition: 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-6px);
+}
+
+/* ICON */
+
+.stat-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 18px auto;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: #f4f6fb;
+}
+
+.stat-icon.blue { color: #3b82f6; }
+.stat-icon.green { color: #10b981; }
+.stat-icon.orange { color: #f59e0b; }
+
+/* TEXT */
+
+.stat-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 12px;
+}
+
+.stat-value {
+    font-size: 48px;
+    font-weight: 800;
+}
+
+
+/* ================= TODAY OVERVIEW ================= */
+
+.overview-section {
+    margin-top: 120px;
+}
+
+.overview-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 35px;
+}
+
+/* FULL WIDTH BOX */
+
+.completion-box {
+    width: 100%;
+    padding: 55px;
+    border-radius: 26px;
+    background: white;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.07);
+}
+
+/* HEADER */
+
+.completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.completion-percent {
+    font-size: 24px;
+    font-weight: 900;
+    color: #2563eb;
+}
+
+/* PROGRESS BAR */
+
+.progress-bar {
+    height: 20px;
+    background: #e5e7eb;
+    border-radius: 30px;
+    overflow: hidden;
+    margin: 30px 0 18px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 30px;
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    transition: width 0.5s ease;
+}
+
+/* SUB TEXT */
+
+.completion-sub {
+    font-size: 17px;
+    color: var(--muted);
+}

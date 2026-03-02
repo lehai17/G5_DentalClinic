@@ -11,6 +11,10 @@ public class SlotDto {
     private Long dentistId;
     private String dentistName;
     private boolean available;
+    private int capacity;
+    private int bookedCount;
+    private int availableSpots;
+    private boolean disabled;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -26,4 +30,12 @@ public class SlotDto {
     public void setDentistName(String dentistName) { this.dentistName = dentistName; }
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
+    public int getBookedCount() { return bookedCount; }
+    public void setBookedCount(int bookedCount) { this.bookedCount = bookedCount; }
+    public int getAvailableSpots() { return availableSpots; }
+    public void setAvailableSpots(int availableSpots) { this.availableSpots = availableSpots; }
+    public boolean isDisabled() { return disabled; }
+    public void setDisabled(boolean disabled) { this.disabled = disabled; }
 }

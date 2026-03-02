@@ -7,6 +7,9 @@ function assignDentist(appointmentId) {
     fetch("/staff/schedules/dentists")
         .then(res => res.json())
         .then(dentists => {
+
+            document.querySelector(".modal-overlay")?.remove();
+
             let options = dentists.map(d =>
                 `<option value="${d.id}">${d.fullName}</option>`
             ).join("");
@@ -15,12 +18,22 @@ function assignDentist(appointmentId) {
                 <div class="modal-overlay">
                     <div class="modal">
                         <h3>Chọn bác sĩ</h3>
+
+                        <div id="assignError"
+                             style="display:none;color:red;margin-bottom:10px;">
+                        </div>
+
                         <select id="dentistSelect">
                             ${options}
                         </select>
+
                         <div class="modal-actions">
-                            <button onclick="submitAssign(${appointmentId})">Xác nhận</button>
-                            <button onclick="closeModal()">Hủy</button>
+                            <button type="button"
+                                onclick="submitAssign(${appointmentId})">
+                                Xác nhận
+                            </button>
+                            <button type="button"
+                                onclick="closeModal()">Hủy</button>
                         </div>
                     </div>
                 </div>
@@ -30,13 +43,34 @@ function assignDentist(appointmentId) {
         });
 }
 
+
+
 function submitAssign(appointmentId) {
     const dentistId = document.getElementById("dentistSelect").value;
+    const errorBox = document.getElementById("assignError");
 
     fetch(`/staff/appointments/assign?appointmentId=${appointmentId}&dentistId=${dentistId}`, {
-        method: 'POST'
-    }).then(() => location.reload());
+        method: "POST"
+    })
+    .then(async res => {
+        if (!res.ok) {
+            const msg = await res.text();
+            errorBox.innerText = msg;
+            errorBox.style.display = "block";
+            return;
+        }
+
+        closeModal();
+        location.reload();
+    })
+    .catch(() => {
+        errorBox.innerText = "Không thể kết nối server";
+        errorBox.style.display = "block";
+    });
 }
+
+
+
 
 function closeModal() {
     document.querySelector(".modal-overlay")?.remove();
@@ -59,4 +93,8 @@ function cancelAppointment(id) {
     fetch(`/staff/appointments/cancel?id=${id}&reason=${reason}`, {
         method: 'POST'
     }).then(() => location.reload());
+}
+
+function goToPayment(id) {
+    window.location.href = "/staff/payments/" + id;
 }

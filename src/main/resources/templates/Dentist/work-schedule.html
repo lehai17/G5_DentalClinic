@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Work Schedule</title>
-  <link rel="stylesheet" href="/css/app.css"/>
+  <link rel="stylesheet" href="/css/dentist/app.css"/>
 </head>
 
 <body>
@@ -19,13 +19,14 @@
         <div class="brand-badge">D+</div>
         <div style="font-weight:800">DentalPlus</div>
       </div>
-      <button id="sidebarToggle" class="icon-btn">☰</button>
     </div>
 
     <nav class="nav">
+      <a class="nav-item" href="/dentist/dashboard">Dashboard</a>
       <a class="nav-item active">Work Schedule</a>
-      <a class="nav-item" href="/dentist/profile">Profile</a>
+        <a class="nav-item" href="/dentist/busy-schedule">Busy Schedule</a>
       <a class="nav-item" href="/dentist/support">Support Ticket</a>
+      <a class="nav-item" href="/dentist/profile">Profile</a>
     </nav>
 
     <div style="margin-top:auto;">
@@ -38,10 +39,6 @@
 
     <div class="topbar">
       <div style="color:var(--muted);font-size:12px;">Modules › Work Schedule</div>
-      <div class="user-chip">
-        <div class="user-name" th:text="${dentistName}">Dentist</div>
-        <div class="user-sub">General Dentist</div>
-      </div>
     </div>
 
     <div class="content">
@@ -64,6 +61,9 @@
                     th:selected="${w.value == selectedWeekStart}">
             </option>
           </select>
+          <input type="hidden" id="weekStartHidden"
+                 th:value="${selectedWeekStart}">
+
         </div>
         <input type="hidden" id="dentistUserIdHidden" th:value="${dentistUserId}">
       </div>
@@ -79,32 +79,51 @@
         </div>
 
         <div class="grid-body">
-          <div class="row" th:each="t : ${timeSlots}">
-            <div class="time-col"
-                 th:text="${#temporals.format(t,'HH:mm')}"></div>
 
+          <th:block th:each="t : ${timeSlots}">
+
+            <!-- Time column -->
+            <div class="time-col"
+                 th:text="${#temporals.format(t,'HH:mm')}">
+            </div>
+
+            <!-- 7 days -->
             <div class="cell" th:each="d : ${days}">
               <th:block th:with="
-                key=${d.toString() + '_' + #temporals.format(t,'HH:mm')},
-                ev=${eventMap.get(key)}
-              ">
+        key=${d.toString() + '_' + #temporals.format(t,'HH:mm')},
+        ev=${eventMap.get(key)}
+      ">
                 <div th:if="${ev != null}"
                      class="appt"
-                     th:classappend="${ev.status == 'COMPLETED'} ? ' appt-completed' : ''"
-                     th:attr="
-                        data-appointment-id=${ev.appointmentId},
-                        data-patient-name=${ev.patientName},
-                        data-service-name=${ev.serviceName},
-                        data-customer-user-id=${ev.customerUserId},
-                        data-dentist-user-id=${dentistUserId},
-                        data-status=${ev.status}
-                        ">
+                     th:style="'height:' + (${ev.span} * 48 - 4) + 'px; z-index:10;'"
 
-                <div class="appt-name" th:text="${ev.patientName}"></div>
+                     th:classappend="
+  ${ev.status == 'EXAMINING'} ? ' appt-examining' :
+  (${ev.status == 'DONE'} ? ' appt-done' :
+  (${ev.status == 'COMPLETED'} ? ' appt-completed' :
+  (${ev.status == 'CONFIRMED'} ? ' appt-confirmed' : '')))
+"
+                     th:attr="
+                data-appointment-id=${ev.appointmentId},
+                data-patient-name=${ev.patientName},
+                data-service-name=${ev.serviceName},
+                data-customer-user-id=${ev.customerUserId},
+                data-dentist-user-id=${dentistUserId},
+                data-status=${ev.status}
+                ">
+<!--                  <div style="font-size:11px;color:red;"-->
+<!--                       th:text="${ev.startTime} + ' - ' + ${ev.endTime} + ' | span=' + ${ev.span}">-->
+<!--                  </div>-->
+                  <div class="appt-name" th:text="${ev.patientName}"></div>
                   <div class="appt-sub" th:text="${ev.serviceName}"></div>
+
                 </div>
               </th:block>
             </div>
+
+          </th:block>
+
+
           </div>
         </div>
       </div>
@@ -135,16 +154,15 @@
        box-sizing:border-box;
      ">
 
-    <a id="btnBillingTransfer"
-         class="btn"
-         style="width:auto;white-space:nowrap;">
-        Service & Billing Transfer
-      </a>
-
       <a id="btnExamination"
          class="btn primary"
          style="width:auto;white-space:nowrap;">
         Clinical Examination Process
+      </a>
+      <a id="btnBillingTransfer"
+         class="btn"
+         style="width:auto;white-space:nowrap;">
+        Service & Billing Transfer
       </a>
 
     </div>
@@ -152,65 +170,9 @@
   </div>
 </div>
 
-<!-- ================= JS INLINE (QUAN TRỌNG) ================= -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
+<!-- ================= JS INLINE  ================= -->
+<script src="/js/dentist/app.js"></script>
 
-    const backdrop = document.getElementById('apptModalBackdrop');
-    const btnClose = document.getElementById('btnCloseModal');
-    const title = document.getElementById('apptModalTitle');
-    const sub = document.getElementById('apptModalSub');
-    const btnExam = document.getElementById('btnExamination');
-    const btnBilling = document.getElementById('btnBillingTransfer');
-
-    function closeModal() {
-      backdrop.hidden = true;
-    }
-
-    btnClose.addEventListener('click', closeModal);
-    backdrop.addEventListener('click', e => {
-      if (e.target === backdrop) closeModal();
-    });
-
-    document.querySelectorAll('.appt').forEach(el => {
-      el.addEventListener('click', () => {
-
-        const status = el.dataset.status;
-
-
-        const appointmentId = el.dataset.appointmentId;
-        const patientName = el.dataset.patientName;
-        const serviceName = el.dataset.serviceName;
-        const customerUserId = el.dataset.customerUserId;
-        const dentistUserId = el.dataset.dentistUserId;
-
-        title.textContent = patientName;
-        sub.textContent = serviceName;
-
-        btnExam.href =
-                `/dentist/appointments/${appointmentId}/examination`
-                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
-
-        btnBilling.href =
-                `/dentist/appointments/${appointmentId}/billing-transfer`
-                + `?customerUserId=${customerUserId}&dentistUserId=${dentistUserId}`;
-
-        backdrop.hidden = false;
-      });
-    });
-
-
-    document.getElementById('weekSelect')?.addEventListener('change', e => {
-      const weekStart = e.target.value;
-      const dentistUserId =
-              document.getElementById('dentistUserIdHidden').value;
-      window.location.href =
-              `/dentist/work-schedule?weekStart=${weekStart}`;
-
-    });
-
-  });
-</script>
 
 </body>
 </html>
