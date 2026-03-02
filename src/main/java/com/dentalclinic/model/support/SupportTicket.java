@@ -1,17 +1,18 @@
 package com.dentalclinic.model.support;
 
 import com.dentalclinic.model.user.User;
+import com.dentalclinic.model.appointment.Appointment;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.dentalclinic.model.support.SupportStatus;
-import com.dentalclinic.model.appointment.Appointment;
 
 @Entity
 @Table(name = "support_ticket")
 public class SupportTicket {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @ManyToOne
     @JoinColumn(name = "appointment_id")
     private Appointment appointment;
@@ -36,55 +37,29 @@ public class SupportTicket {
 
     @Enumerated(EnumType.STRING)
     private SupportStatus status;
-    private String status; // OPEN, ANSWERED, CLOSED
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
-    public Long getId() { return id; }
 
-    public void setId(Long id) { this.id = id; }
-
-    public User getCustomer() { return customer; }
-
-    public void setCustomer(User customer) { this.customer = customer; }
-
-    public User getStaff() { return staff; }
-
-    public void setStaff(User staff) { this.staff = staff; }
-
-    public User getDentist() { return dentist; }
-
-    public void setDentist(User dentist) { this.dentist = dentist; }
-
-    public String getQuestion() { return question; }
-
-    public void setQuestion(String question) { this.question = question; }
-
-    public String getAnswer() { return answer; }
-
-    public void setAnswer(String answer) { this.answer = answer; }
-
-    public SupportStatus getStatus() { return status; }
-
-    public void setStatus(SupportStatus status) { this.status = status; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public Appointment getAppointment() {
-        return appointment;
+    // --- Constructor ---
+    public SupportTicket() {
     }
 
-    public void setAppointment(Appointment appointment) {
-        this.appointment = appointment;
-    }
-}
+    // --- Getters and Setters ---
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Appointment getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
     }
 
     public User getCustomer() {
@@ -103,6 +78,14 @@ public class SupportTicket {
         this.staff = staff;
     }
 
+    public User getDentist() {
+        return dentist;
+    }
+
+    public void setDentist(User dentist) {
+        this.dentist = dentist;
+    }
+
     public String getQuestion() {
         return question;
     }
@@ -119,11 +102,11 @@ public class SupportTicket {
         this.answer = answer;
     }
 
-    public String getStatus() {
+    public SupportStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(SupportStatus status) {
         this.status = status;
     }
 

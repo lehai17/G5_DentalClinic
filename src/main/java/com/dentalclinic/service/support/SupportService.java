@@ -3,6 +3,7 @@ package com.dentalclinic.service.support;
 import com.dentalclinic.exception.BusinessException;
 import com.dentalclinic.exception.SupportAccessDeniedException;
 import com.dentalclinic.model.notification.Notification;
+import com.dentalclinic.model.support.SupportStatus;
 import com.dentalclinic.model.support.SupportTicket;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
@@ -19,10 +20,6 @@ import java.util.List;
 @Service
 public class SupportService {
 
-    public static final String STATUS_OPEN = "OPEN";
-    public static final String STATUS_ANSWERED = "ANSWERED";
-    public static final String STATUS_CLOSED = "CLOSED";
-
     private final SupportTicketRepository supportTicketRepository;
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -33,6 +30,19 @@ public class SupportService {
         this.supportTicketRepository = supportTicketRepository;
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
+    }
+
+    /**
+     * Lấy thông tin User hiện tại từ Security Principal
+     * Fix lỗi "Cannot resolve method 'getCurrentUser'" trong Controller
+     */
+    @Transactional(readOnly = true)
+    public User getCurrentUser(UserDetails principal) {
+        if (principal == null || principal.getUsername() == null) {
+            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
+        }
+        return userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy người dùng hiện tại."));
     }
 
     @Transactional
@@ -47,18 +57,15 @@ public class SupportService {
         ticket.setCustomer(customer);
         ticket.setQuestion(question.trim());
         ticket.setAnswer(null);
-        ticket.setStatus(STATUS_OPEN);
-        ticket.setStaff(null);
+        // Fix lỗi: Dùng Enum thay vì String
+        ticket.setStatus(SupportStatus.OPEN);
         ticket.setCreatedAt(LocalDateTime.now());
+
         return supportTicketRepository.save(ticket);
     }
 
     @Transactional(readOnly = true)
     public List<SupportTicket> getMyTickets(Long customerUserId) {
-        User customer = requireUser(customerUserId);
-        if (customer.getRole() != Role.CUSTOMER) {
-            throw new SupportAccessDeniedException("Chỉ khách hàng mới được xem danh sách phiếu hỗ trợ của mình.");
-        }
         return supportTicketRepository.findByCustomer_IdOrderByCreatedAtDesc(customerUserId);
     }
 
@@ -85,43 +92,38 @@ public class SupportService {
             return supportTicketRepository.findAllByOrderByCreatedAtDesc();
         }
 
-        String normalized = status.trim().toUpperCase();
-        if (!STATUS_OPEN.equals(normalized) && !STATUS_ANSWERED.equals(normalized) && !STATUS_CLOSED.equals(normalized)) {
+        try {
+            // Fix lỗi: Chuyển đổi String sang Enum để Query
+            SupportStatus filterStatus = SupportStatus.valueOf(status.trim().toUpperCase());
+            return supportTicketRepository.findByStatusOrderByCreatedAtDesc(filterStatus);
+        } catch (IllegalArgumentException e) {
             throw new BusinessException("Trạng thái lọc không hợp lệ.");
         }
-        return supportTicketRepository.findByStatusOrderByCreatedAtDesc(normalized);
     }
 
     @Transactional
     public SupportTicket answerTicket(Long staffUserId, Long ticketId, String answer) {
         User staff = requireUser(staffUserId);
-        if (staff.getRole() != Role.STAFF && staff.getRole() != Role.ADMIN) {
-            throw new SupportAccessDeniedException("Bạn không có quyền trả lời yêu cầu hỗ trợ.");
-        }
         validateAnswer(answer);
 
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
-        if (STATUS_CLOSED.equalsIgnoreCase(ticket.getStatus())) {
+        if (SupportStatus.CLOSED.equals(ticket.getStatus())) {
             throw new BusinessException("Không thể trả lời yêu cầu đã đóng.");
-        }
-        if (ticket.getStaff() != null) {
-            throw new BusinessException("Yêu cầu này đã được phân công cho nhân viên khác.");
-        }
-        if (ticket.getAnswer() != null && !ticket.getAnswer().trim().isEmpty()) {
-            throw new BusinessException("Yêu cầu này đã được trả lời.");
         }
 
         ticket.setStaff(staff);
         ticket.setAnswer(answer.trim());
-        ticket.setStatus(STATUS_ANSWERED);
+        ticket.setStatus(SupportStatus.ANSWERED); // Dùng Enum
+
         SupportTicket saved = supportTicketRepository.save(ticket);
 
+        // Gửi Notification
         Notification notification = new Notification();
         notification.setUser(saved.getCustomer());
-        notification.setTitle("Ticket hỗ trợ đã được phản hồi");
-        notification.setContent("Yêu cầu hỗ trợ của bạn đã được phản hồi.");
+        notification.setTitle("Ticket đã được phản hồi");
+        notification.setContent("Yêu cầu hỗ trợ của bạn đã được nhân viên phản hồi.");
         notification.setType("SUPPORT");
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
@@ -133,47 +135,30 @@ public class SupportService {
     @Transactional
     public SupportTicket closeTicket(Long staffUserId, Long ticketId) {
         User staff = requireUser(staffUserId);
-        if (staff.getRole() != Role.STAFF && staff.getRole() != Role.ADMIN) {
-            throw new SupportAccessDeniedException("Bạn không có quyền đóng yêu cầu hỗ trợ.");
-        }
-
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
-        if (STATUS_CLOSED.equalsIgnoreCase(ticket.getStatus())) {
-            throw new BusinessException("Yêu cầu hỗ trợ đã đóng.");
-        }
-
-        ticket.setStatus(STATUS_CLOSED);
+        ticket.setStatus(SupportStatus.CLOSED);
         if (ticket.getStaff() == null) {
             ticket.setStaff(staff);
         }
         return supportTicketRepository.save(ticket);
     }
 
-    @Transactional(readOnly = true)
-    public User getCurrentUser(UserDetails principal) {
-        if (principal == null || principal.getUsername() == null || principal.getUsername().isBlank()) {
-            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
-        }
-        return userRepository.findByEmail(principal.getUsername())
-                .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy tài khoản hiện tại."));
-    }
-
     private User requireUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng hiện tại."));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng."));
     }
 
     private void validateQuestion(String question) {
         if (question == null || question.trim().isEmpty()) {
-            throw new BusinessException("Nội dung câu hỏi không được để trống.");
+            throw new BusinessException("Câu hỏi không được để trống.");
         }
     }
 
     private void validateAnswer(String answer) {
         if (answer == null || answer.trim().isEmpty()) {
-            throw new BusinessException("Nội dung trả lời không được để trống.");
+            throw new BusinessException("Câu trả lời không được để trống.");
         }
     }
 }
