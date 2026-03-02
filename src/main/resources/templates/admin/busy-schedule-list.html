@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Absence Requests | GENZ CLINIC Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin/busy-list.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{admin/sidebar :: sidebar}"></div>
+
+<main class="main-content">
+    <header class="page-header">
+        <div class="header-title">
+            <h1>Dentist Absence Requests</h1>
+            <p>Review and manage time-off requests from dental professionals.</p>
+        </div>
+    </header>
+
+    <section class="table-section">
+        <div class="card">
+            <table>
+                <thead>
+                <tr>
+                    <th>Dentist Name</th>
+                    <th>Absence Period</th>
+                    <th>Reason</th>
+                    <th>Submitted Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="req : ${requests}">
+                    <td class="dentist-info">
+                        <div class="avatar" th:text="${#strings.substring(req.dentist.fullName,0,1)}">D</div>
+                        <span th:text="${req.dentist.fullName}">Dr. Name</span>
+                    </td>
+                    <td>
+                        <div class="date-range">
+                            <i class="far fa-calendar-alt"></i>
+                            <span th:text="${req.startDate} + ' → ' + ${req.endDate}">2026-01-01</span>
+                        </div>
+                    </td>
+                    <td class="reason-cell" th:text="${req.reason}">Reason text...</td>
+                    <td th:text="${#temporals.format(req.createdAt, 'yyyy-MM-dd HH:mm')}">Date</td>
+                    <td>
+                                <span th:class="'badge badge-' + ${#strings.toLowerCase(req.status)}"
+                                      th:text="${req.status}">PENDING</span>
+                    </td>
+                    <td class="action-buttons">
+                        <div th:if="${req.status == 'PENDING'}">
+                            <form th:action="@{/admin/busy-schedule/approve}" method="post">
+                                <input type="hidden" name="id" th:value="${req.id}">
+                                <button type="submit" class="btn btn-approve" onclick="return confirm('Approve this request?')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            <form th:action="@{/admin/busy-schedule/reject}" method="post">
+                                <input type="hidden" name="id" th:value="${req.id}">
+                                <button type="submit" class="btn btn-reject" onclick="return confirm('Reject this request?')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

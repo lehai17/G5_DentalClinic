@@ -1,6 +1,6 @@
 package com.dentalclinic.controller.admin;
 
-import com.dentalclinic.dto.StaffDTO;
+import com.dentalclinic.dto.admin.StaffDTO;
 import com.dentalclinic.model.profile.StaffProfile;
 import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.StaffProfileRepository;
@@ -16,9 +16,6 @@ import java.util.List;
 @Controller
 @RequestMapping("/admin/staff")
 public class AdminStaffController {
-
-    @Autowired
-    private StaffProfileRepository staffProfileRepository;
 
     @Autowired
     private StaffService staffService;
@@ -56,27 +53,34 @@ public class AdminStaffController {
 
     // 3. Xử lý lưu dữ liệu
     @PostMapping("/save")
-    public String processAddStaff(@ModelAttribute("staffDTO") StaffDTO dto, RedirectAttributes ra) {
+    public String processAddStaff(@jakarta.validation.Valid @ModelAttribute("staffDTO") StaffDTO dto,
+                                  org.springframework.validation.BindingResult bindingResult, Model model, RedirectAttributes ra) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("activePage", "staff");
+            return "admin/add-staff";
+        }
         try {
             staffService.saveStaff(dto);
             ra.addFlashAttribute("success", "Thêm nhân viên thành công!");
             return "redirect:/admin/staff";
         } catch (RuntimeException e) {
-            // Gửi thông báo lỗi quay lại màn hình Add
-            ra.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/staff/add";
+            // Giữ lại form và hiển thị lỗi
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("activePage", "staff");
+            return "admin/add-staff";
         }
     }
 
-    // 4. Xử lý khóa tài khoản nhân viên
     @PostMapping("/lock/{id}")
-    public String lockStaff(@PathVariable("id") Long userId) {
+    public String lockStaff(@PathVariable("id") Long userId, RedirectAttributes ra) {
         // userId này là ID của bảng User để khớp với hàm trong Service của bạn
         staffService.deactivateStaff(userId);
+        ra.addFlashAttribute("success", "Đã khóa nhân viên thành công!");
         return "redirect:/admin/staff";
     }
+
     @PostMapping("/unlock/{id}")
-    public String unlockStaff(@PathVariable Long id, RedirectAttributes ra) {
+    public String unlockStaff(@PathVariable("id") Long id, RedirectAttributes ra) {
         try {
             // Gọi hàm dùng chung để đưa trạng thái về ACTIVE
             staffService.updateStaffStatus(id, UserStatus.ACTIVE);
@@ -85,5 +89,49 @@ public class AdminStaffController {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/staff";
+    }
+
+    @GetMapping("/detail/{id}")
+    public String showStaffDetail(@PathVariable("id") Long id, Model model) {
+        com.dentalclinic.dto.admin.UpdateStaffDTO staff = staffService.getStaffForUpdate(id);
+        model.addAttribute("staff", staff);
+        model.addAttribute("activePage", "staff");
+        return "admin/staff-detail";
+    }
+
+    @GetMapping("/api/get/{id}")
+    @ResponseBody
+    public com.dentalclinic.dto.admin.UpdateStaffDTO getStaffData(@PathVariable("id") Long id) {
+        return staffService.getStaffForUpdate(id);
+    }
+
+    @PostMapping("/update/{id}")
+    public String updateStaff(@PathVariable("id") Long id,
+                              @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
+                              org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
+        if (bindingResult.hasErrors()) {
+            ra.addFlashAttribute("error", "Kiểm tra lại thông tin cập nhật (có thể do lỗi định dạng).");
+            return "redirect:/admin/staff";
+        }
+        try {
+            staffService.updateStaff(id, dto);
+            ra.addFlashAttribute("success", "Cập nhật nhân viên thành công!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/staff";
+    }
+
+    @DeleteMapping("/api/delete/{id}")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> deleteStaff(@PathVariable("id") Long id) {
+        try {
+            staffService.deleteStaff(id);
+            return org.springframework.http.ResponseEntity.ok()
+                    .body(java.util.Map.of("success", true, "message", "Xóa nhân viên thành công!"));
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest()
+                    .body(java.util.Map.of("success", false, "message", e.getMessage()));
+        }
     }
 }

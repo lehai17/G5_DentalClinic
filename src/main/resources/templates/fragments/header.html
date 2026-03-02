@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <nav th:fragment="header" class="navbar">
     <div class="navbar-container">
@@ -8,47 +8,80 @@
         </div>
 
         <ul class="navbar-menu">
-            <li><a onclick="scrollToSection('services')">Dịch Vụ</a></li>
-            <li><a onclick="scrollToSection('dentists')">Bác Sĩ</a></li>
+            <li><a onclick="scrollToSection('services')">Dịch vụ</a></li>
+            <li><a onclick="scrollToSection('dentists')">Bác sĩ</a></li>
             <li><a th:href="@{/blogs}">Blog</a></li>
-            <li><a href="#contact">Liên Hệ</a></li>
+            <li><a href="#contact">Liên hệ</a></li>
         </ul>
 
         <div class="navbar-actions" style="display:flex; align-items:center; gap:10px;">
-
-            <!-- CHƯA LOGIN: hiện Đăng nhập / Đăng ký -->
             <div sec:authorize="isAnonymous()" style="display:flex; gap:10px;">
                 <a th:href="@{/login}" class="navbar-cta" style="text-decoration:none;">Đăng nhập</a>
                 <a th:href="@{/register}" class="navbar-cta" style="text-decoration:none;">Đăng ký</a>
             </div>
 
-            <!-- ĐÃ LOGIN: hiện avatar -->
-            <div sec:authorize="isAuthenticated()" class="user-menu">
-                <button type="button" class="avatar-btn" onclick="toggleUserMenu(event)">
-                    <span th:text="${avatarLetter}">U</span>
-                </button>
+            <div sec:authorize="isAuthenticated()" class="user-menu-wrap" style="display:flex; gap:10px; align-items:center;">
 
-                <div id="userDropdown" class="dropdown hidden">
-                    <a class="dropdown-item" th:href="@{/profile}">Profile</a>
-                    <a class="dropdown-item" th:href="@{/change-password}">Change Password</a>
+                <div sec:authorize="hasRole('CUSTOMER')" class="notification-menu">
+                    <button type="button" class="avatar-btn notification-btn" onclick="toggleNotificationMenu(event)">
+                        <i class="bi bi-bell"></i>
+                        <span class="notification-badge"
+                              th:if="${customerUnreadNotificationCount > 0}"
+                              th:text="${customerUnreadNotificationCount > 99 ? '99+' : customerUnreadNotificationCount}">0</span>
+                    </button>
 
-                    <div class="dropdown-divider"></div>
+                    <div id="notificationDropdown" class="dropdown hidden notification-dropdown">
+                        <div class="dropdown-title">Thông báo</div>
 
-                    <form th:action="@{/logout}" method="post" style="margin:0;">
-                        <button type="submit" class="dropdown-item danger">Logout</button>
-                    </form>
+                        <div th:if="${#lists.isEmpty(customerNotificationPreview)}" class="dropdown-empty">
+                            Bạn chưa có thông báo nào.
+                        </div>
+
+                        <div th:if="${!#lists.isEmpty(customerNotificationPreview)}" class="notification-list">
+                            <a class="dropdown-item notification-item"
+                               th:each="n : ${customerNotificationPreview}"
+                               th:href="@{/customer/notifications/{id}/open(id=${n.id})}"
+                               th:classappend="${!n.read} ? ' unread'">
+                                <div class="notification-item-title" th:text="${n.title != null ? n.title : 'Thông báo'}">Tiêu đề</div>
+                                <div class="notification-item-content" th:text="${n.content != null ? n.content : 'Bạn có thông báo mới.'}">Nội dung</div>
+                                <div class="notification-item-time"
+                                     th:text="${n.createdAt != null ? #temporals.format(n.createdAt, 'dd/MM HH:mm') : '--/-- --:--'}">01/01 08:00</div>
+                            </a>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+                        <div class="notification-actions">
+                            <form th:action="@{/customer/notifications/read-all}" method="post" style="margin:0;">
+                                <input type="hidden" name="returnTo" value="/homepage">
+                                <button type="submit" class="dropdown-item notification-mark-read">Đánh dấu tất cả đã đọc</button>
+                            </form>
+                            <a class="dropdown-item notification-view-all" th:href="@{/customer/notifications}">Xem tất cả</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="user-menu">
+                    <button type="button" class="avatar-btn" onclick="toggleUserMenu(event)">
+                        <span th:text="${avatarLetter}">U</span>
+                    </button>
+
+                    <div id="userDropdown" class="dropdown hidden">
+                        <a class="dropdown-item" th:href="@{/profile}">Profile</a>
+                        <a class="dropdown-item" th:href="@{/change-password}">Change Password</a>
+                        <div class="dropdown-divider"></div>
+                        <form th:action="@{/logout}" method="post" style="margin:0;">
+                            <button type="submit" class="dropdown-item danger">Logout</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-
-
-            <a th:href="@{/appointments/book}" class="navbar-cta" style="text-decoration:none;">
+            <a th:href="@{/customer/book}" class="navbar-cta" style="text-decoration:none;">
                 Đặt Lịch Ngay
             </a>
-
         </div>
-
     </div>
+    <script th:src="@{/js/user-dropdown.js}" defer></script>
 </nav>
 </body>
 </html>

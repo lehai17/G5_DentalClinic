@@ -1,14 +1,29 @@
-package com.dentalclinic.dto;
+package com.dentalclinic.dto.admin;
 
 import com.dentalclinic.model.schedule.DentistSchedule;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Past;
 
 public class DentistDTO {
     private Long id;
+
+    @NotBlank(message = "Họ tên không được để trống")
     private String fullName;
+
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không hợp lệ")
     private String email;
+
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(regexp = "^(0|\\+84)[0-9]{9}$", message = "Số điện thoại không hợp lệ")
     private String phone;
 
     public String getTempPassword() {
@@ -19,7 +34,9 @@ public class DentistDTO {
         this.tempPassword = tempPassword;
     }
 
+    @NotBlank(message = "Mật khẩu tạm thời không được để trống")
     private String tempPassword;
+
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
@@ -28,9 +45,16 @@ public class DentistDTO {
         this.dateOfBirth = dateOfBirth;
     }
 
+    @NotNull(message = "Ngày sinh không được để trống")
+    @Past(message = "Ngày sinh phải ở quá khứ")
     private LocalDate dateOfBirth;
+
+    @NotBlank(message = "Giới tính không được để trống")
     private String gender;
+
+    @NotBlank(message = "Chuyên khoa không được để trống")
     private String specialization;
+
     private int experienceYears;
     private String qualifications;
     private String bio;
@@ -39,6 +63,26 @@ public class DentistDTO {
     private List<String> availableDays;
     private String shiftStartTime;
     private String shiftEndTime;
+
+    // Các trường phục vụ upload và hiển thị Avatar
+    private MultipartFile avatarFile;
+    private String avatarPath;
+
+    public MultipartFile getAvatarFile() {
+        return avatarFile;
+    }
+
+    public void setAvatarFile(MultipartFile avatarFile) {
+        this.avatarFile = avatarFile;
+    }
+
+    public String getAvatarPath() {
+        return avatarPath;
+    }
+
+    public void setAvatarPath(String avatarPath) {
+        this.avatarPath = avatarPath;
+    }
 
     public List<DentistSchedule> getSchedules() {
         return schedules;
@@ -49,6 +93,7 @@ public class DentistDTO {
     }
 
     private List<DentistSchedule> schedules;
+
     public String getShiftEndTime() {
         return shiftEndTime;
     }
@@ -88,8 +133,6 @@ public class DentistDTO {
     public void setPhone(String phone) {
         this.phone = phone;
     }
-
-
 
     public String getGender() {
         return gender;

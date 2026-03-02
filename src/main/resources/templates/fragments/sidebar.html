@@ -1,10 +1,7 @@
-<aside
-        th:fragment="sidebar"
-        id="sidebar"
-        class="patient-sidebar d-flex flex-column"
-
-
-xmlns:th="http://www.w3.org/1999/xhtml">
+<aside th:fragment="sidebar"
+       id="sidebar"
+       class="patient-sidebar d-flex flex-column"
+       xmlns:th="http://www.w3.org/1999/xhtml">
 
     <div class="d-flex align-items-center justify-content-between p-4 border-bottom sidebar-header">
         <div class="d-flex align-items-center gap-3 logo-wrapper">
@@ -22,6 +19,7 @@ xmlns:th="http://www.w3.org/1999/xhtml">
             <i class="bi bi-calendar-plus"></i>
             <span>Đặt lịch khám</span>
         </a>
+
         <a th:href="@{/customer/my-appointments}"
            th:classappend="${active == 'appointments'} ? ' active'" class="menu-item">
             <i class="bi bi-calendar2-check"></i>
@@ -55,10 +53,8 @@ xmlns:th="http://www.w3.org/1999/xhtml">
         <a th:href="@{/patient/feedback}"
            th:classappend="${active == 'feedback'} ? ' active'" class="menu-item">
             <i class="bi bi-chat-left-text"></i>
-            <span>Góp ý & Khiếu nại</span>
+            <span>Góp ý và khiếu nại</span>
         </a>
-
-
     </nav>
 
     <div class="p-3 border-top">
@@ -67,7 +63,4 @@ xmlns:th="http://www.w3.org/1999/xhtml">
             <span>Đăng xuất</span>
         </a>
     </div>
-
 </aside>
-
-

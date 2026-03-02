@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/staff/support")
-@PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+@PreAuthorize("hasRole('STAFF')")
 public class StaffSupportController {
 
     private final SupportService supportService;

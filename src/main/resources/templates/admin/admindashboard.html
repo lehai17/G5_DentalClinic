@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,6 +39,7 @@
             opacity: 0.6;
             letter-spacing: 1px;
         }
+
         .nav-item {
             padding: 12px 20px;
             display: flex;
@@ -72,6 +74,7 @@
             align-items: center;
             width: 300px;
         }
+
         .search-bar input {
             border: none;
             background: transparent;
@@ -79,11 +82,13 @@
             outline: none;
             width: 100%;
         }
+
         .header-actions {
             display: flex;
             align-items: center;
             gap: 20px;
         }
+
         .icon-btn {
             background: none;
             border: none;
@@ -92,6 +97,7 @@
             cursor: pointer;
             position: relative;
         }
+
         .admin-profile {
             display: flex;
             align-items: center;
@@ -109,36 +115,38 @@
         }
     </style>
 </head>
+
 <body>
 
 <!-- DÙNG SIDEBAR FRAGMENT -->
 <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+    <div class="main-content">
+        <div class="header">
+            <div class="search-bar">
+                <i class="fas fa-search" style="color: #707EAE;"></i>
+                <input type="text" placeholder="Search...">
+            </div>
 
-<div class="main-content">
-    <div class="header">
-        <div class="search-bar">
-            <i class="fas fa-search" style="color: #707EAE;"></i>
-            <input type="text" placeholder="Search...">
-        </div>
+            <div class="header-actions">
+                <button class="icon-btn"><i class="far fa-bell"></i></button>
 
-        <div class="header-actions">
-            <button class="icon-btn"><i class="far fa-bell"></i></button>
-
-            <div class="admin-profile">
-                <div class="admin-info">
-                    <span class="admin-name">Admin User</span>
-                    <span style="color: #707EAE;">Administrator</span>
+                <div class="admin-profile">
+                    <div class="admin-info">
+                        <span class="admin-name">Admin User</span>
+                        <span style="color: #707EAE;">Administrator</span>
+                    </div>
+                    <div class="avatar"></div>
                 </div>
                 <div class="avatar"></div>
             </div>
         </div>
-    </div>
 
-    <div class="content-body" style="margin-top: 30px;">
-        <h3>Welcome back, Admin!</h3>
-        <p>Select a category from the sidebar to manage GENZ CLINIC.</p>
+        <div class="content-body" style="margin-top: 30px;">
+            <h3>Welcome back, Admin!</h3>
+            <p>Select a category from the sidebar to manage GENZ CLINIC.</p>
+        </div>
     </div>
-</div>
 
 </body>
 </html>
+

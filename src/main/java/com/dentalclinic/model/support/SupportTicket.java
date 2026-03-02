@@ -1,7 +1,7 @@
 package com.dentalclinic.model.support;
 
-import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -13,35 +13,39 @@ public class SupportTicket {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id")
     private Appointment appointment;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
     private User customer;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "staff_id")
     private User staff;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dentist_id")
     private User dentist;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "title", columnDefinition = "NVARCHAR(255)")
+    private String title;
+
+    @Column(name = "question", columnDefinition = "NVARCHAR(MAX)")
     private String question;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "answer", columnDefinition = "NVARCHAR(MAX)")
     private String answer;
 
     @Enumerated(EnumType.STRING)
-    private SupportStatus status;
+    @Column(name = "status", length = 20)
+    private SupportStatus status = SupportStatus.OPEN;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // --- Constructor ---
+    // --- Constructors ---
     public SupportTicket() {
     }
 
@@ -78,12 +82,24 @@ public class SupportTicket {
         this.staff = staff;
     }
 
+    /**
+     * Alias cho Dentist/Staff để tương thích với các logic cũ.
+     * Thường dùng khi Dentist là người trả lời ticket trực tiếp.
+     */
     public User getDentist() {
         return dentist;
     }
 
     public void setDentist(User dentist) {
-        this.dentist = dentist;
+        this.staff = dentist;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getQuestion() {
@@ -116,5 +132,12 @@ public class SupportTicket {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Phương thức tiện ích để kiểm tra xem Ticket đã đóng chưa
+     */
+    public boolean isClosed() {
+        return SupportStatus.CLOSED.equals(this.status);
     }
 }

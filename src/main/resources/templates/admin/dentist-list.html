@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Dentists Management - GENZ CLINIC</title>
@@ -8,310 +9,659 @@
     <style>
         /* CSS nội bộ để định hình khung Dashboard theo mẫu của bạn */
         :root {
-            --sidebar-color: #1A237E; /* Màu Navy Blue từ mẫu GENZ CLINIC */
+            --sidebar-color: #1A237E;
+            /* Màu Navy Blue từ mẫu GENZ CLINIC */
             --bg-light: #F4F7FE;
             --navy-dark: #1B2559;
         }
-        body { display: flex; margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-light); min-height: 100vh; }
+
+        body {
+            display: flex;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+        }
 
         /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA BẠN */
-        .sidebar { width: 250px; background: var(--sidebar-color); min-height: 100vh; color: white; padding: 20px 0; flex-shrink: 0; }
-        .logo-section { padding: 0 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .nav-group { padding: 20px 0; }
-        .nav-label { font-size: 10px; text-transform: uppercase; padding: 0 20px 10px; opacity: 0.6; letter-spacing: 1px; }
-        .nav-item { padding: 12px 20px; display: flex; align-items: center; cursor: pointer; text-decoration: none; color: white; transition: 0.3s; }
-        .nav-item i { margin-right: 15px; width: 20px; }
-        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); border-left: 4px solid #fff; }
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            min-height: 100vh;
+            color: white;
+            padding: 20px 0;
+            flex-shrink: 0;
+        }
+
+        .logo-section {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-group {
+            padding: 20px 0;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 0 20px 10px;
+            opacity: 0.6;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            transition: 0.3s;
+        }
+
+        .nav-item i {
+            margin-right: 15px;
+            width: 20px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #fff;
+        }
 
         /* Main Content & Header - CẬP NHẬT KHOẢNG TRỐNG */
-        .main-content { flex: 1; padding: 30px; overflow-x: hidden; }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-x: hidden;
+        }
 
         /* Statistics Cards */
-        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .stat-header { display: flex; align-items: center; gap: 12px; color: #A3AED0; font-size: 11px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; }
-        .icon-box { width: 40px; height: 40px; border-radius: 12px; background: #F4F7FE; color: #1A237E; display: flex; align-items: center; justify-content: center; }
-        .stat-value { font-size: 28px; font-weight: 800; color: var(--navy-dark); }
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #A3AED0;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #F4F7FE;
+            color: #1A237E;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--navy-dark);
+        }
 
         /* Filter Bar */
-        .filter-bar { background: white; padding: 20px 30px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .filter-group { display: flex; gap: 25px; align-items: center; }
-        .filter-item { display: flex; align-items: center; gap: 10px; }
-        .filter-label { color: #A3AED0; font-weight: 700; font-size: 11px; }
-        select { border: 1px solid #E0E7FF; padding: 8px 15px; border-radius: 10px; color: var(--navy-dark); font-weight: 600; background: #F8FAFF; outline: none; }
+        .filter-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            color: #A3AED0;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        select {
+            border: 1px solid #E0E7FF;
+            padding: 8px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            font-weight: 600;
+            background: #F8FAFF;
+            outline: none;
+        }
 
         /* Data Table Styles */
-        .data-table-container { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: #A3AED0; font-size: 11px; text-transform: uppercase; padding: 15px; border-bottom: 1px solid #F4F7FE; }
-        td { padding: 18px 15px; color: var(--navy-dark); font-weight: 600; font-size: 14px; border-bottom: 1px solid #F4F7FE; }
+        .data-table-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            color: #A3AED0;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 15px;
+            border-bottom: 1px solid #F4F7FE;
+        }
+
+        td {
+            padding: 18px 15px;
+            color: var(--navy-dark);
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #F4F7FE;
+        }
 
         /* Badges & Actions */
-        .status-badge { padding: 6px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; }
-        .status-active { background: #E8F5E9; color: #4CAF50; }
-        .status-locked { background: #FFEBEE; color: #F44336; }
-        .action-btn { color: #A3AED0; cursor: pointer; font-size: 18px; transition: 0.2s; border: none; background: none; padding: 5px; }
-        .action-btn:hover { color: #1A237E; }
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-active {
+            background: #E8F5E9;
+            color: #4CAF50;
+        }
+
+        .status-locked {
+            background: #FFEBEE;
+            color: #F44336;
+        }
+
+        .action-btn {
+            color: #A3AED0;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.2s;
+            border: none;
+            background: none;
+            padding: 5px;
+        }
+
+        .action-btn:hover {
+            color: #1A237E;
+        }
+
         /* CSS CHO MODAL */
         .modal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-            width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(4px);
         }
+
         .modal-content {
-            background-color: white; margin: 5% auto; padding: 0;
-            width: 550px; border-radius: 20px; animation: slideDown 0.3s;
-            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            width: 550px;
+            border-radius: 20px;
+            animation: slideDown 0.3s;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
-        @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-header { padding: 20px 25px; border-bottom: 1px solid #F4F7FE; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 25px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .info-item { background: #F4F7FE; padding: 12px; border-radius: 12px; }
-        .info-item label { display: block; font-size: 10px; color: #A3AED0; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-        .info-item span { color: #1B2559; font-weight: 700; font-size: 14px; }
-        .close-btn { font-size: 24px; color: #A3AED0; cursor: pointer; transition: 0.2s; }
-        .close-btn:hover { color: #F44336; }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #F4F7FE;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-item {
+            background: #F4F7FE;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .info-item label {
+            display: block;
+            font-size: 10px;
+            color: #A3AED0;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .info-item span {
+            color: #1B2559;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .info-item span {
+            color: #1B2559;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            color: #A3AED0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #F44336;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .input-group label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #A3AED0;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            background: #F4F7FE;
+            border-radius: 12px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select,
+        .input-wrapper textarea {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            color: #2B3674;
+            font-size: 14px;
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-left: 4px solid #1A237E;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: #4CAF50;
+        }
+
+        .toast.error {
+            border-left-color: #F44336;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast.success .toast-icon {
+            color: #4CAF50;
+        }
+
+        .toast.error .toast-icon {
+            color: #F44336;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="sidebar">
-    <div class="logo-section">
-        <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
+    <div class="sidebar">
+        <div class="logo-section">
+            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
+        </div>
+
+        <div class="nav-group">
+            <a th:href="@{/admin/dashboard}" class="nav-item"
+                th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+
+            <div class="nav-label">User Management</div>
+            <a th:href="@{/admin/dentists}" class="nav-item"
+                th:classappend="${activePage == 'dentists' ? 'active' : ''}">
+                <i class="fas fa-stethoscope"></i> Dentists
+            </a>
+
+            <a th:href="@{/admin/staff}" class="nav-item" th:classappend="${activePage == 'staff' ? 'active' : ''}">
+                <i class="fas fa-users-cog"></i> Staff
+            </a>
+
+            <a th:href="@{/admin/customers}" class="nav-item">
+                <i class="fas fa-user-friends"></i> Customer
+            </a>
+
+            <div class="nav-label">Operations</div>
+            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
+        </div>
     </div>
 
-    <div class="nav-group">
-        <a th:href="@{/admin/dashboard}"
-           class="nav-item"
-           th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-            <i class="fas fa-th-large"></i> Dashboard
-        </a>
+    <div class="main-content">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 20px;">
 
-        <div class="nav-label">User Management</div>
-        <a th:href="@{/admin/dentists}"
-           class="nav-item"
-           th:classappend="${activePage == 'dentists' ? 'active' : ''}">
-            <i class="fas fa-stethoscope"></i> Dentists
-        </a>
+            <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">Dentist</h2>
 
-        <a th:href="@{/admin/staff}"
-           class="nav-item"
-           th:classappend="${activePage == 'staff' ? 'active' : ''}">
-            <i class="fas fa-users-cog"></i> Staff
-        </a>
+            <div class="search-wrapper" style="flex-grow: 1; max-width: 500px;">
+                <form th:action="@{/admin/dentists}" method="GET">
+                    <div class="input-group"
+                        style="background: #F4F7FE; border-radius: 12px; padding: 2px 15px; display: flex; align-items: center; border: 1px solid #E0E5F2;">
+                        <i class="fas fa-search" style="color: #A3AED0; margin-right: 12px;"></i>
+                        <input type="text" name="keyword" th:value="${keyword}"
+                            placeholder="Search by name or specialty..."
+                            style="border: none; background: transparent; outline: none; width: 100%; padding: 10px 0; color: #1B2559; font-weight: 500; font-size: 14px;">
+                    </div>
 
-        <a th:href="@{/admin/customers}" class="nav-item">
-            <i class="fas fa-user-friends"></i> Customer
-        </a>
+                </form>
+            </div>
 
-        <div class="nav-label">Operations</div>
-        <a href="#" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
-        <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
-    </div>
-</div>
+            <a th:href="@{/admin/dentists/add}"
+                style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2); min-width: fit-content;">
+                <i class="fas fa-plus"></i> Add Dentist
+            </a>
+        </div>
 
-<div class="main-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 20px;">
-
-        <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">Dentist</h2>
-
-        <div class="search-wrapper" style="flex-grow: 1; max-width: 500px;">
-            <form th:action="@{/admin/dentists}" method="GET">
-                <div class="input-group" style="background: #F4F7FE; border-radius: 12px; padding: 2px 15px; display: flex; align-items: center; border: 1px solid #E0E5F2;">
-                    <i class="fas fa-search" style="color: #A3AED0; margin-right: 12px;"></i>
-                    <input type="text"
-                           name="keyword"
-                           th:value="${keyword}"
-                           placeholder="Search by name or specialty..."
-                           style="border: none; background: transparent; outline: none; width: 100%; padding: 10px 0; color: #1B2559; font-weight: 500; font-size: 14px;">
+        <div class="stats-container">
+            <div class="stat-card">
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TOTAL DENTISTS
                 </div>
+                <div class="stat-value" th:text="${totalDentists}">0</div>
+            </div>
+            <div class="stat-card">
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">ON DUTY TODAY</div>
+                <div class="stat-value" th:text="${onDutyCount}">0</div>
+            </div>
+            <div class="stat-card">
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">AVG. PATIENT RATING
+                </div>
+                <div class="stat-value">4.8/5.0</div>
+            </div>
+        </div>
 
+        <div class="filter-bar">
+            <form th:action="@{/admin/dentists}" method="GET" class="filter-group">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="filter-label">SPECIALTY:</span>
+                    <select name="specialty" onchange="this.form.submit()">
+                        <option value="">All Specialties</option>
+                        <option value="Orthodontics" th:selected="${selectedSpecialty == 'Orthodontics'}">
+                            Orthodontics(Niềng răng)</option>
+                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">Endodontics(Nội
+                            nha)</option>
+                        <option value="Periodontics" th:selected="${selectedSpecialty == 'Periodontics'}">
+                            Periodontics(Chu nha)</option>
+                        <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">
+                            Prosthodontics(Phục hình)</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="filter-label">STATUS:</span>
+                    <select name="status" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
+                    </select>
+                </div>
             </form>
-        </div>
-
-        <a th:href="@{/admin/dentists/add}" style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2); min-width: fit-content;">
-            <i class="fas fa-plus"></i> Add Dentist
-        </a>
-    </div>
-
-    <div class="stats-container">
-        <div class="stat-card">
-            <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TOTAL DENTISTS</div>
-            <div class="stat-value" th:text="${totalDentists}">0</div>
-        </div>
-        <div class="stat-card">
-            <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">ON DUTY TODAY</div>
-            <div class="stat-value" th:text="${onDutyCount}">0</div>
-        </div>
-        <div class="stat-card">
-            <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">AVG. PATIENT RATING</div>
-            <div class="stat-value">4.8/5.0</div>
-        </div>
-    </div>
-
-    <div class="filter-bar">
-        <form th:action="@{/admin/dentists}" method="GET" class="filter-group">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="filter-label">SPECIALTY:</span>
-                <select name="specialty" onchange="this.form.submit()">
-                    <option value="">All Specialties</option>
-                    <option value="Orthodontics" th:selected="${selectedSpecialty == 'Orthodontics'}">Orthodontics(Niềng răng)</option>
-                    <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">Endodontics(Nội nha)</option>
-                    <option value="Periodontics" th:selected="${selectedSpecialty == 'Periodontics'}">Periodontics(Chu nha)</option>
-                    <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">Prosthodontics(Phục hình)</option>
-                </select>
+            <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
+                Showing <span th:text="${#lists.size(dentists)}">0</span> dentists
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="filter-label">STATUS:</span>
-                <select name="status" onchange="this.form.submit()">
-                    <option value="">All Status</option>
-                    <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
-                    <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
-                </select>
+        </div>
+
+        <div class="data-table-container">
+            <table th:if="${not #lists.isEmpty(dentists)}">
+                <thead>
+                    <tr>
+                        <th>Dentist</th>
+                        <th>Email</th>
+                        <th>Specialty</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="dentist : ${dentists}" th:id="'dentist-row-' + ${dentist.id}">
+                        <td class="py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; color: #1A237E; background-color: rgba(26, 35, 126, 0.1);">
+                                    <img th:if="${dentist.avatar}" th:src="@{${dentist.avatar}}"
+                                        style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">
+                                    <i th:unless="${dentist.avatar}" class="fas fa-user-md"></i>
+                                </div>
+                                <div>
+                                    <a th:href="@{/admin/dentists/detail/{id}(id=${dentist.id})}"
+                                        class="fw-bold text-decoration-none dentist-name-link"
+                                        style="color: #1B2559; font-size: 14px; transition: color 0.2s;"
+                                        onmouseover="this.style.color='#1A237E'"
+                                        onmouseout="this.style.color='#1B2559'">
+                                        <span th:text="${dentist.fullName}">Tên Bác Sĩ</span>
+                                    </a>
+                                    <div class="small text-muted mt-1">ID: #<span th:text="${dentist.id}"></span></div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="p-3">
+                            <span class="text-muted fw-medium" style="font-size: 14px;"
+                                th:text="${dentist.user.email ?: 'N/A'}">leomessi@gmail.com</span>
+                        </td>
+                        <td th:text="${dentist.specialization}">Specialty</td>
+
+                        <!--                <td>-->
+                        <!--                    <div th:if="${dentist.schedules != null and not #lists.isEmpty(dentist.schedules)}">-->
+                        <!--                        <div th:each="sch : ${dentist.schedules}" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">-->
+                        <!--            <span style="color: #1A237E; font-weight: 800; min-width: 35px;"-->
+                        <!--                  th:text="${#strings.capitalize(#strings.toLowerCase(#strings.substring(sch.dayOfWeek, 0, 3)))}">-->
+                        <!--                  Mon-->
+                        <!--            </span>-->
+
+                        <!--                            <span style="color: #707EAE; font-size: 13px;"-->
+                        <!--                                  th:text="${#temporals.format(sch.startTime, 'HH:mm') + ' - ' + #temporals.format(sch.endTime, 'HH:mm')}">-->
+                        <!--                  08:00 - 17:00-->
+                        <!--            </span>-->
+                        <!--                        </div>-->
+                        <!--                    </div>-->
+
+                        <!--                    <div th:if="${dentist.schedules == null or #lists.isEmpty(dentist.schedules)}"-->
+                        <!--                         style="color: #A3AED0; font-style: italic; font-size: 12px; padding: 5px 0;">-->
+                        <!--                        <i class="far fa-calendar-times" style="margin-right: 5px;"></i>Not scheduled-->
+                        <!--                    </div>-->
+                        <!--                </td>-->
+
+                        <td>
+                            <span class="status-badge"
+                                th:classappend="${dentist.user.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
+                                th:text="${dentist.user.status}">
+                                ACTIVE
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+
+                                <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${dentist.id} + ')'"
+                                    class="action-btn">
+                                    <i class="far fa-edit"></i>
+                                </a>
+
+                                <a href="javascript:void(0)" th:data-id="${dentist.id}"
+                                    th:data-name="${dentist.fullName}"
+                                    onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-name'))"
+                                    class="action-btn" style="color: #F44336;">
+                                    <i class="far fa-trash-alt"></i>
+                                </a>
+
+                                <form th:if="${#strings.equals(dentist.user.status, 'LOCKED')}"
+                                    th:action="@{/admin/dentists/unlock/{id}(id=${dentist.user.id})}" method="POST"
+                                    style="display:inline;">
+                                    <button type="submit" class="action-btn"
+                                        style="color: #4CAF50; border:none; background:none; cursor:pointer;"
+                                        onclick="return confirm('Mở khóa tài khoản bác sĩ này?')">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>
+                                </form>
+
+                                <form th:if="${#strings.equals(dentist.user.status, 'ACTIVE')}"
+                                    th:action="@{/admin/dentists/lock/{id}(id=${dentist.user.id})}" method="POST"
+                                    style="display:inline;">
+                                    <button type="submit" class="action-btn"
+                                        style="color: #F44336; border:none; background:none; cursor:pointer;"
+                                        onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
+                                        <i class="fas fa-user-lock"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 50px;">
+                <i class="fas fa-user-slash" style="font-size: 40px; color: #A3AED0; margin-bottom: 15px;"></i>
+                <h3 style="color: #A3AED0;">No dentists found</h3>
             </div>
-        </form>
-        <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
-            Showing <span th:text="${#lists.size(dentists)}">0</span> dentists
         </div>
     </div>
-
-    <div class="data-table-container">
-        <table th:if="${not #lists.isEmpty(dentists)}">
-            <thead>
-            <tr>
-                <th>Dentist</th>
-                <th>Email</th>
-                <th>Specialty</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="dentist : ${dentists}">
-                <td class="py-3">
-                    <div class="d-flex align-items-center">
-                        <a th:href="@{/admin/dentists/detail/{id}(id=${dentist.id})}"
-                           class="fw-bold text-decoration-none dentist-name-link"
-                           style="color: #1B2559; font-size: 14px; transition: all 0.2s; border-bottom: 1px solid #1B2559;">
-                            <span th:text="${dentist.fullName}">Tên Bác Sĩ</span>
-                        </a>
-                    </div>
-                </td>
-
-                <td class="p-3">
-            <span class="text-muted fw-medium" style="font-size: 14px;"
-                  th:text="${dentist.user.email ?: 'N/A'}">leomessi@gmail.com</span>
-                </td>
-                <td th:text="${dentist.specialization}">Specialty</td>
-
-<!--                <td>-->
-<!--                    <div th:if="${dentist.schedules != null and not #lists.isEmpty(dentist.schedules)}">-->
-<!--                        <div th:each="sch : ${dentist.schedules}" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">-->
-<!--            <span style="color: #1A237E; font-weight: 800; min-width: 35px;"-->
-<!--                  th:text="${#strings.capitalize(#strings.toLowerCase(#strings.substring(sch.dayOfWeek, 0, 3)))}">-->
-<!--                  Mon-->
-<!--            </span>-->
-
-<!--                            <span style="color: #707EAE; font-size: 13px;"-->
-<!--                                  th:text="${#temporals.format(sch.startTime, 'HH:mm') + ' - ' + #temporals.format(sch.endTime, 'HH:mm')}">-->
-<!--                  08:00 - 17:00-->
-<!--            </span>-->
-<!--                        </div>-->
-<!--                    </div>-->
-
-<!--                    <div th:if="${dentist.schedules == null or #lists.isEmpty(dentist.schedules)}"-->
-<!--                         style="color: #A3AED0; font-style: italic; font-size: 12px; padding: 5px 0;">-->
-<!--                        <i class="far fa-calendar-times" style="margin-right: 5px;"></i>Not scheduled-->
-<!--                    </div>-->
-<!--                </td>-->
-
-                <td>
-                    <span class="status-badge"
-                          th:classappend="${dentist.user.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
-                          th:text="${dentist.user.status}">
-                          ACTIVE
-                    </span>
-                </td>
-                <td>
-                <div style="display: flex; gap: 12px; align-items: center;">
-
-                    <a th:href="@{/admin/dentists/edit/{id}(id=${dentist.id})}" class="action-btn">
-                        <i class="far fa-edit"></i>
-                    </a>
-
-                    <form th:if="${#strings.equals(dentist.user.status, 'LOCKED')}"
-                          th:action="@{/admin/dentists/unlock/{id}(id=${dentist.user.id})}" method="POST" style="display:inline;">
-                        <button type="submit" class="action-btn" style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                onclick="return confirm('Mở khóa tài khoản bác sĩ này?')">
-                            <i class="fas fa-user-check"></i>
-                        </button>
-                    </form>
-
-                    <form th:if="${#strings.equals(dentist.user.status, 'ACTIVE')}"
-                          th:action="@{/admin/dentists/lock/{id}(id=${dentist.user.id})}" method="POST" style="display:inline;">
-                        <button type="submit" class="action-btn" style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
-                            <i class="fas fa-user-lock"></i>
-                        </button>
-                    </form>
+    <div class="modal fade" id="viewDentistModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="border-radius: 15px; border: none;">
+                <div class="modal-header" style="background: #1A237E; color: white;">
+                    <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi Tiết Hồ Sơ Bác Sĩ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-4 text-center border-end">
+                            <img id="viewAvatar" src="/img/default-avatar.png" class="rounded-circle mb-3"
+                                style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #f0f2f5;">
+                            <h4 id="viewFullName" style="color: #1B2559; font-weight: 700;">--</h4>
+                            <span id="viewSpecialty" class="badge bg-primary mb-2">--</span>
+                        </div>
 
-        <div class="empty-state" th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 50px;">
-            <i class="fas fa-user-slash" style="font-size: 40px; color: #A3AED0; margin-bottom: 15px;"></i>
-            <h3 style="color: #A3AED0;">No dentists found</h3>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="viewDentistModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border-radius: 15px; border: none;">
-            <div class="modal-header" style="background: #1A237E; color: white;">
-                <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi Tiết Hồ Sơ Bác Sĩ</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row">
-                    <div class="col-md-4 text-center border-end">
-                        <img id="viewAvatar" src="/img/default-avatar.png" class="rounded-circle mb-3"
-                             style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #f0f2f5;">
-                        <h4 id="viewFullName" style="color: #1B2559; font-weight: 700;">--</h4>
-                        <span id="viewSpecialty" class="badge bg-primary mb-2">--</span>
-                    </div>
-
-                    <div class="col-md-8">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <label class="text-muted small">Email Address</label>
-                                <p id="viewEmail" class="fw-bold">--</p>
-                            </div>
-                            <div class="col-6">
-                                <label class="text-muted small">Phone Number</label>
-                                <p id="viewPhone" class="fw-bold">--</p>
-                            </div>
-                            <div class="col-6">
-                                <label class="text-muted small">Date of Birth</label>
-                                <p id="viewDob" class="fw-bold">--</p>
-                            </div>
-                            <div class="col-6">
-                                <label class="text-muted small">Gender</label>
-                                <p id="viewGender" class="fw-bold">--</p>
-                            </div>
-                            <div class="col-6">
-                                <label class="text-muted small">Years of Experience</label>
-                                <p id="viewExp" class="fw-bold">--</p>
-                            </div>
-                            <div class="col-12">
-                                <label class="text-muted small">Qualifications & Certifications</label>
-                                <p id="viewQuals" class="p-2 bg-light rounded" style="font-size: 0.9rem;">--</p>
-                            </div>
-                            <div class="col-12">
-                                <label class="text-muted small">Work Schedule</label>
-                                <div id="viewSchedule" class="mt-1">
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="text-muted small">Email Address</label>
+                                    <p id="viewEmail" class="fw-bold">--</p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small">Phone Number</label>
+                                    <p id="viewPhone" class="fw-bold">--</p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small">Date of Birth</label>
+                                    <p id="viewDob" class="fw-bold">--</p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small">Gender</label>
+                                    <p id="viewGender" class="fw-bold">--</p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small">Years of Experience</label>
+                                    <p id="viewExp" class="fw-bold">--</p>
+                                </div>
+                                <div class="col-12">
+                                    <label class="text-muted small">Qualifications & Certifications</label>
+                                    <p id="viewQuals" class="p-2 bg-light rounded" style="font-size: 0.9rem;">--</p>
+                                </div>
+                                <div class="col-12">
+                                    <label class="text-muted small">Work Schedule</label>
+                                    <div id="viewSchedule" class="mt-1">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -320,7 +670,318 @@
             </div>
         </div>
     </div>
-</div>
-<script th:src="@{/js/admin/dentist-viewdetail.js}"></script>
+    </div>
+    <script th:src="@{/js/admin/dentist-viewdetail.js}"></script>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteDentistModal">
+        <div class="modal-content" style="width: 450px;">
+            <div class="modal-header">
+                <h5 style="margin: 0; color: #F44336; font-size: 18px;">
+                    <i class="fas fa-exclamation-triangle me-2" style="margin-right: 10px;"></i>Xác nhận xóa
+                </h5>
+                <span class="close-btn" onclick="closeDeleteModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="color: #1B2559; font-size: 15px; margin-bottom: 20px;">
+                    Bạn có chắc chắn muốn xóa nha sĩ <strong id="deleteDentistName"></strong> không? <br>
+                    <span style="color: #F44336; font-size: 13px;">Hành động này không thể hoàn tác.</span>
+                </p>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <button type="button" onclick="closeDeleteModal()"
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Hủy</button>
+                    <button type="button" onclick="confirmDeleteDentist()"
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa
+                        Nha Sĩ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Dentist Modal -->
+    <div class="modal" id="editDentistModal">
+        <div class="modal-content" style="width: 800px;">
+            <div class="modal-header">
+                <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-user-md me-2"
+                        style="color: #1A237E; margin-right: 10px;"></i>Edit Dentist Profile</h5>
+                <span class="close-btn" onclick="closeEditModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <form id="editDentistForm" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" id="editDentistId" name="id">
+
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Personal Information</h6>
+                    <div class="info-grid">
+                        <div style="grid-row: span 3; text-align: center;">
+                            <div class="avatar-circle"
+                                style="width: 120px; height: 120px; border-radius: 50%; background: #F4F7FE; display: flex; align-items: center; justify-content: center; position: relative; border: 2px dashed #D1D9E8; margin: 0 auto 10px;">
+                                <img id="editAvatarPreview" src="/img/default-avatar.png"
+                                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
+                                <i id="editAvatarPlaceholder" class="fas fa-user"
+                                    style="font-size: 35px; color: #D1D9E8;"></i>
+                                <button type="button" class="camera-btn"
+                                    style="position: absolute; bottom: 5px; right: 5px; background: #1A237E; color: white; width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;"
+                                    onclick="document.getElementById('editAvatarInput').click();">
+                                    <i class="fas fa-camera" style="font-size: 12px;"></i>
+                                </button>
+                            </div>
+                            <input type="file" id="editAvatarInput" name="avatarFile" accept="image/*"
+                                style="display: none;" onchange="previewEditAvatar(this)">
+                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">CHANGE PHOTO</small>
+                        </div>
+                        <script>
+                            function previewEditAvatar(input) {
+                                if (input.files && input.files[0]) {
+                                    var reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        document.getElementById('editAvatarPreview').src = e.target.result;
+                                        document.getElementById('editAvatarPreview').style.display = 'block';
+                                        document.getElementById('editAvatarPlaceholder').style.display = 'none';
+                                    }
+                                    reader.readAsDataURL(input.files[0]);
+                                }
+                            }
+                        </script>
+
+                        <div class="input-group">
+                            <label>Full Name</label>
+                            <div class="input-wrapper"><input type="text" id="editFullName" name="fullName" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper"><input type="email" id="editEmail" name="email" required></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Phone Number</label>
+                            <div class="input-wrapper"><input type="text" id="editPhone" name="phone" required
+                                    pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Date of Birth</label>
+                            <div class="input-wrapper"><input type="date" id="editDob" name="dateOfBirth" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Gender</label>
+                            <div class="input-wrapper">
+                                <select id="editGender" name="gender" required>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Status</label>
+                            <div class="input-wrapper">
+                                <select id="editStatus" name="status" required>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="LOCKED">Locked</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Professional Information</h6>
+                    <div class="info-grid">
+                        <div class="input-group">
+                            <label>Specialty</label>
+                            <div class="input-wrapper">
+                                <select id="editSpecialty" name="specialization" required>
+                                    <option value="Orthodontics">Orthodontics (Niềng răng)</option>
+                                    <option value="Endodontics">Endodontics (Nội nha)</option>
+                                    <option value="Periodontics">Periodontics (Chu nha)</option>
+                                    <option value="Prosthodontics">Prosthodontics (Phục hình)</option>
+                                    <option value="Oral Surgery">Oral Surgery (Phẫu thuật miệng)</option>
+                                    <option value="General Dentistry">General Dentistry (Nha khoa tổng quát)</option>
+                                    <option value="Pediatric Dentistry">Pediatric Dentistry (Nha khoa trẻ em)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Experience Years</label>
+                            <div class="input-wrapper"><input type="number" id="editExperienceYears"
+                                    name="experienceYears" min="0" required></div>
+                        </div>
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label>Biography</label>
+                            <div class="input-wrapper"><textarea id="editBio" name="bio" rows="3"
+                                    style="resize: vertical;"></textarea></div>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Work Schedule</h6>
+                    <div class="info-grid">
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label>Available Days</label>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
+                                        type="checkbox" name="availableDays" value="MONDAY"> Monday</label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
+                                        type="checkbox" name="availableDays" value="TUESDAY"> Tuesday</label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
+                                        type="checkbox" name="availableDays" value="WEDNESDAY"> Wednesday</label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
+                                        type="checkbox" name="availableDays" value="THURSDAY"> Thursday</label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
+                                        type="checkbox" name="availableDays" value="FRIDAY"> Friday</label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
+                                        type="checkbox" name="availableDays" value="SATURDAY"> Saturday</label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
+                                        type="checkbox" name="availableDays" value="SUNDAY"> Sunday</label>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Shift Start Time</label>
+                            <div class="input-wrapper"><input type="time" id="editShiftStartTime" name="shiftStartTime">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Shift End Time</label>
+                            <div class="input-wrapper"><input type="time" id="editShiftEndTime" name="shiftEndTime">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
+                        <button type="button" onclick="closeEditModal()"
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Cancel</button>
+                        <button type="submit"
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Save
+                            Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var successMsg = /*[[${success}]]*/ null;
+        var errorMsg = /*[[${error}]]*/ null;
+
+        // Xử lý Delete Logic
+        let dentistToDelete = null;
+
+        function openDeleteModal(id, name) {
+            dentistToDelete = id;
+            document.getElementById('deleteDentistName').innerText = name;
+            document.getElementById('deleteDentistModal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteDentistModal').style.display = 'none';
+            dentistToDelete = null;
+        }
+
+        function confirmDeleteDentist() {
+            if (!dentistToDelete) return;
+
+            fetch('/admin/dentists/api/delete/' + dentistToDelete, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    closeDeleteModal();
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        // Xóa dòng tương ứng khỏi DOM
+                        const row = document.getElementById('dentist-row-' + dentistToDelete);
+                        if (row) {
+                            row.remove();
+                        }
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    closeDeleteModal();
+                    showToast("Lỗi kết nối máy chủ", "error");
+                });
+        }
+
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type} show`;
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            toast.innerHTML = `<i class="fas ${icon} toast-icon"></i><span style="color: #1B2559; font-weight: 600; font-size: 14px;">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        if (successMsg) showToast(successMsg, 'success');
+        if (errorMsg) showToast(errorMsg, 'error');
+
+        function openEditModal(id) {
+            fetch('/admin/dentists/api/get/' + id)
+                .then(response => {
+                    if (!response.ok) throw new Error("Network error");
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('editDentistForm').action = '/admin/dentists/update/' + id;
+                    document.getElementById('editDentistId').value = data.id;
+                    document.getElementById('editFullName').value = data.fullName;
+                    document.getElementById('editEmail').value = data.email;
+                    document.getElementById('editPhone').value = data.phone;
+                    document.getElementById('editDob').value = data.dateOfBirth;
+                    document.getElementById('editGender').value = data.gender;
+                    document.getElementById('editStatus').value = data.status;
+
+                    document.getElementById('editSpecialty').value = data.specialization;
+                    document.getElementById('editExperienceYears').value = data.experienceYears;
+                    document.getElementById('editBio').value = data.bio;
+
+                    document.getElementById('editShiftStartTime').value = data.shiftStartTime || '';
+                    document.getElementById('editShiftEndTime').value = data.shiftEndTime || '';
+
+                    // Checkboxes cho availableDays
+                    const checkboxes = document.querySelectorAll('input[name="availableDays"]');
+                    checkboxes.forEach(cb => cb.checked = false);
+                    if (data.availableDays) {
+                        data.availableDays.forEach(day => {
+                            const cb = document.querySelector(`input[name="availableDays"][value="${day}"]`);
+                            if (cb) cb.checked = true;
+                        });
+                    }
+
+                    document.getElementById('editDentistModal').style.display = 'block';
+                })
+                .catch(error => {
+                    showToast("Cannot fetch data", "error");
+                });
+        }
+
+        function closeEditModal() {
+            document.getElementById('editDentistModal').style.display = 'none';
+        }
+
+        // Đóng Edit Modal khi click bên ngoài
+        window.addEventListener('click', function (event) {
+            let editModal = document.getElementById('editDentistModal');
+            if (event.target == editModal) {
+                closeEditModal();
+            }
+        });
+        /*]]>*/
+    </script>
 </body>
+
 </html>

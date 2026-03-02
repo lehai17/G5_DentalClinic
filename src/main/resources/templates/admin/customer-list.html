@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Management - GENZ CLINIC</title>
+    <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --sidebar-color: #1A237E;
+            --bg-light: #F4F7FE;
+            --navy-dark: #1B2559;
+        }
+
+        body {
+            display: flex;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            min-height: 100vh;
+            color: white;
+            padding: 20px 0;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-section {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-group {
+            padding: 20px 0;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 0 20px 10px;
+            opacity: 0.6;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            transition: 0.3s;
+        }
+
+        .nav-item i {
+            margin-right: 15px;
+            width: 20px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #fff;
+        }
+
+        /* Main Content & Header */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-x: hidden;
+            background-color: var(--bg-light);
+        }
+
+        /* Statistics Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #A3AED0;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .icon-box {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: #F4F7FE;
+            color: #1A237E;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--navy-dark);
+        }
+
+        .stat-subtext {
+            font-size: 12px;
+            color: #707EAE;
+            margin-top: 5px;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            color: #A3AED0;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .search-input {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            background: #F8FAFF;
+            outline: none;
+            width: 250px;
+            font-family: inherit;
+        }
+
+        select {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            font-weight: 600;
+            background: #F8FAFF;
+            outline: none;
+            min-width: 150px;
+            font-family: inherit;
+        }
+
+        /* Data Table Styles */
+        .data-table-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            color: #A3AED0;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 15px;
+            border-bottom: 1px solid #F4F7FE;
+        }
+
+        td {
+            padding: 18px 15px;
+            color: var(--navy-dark);
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #F4F7FE;
+            vertical-align: middle;
+        }
+
+        tr.clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        tr.clickable-row:hover {
+            background-color: #F8FAFF;
+        }
+
+        /* Badges & Actions */
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-active {
+            background: #E8F5E9;
+            color: #4CAF50;
+        }
+
+        .status-locked {
+            background: #FFEBEE;
+            color: #F44336;
+        }
+
+        .action-btn {
+            color: #1A237E;
+            background: #F4F7FE;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            background: #E0E7FF;
+        }
+
+        .loader {
+            display: none;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1A237E;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="logo-section">
+            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
+        </div>
+
+        <div class="nav-group" style="flex-grow: 1;">
+            <a th:href="@{/admin/dashboard}" class="nav-item">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+
+            <div class="nav-label">User Management</div>
+            <a th:href="@{/admin/dentists}" class="nav-item">
+                <i class="fas fa-stethoscope"></i> Dentists
+            </a>
+
+            <a th:href="@{/admin/staff}" class="nav-item">
+                <i class="fas fa-users-cog"></i> Staff
+            </a>
+
+            <a th:href="@{/admin/customers}" class="nav-item active">
+                <i class="fas fa-user-friends"></i> Customer
+            </a>
+
+            <div class="nav-label">Operations</div>
+            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
+        </div>
+
+        <div class="nav-group"
+            style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-bottom: 20px;">
+            <a th:href="@{/login}" class="nav-item logout-item" style="color: #FFB7B7;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Customer Management</h2>
+                <p style="color: #A3AED0; margin: 5px 0 0 0; font-size: 14px;">Manage patient profiles and appointment
+                    history</p>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="icon-box"><i class="fas fa-users"></i></div> Total Customers
+                </div>
+                <div class="stat-value" id="stat-total" th:text="${stats.totalCustomers}">0</div>
+                <div class="stat-subtext">All registered patients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="icon-box" style="background: #E8F5E9; color: #4CAF50;"><i class="fas fa-user-plus"></i>
+                    </div> New This Month
+                </div>
+                <div class="stat-value" id="stat-new" th:text="${stats.newCustomersThisMonth}">0</div>
+                <div class="stat-subtext">Patients joined recently</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="icon-box" style="background: #FFF3E0; color: #FF9800;"><i
+                            class="fas fa-calendar-check"></i></div> Current Appointments
+                </div>
+                <div class="stat-value" id="stat-appt" th:text="${stats.customersWithAppointments}">0</div>
+                <div class="stat-subtext">Patients with upcoming slots</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <div class="filter-item">
+                    <i class="fas fa-search" style="color: #A3AED0; position: absolute; margin-left: 15px;"></i>
+                    <input type="text" id="searchInput" class="search-input" style="padding-left: 40px;"
+                        placeholder="Search name, email, phone..." th:value="${selectedKeyword}">
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">STATUS:</span>
+                    <select id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">SERVICE HISTORY:</span>
+                    <select id="serviceFilter" style="max-width: 250px;">
+                        <option value="">Any Service</option>
+                        <option th:each="srv : ${services}" th:value="${srv.id}" th:text="${srv.name}"
+                            th:selected="${selectedServiceId == srv.id}">Service Name</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="loader" id="searchLoader"></div>
+                <div style="color: #A3AED0; font-size: 13px; font-weight: 700; margin-left: 15px;" id="resultCount">
+                    Showing <span th:text="${#lists.size(customers)}">0</span> customers
+                </div>
+            </div>
+        </div>
+
+        <div class="data-table-container">
+            <div id="tableContainer">
+                <!-- Fragment content will be loaded here -->
+                <div th:replace="admin/fragments/customer-table :: customer-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Debounce function to delay search execution while tying
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // The search API call
+        function performSearch() {
+            const keyword = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            const serviceId = document.getElementById('serviceFilter').value;
+
+            const loader = document.getElementById('searchLoader');
+            loader.style.display = 'inline-block';
+
+            // Construct URL parameters
+            const params = new URLSearchParams();
+            if (keyword) params.append('keyword', keyword);
+            if (status) params.append('status', status);
+            if (serviceId) params.append('serviceId', serviceId);
+
+            fetch(`/admin/customers/api/search?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text();
+                })
+                .then(htmlStr => {
+                    document.getElementById('tableContainer').innerHTML = htmlStr;
+
+                    // Update count
+                    const rows = document.querySelectorAll('#tableContainer tbody tr:not(.empty-state-row)');
+                    document.getElementById('resultCount').innerHTML = `Showing <span>${rows.length}</span> customers`;
+                })
+                .catch(error => {
+                    console.error('Search failed:', error);
+                })
+                .finally(() => {
+                    loader.style.display = 'none';
+                });
+        }
+
+        // Add event listeners
+        document.getElementById('searchInput').addEventListener('keyup', debounce(performSearch, 500));
+        document.getElementById('statusFilter').addEventListener('change', performSearch);
+        document.getElementById('serviceFilter').addEventListener('change', performSearch);
+
+        // Click on row to go to details
+        function goToDetail(id) {
+            window.location.href = `/admin/customers/detail/${id}`;
+        }
+    </script>
+</body>
+
+</html>

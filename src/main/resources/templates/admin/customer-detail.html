@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Detail - GENZ CLINIC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-color: #1A237E;
+            --bg-light: #F4F7FE;
+        }
+
+        body {
+            display: flex;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            min-height: 100vh;
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-section {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-group {
+            padding: 20px 0;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 0 20px 10px;
+            opacity: 0.6;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            transition: 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item i {
+            margin-right: 15px;
+            width: 20px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #fff;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            padding: 0;
+        }
+
+        .bg-primary-soft {
+            background-color: rgba(26, 35, 126, 0.1);
+            color: #1A237E !important;
+        }
+
+        .bg-success-soft {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4CAF50 !important;
+        }
+
+        .bg-warning-soft {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: #FF9800 !important;
+        }
+
+        .bg-info-soft {
+            background-color: rgba(33, 150, 243, 0.1);
+            color: #2196F3 !important;
+        }
+
+        .rounded-4 {
+            border-radius: 1.25rem !important;
+        }
+
+        .table thead th {
+            color: #A3AED0;
+            text-transform: uppercase;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="logo-section">
+            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
+        </div>
+
+        <div class="nav-group" style="flex-grow: 1;">
+            <a th:href="@{/admin/dashboard}" class="nav-item">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+
+            <div class="nav-label">User Management</div>
+            <a th:href="@{/admin/dentists}" class="nav-item">
+                <i class="fas fa-stethoscope"></i> Dentists
+            </a>
+
+            <a th:href="@{/admin/staff}" class="nav-item">
+                <i class="fas fa-users-cog"></i> Staff
+            </a>
+
+            <a th:href="@{/admin/customers}" class="nav-item active">
+                <i class="fas fa-user-friends"></i> Customer
+            </a>
+
+            <div class="nav-label">Operations</div>
+            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
+        </div>
+
+        <div class="nav-group"
+            style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-bottom: 20px;">
+            <a th:href="@{/login}" class="nav-item logout-item" style="color: #FFB7B7;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-wrapper p-4" style="background-color: #F4F7FE; min-height: 100vh;">
+        <div class="container-fluid">
+            <a th:href="@{/admin/customers}" class="btn btn-link text-decoration-none fw-bold mb-4 p-0"
+                style="color: #1A237E;">
+                <i class="fas fa-arrow-left me-2"></i> Back to Customer List
+            </a>
+
+            <div class="row g-4 border-0 mb-4">
+                <!-- Customer Profile Card -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm rounded-4 p-4 text-center h-100"
+                        style="background: white; border: none;">
+                        <div class="position-relative d-inline-block mb-4 mt-3">
+                            <div
+                                style="width: 150px; height: 150px; border-radius: 50%; background: #F4F7FE; color: #1A237E; display: flex; align-items: center; justify-content: center; font-size: 60px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+
+                        <h3 th:text="${customer.fullName}" class="fw-bold mb-1" style="color: #1B2559;">Customer Name
+                        </h3>
+                        <p class="text-muted mb-3" style="font-size: 14px;">
+                            ID: #<span th:text="${customer.id}">ID</span>
+                        </p>
+
+                        <div class="mb-4">
+                            <span class="status-badge"
+                                th:classappend="${customer.status.name() == 'ACTIVE' ? 'bg-success-soft text-success' : 'bg-danger text-white'}"
+                                th:text="${customer.status}">
+                            </span>
+                        </div>
+
+                        <div class="text-start mt-2 p-3 rounded-4" style="background: #f4f7fe;">
+                            <label class="text-uppercase text-muted fw-bold mb-2"
+                                style="font-size: 11px; letter-spacing: 1px;">Account Info</label>
+
+                            <div class="d-flex align-items-center mb-2" style="font-size: 13px;">
+                                <i class="far fa-calendar-alt text-muted me-2" style="width: 20px;"></i>
+                                <span class="text-muted me-1">Joined: </span>
+                                <span class="fw-bold text-dark"
+                                    th:text="${#temporals.format(customer.createdAt, 'dd/MM/yyyy')}">Date</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Info Card -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm rounded-4 p-4 mb-4"
+                        style="background: white; border: none; height: 100%;">
+                        <h5 class="fw-bold mb-4" style="color: #1B2559;">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary-soft p-2 rounded-3 me-3">
+                                    <i class="fas fa-id-card text-primary"></i>
+                                </div>
+                                Personal Details
+                            </div>
+                        </h5>
+
+                        <div class="row g-4 mt-1">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-bold small mb-1"
+                                    style="font-size: 10px; letter-spacing: 0.5px;">EMAIL ADDRESS</label>
+                                <div class="d-flex align-items-center p-3 rounded-4"
+                                    style="background: #f4f7fe; border: 1px solid #E0E7FF;">
+                                    <i class="fas fa-envelope text-primary me-3"></i>
+                                    <span th:text="${customer.email}" class="fw-semibold text-dark">email</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-bold small mb-1"
+                                    style="font-size: 10px; letter-spacing: 0.5px;">PHONE NUMBER</label>
+                                <div class="d-flex align-items-center p-3 rounded-4"
+                                    style="background: #f4f7fe; border: 1px solid #E0E7FF;">
+                                    <i class="fas fa-phone-alt text-primary me-3"></i>
+                                    <span th:text="${customer.phone ?: 'Not Provided'}"
+                                        class="fw-semibold text-dark">phone</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-bold small mb-1"
+                                    style="font-size: 10px; letter-spacing: 0.5px;">DATE OF BIRTH</label>
+                                <div class="d-flex align-items-center p-3 rounded-4"
+                                    style="background: #f4f7fe; border: 1px solid #E0E7FF;">
+                                    <i class="fas fa-birthday-cake text-primary me-3"></i>
+                                    <span
+                                        th:text="${customer.dateOfBirth != null ? #temporals.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Not Provided'}"
+                                        class="fw-semibold text-dark">dob</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-bold small mb-1"
+                                    style="font-size: 10px; letter-spacing: 0.5px;">GENDER</label>
+                                <div class="d-flex align-items-center p-3 rounded-4"
+                                    style="background: #f4f7fe; border: 1px solid #E0E7FF;">
+                                    <i class="fas fa-venus-mars text-primary me-3"></i>
+                                    <span th:text="${customer.gender ?: 'Not Provided'}"
+                                        class="fw-semibold text-dark">gender</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted fw-bold small mb-1"
+                                    style="font-size: 10px; letter-spacing: 0.5px;">HOME ADDRESS</label>
+                                <div class="d-flex align-items-center p-3 rounded-4"
+                                    style="background: #f4f7fe; border: 1px solid #E0E7FF;">
+                                    <i class="fas fa-map-marker-alt text-primary me-3"></i>
+                                    <span th:text="${customer.address ?: 'Address not provided yet'}"
+                                        class="fw-semibold text-dark">address</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Appointments -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: white;">
+                <h5 class="fw-bold mb-4" style="color: #1B2559;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning-soft p-2 rounded-3 me-3">
+                            <i class="far fa-calendar-check mt-1"></i>
+                        </div>
+                        Upcoming Appointments
+                    </div>
+                </h5>
+
+                <div class="table-responsive rounded-4 border" style="border-color: #E0E7FF !important;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background: #f4f7fe;">
+                            <tr>
+                                <th class="border-0 p-3">Date & Time</th>
+                                <th class="border-0 p-3">Service</th>
+                                <th class="border-0 p-3">Dentist</th>
+                                <th class="border-0 p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="apt : ${upcoming}" class="border-bottom"
+                                style="border-color: #F4F7FE !important;">
+                                <td class="p-3">
+                                    <div class="fw-bold" style="color: #1B2559;"
+                                        th:text="${#temporals.format(apt.date, 'dd/MM/yyyy')}">Date</div>
+                                    <div class="small text-muted">
+                                        <i class="far fa-clock me-1"></i>
+                                        <span th:text="${#temporals.format(apt.startTime, 'HH:mm')}">Time</span>
+                                    </div>
+                                </td>
+                                <td class="p-3 fw-semibold text-dark" th:text="${apt.service.name}">Service</td>
+                                <td class="p-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width: 25px; height: 25px;">
+                                            <i class="fas fa-user-md" style="font-size: 10px;"></i>
+                                        </div>
+                                        <span class="text-dark" th:text="${apt.dentist.fullName}">Dr. Name</span>
+                                    </div>
+                                </td>
+                                <td class="p-3">
+                                    <span class="status-badge bg-warning-soft" th:text="${apt.status}">PENDING</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(upcoming)}">
+                                <td colspan="4" class="text-center text-muted py-5">
+                                    <div class="mb-2"><i class="far fa-calendar-times fs-2 fw-light"
+                                            style="opacity: 0.3;"></i></div>
+                                    <p class="mb-0">No upcoming appointments scheduled</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Treatment History -->
+            <div class="card border-0 shadow-sm rounded-4 p-4" style="background: white;">
+                <h5 class="fw-bold mb-4" style="color: #1B2559;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success-soft p-2 rounded-3 me-3">
+                            <i class="fas fa-notes-medical mt-1"></i>
+                        </div>
+                        Treatment History
+                    </div>
+                </h5>
+
+                <div class="table-responsive rounded-4 border" style="border-color: #E0E7FF !important;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background: #f4f7fe;">
+                            <tr>
+                                <th class="border-0 p-3">Date</th>
+                                <th class="border-0 p-3">Service</th>
+                                <th class="border-0 p-3">Dentist</th>
+                                <th class="border-0 p-3">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="apt : ${history}" class="border-bottom"
+                                style="border-color: #F4F7FE !important;">
+                                <td class="p-3">
+                                    <div class="fw-bold" style="color: #1B2559;"
+                                        th:text="${#temporals.format(apt.date, 'dd/MM/yyyy')}">Date</div>
+                                </td>
+                                <td class="p-3 text-dark fw-semibold" th:text="${apt.service.name}">Service Name</td>
+                                <td class="p-3 text-dark" th:text="${'Dr. ' + apt.dentist.fullName}">Dentist</td>
+                                <td class="p-3 text-muted small" th:text="${apt.notes ?: '-'}">Notes</td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(history)}">
+                                <td colspan="4" class="text-center text-muted py-5">
+                                    <div class="mb-2"><i class="fas fa-file-medical-alt fs-2 fw-light"
+                                            style="opacity: 0.3;"></i></div>
+                                    <p class="mb-0">No past treatment history found</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

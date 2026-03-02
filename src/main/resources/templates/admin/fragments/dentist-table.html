@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="dentist-list">
+        <table th:if="${not #lists.isEmpty(dentists)}">
+            <tr th:each="dentist : ${dentists}">
+                <thead>
+                    <tr>
+                        <th>Dentist</th>
+                        <th>Email</th>
+                        <th>Specialty</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="dentist : ${dentists}">
+                        <td class="py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 40px; height: 40px; color: #1A237E;">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <div>
+                                    <a th:href="@{/admin/dentists/detail/{id}(id=${dentist.id})}"
+                                        class="fw-bold text-decoration-none dentist-name-link"
+                                        style="color: #1B2559; font-size: 14px; transition: color 0.2s;"
+                                        onmouseover="this.style.color='#1A237E'"
+                                        onmouseout="this.style.color='#1B2559'">
+                                        <span th:text="${dentist.fullName}">Tên Bác Sĩ</span>
+                                    </a>
+                                    <div class="small text-muted mt-1">ID: #<span th:text="${dentist.id}"></span></div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="p-3">
+                            <span class="text-muted fw-medium" style="font-size: 14px;"
+                                th:text="${dentist.email ?: 'N/A'}">leomessi@gmail.com</span>
+                        </td>
+                        <td th:text="${dentist.specialization}">Specialty</td>
+
+                        <td>
+                            <span class="status-badge"
+                                th:classappend="${dentist.status == 'ACTIVE' ? 'status-active' : 'status-locked'}"
+                                th:text="${dentist.status}">ACTIVE</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <a th:href="@{/admin/dentists/edit/{id}(id=${dentist.id})}" class="action-btn">
+                                    <i class="far fa-edit"></i>
+                                </a>
+
+                                <form th:if="${dentist.status == 'LOCKED'}"
+                                    th:action="@{/admin/dentists/unlock/{id}(id=${dentist.userId})}" method="POST"
+                                    style="display:inline;">
+                                    <button type="submit" class="action-btn"
+                                        style="color: #4CAF50; border:none; background:none; cursor:pointer;"
+                                        onclick="return confirm('Mở khóa tài khoản bác sĩ này?')">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>
+                                </form>
+
+                                <form th:if="${dentist.status == 'ACTIVE'}"
+                                    th:action="@{/admin/dentists/lock/{id}(id=${dentist.userId})}" method="POST"
+                                    style="display:inline;">
+                                    <button type="submit" class="action-btn"
+                                        style="color: #F44336; border:none; background:none; cursor:pointer;"
+                                        onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
+                                        <i class="fas fa-user-lock"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+        </table>
+
+        <div th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 40px; color: #A3AED0;">
+            <i class="fas fa-search mb-3" style="font-size: 40px; opacity: 0.3;"></i>
+            <p>Không tìm thấy bác sĩ nào khớp với từ khóa của bạn.</p>
+        </div>
+    </div>
+</body>
+
+</html>
