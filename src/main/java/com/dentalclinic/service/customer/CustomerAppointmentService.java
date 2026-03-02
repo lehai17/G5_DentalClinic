@@ -20,6 +20,7 @@ import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.SlotRepository;
 import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -62,17 +63,20 @@ public class CustomerAppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final ServiceRepository serviceRepository;
     private final SlotRepository slotRepository;
+    private final NotificationService notificationService;
 
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
                                       UserRepository userRepository,
                                       AppointmentRepository appointmentRepository,
                                       ServiceRepository serviceRepository,
-                                      SlotRepository slotRepository) {
+                                      SlotRepository slotRepository,
+                                      NotificationService notificationService) {
         this.customerProfileRepository = customerProfileRepository;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
         this.serviceRepository = serviceRepository;
         this.slotRepository = slotRepository;
+        this.notificationService = notificationService;
     }
 
     public static int calculateSlotsNeeded(int durationMinutes) {
@@ -115,18 +119,20 @@ public class CustomerAppointmentService {
         validateNoCustomerOverlap(user.getId(), start.toLocalDate(), start.toLocalTime(), end.toLocalTime(), null);
 
         List<Slot> reserved = reserveSlots(start, slotsNeeded);
-        if (reserved.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Slot đã hết chỗ.");
-        return toDto(createPendingAppointment(customer, service, reserved,
-                request.getContactChannel().trim().toUpperCase(), request.getContactValue().trim(), request.getPatientNote()));
+        if (reserved.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Slot Ä‘Ã£ háº¿t chá»—.");
+        Appointment created = createPendingAppointment(customer, service, reserved,
+                request.getContactChannel().trim().toUpperCase(), request.getContactValue().trim(), request.getPatientNote());
+        notificationService.notifyBookingCreated(created);
+        return toDto(created);
     }
 
     @Transactional
     public AppointmentDto rescheduleAppointment(Long userId, Long appointmentId, RescheduleAppointmentRequest request) {
         if (request == null || request.getSelectedDate() == null || request.getSelectedTime() == null) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ngày và giờ đổi lịch là bắt buộc.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "NgÃ y vÃ  giá» Ä‘á»•i lá»‹ch lÃ  báº¯t buá»™c.");
         }
         Appointment a = appointmentRepository.findByIdWithSlotsAndCustomerUserId(appointmentId, userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
         ensureRescheduleAllowed(a);
 
         Services service = validateService(a.getService() != null ? a.getService().getId() : null);
@@ -139,7 +145,7 @@ public class CustomerAppointmentService {
 
         List<Slot> oldSlots = a.getAppointmentSlots().stream().map(AppointmentSlot::getSlot).collect(Collectors.toCollection(ArrayList::new));
         List<Slot> newSlots = reserveSlots(newStart, slotsNeeded);
-        if (newSlots.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Slot đã hết chỗ.");
+        if (newSlots.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Slot Ä‘Ã£ háº¿t chá»—.");
 
         a.setDate(newStart.toLocalDate());
         a.setStartTime(newStart.toLocalTime());
@@ -148,6 +154,7 @@ public class CustomerAppointmentService {
         for (int i = 0; i < newSlots.size(); i++) a.addAppointmentSlot(new AppointmentSlot(a, newSlots.get(i), i));
         Appointment saved = appointmentRepository.save(a);
         releaseSlots(oldSlots);
+        notificationService.notifyBookingUpdated(saved, "Thay đổi thời gian khám");
         return toDto(saved);
     }
 
@@ -157,13 +164,17 @@ public class CustomerAppointmentService {
     @Transactional
     public AppointmentDto cancelAppointment(Long userId, Long appointmentId) {
         Appointment a = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
         ensureCancelAllowed(a);
         return toDto(cancelAppointmentEntity(appointmentId, null));
     }
 
     @Transactional
-    public Appointment cancelAppointmentByStaff(Long appointmentId, String reason) { return cancelAppointmentEntity(appointmentId, reason); }
+    public Appointment cancelAppointmentByStaff(Long appointmentId, String reason) {
+        Appointment cancelled = cancelAppointmentEntity(appointmentId, reason);
+        notificationService.notifyBookingCancelled(cancelled, reason);
+        return cancelled;
+    }
 
     public List<AppointmentDto> getMyAppointments(Long userId) {
         return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream().map(this::toDto).collect(Collectors.toList());
@@ -239,10 +250,10 @@ public class CustomerAppointmentService {
 
     @Transactional
     private List<Slot> reserveSlots(LocalDateTime startDateTime, int slotsNeeded) {
-        if (!startDateTime.isAfter(nowDateTime())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
-        if (slotsNeeded <= 0) throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thời lượng đặt lịch không hợp lệ.");
+        if (!startDateTime.isAfter(nowDateTime())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "KhÃ´ng thá»ƒ Ä‘áº·t lá»‹ch trong quÃ¡ khá»©.");
+        if (slotsNeeded <= 0) throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thá»i lÆ°á»£ng Ä‘áº·t lá»‹ch khÃ´ng há»£p lá»‡.");
         LocalDateTime endDateTime = startDateTime.plusMinutes((long) slotsNeeded * SLOT_MIN);
-        if (!isInsideWorkingWindow(startDateTime, endDateTime)) throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngoài giờ làm việc.");
+        if (!isInsideWorkingWindow(startDateTime, endDateTime)) throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thá»i gian náº±m ngoÃ i giá» lÃ m viá»‡c.");
 
         List<Slot> locked = slotRepository.findActiveSlotsForUpdate(startDateTime, endDateTime);
         if (locked.size() != slotsNeeded) return new ArrayList<>();
@@ -257,8 +268,8 @@ public class CustomerAppointmentService {
     private void releaseSlots(List<Slot> slots) {
         for (Slot s : slots) {
             Slot locked = slotRepository.findBySlotTimeAndActiveTrueForUpdate(s.getSlotTime())
-                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
-            if (locked.getBookedCount() <= 0) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dữ liệu slot không hợp lệ.");
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giá» khÃ´ng tá»“n táº¡i."));
+            if (locked.getBookedCount() <= 0) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dá»¯ liá»‡u slot khÃ´ng há»£p lá»‡.");
             locked.setBookedCount(locked.getBookedCount() - 1);
             slotRepository.save(locked);
         }
@@ -267,7 +278,7 @@ public class CustomerAppointmentService {
     @Transactional
     private Appointment createPendingAppointment(CustomerProfile customer, Services service, List<Slot> reservedSlots,
                                                  String contactChannel, String contactValue, String notes) {
-        if (reservedSlots.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "Không có slot được giữ.");
+        if (reservedSlots.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "KhÃ´ng cÃ³ slot Ä‘Æ°á»£c giá»¯.");
         Slot first = reservedSlots.get(0), last = reservedSlots.get(reservedSlots.size() - 1);
         Appointment a = new Appointment();
         a.setCustomer(customer); a.setService(service);
@@ -281,9 +292,9 @@ public class CustomerAppointmentService {
     @Transactional
     private Appointment confirmAppointmentEntity(Long appointmentId) {
         Appointment a = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
         if (a.getStatus() != AppointmentStatus.PENDING && a.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể xác nhận lịch hẹn ở trạng thái hiện tại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "KhÃ´ng thá»ƒ xÃ¡c nháº­n lá»‹ch háº¹n á»Ÿ tráº¡ng thÃ¡i hiá»‡n táº¡i.");
         }
         a.setStatus(AppointmentStatus.CONFIRMED);
         return appointmentRepository.save(a);
@@ -292,9 +303,9 @@ public class CustomerAppointmentService {
     @Transactional
     private Appointment cancelAppointmentEntity(Long appointmentId, String reason) {
         Appointment a = appointmentRepository.findByIdWithSlots(appointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
         if (a.getStatus() == AppointmentStatus.CANCELLED || a.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "KhÃ´ng thá»ƒ há»§y lá»‹ch vá»›i tráº¡ng thÃ¡i hiá»‡n táº¡i.");
         }
         List<Slot> toRelease = a.getAppointmentSlots().stream().map(AppointmentSlot::getSlot).toList();
         a.setStatus(AppointmentStatus.CANCELLED);
@@ -313,52 +324,52 @@ public class CustomerAppointmentService {
     }
 
     private void validateCreateRequest(CreateAppointmentRequest request) {
-        if (request == null) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dữ liệu đặt lịch không hợp lệ.");
-        if (request.getServiceId() == null || request.getServiceId() <= 0) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn dịch vụ hợp lệ.");
-        if (!request.isOldFormat() && !request.isNewFormat()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn ngày và giờ hợp lệ.");
-        if (request.getPatientNote() != null && request.getPatientNote().length() > 500) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ghi chú tối đa 500 ký tự.");
-        if (request.getContactChannel() == null || request.getContactChannel().isBlank()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn kênh liên hệ.");
-        if (request.getContactValue() == null || request.getContactValue().isBlank()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng nhập thông tin liên hệ.");
+        if (request == null) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dá»¯ liá»‡u Ä‘áº·t lá»‹ch khÃ´ng há»£p lá»‡.");
+        if (request.getServiceId() == null || request.getServiceId() <= 0) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lÃ²ng chá»n dá»‹ch vá»¥ há»£p lá»‡.");
+        if (!request.isOldFormat() && !request.isNewFormat()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lÃ²ng chá»n ngÃ y vÃ  giá» há»£p lá»‡.");
+        if (request.getPatientNote() != null && request.getPatientNote().length() > 500) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ghi chÃº tá»‘i Ä‘a 500 kÃ½ tá»±.");
+        if (request.getContactChannel() == null || request.getContactChannel().isBlank()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lÃ²ng chá»n kÃªnh liÃªn há»‡.");
+        if (request.getContactValue() == null || request.getContactValue().isBlank()) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lÃ²ng nháº­p thÃ´ng tin liÃªn há»‡.");
 
         String channel = request.getContactChannel().trim().toUpperCase();
         String value = request.getContactValue().trim();
         if (("PHONE".equals(channel) || "ZALO".equals(channel)) && !VN_PHONE_PATTERN.matcher(value.replaceAll("\\s+", "")).matches())
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số điện thoại/Zalo không hợp lệ.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Sá»‘ Ä‘iá»‡n thoáº¡i/Zalo khÃ´ng há»£p lá»‡.");
         if ("EMAIL".equals(channel) && !EMAIL_PATTERN.matcher(value).matches())
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Email không hợp lệ.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Email khÃ´ng há»£p lá»‡.");
         if (!List.of("PHONE", "ZALO", "EMAIL").contains(channel))
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Kênh liên hệ chỉ được: PHONE, ZALO, EMAIL.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "KÃªnh liÃªn há»‡ chá»‰ Ä‘Æ°á»£c: PHONE, ZALO, EMAIL.");
         if (request.getDepositAmount() != null && request.getDepositAmount() < 0)
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiền cọc không được âm.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiá»n cá»c khÃ´ng Ä‘Æ°á»£c Ã¢m.");
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
             String status = request.getStatus().trim().toUpperCase();
             if (!"PENDING".equals(status) && !"CONFIRMED".equals(status))
-                throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ được khởi tạo với trạng thái PENDING hoặc CONFIRMED.");
+                throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chá»‰ Ä‘Æ°á»£c khá»Ÿi táº¡o vá»›i tráº¡ng thÃ¡i PENDING hoáº·c CONFIRMED.");
         }
     }
 
     private User validateBookingUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Người dùng không tồn tại."));
-        if (user.getRole() != Role.CUSTOMER) throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Chỉ bệnh nhân mới được đặt lịch.");
-        if (user.getStatus() != UserStatus.ACTIVE) throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Tài khoản đang bị khóa.");
+                .orElseThrow(() -> new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "NgÆ°á»i dÃ¹ng khÃ´ng tá»“n táº¡i."));
+        if (user.getRole() != Role.CUSTOMER) throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Chá»‰ bá»‡nh nhÃ¢n má»›i Ä‘Æ°á»£c Ä‘áº·t lá»‹ch.");
+        if (user.getStatus() != UserStatus.ACTIVE) throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "TÃ i khoáº£n Ä‘ang bá»‹ khÃ³a.");
         return user;
     }
 
     private CustomerProfile getOrCreateCustomerProfile(User user) {
         return customerProfileRepository.findByUser_Id(user.getId()).orElseGet(() -> {
             CustomerProfile p = new CustomerProfile();
-            p.setUser(user); p.setFullName(user.getEmail() != null ? user.getEmail() : "Khách hàng");
+            p.setUser(user); p.setFullName(user.getEmail() != null ? user.getEmail() : "KhÃ¡ch hÃ ng");
             return customerProfileRepository.save(p);
         });
     }
 
     private Services validateService(Long serviceId) {
-        if (serviceId == null || serviceId <= 0) throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Dịch vụ không tồn tại.");
+        if (serviceId == null || serviceId <= 0) throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Dá»‹ch vá»¥ khÃ´ng tá»“n táº¡i.");
         Services service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Dịch vụ không tồn tại."));
-        if (!service.isActive()) throw new BookingException(BookingErrorCode.SERVICE_INACTIVE, "Dịch vụ đang tạm ngưng.");
-        if (service.getDurationMinutes() <= 0) throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thời lượng dịch vụ không hợp lệ.");
+                .orElseThrow(() -> new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Dá»‹ch vá»¥ khÃ´ng tá»“n táº¡i."));
+        if (!service.isActive()) throw new BookingException(BookingErrorCode.SERVICE_INACTIVE, "Dá»‹ch vá»¥ Ä‘ang táº¡m ngÆ°ng.");
+        if (service.getDurationMinutes() <= 0) throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thá»i lÆ°á»£ng dá»‹ch vá»¥ khÃ´ng há»£p lá»‡.");
         return service;
     }
 
@@ -366,40 +377,40 @@ public class CustomerAppointmentService {
         if (clientDeposit == null) return;
         double expected = Math.max(0d, service.getPrice() * DEFAULT_DEPOSIT_RATE);
         if (Math.abs(clientDeposit - expected) > 0.0001d)
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiền cọc không hợp lệ theo cấu hình dịch vụ.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiá»n cá»c khÃ´ng há»£p lá»‡ theo cáº¥u hÃ¬nh dá»‹ch vá»¥.");
     }
 
     private LocalDateTime resolveStartDateTime(CreateAppointmentRequest request) {
         if (request.isOldFormat()) {
             Slot slot = slotRepository.findById(request.getSlotId())
-                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giá» khÃ´ng tá»“n táº¡i."));
             return slot.getSlotTime();
         }
         return LocalDateTime.of(request.getSelectedDate(), request.getSelectedTime());
     }
 
     private void validateSelectedDate(LocalDate date) {
-        if (date == null) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ngày không hợp lệ.");
-        if (date.isBefore(nowDateTime().toLocalDate())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
+        if (date == null) throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "NgÃ y khÃ´ng há»£p lá»‡.");
+        if (date.isBefore(nowDateTime().toLocalDate())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "KhÃ´ng thá»ƒ Ä‘áº·t lá»‹ch trong quÃ¡ khá»©.");
     }
 
     private void validateNotInPast(LocalDateTime startDateTime) {
-        if (!startDateTime.isAfter(nowDateTime())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
+        if (!startDateTime.isAfter(nowDateTime())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "KhÃ´ng thá»ƒ Ä‘áº·t lá»‹ch trong quÃ¡ khá»©.");
     }
 
     private void validateWorkingWindow(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         LocalTime start = startDateTime.toLocalTime(), end = endDateTime.toLocalTime();
         if (endDateTime.toLocalDate().isAfter(startDateTime.toLocalDate()))
-            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngoài giờ làm việc.");
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thá»i gian náº±m ngoÃ i giá» lÃ m viá»‡c.");
         if (start.isBefore(OPEN) || !end.isAfter(start) || end.isAfter(CLOSE) || start.equals(CLOSE))
-            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngoài giờ làm việc.");
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thá»i gian náº±m ngoÃ i giá» lÃ m viá»‡c.");
         if (start.isBefore(LUNCH_END) && end.isAfter(LUNCH_START))
-            throw new BookingException(BookingErrorCode.LUNCH_BREAK_CONFLICT, "Khung giờ cắt ngang thời gian nghỉ trưa 12:00-13:00.");
+            throw new BookingException(BookingErrorCode.LUNCH_BREAK_CONFLICT, "Khung giá» cáº¯t ngang thá»i gian nghá»‰ trÆ°a 12:00-13:00.");
     }
 
     private void validateNoCustomerOverlap(Long userId, LocalDate date, LocalTime startTime, LocalTime endTime, Long excludeAppointmentId) {
         if (hasCustomerOverlap(userId, date, startTime, endTime, excludeAppointmentId))
-            throw new BookingException(BookingErrorCode.BOOKING_CONFLICT, "Bạn đã có lịch hẹn trùng thời điểm này.");
+            throw new BookingException(BookingErrorCode.BOOKING_CONFLICT, "Báº¡n Ä‘Ã£ cÃ³ lá»‹ch háº¹n trÃ¹ng thá»i Ä‘iá»ƒm nÃ y.");
     }
 
     private boolean hasCustomerOverlap(Long userId, LocalDate date, LocalTime startTime, LocalTime endTime, Long excludeAppointmentId) {
@@ -410,16 +421,16 @@ public class CustomerAppointmentService {
 
     private void ensureRescheduleAllowed(Appointment appointment) {
         if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELLED)
-            throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED, "Không thể đổi lịch với trạng thái hiện tại.");
+            throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED, "KhÃ´ng thá»ƒ Ä‘á»•i lá»‹ch vá»›i tráº¡ng thÃ¡i hiá»‡n táº¡i.");
         if (!LocalDateTime.of(appointment.getDate(), appointment.getStartTime()).isAfter(nowDateTime()))
-            throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED, "Không thể đổi lịch sau giờ check-in.");
+            throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED, "KhÃ´ng thá»ƒ Ä‘á»•i lá»‹ch sau giá» check-in.");
     }
 
     private void ensureCancelAllowed(Appointment appointment) {
         if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELLED)
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "KhÃ´ng thá»ƒ há»§y lá»‹ch vá»›i tráº¡ng thÃ¡i hiá»‡n táº¡i.");
         if (nowDateTime().isAfter(LocalDateTime.of(appointment.getDate(), appointment.getStartTime()).minusHours(CANCEL_MIN_HOURS_BEFORE)))
-            throw new BookingException(BookingErrorCode.CANCEL_WINDOW_CLOSED, "Không thể hủy lịch trong vòng 2 giờ trước giờ hẹn.");
+            throw new BookingException(BookingErrorCode.CANCEL_WINDOW_CLOSED, "KhÃ´ng thá»ƒ há»§y lá»‹ch trong vÃ²ng 2 giá» trÆ°á»›c giá» háº¹n.");
     }
 
     private LocalDateTime findNextSlotStart(LocalDateTime now) {

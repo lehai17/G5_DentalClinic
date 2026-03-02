@@ -3,15 +3,16 @@ package com.dentalclinic.service.support;
 import com.dentalclinic.exception.BusinessException;
 import com.dentalclinic.exception.SupportAccessDeniedException;
 import com.dentalclinic.model.appointment.Appointment;
-import com.dentalclinic.model.notification.Notification;
+import com.dentalclinic.model.notification.NotificationReferenceType;
+import com.dentalclinic.model.notification.NotificationType;
 import com.dentalclinic.model.support.SupportStatus;
 import com.dentalclinic.model.support.SupportTicket;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
-import com.dentalclinic.repository.NotificationRepository;
 import com.dentalclinic.repository.SupportTicketRepository;
 import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -26,16 +27,16 @@ import java.util.List;
 public class SupportService {
 
     private final SupportTicketRepository supportTicketRepository;
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
 
     public SupportService(SupportTicketRepository supportTicketRepository,
-                          NotificationRepository notificationRepository,
+                          NotificationService notificationService,
                           UserRepository userRepository,
                           AppointmentRepository appointmentRepository) {
         this.supportTicketRepository = supportTicketRepository;
-        this.notificationRepository = notificationRepository;
+        this.notificationService = notificationService;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
     }
@@ -62,9 +63,12 @@ public class SupportService {
 
         Appointment appointment = null;
         User assignedResponder = null;
+
         if (appointmentId != null) {
             appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, customerUserId)
                     .orElseThrow(() -> new BusinessException("Không tìm thấy ca khám phù hợp để hỗ trợ."));
+
+            // Auto-assign dentist of the appointment as responder (if any)
             if (appointment.getDentist() != null && appointment.getDentist().getUser() != null) {
                 assignedResponder = appointment.getDentist().getUser();
             }
@@ -164,6 +168,11 @@ public class SupportService {
             throw new BusinessException("Không thể trả lời yêu cầu đã đóng.");
         }
 
+        // Không cho trả lời lại nếu đã có câu trả lời
+        if (ticket.getAnswer() != null && !ticket.getAnswer().trim().isEmpty()) {
+            throw new BusinessException("Yêu cầu này đã được trả lời.");
+        }
+
         if (responder.getRole() == Role.DENTIST) {
             validateDentistCanAnswer(responder.getId(), ticket);
         }
@@ -171,17 +180,19 @@ public class SupportService {
         ticket.setStaff(responder);
         ticket.setAnswer(answer.trim());
         ticket.setStatus(SupportStatus.ANSWERED);
+
         SupportTicket saved = supportTicketRepository.save(ticket);
 
-        // Send Notification
-        Notification notification = new Notification();
-        notification.setUser(saved.getCustomer());
-        notification.setTitle("Phiếu hỗ trợ đã được phản hồi");
-        notification.setContent("Yêu cầu hỗ trợ của bạn đã được phản hồi.");
-        notification.setType("SUPPORT");
-        notification.setRead(false);
-        notification.setCreatedAt(LocalDateTime.now());
-        notificationRepository.save(notification);
+        // Notify customer: ticket answered
+        notificationService.createForCustomer(
+                saved.getCustomer().getId(),
+                NotificationType.TICKET_ANSWERED,
+                "Phiếu hỗ trợ đã được phản hồi",
+                "Yêu cầu hỗ trợ #" + saved.getId() + " đã được phản hồi.",
+                "/support/" + saved.getId(),
+                NotificationReferenceType.TICKET,
+                saved.getId()
+        );
 
         return saved;
     }
@@ -195,12 +206,28 @@ public class SupportService {
         if (ticket.getStatus() == SupportStatus.CLOSED) {
             throw new BusinessException("Yêu cầu hỗ trợ đã đóng.");
         }
+
         ticket.setStatus(SupportStatus.CLOSED);
         if (ticket.getStaff() == null) {
             ticket.setStaff(staff);
         }
-        return supportTicketRepository.save(ticket);
+
+        SupportTicket saved = supportTicketRepository.save(ticket);
+
+        notificationService.createForCustomer(
+                saved.getCustomer().getId(),
+                NotificationType.TICKET_STATUS_CHANGED,
+                "Phiếu hỗ trợ đã đóng",
+                "Yêu cầu hỗ trợ #" + saved.getId() + " đã được chuyển sang trạng thái CLOSED.",
+                "/support/" + saved.getId(),
+                NotificationReferenceType.TICKET,
+                saved.getId()
+        );
+
+        return saved;
     }
+
+    // ================== INTERNAL HELPERS ==================
 
     private User requireUser(Long userId) {
         return userRepository.findById(userId)
@@ -225,8 +252,8 @@ public class SupportService {
 
     private User requireSupportResponder(Long userId) {
         User user = requireUser(userId);
-        if (user.getRole() != Role.STAFF && user.getRole() != Role.DENTIST) {
-            throw new SupportAccessDeniedException("Chỉ nhân viên hoặc bác sĩ mới được phản hồi phiếu hỗ trợ.");
+        if (user.getRole() != Role.STAFF && user.getRole() != Role.DENTIST && user.getRole() != Role.ADMIN) {
+            throw new SupportAccessDeniedException("Chỉ nhân viên, bác sĩ hoặc admin mới được phản hồi phiếu hỗ trợ.");
         }
         return user;
     }
@@ -260,7 +287,7 @@ public class SupportService {
 
     private void validateQuestion(String question) {
         if (question == null || question.trim().isEmpty()) {
-            throw new BusinessException("Câu hỏi không được để trống.");
+            throw new BusinessException("Nội dung câu hỏi không được để trống.");
         }
     }
 

@@ -2,14 +2,17 @@ package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.profile.CustomerProfile;
+import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.BlogRepository;
-import com.dentalclinic.service.customer.CustomerProfileService;
-import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.dentalclinic.repository.ServiceRepository;
+import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.service.customer.CustomerProfileService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,29 +27,44 @@ public class CustomerHomepageController {
     private final ServiceRepository serviceRepo;
     private final DentistProfileRepository dentistRepo;
     private final BlogRepository blogRepo;
+    private final UserRepository userRepository;
 
-    public CustomerHomepageController(CustomerProfileService profileService,
+    public CustomerHomepageController(
+            CustomerProfileService profileService,
             ServiceRepository serviceRepo,
-            DentistProfileRepository dentistRepo, BlogRepository blogRepo) {
+            DentistProfileRepository dentistRepo,
+            BlogRepository blogRepo,
+            UserRepository userRepository
+    ) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
         this.blogRepo = blogRepo;
+        this.userRepository = userRepository;
     }
 
-    @GetMapping({ "/", "/index", "/home" })
+    @GetMapping({"/", "/index", "/home"})
     public String redirectToHomepage() {
         return "redirect:/homepage";
     }
 
-    @GetMapping({ "/homepage", "/customer/homepage" })
-    public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
-        // Sử dụng một ID giả lập hoặc lấy từ Security nếu có
-        Long currentCustomerId = 3L;
+    @GetMapping({"/homepage", "/customer/homepage"})
+    public String showHomepage(
+            @RequestParam(defaultValue = "0") int page,
+            Authentication authentication,
+            Model model
+    ) {
+        model.addAttribute("active", "homepage");
+
+        Long currentCustomerId = resolveCurrentUserId(authentication);
+        if (currentCustomerId == null) {
+            // Nếu chưa đăng nhập, chuyển hướng về trang login (hoặc landing page tuỳ project)
+            return "redirect:/login";
+        }
 
         try {
-            // 1. Lấy dữ liệu Profile khách hàng
             CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
+
             if (profile == null) {
                 profile = new CustomerProfile();
                 profile.setFullName("Khách hàng");
@@ -56,23 +74,20 @@ public class CustomerHomepageController {
             }
             model.addAttribute("customer", profile);
 
-            // 2. Lấy danh sách Dịch vụ và Bác sĩ
+            // Dịch vụ và bác sĩ (lọc active theo master)
             model.addAttribute("services", serviceRepo.findByActiveTrue());
-            model.addAttribute("dentists",
-                    dentistRepo.filterDentists(null, com.dentalclinic.model.user.UserStatus.ACTIVE));
+            model.addAttribute("dentists", dentistRepo.filterDentists(null, UserStatus.ACTIVE));
 
-            // 3. Xử lý phân trang Blog (Lấy 2 bài mỗi trang)
-            Pageable pageable = PageRequest.of(page, 2);
+            int safePage = Math.max(page, 0);
+            Pageable pageable = PageRequest.of(safePage, 2);
             Page<Blog> blogPage = blogRepo.findByIsPublishedTrueOrderByCreatedAtDesc(pageable);
 
             model.addAttribute("blogs", blogPage.getContent());
-            model.addAttribute("currentPage", page);
+            model.addAttribute("currentPage", safePage);
             model.addAttribute("totalPages", blogPage.getTotalPages());
 
             return "customer/homepage";
-
         } catch (Exception e) {
-            // Fallback: Trả về trang chủ với danh sách rỗng nếu có lỗi xảy ra
             model.addAttribute("customer", new CustomerProfile());
             model.addAttribute("appointments", new ArrayList<>());
             model.addAttribute("services", new ArrayList<>());
@@ -84,7 +99,6 @@ public class CustomerHomepageController {
         }
     }
 
-    /** Trang đặt lịch khám (cùng layout với trang chủ) */
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
         model.addAttribute("services", serviceRepo.findByActiveTrue());
@@ -92,12 +106,29 @@ public class CustomerHomepageController {
     }
 
     /**
-     * Trang lịch hẹn của tôi (cùng layout với trang chủ). Dùng /my-appointments để
-     * tránh trùng GET /customer/appointments (API JSON).
+     * Trang lịch hẹn của tôi (cùng layout với trang chủ).
+     * Dùng /my-appointments để tránh trùng GET /customer/appointments (API JSON) nếu có.
      */
     @GetMapping("/customer/my-appointments")
     public String appointmentsPage(Model model) {
         model.addAttribute("active", "appointments");
         return "customer/appointments";
+    }
+
+    private Long resolveCurrentUserId(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            return userRepository.findByEmail(userDetails.getUsername())
+                    .map(user -> user.getId())
+                    .orElse(null);
+        }
+
+        return userRepository.findByEmail(authentication.getName())
+                .map(user -> user.getId())
+                .orElse(null);
     }
 }

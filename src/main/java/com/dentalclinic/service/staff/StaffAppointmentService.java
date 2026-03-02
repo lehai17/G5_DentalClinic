@@ -7,6 +7,7 @@ import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.mail.EmailService;
+import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +32,9 @@ public class StaffAppointmentService {
 
     @Autowired
     private CustomerAppointmentService customerAppointmentService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
@@ -59,6 +63,7 @@ public class StaffAppointmentService {
     public void assignDentist(Long appointmentId, Long dentistId) {
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        Long oldDentistId = appt.getDentist() != null ? appt.getDentist().getId() : null;
 
         boolean hasOverlap = appointmentRepository.hasOverlappingAppointment(
                 dentistId,
@@ -75,7 +80,10 @@ public class StaffAppointmentService {
                 .orElseThrow(() -> new RuntimeException("Dentist not found"));
 
         appt.setDentist(dentist);
-        appointmentRepository.save(appt);
+        Appointment saved = appointmentRepository.save(appt);
+        if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
+            notificationService.notifyBookingUpdated(saved, "Thay đổi bác sĩ phụ trách");
+        }
     }
 
     @Transactional

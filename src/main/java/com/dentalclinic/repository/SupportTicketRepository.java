@@ -25,6 +25,9 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     Page<SupportTicket> findByCustomer_Id(Long customerId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
+    Optional<SupportTicket> findFirstByCustomer_IdAndAnswerIsNotNullOrderByCreatedAtDesc(Long customerId);
+
+    @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
     List<SupportTicket> findByStatusOrderByCreatedAtDesc(SupportStatus status);
 
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
@@ -33,22 +36,26 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     // --- Dentist Methods (Optimized with Fetch Joins) ---
 
     /**
-     * Method này được thêm vào để khớp với SupportTicketService.
-     * Lấy danh sách phiếu hỗ trợ dựa trên ID người dùng của Bác sĩ thông qua Appointment.
+     * Lấy danh sách ticket theo Dentist (userId) thông qua Appointment.dentist.user.
+     * Giữ tên method để khớp các service/controller đang gọi.
      */
     @Query("""
-        SELECT s FROM SupportTicket s
-        JOIN FETCH s.appointment a
-        JOIN FETCH a.dentist d
-        JOIN FETCH d.user u
+        SELECT s
+        FROM SupportTicket s
+        LEFT JOIN FETCH s.appointment a
+        LEFT JOIN FETCH a.service
+        LEFT JOIN FETCH a.dentist ad
+        LEFT JOIN FETCH ad.user
         LEFT JOIN FETCH s.customer c
-        WHERE u.id = :dentistId
+        LEFT JOIN FETCH c.customerProfile
+        LEFT JOIN FETCH s.staff
+        WHERE a.dentist.user.id = :dentistId
         ORDER BY s.createdAt DESC
     """)
     List<SupportTicket> findByDentistWithAppointment(@Param("dentistId") Long dentistId);
 
     /**
-     * Lấy danh sách phiếu hỗ trợ hiển thị cho Bác sĩ (hàm cũ của bạn).
+     * Lấy danh sách phiếu hỗ trợ hiển thị cho Bác sĩ.
      */
     @Query("""
         SELECT s FROM SupportTicket s

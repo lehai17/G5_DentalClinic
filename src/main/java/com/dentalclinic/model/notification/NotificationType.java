@@ -1,0 +1,15 @@
+package com.dentalclinic.model.notification;
+
+public enum NotificationType {
+    BOOKING_CREATED,
+    BOOKING_UPDATED,
+    BOOKING_CANCELLED,
+    APPOINTMENT_REMINDER,
+    TICKET_ANSWERED,
+    TICKET_STATUS_CHANGED,
+    TICKET_NEW_REPLY,
+    MEDICAL_RECORD_CREATED,
+    PRESCRIPTION_CREATED,
+    FOLLOWUP_RECOMMENDED,
+    SUPPORT
+}

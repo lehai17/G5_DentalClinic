@@ -108,7 +108,7 @@ public class DentistSessionService {
 
         return new BillingForm(
                 appt.getCustomer().getFullName(),
-                // SỬA LỖI TẠI ĐÂY: Truyền tham số 'appt' vào hàm defaultPerformedJson
+                // FIX BUG: cần truyền appt để sinh default service JSON
                 bn == null ? defaultPerformedJson(appt) : safe(bn.getPerformedServicesJson()),
                 bn == null ? defaultPrescriptionJson() : safe(bn.getPrescriptionNote()),
                 bn == null ? "" : safe(bn.getNote())
@@ -171,7 +171,6 @@ public class DentistSessionService {
         if (appt.getService() == null) {
             return "[]";
         }
-        // Có thể bổ sung logic lấy ID dịch vụ thực tế từ appt.getService().getId()
         return """
             [
               {"serviceId":%d,"qty":1,"toothNo":"Full mouth"}
@@ -180,6 +179,6 @@ public class DentistSessionService {
     }
 
     private String defaultPrescriptionJson() {
-        return "[]"; // Mặc định trả về mảng rỗng để tránh lỗi phía Frontend
+        return "[]";
     }
 }
