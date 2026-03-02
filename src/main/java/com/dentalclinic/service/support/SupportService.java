@@ -164,7 +164,7 @@ public class SupportService {
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
-        if (ticket.getStatus() == SupportStatus.CLOSED) {
+        if (ticket.getStatus() == SupportStatus.ANSWERED) {
             throw new BusinessException("Không thể trả lời yêu cầu đã đóng.");
         }
 
@@ -203,11 +203,11 @@ public class SupportService {
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
-        if (ticket.getStatus() == SupportStatus.CLOSED) {
+        if (ticket.getStatus() == SupportStatus.ANSWERED) {
             throw new BusinessException("Yêu cầu hỗ trợ đã đóng.");
         }
 
-        ticket.setStatus(SupportStatus.CLOSED);
+        ticket.setStatus(SupportStatus.ANSWERED);
         if (ticket.getStaff() == null) {
             ticket.setStaff(staff);
         }
