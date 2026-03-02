@@ -3,7 +3,6 @@ package com.dentalclinic.repository;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,92 +18,9 @@ import java.util.Optional;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-  @Query(value = """
-      SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
-      FROM appointment
-      WHERE dentist_id = :dentistId
-        AND appointment_date = :date
-        AND start_time < CAST(:endTime AS time)
-        AND end_time > CAST(:startTime AS time)
-      """, nativeQuery = true)
-  int countBusyAppointments(
-      @Param("dentistId") Long dentistId,
-      @Param("date") LocalDate date,
-      @Param("startTime") LocalTime startTime,
-      @Param("endTime") LocalTime endTime);
-
-  default boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-      Long dentistId,
-      LocalDate date,
-      LocalTime startTime,
-      LocalTime endTime) {
-    // true nếu bác sĩ đã có lịch trùng khung giờ (bất kỳ appointment nào overlap)
-    return countBusyAppointments(dentistId, date, startTime, endTime) > 0;
-  }
-
-  /**
-   * Không cho phép 1 slot (DentistSchedule) có nhiều appointment còn hiệu lực
-   * (không tính CANCELLED).
-   */
-  boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
-
-  // (Giữ lại nếu chỗ khác trong project đang gọi; không dùng cho rule mới)
-  boolean existsBySlot_Id(Long slotId);
-
-  Optional<Appointment> findByIdAndCustomer_User_Id(
-      Long appointmentId,
-      Long customerUserId);
-
-  List<Appointment> findByCustomer_User_IdAndStatus(
-      Long customerUserId,
-      AppointmentStatus status);
-
-  List<Appointment> findByCustomer_User_IdOrderByDateDesc(
-      Long customerUserId);
-
-  List<Appointment> findByCustomerId(Long customerId);
-
-  @Query("""
-          SELECT a FROM Appointment a
-          JOIN FETCH a.customer c
-          JOIN FETCH c.user cu
-          JOIN FETCH a.service s
-          JOIN FETCH a.dentist d
-          WHERE d.id = :dentistProfileId
-            AND a.date BETWEEN :start AND :end
-      """)
-  List<Appointment> findScheduleForWeek(
-      @Param("dentistProfileId") Long dentistProfileId,
-      @Param("start") LocalDate start,
-      @Param("end") LocalDate end);
-
-  List<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword);
-
-  @Query("SELECT COUNT(a) FROM Appointment a WHERE a.dentist.id = :dentistId AND a.date >= :currentDate AND a.status NOT IN :excludedStatuses")
-  int countUpcomingAppointments(@Param("dentistId") Long dentistId, @Param("currentDate") LocalDate currentDate,
-      @Param("excludedStatuses") List<AppointmentStatus> excludedStatuses);
-
-  @Query("SELECT a FROM Appointment a WHERE a.customer.id = :customerId AND a.status = 'COMPLETED' ORDER BY a.date DESC, a.startTime DESC")
-  List<Appointment> findCompletedAppointmentsByCustomerId(@Param("customerId") Long customerId);
-
-  @Query("SELECT a FROM Appointment a WHERE a.customer.id = :customerId AND a.status IN ('PENDING', 'CONFIRMED') ORDER BY a.date ASC, a.startTime ASC")
-  List<Appointment> findUpcomingAppointmentsByCustomerId(@Param("customerId") Long customerId);
-}
-    // --- 1. NHÓM NATIVE QUERY (Xử lý Overlap) ---
-
-    @Query(value = """
-        SELECT COUNT(*) FROM appointment
-        WHERE dentist_id = :dentistId
-          AND appointment_date = :date
-          AND start_time < CAST(:endTime AS TIME)
-          AND end_time > CAST(:startTime AS TIME)
-        """, nativeQuery = true)
-    int countBusyAppointments(
-            @Param("dentistId") Long dentistId,
-            @Param("date") LocalDate date,
-            @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime
-    );
+    // =========================================================
+    // 1. NHÓM KIỂM TRA TRÙNG LỊCH (OVERLAP LOGIC) - NATIVE QUERY
+    // =========================================================
 
     @Query(value = """
         SELECT COUNT(*) FROM appointment
@@ -118,8 +34,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("dentistId") Long dentistId,
             @Param("date") LocalDate date,
             @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime
-    );
+            @Param("endTime") LocalTime endTime);
 
     @Query(value = """
         SELECT COUNT(*) FROM appointment
@@ -135,62 +50,97 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("date") LocalDate date,
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
-            @Param("appointmentId") Long appointmentId
-    );
+            @Param("appointmentId") Long appointmentId);
 
     @Query(value = """
-            SELECT COUNT(*) FROM appointment
-            WHERE customer_id = :userId
-              AND status IN (:activeStatuses)
-              AND appointment_date = :date
-              AND start_time < CAST(:endTime AS TIME)
-              AND end_time > CAST(:startTime AS TIME)
-            """, nativeQuery = true)
+        SELECT COUNT(*) FROM appointment
+        WHERE customer_id = :userId
+          AND status IN (:activeStatuses)
+          AND appointment_date = :date
+          AND start_time < CAST(:endTime AS TIME)
+          AND end_time > CAST(:startTime AS TIME)
+        """, nativeQuery = true)
     int checkCustomerOverlap(
             @Param("userId") Long userId,
             @Param("date") LocalDate date,
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
-            @Param("activeStatuses") List<String> activeStatuses
-    );
+            @Param("activeStatuses") List<String> activeStatuses);
 
     @Query(value = """
-            SELECT COUNT(*) FROM appointment
-            WHERE customer_id = :userId
-              AND id <> :excludeAppointmentId
-              AND status IN (:activeStatuses)
-              AND appointment_date = :date
-              AND start_time < CAST(:endTime AS TIME)
-              AND end_time > CAST(:startTime AS TIME)
-            """, nativeQuery = true)
-    int checkCustomerOverlapExcludingAppointment(
+        SELECT COUNT(*) FROM appointment
+        WHERE customer_id = :userId
+          AND id <> :excludeId
+          AND status IN (:activeStatuses)
+          AND appointment_date = :date
+          AND start_time < CAST(:endTime AS TIME)
+          AND end_time > CAST(:startTime AS TIME)
+        """, nativeQuery = true)
+    int checkCustomerOverlapExcludingSelf(
             @Param("userId") Long userId,
-            @Param("excludeAppointmentId") Long excludeAppointmentId,
+            @Param("excludeId") Long excludeId,
             @Param("date") LocalDate date,
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
-            @Param("activeStatuses") List<String> activeStatuses
-    );
+            @Param("activeStatuses") List<String> activeStatuses);
 
-    // --- 2. WRAPPER METHODS (Tương thích với logic Service) ---
-
-    default boolean hasOverlappingAppointment(Long dentistId, LocalDate date, LocalTime startTime, LocalTime endTime) {
-        return checkOverlappingAppointment(dentistId, date, startTime, endTime) > 0;
+    // Wrapper methods gọi từ Service
+    default boolean hasOverlappingAppointment(Long dId, LocalDate d, LocalTime s, LocalTime e) {
+        return checkOverlappingAppointment(dId, d, s, e) > 0;
     }
 
-    default boolean hasOverlappingAppointmentExcludingSelf(Long dentistId, LocalDate date, LocalTime startTime, LocalTime endTime, Long appointmentId) {
-        return checkOverlappingAppointmentExcludingSelf(dentistId, date, startTime, endTime, appointmentId) > 0;
+    default boolean hasOverlappingAppointmentExcludingSelf(Long dId, LocalDate d, LocalTime s, LocalTime e, Long apptId) {
+        return checkOverlappingAppointmentExcludingSelf(dId, d, s, e, apptId) > 0;
     }
 
-    default boolean existsCustomerOverlap(Long userId, LocalDate date, LocalTime startTime, LocalTime endTime, List<String> activeStatuses) {
-        return checkCustomerOverlap(userId, date, startTime, endTime, activeStatuses) > 0;
+    default boolean existsCustomerOverlap(Long uId, LocalDate d, LocalTime s, LocalTime e, List<String> states) {
+        return checkCustomerOverlap(uId, d, s, e, states) > 0;
     }
 
-    default boolean existsCustomerOverlapExcludingAppointment(Long userId, Long excludeId, LocalDate date, LocalTime startTime, LocalTime endTime, List<String> activeStatuses) {
-        return checkCustomerOverlapExcludingAppointment(userId, excludeId, date, startTime, endTime, activeStatuses) > 0;
+    default boolean existsCustomerOverlapExcludingAppointment(Long uId, Long exId, LocalDate d, LocalTime s, LocalTime e, List<String> states) {
+        return checkCustomerOverlapExcludingSelf(uId, exId, d, s, e, states) > 0;
     }
 
-    // --- 3. NHÓM JPQL (Fetch dữ liệu chi tiết) ---
+    // =========================================================
+    // 2. NHÓM TRA CỨU CHO KHÁCH HÀNG (CUSTOMER)
+    // =========================================================
+
+    @Query("""
+        SELECT a FROM Appointment a 
+        WHERE a.customer.id = :customerId 
+          AND a.status IN (
+            com.dentalclinic.model.appointment.AppointmentStatus.PENDING, 
+            com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED
+          ) 
+        ORDER BY a.date ASC, a.startTime ASC
+    """)
+    List<Appointment> findUpcomingAppointmentsByCustomerId(@Param("customerId") Long customerId);
+
+    @Query("""
+        SELECT a FROM Appointment a 
+        WHERE a.customer.id = :customerId 
+          AND a.status = com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED 
+        ORDER BY a.date DESC, a.startTime DESC
+    """)
+    List<Appointment> findCompletedAppointmentsByCustomerId(@Param("customerId") Long customerId);
+
+    Optional<Appointment> findByIdAndCustomer_User_Id(Long appointmentId, Long customerUserId);
+
+    List<Appointment> findByCustomer_User_IdOrderByDateDesc(Long customerUserId);
+
+    Page<Appointment> findByCustomer_User_Id(Long userId, Pageable pageable);
+
+    @Query("""
+        SELECT a FROM Appointment a
+        LEFT JOIN FETCH a.appointmentSlots ass
+        LEFT JOIN FETCH ass.slot
+        WHERE a.id = :appointmentId AND a.customer.user.id = :userId
+    """)
+    Optional<Appointment> findByIdWithSlotsAndCustomerUserId(@Param("appointmentId") Long appointmentId, @Param("userId") Long userId);
+
+    // =========================================================
+    // 3. NHÓM TRA CỨU CHO BÁC SĨ (DENTIST & DASHBOARD)
+    // =========================================================
 
     @Query("""
         SELECT a FROM Appointment a
@@ -200,123 +150,64 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         LEFT JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
-          AND a.status IN (
-                com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
-                com.dentalclinic.model.appointment.AppointmentStatus.EXAMINING,
-                com.dentalclinic.model.appointment.AppointmentStatus.DONE,
-                com.dentalclinic.model.appointment.AppointmentStatus.REEXAM,
-                com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
-          )
+          AND a.status NOT IN (com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED)
     """)
     List<Appointment> findScheduleForWeek(
             @Param("dentistProfileId") Long dentistProfileId,
             @Param("start") LocalDate start,
-            @Param("end") LocalDate end
-    );
+            @Param("end") LocalDate end);
 
-    @Query("""
-        SELECT a FROM Appointment a
-        JOIN FETCH a.customer c
-        JOIN FETCH c.user cu
-        JOIN FETCH a.service s
-        LEFT JOIN FETCH a.dentist d
-        WHERE a.id = :appointmentId
-    """)
-    Optional<Appointment> findByIdWithDetails(@Param("appointmentId") Long appointmentId);
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.dentist.id = :dentistId AND a.date >= :currentDate AND a.status NOT IN :excludedStatuses")
+    int countUpcomingAppointments(@Param("dentistId") Long dentistId, @Param("currentDate") LocalDate currentDate,
+                                  @Param("excludedStatuses") List<AppointmentStatus> excludedStatuses);
 
-    @Query("""
-        SELECT a FROM Appointment a
-        LEFT JOIN FETCH a.appointmentSlots ass
-        LEFT JOIN FETCH ass.slot
-        WHERE a.id = :appointmentId
-    """)
-    Optional<Appointment> findByIdWithSlots(@Param("appointmentId") Long appointmentId);
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.dentist.id = :dentistId AND a.date = :date AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED")
+    long countTotalByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
 
-    @Query("SELECT aslot FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId ORDER BY aslot.slotOrder ASC")
-    List<Object[]> findAppointmentSlotDetailsByAppointmentId(@Param("appointmentId") Long appointmentId);
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.dentist.id = :dentistId AND a.date = :date AND a.status IN (com.dentalclinic.model.appointment.AppointmentStatus.DONE, com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED)")
+    long countCompletedByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
 
-    @Query("""
-        SELECT a FROM Appointment a
-        LEFT JOIN FETCH a.appointmentSlots ass
-        LEFT JOIN FETCH ass.slot
-        WHERE a.id = :appointmentId
-          AND a.customer.user.id = :userId
-    """)
-    Optional<Appointment> findByIdWithSlotsAndCustomerUserId(
-            @Param("appointmentId") Long appointmentId,
-            @Param("userId") Long userId
-    );
+    // =========================================================
+    // 4. NHÓM FETCH CHI TIẾT
+    // =========================================================
 
-    // Đếm tổng số lịch hẹn trong ngày của nha sĩ (trừ các lịch đã hủy)
-    @Query("""
-        SELECT COUNT(a) 
-        FROM Appointment a 
-        WHERE a.dentist.id = :dentistId 
-          AND a.date = :date 
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
-    """)
-    long countTotalByDentistAndDate(
-            @Param("dentistId") Long dentistId,
-            @Param("date") LocalDate date
-    );
+    @Query("SELECT a FROM Appointment a JOIN FETCH a.customer JOIN FETCH a.service WHERE a.id = :id")
+    Optional<Appointment> findByIdWithDetails(@Param("id") Long id);
 
-    // Đếm số lịch hẹn đã hoàn thành trong ngày của nha sĩ
-    @Query("""
-        SELECT COUNT(a) 
-        FROM Appointment a 
-        WHERE a.dentist.id = :dentistId 
-          AND a.date = :date 
-          AND a.status IN (
-                com.dentalclinic.model.appointment.AppointmentStatus.DONE, 
-                com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
-          )
-    """)
-    long countCompletedByDentistAndDate(
-            @Param("dentistId") Long dentistId,
-            @Param("date") LocalDate date
-    );
+    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.appointmentSlots ass LEFT JOIN FETCH ass.slot WHERE a.id = :id")
+    Optional<Appointment> findByIdWithSlots(@Param("id") Long id);
 
-    // --- 4. NHÓM SPRING DATA QUERIES (Tự động sinh) ---
-
-    boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
-
-    boolean existsBySlot_Id(Long slotId);
-
-    Optional<Appointment> findByIdAndCustomer_User_Id(Long appointmentId, Long customerUserId);
-
-    List<Appointment> findByCustomer_User_IdAndStatus(Long customerUserId, AppointmentStatus status);
-
-    List<Appointment> findByCustomer_User_IdOrderByDateDesc(Long customerUserId);
-
-    List<Appointment> findByCustomerId(Long customerId);
+    // =========================================================
+    // 5. TÌM KIẾM VÀ PHÂN TRANG
+    // =========================================================
 
     Page<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword, Pageable pageable);
+
+    Page<Appointment> findByService_NameContainingIgnoreCase(String serviceKeyword, Pageable pageable);
+
+    Page<Appointment> findByCustomer_FullNameContainingIgnoreCaseAndService_NameContainingIgnoreCase(
+            String customerKeyword, String serviceKeyword, Pageable pageable);
 
     List<Appointment> findByStatus(AppointmentStatus status);
 
     List<Appointment> findByDate(LocalDate date);
 
-    Page<Appointment> findByCustomer_FullNameContainingIgnoreCaseAndService_NameContainingIgnoreCase(
-            String customerKeyword, String serviceKeyword, Pageable pageable);
-
-    // --- 5. MODIFING QUERIES ---
+    // =========================================================
+    // 6. MODIFING & OTHERS
+    // =========================================================
 
     @Modifying
     @Query("DELETE FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId")
     void deleteAppointmentSlotsByAppointmentId(@Param("appointmentId") Long appointmentId);
 
-    // Default method hỗ trợ logic cũ
+    boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
+
     default boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-            Long dentistId, LocalDate date, LocalTime startTime, LocalTime endTime) {
-        return countBusyAppointments(dentistId, date, startTime, endTime) > 0;
+            Long dId, LocalDate d, LocalTime s, LocalTime e) {
+        return checkOverlappingAppointment(dId, d, s, e) > 0;
     }
 
-    Page<Appointment> findByCustomer_User_Id(Long userId, PageRequest pageable);
-    @Query("SELECT a FROM Appointment a WHERE a.date = :date AND a.status IN :statuses")
-    List<Appointment> findByDateAndStatusIn(
-            @Param("date") LocalDate date,
-            @Param("statuses") List<AppointmentStatus> statuses
-    );
+    List<Appointment> findByDateAndStatusIn(LocalDate targetDate, List<AppointmentStatus> pending);
 
-    Page<Appointment> findByService_NameContainingIgnoreCase(String serviceKeyword, Pageable pageable);
+    List<Appointment> findByCustomerId(Long customerId);
 }
