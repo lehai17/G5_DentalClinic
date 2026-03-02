@@ -10,7 +10,6 @@ import com.dentalclinic.repository.MedicalRecordRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 public class DentistSessionService {
 
@@ -38,7 +37,6 @@ public class DentistSessionService {
 
     @Transactional(readOnly = true)
     public ExamForm loadExam(Long appointmentId, Long customerUserId) {
-
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
         MedicalRecord mr = medicalRecordRepository
@@ -62,13 +60,11 @@ public class DentistSessionService {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
-        // Không cho save nếu đã DONE hoặc COMPLETED
         if (appt.getStatus() == AppointmentStatus.DONE
                 || appt.getStatus() == AppointmentStatus.COMPLETED) {
             throw new IllegalStateException("Appointment already finalized");
         }
 
-        // Nếu chưa EXAMINING thì set
         if (appt.getStatus() != AppointmentStatus.EXAMINING) {
             appt.setStatus(AppointmentStatus.EXAMINING);
             appointmentRepository.save(appt);
@@ -102,7 +98,6 @@ public class DentistSessionService {
 
     @Transactional(readOnly = true)
     public BillingForm loadBilling(Long appointmentId, Long customerUserId) {
-
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
         BillingNote bn = billingNoteRepository
@@ -113,7 +108,8 @@ public class DentistSessionService {
 
         return new BillingForm(
                 appt.getCustomer().getFullName(),
-                bn == null ? defaultPerformedJson() : safe(bn.getPerformedServicesJson()),
+                // SỬA LỖI TẠI ĐÂY: Truyền tham số 'appt' vào hàm defaultPerformedJson
+                bn == null ? defaultPerformedJson(appt) : safe(bn.getPerformedServicesJson()),
                 bn == null ? defaultPrescriptionJson() : safe(bn.getPrescriptionNote()),
                 bn == null ? "" : safe(bn.getNote())
         );
@@ -148,29 +144,22 @@ public class DentistSessionService {
         bn.setNote(safe(note));
         billingNoteRepository.save(bn);
 
-        // Chuyển DONE
         appt.setStatus(AppointmentStatus.DONE);
         appointmentRepository.save(appt);
     }
-
 
     /* =========================================================
        INTERNAL
        ========================================================= */
 
     private Appointment mustGetAppointment(Long appointmentId, Long customerUserId) {
-
         Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Appointment not found")
-                );
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
 
         Long ownerUserId = appt.getCustomer().getUser().getId();
-
         if (!ownerUserId.equals(customerUserId)) {
             throw new IllegalArgumentException("Appointment does not belong to this customer");
         }
-
         return appt;
     }
 
@@ -179,23 +168,18 @@ public class DentistSessionService {
     }
 
     private String defaultPerformedJson(Appointment appt) {
-
         if (appt.getService() == null) {
             return "[]";
         }
-
+        // Có thể bổ sung logic lấy ID dịch vụ thực tế từ appt.getService().getId()
         return """
             [
-              {"serviceId":1,"qty":1,"toothNo":"Full mouth"}
+              {"serviceId":%d,"qty":1,"toothNo":"Full mouth"}
             ]
-        """;
+        """.formatted(appt.getService().getId());
     }
 
     private String defaultPrescriptionJson() {
-        return """
-            [
-              {"name":"Amoxicillin","dosage":"500mg","duration":"5 days","instruction":"After meals"}
-            ]
-        """;
+        return "[]"; // Mặc định trả về mảng rỗng để tránh lỗi phía Frontend
     }
 }

@@ -33,7 +33,6 @@ public class SlotSeeder {
     public ApplicationRunner seedSlotsIfNeeded(SlotRepository slotRepository) {
         return (ApplicationArguments args) -> {
             LocalDate today = LocalDate.now();
-            LocalDate endDate = today.plusDays(DAYS_TO_SEED - 1);
 
             logger.info("Seeding/repairing slots for next {} days with capacity {}", DAYS_TO_SEED, DEFAULT_CAPACITY);
 
@@ -43,6 +42,7 @@ public class SlotSeeder {
             for (int day = 0; day < DAYS_TO_SEED; day++) {
                 LocalDate date = today.plusDays(day);
 
+                // Bỏ qua Chủ Nhật
                 if (date.getDayOfWeek().getValue() == 7) {
                     continue;
                 }
@@ -50,7 +50,7 @@ public class SlotSeeder {
                 LocalDateTime current = LocalDateTime.of(date, CLINIC_OPEN_TIME);
                 LocalDateTime end = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
 
-                while (current.isBefore(end) || current.equals(end.minusMinutes(30))) {
+                while (current.isBefore(end)) {
                     Optional<Slot> existing = slotRepository.findBySlotTime(current);
                     if (existing.isPresent()) {
                         Slot slot = existing.get();
@@ -79,70 +79,48 @@ public class SlotSeeder {
                     }
 
                     current = current.plusMinutes(30);
-                } // Kết thúc vòng lặp while
-            } // Kết thúc vòng lặp for
-
-            logger.info("Slot seeding done. Created={}, Updated={}", totalSlotsCreated, totalSlotsUpdated);
-
-            logger.info("Slot seed completed. created={}, updated={}", totalSlotsCreated, totalSlotsUpdated);
+                }
+            }
+            logger.info("Slot seeding completed. Created={}, Updated={}", totalSlotsCreated, totalSlotsUpdated);
         };
     }
 
     /**
-     * This method used to patch legacy missing slots, kept as no-op for compatibility.
+     * Phương thức bổ sung để vá các slot bị thiếu trong một khoảng thời gian cụ thể.
      */
-    @SuppressWarnings("unused")
-    private void fillMissingLastSlots(SlotRepository slotRepository, LocalDate fromDate, LocalDate toDate) {
-        // No-op: seeding now does full upsert for all expected slot_time values.
-        logger.debug("fillMissingLastSlots is deprecated; full upsert seeding is used instead.");
+    public void fillMissingLastSlots(SlotRepository slotRepository, LocalDate fromDate, LocalDate toDate) {
         if (fromDate == null || toDate == null) {
             return;
-        logger.info("Checking and filling missing slots (all incomplete dates)...");
+        }
+
+        logger.info("Checking and filling missing slots from {} to {}...", fromDate, toDate);
 
         LocalDate currentDay = fromDate;
         int slotsAdded = 0;
 
         while (!currentDay.isAfter(toDate)) {
-            if (currentDay.getDayOfWeek().getValue() != 7) { // Bỏ qua Chủ Nhật
+            if (currentDay.getDayOfWeek().getValue() != 7) {
                 LocalDateTime dayStart = LocalDateTime.of(currentDay, CLINIC_OPEN_TIME);
                 LocalDateTime dayEnd = LocalDateTime.of(currentDay, CLINIC_CLOSE_TIME);
 
-                // Tìm tất cả slot hiện có trong ngày
-                List<Slot> existingDaySlots = slotRepository.findAllSlotsBetweenTimes(dayStart, dayEnd);
+                LocalDateTime slotTime = dayStart;
+                while (slotTime.isBefore(dayEnd)) {
+                    Optional<Slot> existingSlot = slotRepository.findBySlotTime(slotTime);
 
-                // Nếu không đủ 18 slots, tiến hành kiểm tra từng slot một
-                if (existingDaySlots.size() < 18) {
-                    logger.warn("Day {} only has {} slots, expected 18. Repairing...", currentDay, existingDaySlots.size());
-
-                    LocalDateTime slotTime = dayStart;
-                    while (slotTime.isBefore(dayEnd)) {
-                        Optional<Slot> existingSlot = slotRepository.findBySlotTime(slotTime);
-
-                        if (existingSlot.isEmpty()) {
-                            Slot slot = new Slot(slotTime, DEFAULT_CAPACITY);
-                            slotRepository.save(slot);
-                            slotsAdded++;
-                            logger.info("Created missing slot: {}", slotTime);
-                        } else if (!existingSlot.get().isActive()) {
-                            Slot slot = existingSlot.get();
-                            slot.setActive(true);
-                            if (slot.getCapacity() <= 0) {
-                                slot.setCapacity(DEFAULT_CAPACITY);
-                            }
-                            slotRepository.save(slot);
-                            logger.info("Re-activated slot: {}", slotTime);
-                        }
-                        slotTime = slotTime.plusMinutes(30);
+                    if (existingSlot.isEmpty()) {
+                        slotRepository.save(new Slot(slotTime, DEFAULT_CAPACITY));
+                        slotsAdded++;
+                    } else if (!existingSlot.get().isActive()) {
+                        Slot slot = existingSlot.get();
+                        slot.setActive(true);
+                        slot.setCapacity(DEFAULT_CAPACITY);
+                        slotRepository.save(slot);
                     }
+                    slotTime = slotTime.plusMinutes(30);
                 }
             }
             currentDay = currentDay.plusDays(1);
         }
-
-        if (slotsAdded > 0) {
-            logger.info("Added {} missing slots total", slotsAdded);
-        } else {
-            logger.info("No missing slots found, database is complete");
-        }
+        logger.info("Repair complete. Added/Fixed {} slots.", slotsAdded);
     }
 }
