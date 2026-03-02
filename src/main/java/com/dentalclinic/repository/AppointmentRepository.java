@@ -150,7 +150,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         LEFT JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
-          AND a.status NOT IN (com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED)
+          AND a.status IN (
+              com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
+              com.dentalclinic.model.appointment.AppointmentStatus.EXAMINING,
+              com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+              com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
+              com.dentalclinic.model.appointment.AppointmentStatus.CHECKED_IN
+          )
     """)
     List<Appointment> findScheduleForWeek(
             @Param("dentistProfileId") Long dentistProfileId,
