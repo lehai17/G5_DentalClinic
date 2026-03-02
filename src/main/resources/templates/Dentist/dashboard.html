@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
+    <link rel="stylesheet" th:href="@{/css/dentist/dashboard.css}"/>
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- SIDEBAR (GIỮ NGUYÊN) -->
+    <aside class="sidebar" id="sidebar"
+           style="display:flex;flex-direction:column;height:100vh;">
+        <div class="sidebar-top">
+            <div class="brand-mini">
+                <div class="brand-badge">D+</div>
+                <div style="font-weight:800">DentalPlus</div>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <a class="nav-item active" href="/dentist/dashboard">Dashboard</a>
+            <a class="nav-item" href="/dentist/work-schedule">Work Schedule</a>
+            <a class="nav-item" href="/dentist/busy-schedule">Busy Schedule</a>
+            <a class="nav-item" href="/dentist/support">Support Ticket</a>
+            <a class="nav-item" href="/dentist/profile">Profile</a>
+        </nav>
+
+        <div style="margin-top:auto;">
+            <a class="nav-item danger" href="/logout">Sign Out</a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <div class="topbar">
+            <div style="color:var(--muted);font-size:12px;">
+                Modules › Dashboard
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- HERO SECTION -->
+            <div class="dashboard-hero">
+                <h1 class="clinic-name">GENZ CLINIC</h1>
+                <div class="clinic-slogan">
+                    Care with Precision. Smile with Confidence.
+                </div>
+            </div>
+
+            <!-- STATS SECTION -->
+            <div class="stats-grid">
+
+                <!-- TOTAL -->
+                <div class="stat-card">
+                    <div class="stat-icon blue">📅</div>
+                    <div class="stat-label">APPOINTMENTS TODAY</div>
+                    <div class="stat-value"
+                         th:text="${totalToday}">0</div>
+                </div>
+
+                <!-- COMPLETED -->
+                <div class="stat-card">
+                    <div class="stat-icon green">✔</div>
+                    <div class="stat-label">COMPLETED TODAY</div>
+                    <div class="stat-value"
+                         th:text="${completedToday}">0</div>
+                </div>
+
+                <!-- REMAINING -->
+                <div class="stat-card">
+                    <div class="stat-icon orange">⏳</div>
+                    <div class="stat-label">REMAINING TODAY</div>
+                    <div class="stat-value"
+                         th:text="${remainingToday}">0</div>
+                </div>
+
+            </div>
+
+
+            <!-- TODAY OVERVIEW -->
+            <div class="overview-section">
+
+                <h2 class="overview-title">Today's Overview</h2>
+
+                <div>
+
+                    <!-- COMPLETION RATE -->
+                    <div class="completion-box">
+
+                        <div class="completion-header">
+                            <span>Completion Rate</span>
+                            <span class="completion-percent"
+                                  th:text="${completionRate} + '%'">0%</span>
+                        </div>
+
+                        <div class="progress-bar">
+                            <div class="progress-fill"
+                                 th:style="'width:' + ${completionRate} + '%;'">
+                            </div>
+                        </div>
+
+                        <div class="completion-sub"
+                             th:text="'Completed ' + ${completedToday} + ' / ' + ${totalToday} + ' appointments today.'">
+                            Completed 0 / 0 appointments today.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

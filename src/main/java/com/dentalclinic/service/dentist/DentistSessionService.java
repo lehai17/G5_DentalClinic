@@ -10,6 +10,7 @@ import com.dentalclinic.repository.MedicalRecordRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 public class DentistSessionService {
 
@@ -24,7 +25,6 @@ public class DentistSessionService {
         this.medicalRecordRepository = medicalRecordRepository;
         this.billingNoteRepository = billingNoteRepository;
     }
-
 
     /* =========================================================
        EXAMINATION
@@ -47,10 +47,8 @@ public class DentistSessionService {
                 )
                 .orElse(null);
 
-        String patientName = appt.getCustomer().getFullName();
-
         return new ExamForm(
-                patientName,
+                appt.getCustomer().getFullName(),
                 mr == null ? "" : safe(mr.getDiagnosis()),
                 mr == null ? "" : safe(mr.getTreatmentNote())
         );
@@ -63,6 +61,18 @@ public class DentistSessionService {
                          String treatmentNote) {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+
+        // Không cho save nếu đã DONE hoặc COMPLETED
+        if (appt.getStatus() == AppointmentStatus.DONE
+                || appt.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Appointment already finalized");
+        }
+
+        // Nếu chưa EXAMINING thì set
+        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
+            appt.setStatus(AppointmentStatus.EXAMINING);
+            appointmentRepository.save(appt);
+        }
 
         MedicalRecord mr = medicalRecordRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -77,9 +87,6 @@ public class DentistSessionService {
         mr.setDiagnosis(safe(diagnosis));
         mr.setTreatmentNote(safe(treatmentNote));
         medicalRecordRepository.save(mr);
-
-        appt.setStatus(AppointmentStatus.COMPLETED);
-        appointmentRepository.save(appt);
     }
 
     /* =========================================================
@@ -104,13 +111,17 @@ public class DentistSessionService {
                 )
                 .orElse(null);
 
-        String patientName = appt.getCustomer().getFullName();
-
         return new BillingForm(
-                patientName,
-                bn == null ? defaultPerformedJson() : safe(bn.getPerformedServicesJson()),
-                bn == null ? defaultPrescriptionJson() : safe(bn.getPrescriptionNote()),
-                bn == null ? "" : safe(bn.getNote())
+                appt.getCustomer().getFullName(),
+                bn == null
+                        ? defaultPerformedJson(appt)
+                        : safe(bn.getPerformedServicesJson()),
+                bn == null
+                        ? defaultPrescriptionJson()
+                        : safe(bn.getPrescriptionNote()),
+                bn == null
+                        ? ""
+                        : safe(bn.getNote())
         );
     }
 
@@ -122,6 +133,11 @@ public class DentistSessionService {
                             String note) {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+
+        if (appt.getStatus() == AppointmentStatus.DONE
+                || appt.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Appointment already finalized");
+        }
 
         BillingNote bn = billingNoteRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -138,12 +154,14 @@ public class DentistSessionService {
         bn.setNote(safe(note));
         billingNoteRepository.save(bn);
 
-        appt.setStatus(AppointmentStatus.COMPLETED);
+        // Chuyển DONE
+        appt.setStatus(AppointmentStatus.DONE);
         appointmentRepository.save(appt);
     }
 
+
     /* =========================================================
-       INTERNAL HELPERS
+       INTERNAL
        ========================================================= */
 
     private Appointment mustGetAppointment(Long appointmentId, Long customerUserId) {
@@ -153,12 +171,8 @@ public class DentistSessionService {
                         new IllegalArgumentException("Appointment not found")
                 );
 
-        if (appt.getCustomer() == null ||
-                appt.getCustomer().getUser() == null) {
-            throw new IllegalArgumentException("Appointment missing customer");
-        }
-
         Long ownerUserId = appt.getCustomer().getUser().getId();
+
         if (!ownerUserId.equals(customerUserId)) {
             throw new IllegalArgumentException("Appointment does not belong to this customer");
         }
@@ -170,13 +184,17 @@ public class DentistSessionService {
         return s == null ? "" : s.trim();
     }
 
-    private String defaultPerformedJson() {
+    private String defaultPerformedJson(Appointment appt) {
+
+        if (appt.getService() == null) {
+            return "[]";
+        }
+
         return """
-            [
-              {"serviceId":1,"qty":1,"toothNo":"Full mouth"},
-              {"serviceId":2,"qty":1,"toothNo":"36"}
-            ]
-        """;
+        [
+          {"serviceId":%d,"qty":1,"toothNo":""}
+        ]
+        """.formatted(appt.getService().getId());
     }
 
     private String defaultPrescriptionJson() {

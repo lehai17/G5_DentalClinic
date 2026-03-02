@@ -13,11 +13,11 @@
         <div th:replace="~{staff/fragments/header :: header}"></div>
 
         <div class="content">
-            <h2>️ Lịch làm việc bác sĩ</h2>
+            <h2>️ Dentist's work schedule</h2>
 
             <form method="get" th:action="@{/staff/schedules}" class="schedule-filter">
                 <select name="dentistId" required>
-                    <option value="">-- Chọn bác sĩ --</option>
+                    <option value="">-- Choose dentist --</option>
                     <option th:each="d : ${dentists}"
                             th:value="${d.id}"
                             th:text="${d.fullName}"
@@ -27,16 +27,16 @@
 
                 <input type="date" name="date" th:value="${selectedDate}" required/>
 
-                <button type="submit">Xem</button>
+                <button type="submit">View</button>
             </form>
 
 
             <table th:if="${schedule != null}">
                 <thead>
                 <tr>
-                    <th>Bác sĩ</th>
-                    <th>Giờ</th>
-                    <th>Dịch vụ</th>
+                    <th>Dentist</th>
+                    <th>Time</th>
+                    <th>Service</th>
                 </tr>
                 </thead>
 

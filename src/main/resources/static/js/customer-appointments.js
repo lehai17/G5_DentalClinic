@@ -266,3 +266,14 @@
 
   loadAppointments();
 })();
+
+if (appointment.status === "WAITING_PAYMENT") {
+    html += `
+        <div class="cap-payment-box" style="margin-top:20px;">
+            <a href="/customer/payment/create/${appointment.id}"
+               class="cap-pay-btn">
+               Thanh toán VNPay
+            </a>
+        </div>
+    `;
+}

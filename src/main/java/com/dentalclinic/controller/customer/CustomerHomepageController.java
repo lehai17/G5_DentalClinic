@@ -85,11 +85,13 @@ public class CustomerHomepageController {
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
         model.addAttribute("services", serviceRepo.findAll());
+        model.addAttribute("active", "booking");
         return "customer/booking";
     }
 
     @GetMapping("/customer/my-appointments")
-    public String appointmentsPage() {
+    public String appointmentsPage(Model model) {
+        model.addAttribute("active", "appointments");
         return "customer/appointments";
     }
 }
