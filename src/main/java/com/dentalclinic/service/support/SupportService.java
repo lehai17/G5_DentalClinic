@@ -41,6 +41,15 @@ public class SupportService {
         this.appointmentRepository = appointmentRepository;
     }
 
+    @Transactional(readOnly = true)
+    public User getCurrentUser(UserDetails principal) {
+        if (principal == null || principal.getUsername() == null || principal.getUsername().isBlank()) {
+            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
+        }
+        return userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy người dùng hiện tại."));
+    }
+
     @Transactional
     public SupportTicket createTicket(Long customerUserId, String question) {
         return createTicket(customerUserId, null, "Hỗ trợ chuyên môn", question);
@@ -54,9 +63,12 @@ public class SupportService {
 
         Appointment appointment = null;
         User assignedResponder = null;
+
         if (appointmentId != null) {
             appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, customerUserId)
                     .orElseThrow(() -> new BusinessException("Không tìm thấy ca khám phù hợp để hỗ trợ."));
+
+            // Auto-assign dentist of the appointment as responder (if any)
             if (appointment.getDentist() != null && appointment.getDentist().getUser() != null) {
                 assignedResponder = appointment.getDentist().getUser();
             }
@@ -68,9 +80,9 @@ public class SupportService {
         ticket.setStaff(assignedResponder);
         ticket.setTitle(title.trim());
         ticket.setQuestion(question.trim());
-        ticket.setAnswer(null);
         ticket.setStatus(SupportStatus.OPEN);
         ticket.setCreatedAt(LocalDateTime.now());
+
         return supportTicketRepository.save(ticket);
     }
 
@@ -117,8 +129,7 @@ public class SupportService {
         if (status == null || status.isBlank()) {
             return supportTicketRepository.findAllByOrderByCreatedAtDesc();
         }
-        SupportStatus normalized = parseStatus(status);
-        return supportTicketRepository.findByStatusOrderByCreatedAtDesc(normalized);
+        return supportTicketRepository.findByStatusOrderByCreatedAtDesc(parseStatus(status));
     }
 
     @Transactional(readOnly = true)
@@ -156,6 +167,8 @@ public class SupportService {
         if (ticket.getStatus() == SupportStatus.CLOSED) {
             throw new BusinessException("Không thể trả lời yêu cầu đã đóng.");
         }
+
+        // Không cho trả lời lại nếu đã có câu trả lời
         if (ticket.getAnswer() != null && !ticket.getAnswer().trim().isEmpty()) {
             throw new BusinessException("Yêu cầu này đã được trả lời.");
         }
@@ -167,8 +180,10 @@ public class SupportService {
         ticket.setStaff(responder);
         ticket.setAnswer(answer.trim());
         ticket.setStatus(SupportStatus.ANSWERED);
+
         SupportTicket saved = supportTicketRepository.save(ticket);
 
+        // Notify customer: ticket answered
         notificationService.createForCustomer(
                 saved.getCustomer().getId(),
                 NotificationType.TICKET_ANSWERED,
@@ -191,10 +206,12 @@ public class SupportService {
         if (ticket.getStatus() == SupportStatus.CLOSED) {
             throw new BusinessException("Yêu cầu hỗ trợ đã đóng.");
         }
+
         ticket.setStatus(SupportStatus.CLOSED);
         if (ticket.getStaff() == null) {
             ticket.setStaff(staff);
         }
+
         SupportTicket saved = supportTicketRepository.save(ticket);
 
         notificationService.createForCustomer(
@@ -210,18 +227,11 @@ public class SupportService {
         return saved;
     }
 
-    @Transactional(readOnly = true)
-    public User getCurrentUser(UserDetails principal) {
-        if (principal == null || principal.getUsername() == null || principal.getUsername().isBlank()) {
-            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
-        }
-        return userRepository.findByEmail(principal.getUsername())
-                .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy tài khoản hiện tại."));
-    }
+    // ================== INTERNAL HELPERS ==================
 
     private User requireUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng hiện tại."));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng."));
     }
 
     private User requireCustomer(Long userId) {
@@ -242,16 +252,15 @@ public class SupportService {
 
     private User requireSupportResponder(Long userId) {
         User user = requireUser(userId);
-        if (user.getRole() != Role.STAFF && user.getRole() != Role.DENTIST) {
-            throw new SupportAccessDeniedException("Chỉ nhân viên hoặc bác sĩ mới được phản hồi phiếu hỗ trợ.");
+        if (user.getRole() != Role.STAFF && user.getRole() != Role.DENTIST && user.getRole() != Role.ADMIN) {
+            throw new SupportAccessDeniedException("Chỉ nhân viên, bác sĩ hoặc admin mới được phản hồi phiếu hỗ trợ.");
         }
         return user;
     }
 
     private void validateDentistCanAnswer(Long dentistUserId, SupportTicket ticket) {
-        if (ticket.getAppointment() == null) {
-            return;
-        }
+        if (ticket.getAppointment() == null) return;
+
         if (ticket.getAppointment().getDentist() == null || ticket.getAppointment().getDentist().getUser() == null) {
             throw new SupportAccessDeniedException("Phiếu này chưa gán bác sĩ ca khám, bác sĩ không thể phản hồi.");
         }

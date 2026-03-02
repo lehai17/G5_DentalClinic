@@ -2,6 +2,7 @@ package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.profile.CustomerProfile;
+import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.BlogRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.repository.ServiceRepository;
@@ -28,11 +29,13 @@ public class CustomerHomepageController {
     private final BlogRepository blogRepo;
     private final UserRepository userRepository;
 
-    public CustomerHomepageController(CustomerProfileService profileService,
-                                      ServiceRepository serviceRepo,
-                                      DentistProfileRepository dentistRepo,
-                                      BlogRepository blogRepo,
-                                      UserRepository userRepository) {
+    public CustomerHomepageController(
+            CustomerProfileService profileService,
+            ServiceRepository serviceRepo,
+            DentistProfileRepository dentistRepo,
+            BlogRepository blogRepo,
+            UserRepository userRepository
+    ) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
@@ -46,14 +49,22 @@ public class CustomerHomepageController {
     }
 
     @GetMapping({"/homepage", "/customer/homepage"})
-    public String showHomepage(@RequestParam(defaultValue = "0") int page,
-                               Authentication authentication,
-                               Model model) {
+    public String showHomepage(
+            @RequestParam(defaultValue = "0") int page,
+            Authentication authentication,
+            Model model
+    ) {
         model.addAttribute("active", "homepage");
+
         Long currentCustomerId = resolveCurrentUserId(authentication);
+        if (currentCustomerId == null) {
+            // Nếu chưa đăng nhập, chuyển hướng về trang login (hoặc landing page tuỳ project)
+            return "redirect:/login";
+        }
 
         try {
             CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
+
             if (profile == null) {
                 profile = new CustomerProfile();
                 profile.setFullName("Khách hàng");
@@ -63,8 +74,9 @@ public class CustomerHomepageController {
             }
             model.addAttribute("customer", profile);
 
-            model.addAttribute("services", serviceRepo.findAll());
-            model.addAttribute("dentists", dentistRepo.findAll());
+            // Dịch vụ và bác sĩ (lọc active theo master)
+            model.addAttribute("services", serviceRepo.findByActiveTrue());
+            model.addAttribute("dentists", dentistRepo.filterDentists(null, UserStatus.ACTIVE));
 
             int safePage = Math.max(page, 0);
             Pageable pageable = PageRequest.of(safePage, 2);
@@ -73,6 +85,7 @@ public class CustomerHomepageController {
             model.addAttribute("blogs", blogPage.getContent());
             model.addAttribute("currentPage", safePage);
             model.addAttribute("totalPages", blogPage.getTotalPages());
+
             return "customer/homepage";
         } catch (Exception e) {
             model.addAttribute("customer", new CustomerProfile());
@@ -88,11 +101,14 @@ public class CustomerHomepageController {
 
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
-        model.addAttribute("services", serviceRepo.findAll());
-        model.addAttribute("active", "booking");
+        model.addAttribute("services", serviceRepo.findByActiveTrue());
         return "customer/booking";
     }
 
+    /**
+     * Trang lịch hẹn của tôi (cùng layout với trang chủ).
+     * Dùng /my-appointments để tránh trùng GET /customer/appointments (API JSON) nếu có.
+     */
     @GetMapping("/customer/my-appointments")
     public String appointmentsPage(Model model) {
         model.addAttribute("active", "appointments");
@@ -103,12 +119,14 @@ public class CustomerHomepageController {
         if (authentication == null) {
             return null;
         }
+
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserDetails userDetails) {
             return userRepository.findByEmail(userDetails.getUsername())
                     .map(user -> user.getId())
                     .orElse(null);
         }
+
         return userRepository.findByEmail(authentication.getName())
                 .map(user -> user.getId())
                 .orElse(null);

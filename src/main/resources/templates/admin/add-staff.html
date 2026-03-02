@@ -81,6 +81,14 @@
         <span th:text="${success}">Thành công!</span>
     </div>
     <form th:action="@{/admin/staff/save}" th:object="${staffDTO}" method="POST">
+        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger"
+             style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+            <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
+            <strong>Vui lòng kiểm tra lại thông tin:</strong>
+            <ul style="margin: 5px 0 0 20px; padding: 0;">
+                <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+            </ul>
+        </div>
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
 
             <div class="left-col">

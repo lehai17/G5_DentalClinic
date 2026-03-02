@@ -22,7 +22,10 @@ public class SupportTicket {
     @JoinColumn(name = "customer_id")
     private User customer;
 
-    // Mapped to existing DB column `staff_id`.
+    /**
+     * Nhân viên / bác sĩ xử lý ticket.
+     * Map trực tiếp tới cột DB `staff_id`.
+     */
     @ManyToOne
     @JoinColumn(name = "staff_id")
     private User staff;
@@ -43,6 +46,11 @@ public class SupportTicket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // ================== CONSTRUCTORS ==================
+    public SupportTicket() {
+    }
+
+    // ================== GETTERS & SETTERS ==================
     public Long getId() {
         return id;
     }
@@ -75,7 +83,9 @@ public class SupportTicket {
         this.staff = staff;
     }
 
-    // Backward-compatible alias used by some old modules.
+    /**
+     * Alias để tương thích với code cũ (dentist = staff).
+     */
     public User getDentist() {
         return staff;
     }
