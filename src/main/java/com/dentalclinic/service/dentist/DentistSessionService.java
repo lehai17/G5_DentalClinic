@@ -178,7 +178,12 @@ public class DentistSessionService {
         return s == null ? "" : s.trim();
     }
 
-    private String defaultPerformedJson() {
+    private String defaultPerformedJson(Appointment appt) {
+
+        if (appt.getService() == null) {
+            return "[]";
+        }
+
         return """
             [
               {"serviceId":1,"qty":1,"toothNo":"Full mouth"}

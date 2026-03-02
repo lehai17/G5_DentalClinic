@@ -40,6 +40,19 @@ public class SupportService {
         this.appointmentRepository = appointmentRepository;
     }
 
+    /**
+     * Lấy thông tin User hiện tại từ Security Principal
+     * Fix lỗi "Cannot resolve method 'getCurrentUser'" trong Controller
+     */
+    @Transactional(readOnly = true)
+    public User getCurrentUser(UserDetails principal) {
+        if (principal == null || principal.getUsername() == null) {
+            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
+        }
+        return userRepository.findByEmail(principal.getUsername())
+                .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy người dùng hiện tại."));
+    }
+
     @Transactional
     public SupportTicket createTicket(Long customerUserId, String question) {
         return createTicket(customerUserId, null, "Hỗ trợ chuyên môn", question);
@@ -70,6 +83,7 @@ public class SupportService {
         ticket.setAnswer(null);
         ticket.setStatus(SupportStatus.OPEN);
         ticket.setCreatedAt(LocalDateTime.now());
+
         return supportTicketRepository.save(ticket);
     }
 
@@ -147,6 +161,18 @@ public class SupportService {
     @Transactional
     public SupportTicket answerTicket(Long responderUserId, Long ticketId, String answer) {
         User responder = requireSupportResponder(responderUserId);
+        try {
+            // Fix lỗi: Chuyển đổi String sang Enum để Query
+            SupportStatus filterStatus = SupportStatus.valueOf(status.trim().toUpperCase());
+            return supportTicketRepository.findByStatusOrderByCreatedAtDesc(filterStatus);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Trạng thái lọc không hợp lệ.");
+        }
+    }
+
+    @Transactional
+    public SupportTicket answerTicket(Long staffUserId, Long ticketId, String answer) {
+        User staff = requireUser(staffUserId);
         validateAnswer(answer);
 
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
@@ -157,6 +183,8 @@ public class SupportService {
         }
         if (ticket.getAnswer() != null && !ticket.getAnswer().trim().isEmpty()) {
             throw new BusinessException("Yeu cau nay da duoc tra loi.");
+        if (SupportStatus.CLOSED.equals(ticket.getStatus())) {
+            throw new BusinessException("Không thể trả lời yêu cầu đã đóng.");
         }
 
         if (responder.getRole() == Role.DENTIST) {
@@ -168,6 +196,7 @@ public class SupportService {
         ticket.setStatus(SupportStatus.ANSWERED);
         SupportTicket saved = supportTicketRepository.save(ticket);
 
+        // Gửi Notification
         Notification notification = new Notification();
         notification.setUser(saved.getCustomer());
         notification.setTitle("Phieu ho tro da duoc phan hoi");
@@ -260,11 +289,14 @@ public class SupportService {
         if (title == null || title.trim().isEmpty()) {
             throw new BusinessException("Tiêu đề không được để trống.");
         }
+    private User requireUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng."));
     }
 
     private void validateQuestion(String question) {
         if (question == null || question.trim().isEmpty()) {
-            throw new BusinessException("Nội dung câu hỏi không được để trống.");
+            throw new BusinessException("Câu hỏi không được để trống.");
         }
     }
 

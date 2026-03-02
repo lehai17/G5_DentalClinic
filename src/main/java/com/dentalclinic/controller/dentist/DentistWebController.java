@@ -134,4 +134,45 @@ public class DentistWebController {
 
         return "Dentist/work-schedule";
     }
+
+    @GetMapping("/dentist/dashboard")
+    public String dashboard(Model model) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Long dentistUserId = user.getId();
+
+        Long dentistProfileId = dentistProfileRepository
+                .findByUser_Id(dentistUserId)
+                .orElseThrow(() -> new RuntimeException("Dentist profile not found"))
+                .getId();
+
+        LocalDate today = LocalDate.now();
+
+        long total = appointmentRepository
+                .countTotalByDentistAndDate(dentistProfileId, today);
+
+        long completed = appointmentRepository
+                .countCompletedByDentistAndDate(dentistProfileId, today);
+
+        long remaining = total - completed;
+
+        int completionRate = 0;
+        if (total > 0) {
+            completionRate = (int) ((completed * 100.0) / total);
+        }
+
+        model.addAttribute("totalToday", total);
+        model.addAttribute("completedToday", completed);
+        model.addAttribute("remainingToday", remaining);
+        model.addAttribute("completionRate", completionRate);
+
+        return "Dentist/dashboard";
+    }
 }

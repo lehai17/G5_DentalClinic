@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Edit Profile</title>
+
+    <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
+    <link rel="stylesheet" th:href="@{/css/dentist/profile.css}"/>
+</head>
+
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" style="display:flex;flex-direction:column;height:100vh;">
+        <div class="sidebar-top">
+            <div class="brand-mini">
+                <div class="brand-badge">D+</div>
+                <div style="font-weight:800">DentalPlus</div>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <a class="nav-item" href="/dentist/dashboard">Dashboard</a>
+            <a class="nav-item" href="/dentist/work-schedule">Work Schedule</a>
+            <a class="nav-item" href="/dentist/busy-schedule">Busy Schedule</a>
+            <a class="nav-item" href="/dentist/support">Support Ticket</a>
+            <a class="nav-item active" href="/dentist/profile">Profile</a>
+        </nav>
+
+        <div style="margin-top:auto;">
+            <a class="nav-item danger" href="/logout">Sign Out</a>
+        </div>
+    </aside>
+
+    <div class="main">
+
+        <div class="topbar">
+            <div style="color:var(--muted);font-size:12px;">
+            Modules › Profile › Edit
+        </div>
+        </div>
+
+        <div class="content">
+
+            <div class="profile-header">
+                <h1>Edit Profile</h1>
+            </div>
+
+            <form th:action="@{/dentist/profile/edit}"
+                  th:object="${editDTO}"
+                  method="post">
+
+                <div class="card large">
+                    <h3>Account Information</h3>
+
+                    <div class="grid-2">
+                        <div>
+                            <label>Gender</label>
+                            <select name="gender">
+                                <option value="MALE"
+                                        th:selected="${editDTO.gender.name() == 'MALE'}">
+                                    Male
+                                </option>
+                                <option value="FEMALE"
+                                        th:selected="${editDTO.gender.name() == 'FEMALE'}">
+                                    Female
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Date of Birth</label>
+                            <input type="date"
+                                   name="dateOfBirth"
+                                   th:value="${#temporals.format(editDTO.dateOfBirth, 'yyyy-MM-dd')}" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card large">
+                    <h3>Professional Information</h3>
+
+                    <div class="grid-2">
+                        <div>
+                            <label>Full Name</label>
+                            <input type="text"
+                                   name="fullName"
+                                   th:value="${editDTO.fullName}" />
+                        </div>
+
+                        <div>
+                            <label>Phone</label>
+                            <input type="text"
+                                   name="phone"
+                                   th:value="${editDTO.phone}" />
+                        </div>
+
+                        <div>
+                            <label>Specialization</label>
+                            <input type="text"
+                                   name="specialization"
+                                   th:value="${editDTO.specialization}" />
+                        </div>
+
+                        <div>
+                            <label>Experience</label>
+                            <input type="number"
+                                   name="experienceYears"
+                                   th:value="${editDTO.experienceYears}" />
+                        </div>
+                    </div>
+
+                    <div class="bio-section">
+                        <label>Biography</label>
+                        <textarea rows="4"
+                                  name="bio"
+                                  th:text="${editDTO.bio}"></textarea>
+                    </div>
+                </div>
+
+                <div class="actions bottom">
+                    <a th:href="@{/dentist/profile}" class="btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn-primary">
+                        Save Changes
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

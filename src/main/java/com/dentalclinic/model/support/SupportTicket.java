@@ -2,6 +2,7 @@ package com.dentalclinic.model.support;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.user.User;
+import com.dentalclinic.model.appointment.Appointment;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -9,9 +10,14 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "support_ticket")
 public class SupportTicket {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
@@ -28,6 +34,8 @@ public class SupportTicket {
 
     @Column(name = "title", columnDefinition = "NVARCHAR(255)")
     private String title;
+    @JoinColumn(name = "dentist_id")
+    private User dentist;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String question;
@@ -42,12 +50,25 @@ public class SupportTicket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // --- Constructor ---
+    public SupportTicket() {
+    }
+
+    // --- Getters and Setters ---
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Appointment getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
     }
 
     public User getCustomer() {

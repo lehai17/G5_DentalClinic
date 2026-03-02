@@ -5,3 +5,6 @@ public enum SupportStatus {
     ANSWERED,
     CLOSED
 }
+    CLOSED,
+    ANSWERED
+}
