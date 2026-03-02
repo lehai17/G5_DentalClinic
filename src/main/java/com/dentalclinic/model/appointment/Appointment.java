@@ -60,7 +60,8 @@ public class Appointment {
     private LocalTime endTime;
 
     @Enumerated(EnumType.STRING)
-    private AppointmentStatus status = AppointmentStatus.PENDING;
+    @Column(name="status")
+    private AppointmentStatus status;
 
     @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;

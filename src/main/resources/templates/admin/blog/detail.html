@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Detail - Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-light: #F4F7FE;
+            --card: #fff;
+            --text-main: #1B2559;
+            --muted: #707EAE;
+            --border: #E6ECF5;
+        }
+        body { display: flex; margin: 0; font-family: Inter, sans-serif; background: var(--bg-light); }
+        .main-content { flex: 1; padding: 20px; }
+        .page-title { margin: 0 0 18px; color: var(--text-main); }
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.05);
+            padding: 20px;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .meta-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fafcff;
+        }
+        .meta-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+        .meta-value { font-size: 14px; color: var(--text-main); font-weight: 600; }
+
+        .blog-title { font-size: 28px; margin: 0 0 10px; color: var(--text-main); }
+        .summary {
+            margin: 0 0 16px;
+            color: #334155;
+            font-size: 16px;
+            line-height: 1.6;
+            border-left: 4px solid #dbeafe;
+            padding-left: 12px;
+        }
+
+        .thumb-wrap { margin-bottom: 18px; }
+        .thumb {
+            width: 100%;
+            max-height: 420px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #f1f5f9;
+        }
+
+        .content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #111827;
+            white-space: pre-wrap;
+        }
+
+        .actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-secondary { background: #e2e8f0; color: #1f2937; }
+        .btn-edit { background:#2563eb; color:#fff; }
+        .btn-success { background: #16a34a; color: #fff; }
+        .btn-danger { background: #dc2626; color: #fff; }
+
+        .reject-box {
+            margin-top: 12px;
+            display: none;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .reject-box input {
+            min-width: 320px;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+        }
+        .reject-box.show { display: flex; }
+
+        .status-pill {
+            display: inline-block; padding: 4px 10px; border-radius: 999px;
+            font-size: 12px; font-weight: 700;
+        }
+        .st-draft { background: #e2e8f0; color: #334155; }
+        .st-pending { background: #fef3c7; color: #92400e; }
+        .st-approved { background: #dcfce7; color: #166534; }
+        .st-rejected { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{admin/sidebar :: sidebar}"></div>
+
+<div class="main-content">
+    <h2 class="page-title">Blog Detail</h2>
+
+    <div class="card" th:if="${blog != null}">
+        <div class="meta-grid">
+            <div class="meta-item">
+                <div class="meta-label">ID</div>
+                <div class="meta-value" th:text="${blog.id}">1</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Status</div>
+                <div class="meta-value">
+                    <span class="status-pill"
+                          th:classappend="${
+                            blog.status.name() == 'DRAFT' ? 'st-draft' :
+                            (blog.status.name() == 'PENDING' ? 'st-pending' :
+                            (blog.status.name() == 'APPROVED' ? 'st-approved' : 'st-rejected'))
+                          }"
+                          th:text="${blog.status}">PENDING</span>
+                </div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Created At</div>
+                <div class="meta-value" th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy HH:mm')}">-</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Updated At</div>
+                <div class="meta-value" th:text="${#temporals.format(blog.updatedAt, 'dd/MM/yyyy HH:mm')}">-</div>
+            </div>
+        </div>
+
+        <h1 class="blog-title" th:text="${blog.title}">Tiêu đề blog</h1>
+        <p class="summary" th:text="${blog.summary}">Tóm tắt blog...</p>
+
+        <div class="thumb-wrap" th:if="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}">
+            <img class="thumb" th:src="${blog.imageUrl}" alt="Blog image">
+        </div>
+
+        <div class="content" th:text="${blog.content}">Nội dung blog...</div>
+
+        <div class="actions">
+            <a th:href="@{/admin/blogs(status=${blog.status})}" class="btn btn-secondary">← Back</a>
+
+            <!-- EDIT: CHỈ PENDING/APPROVED -->
+            <a class="btn btn-edit"
+               th:if="${blog.status.name() == 'PENDING' or blog.status.name() == 'APPROVED'}"
+               th:href="@{'/admin/blogs/' + ${blog.id} + '/edit'}">
+                Edit
+            </a>
+
+            <!-- APPROVE: CHỈ PENDING -->
+            <form th:if="${blog.status.name() == 'PENDING'}"
+                  th:action="@{'/admin/blogs/' + ${blog.id} + '/approve'}"
+                  method="post">
+                <button type="submit" class="btn btn-success">Approve</button>
+            </form>
+
+            <!-- REJECT: CHỈ PENDING -->
+            <button th:if="${blog.status.name() == 'PENDING'}"
+                    type="button" class="btn btn-danger"
+                    onclick="toggleReject()">Reject</button>
+        </div>
+
+        <form id="rejectForm"
+              class="reject-box"
+              th:if="${blog.status.name() == 'PENDING'}"
+              th:action="@{'/admin/blogs/' + ${blog.id} + '/reject'}"
+              method="post">
+            <input type="text" name="rejectionReason" required placeholder="Nhập lý do reject...">
+            <button type="submit" class="btn btn-danger">Confirm Reject</button>
+        </form>
+
+        <div th:if="${blog.rejectionReason != null and !#strings.isEmpty(blog.rejectionReason)}"
+             style="margin-top:14px; color:#991b1b; font-weight:600;">
+            Rejection reason:
+            <span th:text="${blog.rejectionReason}"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleReject() {
+        const f = document.getElementById('rejectForm');
+        if (f) f.classList.toggle('show');
+    }
+</script>
+</body>
+</html>

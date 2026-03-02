@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin - Health Blogs</title>
+
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root { --sidebar-color:#1A237E; --bg:#F4F7FE; --card:#fff; --text:#1B2559; --muted:#707EAE; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family: Inter, Arial, sans-serif; background: var(--bg); display:flex; }
+
+        .main-content { flex:1; padding:20px; }
+        .header { background:#fff; border-radius:14px; padding:14px 18px; box-shadow:0 3px 10px rgba(0,0,0,.04); margin-bottom:18px; }
+        .title { margin:0; color:var(--text); }
+
+        .stats { display:grid; grid-template-columns: repeat(4, minmax(160px,1fr)); gap:12px; margin:14px 0 16px; }
+        .stat { background:#fff; border-radius:12px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+        .stat .label { color:var(--muted); font-size:12px; }
+        .stat .value { font-size:24px; font-weight:700; color:var(--text); margin-top:4px; }
+
+        .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+        .chip {
+            padding:8px 12px; border-radius:10px; text-decoration:none; font-weight:600;
+            background:#e9edf7; color:#334155; border:1px solid transparent;
+        }
+        .chip.active { background:#1A237E; color:#fff; }
+
+        .card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); overflow:hidden; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px 14px; border-bottom:1px solid #eef1f7; font-size:14px; text-align:left; }
+        th { color:#64748B; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+        .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+        .b-draft { background:#ECEFF4; color:#334155; }
+        .b-pending { background:#FEF3C7; color:#92400E; }
+        .b-approved { background:#DCFCE7; color:#166534; }
+        .b-rejected { background:#FEE2E2; color:#991B1B; }
+
+        .empty { padding:28px; text-align:center; color:#6B7280; }
+
+        .pagination { display:flex; gap:8px; justify-content:flex-end; padding:14px; }
+        .page-link { padding:6px 10px; border:1px solid #d6dbe7; border-radius:8px; text-decoration:none; color:#334155; background:#fff; }
+
+        .btn-link {
+            padding:6px 12px; border-radius:8px; text-decoration:none;
+            border:1px solid #cbd5e1; color:#0f172a; background:#fff;
+        }
+        .btn-edit {
+            border:1px solid #93c5fd; color:#1d4ed8;
+        }
+        .btn-reject {
+            border:none; background:#dc2626; color:#fff; border-radius:8px; cursor:pointer; padding:6px 10px;
+        }
+        .reject-input {
+            padding:6px 8px; border:1px solid #fecaca; border-radius:8px; width:140px;
+        }
+    </style>
+</head>
+<body>
+
+<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+
+<div class="main-content">
+    <div class="header">
+        <h2 class="title">Health Blog Management</h2>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><div class="label">Draft</div><div class="value" th:text="${draftCount}">0</div></div>
+        <div class="stat"><div class="label">Pending</div><div class="value" th:text="${pendingCount}">0</div></div>
+        <div class="stat"><div class="label">Approved</div><div class="value" th:text="${approvedCount}">0</div></div>
+        <div class="stat"><div class="label">Rejected</div><div class="value" th:text="${rejectedCount}">0</div></div>
+    </div>
+
+    <div class="toolbar">
+        <a class="chip" th:classappend="${status.name() == 'DRAFT'} ? ' active' : ''"
+           th:href="@{/admin/blogs(status='DRAFT')}">Draft</a>
+
+        <a class="chip" th:classappend="${status.name() == 'PENDING'} ? ' active' : ''"
+           th:href="@{/admin/blogs(status='PENDING')}">Pending</a>
+
+        <a class="chip" th:classappend="${status.name() == 'APPROVED'} ? ' active' : ''"
+           th:href="@{/admin/blogs(status='APPROVED')}">Approved</a>
+
+        <a class="chip" th:classappend="${status.name() == 'REJECTED'} ? ' active' : ''"
+           th:href="@{/admin/blogs(status='REJECTED')}">Rejected</a>
+
+        <!-- Create button -->
+        <a class="chip chip-create" th:href="@{/admin/blogs/create}" style="margin-left:auto;">
+            + Create Blog
+        </a>
+    </div>
+
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Updated At</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:if="${blogPage == null or blogPage.content.isEmpty()}">
+                <td colspan="6" class="empty">Không có blog ở trạng thái này</td>
+            </tr>
+
+            <tr th:each="b : ${blogPage.content}">
+                <td th:text="${b.id}">1</td>
+                <td th:text="${b.title}">Tiêu đề</td>
+                <td th:text="${b.createdBy != null ? b.createdBy.email : 'Staff'}">staff@x.com</td>
+                <td th:text="${#temporals.format(b.updatedAt, 'dd/MM/yyyy HH:mm')}">18/02/2026 03:33</td>
+
+                <td>
+                    <span class="badge b-draft" th:if="${b.status.name() == 'DRAFT'}">DRAFT</span>
+                    <span class="badge b-pending" th:if="${b.status.name() == 'PENDING'}">PENDING</span>
+                    <span class="badge b-approved" th:if="${b.status.name() == 'APPROVED'}">APPROVED</span>
+                    <span class="badge b-rejected" th:if="${b.status.name() == 'REJECTED'}">REJECTED</span>
+                </td>
+
+                <td>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <!-- View -->
+                        <a class="btn-link" th:href="@{'/admin/blogs/' + ${b.id}}">View</a>
+
+                        <!-- Edit: CHỈ PENDING/APPROVED -->
+                        <a class="btn-link btn-edit"
+                           th:if="${b.status.name() == 'PENDING' or b.status.name() == 'APPROVED'}"
+                           th:href="@{'/admin/blogs/' + ${b.id} + '/edit'}">
+                            Edit
+                        </a>
+
+                        <!-- Reject: CHỈ PENDING -->
+                        <form th:if="${b.status.name() == 'PENDING' or b.status.name() == 'APPROVED'}"
+                              th:action="@{'/admin/blogs/' + ${b.id} + '/reject'}"
+                              method="post" style="display:flex; gap:6px; align-items:center;">
+                            <input type="hidden" name="returnStatus" th:value="${status}">
+                            <input class="reject-input" type="text" name="rejectionReason" required placeholder="Reason">
+                            <button class="btn-reject" type="submit">Reject</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="pagination" th:if="${blogPage != null and blogPage.totalPages > 1}">
+            <a class="page-link"
+               th:if="${blogPage.hasPrevious()}"
+               th:href="@{/admin/blogs(page=${blogPage.number - 1}, status=${status})}">Prev</a>
+
+            <a class="page-link"
+               th:if="${blogPage.hasNext()}"
+               th:href="@{/admin/blogs(page=${blogPage.number + 1}, status=${status})}">Next</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

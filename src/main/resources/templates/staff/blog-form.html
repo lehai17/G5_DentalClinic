@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${blog.id == null} ? 'Create Health Blog' : 'Edit Health Blog'">Create/Edit Blog</title>
+    <link rel="stylesheet" th:href="@{/css/staff/staff.css}">
+    <style>
+        .content {
+            padding: 24px;
+        }
+
+        .page-title {
+            margin: 0 0 20px;
+            font-size: 36px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .blog-form-card {
+            max-width: 980px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .05s ease, opacity .2s;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-draft {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-submit {
+            background: #1d4ed8;
+            color: #fff;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            background: #f3f4f6;
+            color: #111827;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 600;
+        }
+
+        .hint {
+            margin-top: 12px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        @media (max-width: 860px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <th:block th:replace="~{staff/fragments/sidebar :: sidebar}"></th:block>
+
+    <div class="main-content">
+        <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
+
+        <div class="content">
+            <h2 class="page-title" th:text="${blog.id == null} ? 'Create Health Blog' : 'Edit Health Blog'"></h2>
+
+            <div class="blog-form-card">
+                <!-- Form chính: mặc định lưu nháp -->
+                <form th:action="@{/staff/blogs/save-draft}" method="post" enctype="multipart/form-data">
+                <!-- CSRF (nếu bật Spring Security) -->
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <!-- id để update khi edit -->
+                    <input type="hidden" name="id" th:if="${blog.id != null}" th:value="${blog.id}"/>
+
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label for="title">Title <span style="color:#dc2626">*</span></label>
+                            <input id="title" type="text" name="title" th:value="${blog.title}" required maxlength="255">
+                        </div>
+
+                        <div class="form-group full">
+                            <label for="summary">Summary <span style="color:#dc2626">*</span></label>
+                            <textarea id="summary" name="summary" rows="4" required maxlength="1000"
+                                      th:text="${blog.summary}"></textarea>
+                        </div>
+
+                        <div class="form-group full">
+                            <label for="imageFile">Blog Image</label>
+
+                            <input id="imageFile" type="file" name="imageFile" accept="image/*">
+
+                            <!-- giữ ảnh cũ nếu không upload ảnh mới -->
+                            <input type="hidden" name="existingImageUrl" th:value="${blog.imageUrl}"/>
+
+                            <img id="preview"
+                                 th:if="${!#strings.isEmpty(blog.imageUrl)}"
+                                 th:src="${blog.imageUrl}"
+                                 style="margin-top:10px; max-width:320px; border-radius:12px; border:1px solid #e5e7eb;" />
+
+                            <img id="previewNew"
+                                 style="margin-top:10px; max-width:320px; display:none; border-radius:12px; border:1px solid #e5e7eb;" />
+                        </div>
+
+                        <script>
+                            const input = document.getElementById('imageFile');
+                            const pvNew = document.getElementById('previewNew');
+                            if (input) {
+                                input.addEventListener('change', (e) => {
+                                    const file = e.target.files && e.target.files[0];
+                                    if (!file) { pvNew.style.display='none'; return; }
+                                    pvNew.src = URL.createObjectURL(file);
+                                    pvNew.style.display='block';
+                                });
+                            }
+                        </script>
+
+
+                        <div class="form-group full">
+                            <label for="content">Content <span style="color:#dc2626">*</span></label>
+                            <textarea id="content" name="content" rows="12" required
+                                      th:text="${blog.content}"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <!-- Lưu nháp -->
+                        <button type="submit" class="btn btn-draft">Save Draft</button>
+
+                        <!-- Gửi duyệt -->
+                        <button type="submit"
+                                class="btn btn-submit"
+                                th:formaction="@{/staff/blogs/submit-review}">
+                            Submit for Review
+                        </button>
+
+                        <a th:href="@{/staff/blogs}" class="btn-back">Back to My Blogs</a>
+                    </div>
+
+                    <p class="hint">
+                        * Submit for Review sẽ chuyển bài sang trạng thái <strong>PENDING</strong> để Admin duyệt.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

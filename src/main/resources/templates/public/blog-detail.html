@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${blog.title}">Blog Detail</title>
+</head>
+<body style="font-family: Arial; max-width: 900px; margin: 30px auto;">
+<a th:href="@{/customer/homepage}">← Quay lại</a>
+
+<h1 th:text="${blog.title}" style="margin-top:12px;"></h1>
+<p th:text="${#temporals.format(blog.updatedAt, 'dd/MM/yyyy')}" style="color:#666;"></p>
+
+<img th:if="${!#strings.isEmpty(blog.imageUrl)}"
+     th:src="${blog.imageUrl}"
+     style="max-width:100%; border-radius:12px; margin:12px 0;"/>
+
+<p th:if="${!#strings.isEmpty(blog.summary)}"
+   th:text="${blog.summary}" style="font-weight:600;"></p>
+
+<div th:text="${blog.content}" style="white-space:pre-wrap; line-height:1.6;"></div>
+</body>
+</html>

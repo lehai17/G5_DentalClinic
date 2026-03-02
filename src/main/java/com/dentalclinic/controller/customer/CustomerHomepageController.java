@@ -1,6 +1,7 @@
 package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.model.blog.Blog;
+import com.dentalclinic.model.blog.BlogStatus; // NEW
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.BlogRepository;
@@ -29,6 +30,10 @@ public class CustomerHomepageController {
     private final BlogRepository blogRepo;
     private final UserRepository userRepository;
 
+    public CustomerHomepageController(CustomerProfileService profileService,
+                                      ServiceRepository serviceRepo,
+                                      DentistProfileRepository dentistRepo,
+                                      BlogRepository blogRepo) {
     public CustomerHomepageController(
             CustomerProfileService profileService,
             ServiceRepository serviceRepo,
@@ -49,6 +54,11 @@ public class CustomerHomepageController {
     }
 
     @GetMapping({"/homepage", "/customer/homepage"})
+    public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
+        Long currentCustomerId = 3L; // TODO: lấy từ SecurityContext nếu có
+
+        try {
+            // 1) Customer profile + appointments
     public String showHomepage(
             @RequestParam(defaultValue = "0") int page,
             Authentication authentication,
@@ -74,6 +84,13 @@ public class CustomerHomepageController {
             }
             model.addAttribute("customer", profile);
 
+            // 2) Services + dentists
+            model.addAttribute("services", serviceRepo.findAll());
+            model.addAttribute("dentists", dentistRepo.findAll());
+
+            // 3) Blogs: chỉ lấy APPROVED (đúng nghiệp vụ mới)
+            Pageable pageable = PageRequest.of(page, 2);
+            Page<Blog> blogPage = blogRepo.findByStatusOrderByApprovedAtDesc(BlogStatus.APPROVED, pageable);
             // Dịch vụ và bác sĩ (lọc active theo master)
             model.addAttribute("services", serviceRepo.findByActiveTrue());
             model.addAttribute("dentists", dentistRepo.filterDentists(null, UserStatus.ACTIVE));
@@ -88,6 +105,7 @@ public class CustomerHomepageController {
 
             return "customer/homepage";
         } catch (Exception e) {
+            // fallback
             model.addAttribute("customer", new CustomerProfile());
             model.addAttribute("appointments", new ArrayList<>());
             model.addAttribute("services", new ArrayList<>());

@@ -151,7 +151,11 @@ public class StaffAppointmentController {
             @RequestParam String reason) {
         staffAppointmentService.cancelAppointment(id, reason);
     }
-
+    @PostMapping("/appointments/checkin")
+    @ResponseBody
+    public void checkin(@RequestParam Long id) {
+        staffAppointmentService.checkInAppointment(id);
+    }
 
 
 }

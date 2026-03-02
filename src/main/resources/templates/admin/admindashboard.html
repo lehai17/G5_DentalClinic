@@ -8,13 +8,10 @@
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* CSS nội bộ để định hình khung Dashboard theo mẫu của bạn */
         :root {
             --sidebar-color: #1A237E;
-            /* Màu Navy Blue từ mẫu GENZ CLINIC */
             --bg-light: #F4F7FE;
         }
-
         body {
             display: flex;
             margin: 0;
@@ -22,7 +19,7 @@
             background-color: var(--bg-light);
         }
 
-        /* Sidebar Navigation */
+        /* Sidebar styles (áp dụng cho fragment sidebar) */
         .sidebar {
             width: 250px;
             background: var(--sidebar-color);
@@ -30,16 +27,11 @@
             color: white;
             padding: 20px 0;
         }
-
         .logo-section {
             padding: 0 20px 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
-        .nav-group {
-            padding: 20px 0;
-        }
-
+        .nav-group { padding: 20px 0; }
         .nav-label {
             font-size: 10px;
             text-transform: uppercase;
@@ -57,24 +49,14 @@
             color: white;
             transition: 0.3s;
         }
-
-        .nav-item i {
-            margin-right: 15px;
-            width: 20px;
-        }
-
-        .nav-item:hover,
-        .nav-item.active {
-            background: rgba(255, 255, 255, 0.1);
+        .nav-item i { margin-right: 15px; width: 20px; }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.1);
             border-left: 4px solid #fff;
         }
 
-        /* Main Content & Header */
-        .main-content {
-            flex: 1;
-            padding: 20px;
-        }
-
+        /* Main Content */
+        .main-content { flex: 1; padding: 20px; }
         .header {
             display: flex;
             justify-content: space-between;
@@ -82,9 +64,8 @@
             background: white;
             padding: 15px 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-
         .search-bar {
             background: #F4F7FE;
             border-radius: 12px;
@@ -124,17 +105,8 @@
             border-left: 1px solid #E0E7FF;
             padding-left: 20px;
         }
-
-        .admin-info span {
-            display: block;
-            font-size: 12px;
-        }
-
-        .admin-name {
-            font-weight: 700;
-            color: #1B2559;
-        }
-
+        .admin-info span { display: block; font-size: 12px; }
+        .admin-name { font-weight: 700; color: #1B2559; }
         .avatar {
             width: 40px;
             height: 40px;
@@ -146,6 +118,8 @@
 
 <body>
 
+<!-- DÙNG SIDEBAR FRAGMENT -->
+<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
     <div class="sidebar" style="display: flex; flex-direction: column; height: 100vh;">
         <div class="logo-section">
             <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
@@ -201,6 +175,7 @@
                     </div>
                     <div class="avatar"></div>
                 </div>
+                <div class="avatar"></div>
             </div>
         </div>
 
@@ -211,5 +186,6 @@
     </div>
 
 </body>
+</html>
 
 </html>

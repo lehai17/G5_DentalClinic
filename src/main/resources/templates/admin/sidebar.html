@@ -1,3 +1,64 @@
+<!-- templates/admin/sidebar.html -->
+<div class="sidebar" th:fragment="sidebar">
+    <div class="logo-section">
+        <span class="logo-text">GENZ CLINIC</span>
+    </div>
+
+    <div class="nav-group">
+        <a th:href="@{/admin/dashboard}"
+           class="nav-item"
+           th:classappend="${activePage == 'dashboard' ? ' active' : ''}">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <div class="nav-label">User Management</div>
+
+        <a th:href="@{/admin/dentists}"
+           class="nav-item"
+           th:classappend="${activePage == 'dentists' ? ' active' : ''}">
+            <i class="fas fa-stethoscope"></i>
+            <span>Dentists</span>
+        </a>
+
+        <a th:href="@{/admin/staff}"
+           class="nav-item"
+           th:classappend="${activePage == 'staff' ? ' active' : ''}">
+            <i class="fas fa-users-cog"></i>
+            <span>Staff</span>
+        </a>
+
+        <a th:href="@{/admin/customers}"
+           class="nav-item"
+           th:classappend="${activePage == 'customers' ? ' active' : ''}">
+            <i class="fas fa-user-friends"></i>
+            <span>Customer</span>
+        </a>
+
+        <div class="nav-label">Operations</div>
+
+        <a th:href="@{/admin/services}"
+           class="nav-item"
+           th:classappend="${activePage == 'services' ? ' active' : ''}">
+            <i class="fas fa-briefcase-medical"></i>
+            <span>Services</span>
+        </a>
+
+        <a th:href="@{/admin/slots}"
+           class="nav-item"
+           th:classappend="${activePage == 'slots' ? ' active' : ''}">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Slots</span>
+        </a>
+
+        <a th:href="@{/admin/blogs}"
+           class="nav-item"
+           th:classappend="${activePage == 'blogs' ? ' active' : ''}">
+            <i class="fas fa-notes-medical"></i>
+            <span>Health Blogs</span>
+        </a>
+    </div>
+</div>
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
