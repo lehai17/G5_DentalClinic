@@ -7,8 +7,11 @@ import lombok.Setter;
 @Getter @Setter
 public class RegisterRequest {
 
-    @NotBlank(message = "Vui lòng nhập họ tên")
-    @Size(min = 2, max = 100, message = "Họ tên phải từ 2 đến 100 ký tự")
+    @NotBlank(message = "Họ và tên không được để trống")
+    @Pattern(
+            regexp = "^[\\p{L} ]+$",
+            message = "Họ và tên chỉ được chứa chữ cái"
+    )
     private String fullName;
 
     @NotBlank(message = "Vui lòng nhập email")

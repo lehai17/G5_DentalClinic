@@ -15,7 +15,7 @@ public class CustomerProfile {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "full_name", columnDefinition = "NVARCHAR(255)")
+    @Column(name = "full_name", columnDefinition = "NVARCHAR(255)",nullable = false)
     private String fullName;
 
     @Column(name = "phone", length = 15)

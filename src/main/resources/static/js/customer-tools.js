@@ -129,8 +129,20 @@
             var tr = document.createElement('tr');
             tr.className = 'customer-time-row';
             tr.dataset.slotId = slot.id;
-            tr.innerHTML = '<td>' + formatTime(slot.startTime) + ' - ' + formatTime(slot.endTime) + '</td><td>Trống</td>';
+            // Display available spots - show "Trống" if available, or specific count
+            var availableText = 'Trống';
+            if (slot.availableSpots !== undefined && slot.availableSpots !== null && slot.availableSpots > 0) {
+              availableText = 'Còn ' + slot.availableSpots + ' chỗ';
+            } else if (slot.availableSpots === 0 || slot.available === false) {
+              availableText = 'Hết chỗ';
+            }
+            tr.innerHTML = '<td>' + formatTime(slot.startTime) + ' - ' + formatTime(slot.endTime) + '</td><td>' + availableText + '</td>';
             tr.addEventListener('click', function () {
+              // Only allow selection if slot is available
+              if (slot.availableSpots === 0 || slot.available === false) {
+                alert('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.');
+                return;
+              }
               document.querySelectorAll('.customer-time-row').forEach(function (r) { r.classList.remove('selected'); });
               this.classList.add('selected');
               var slotIdInput = document.getElementById('customer-booking-slot-id');
@@ -139,14 +151,7 @@
             });
             body.appendChild(tr);
           });
-        } else if (empty) empty.style.display = '';
-      })
-      .catch(function () {
-        if (loading) loading.style.display = 'none';
-        if (wrap) wrap.style.display = '';
-        alert('Không thể tải khung giờ.');
-      });
-  }
+        }
 
   function formatDateDisplay(dateStr) {
     if (!dateStr) return '';

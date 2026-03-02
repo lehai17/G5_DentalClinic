@@ -5,12 +5,16 @@ import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerProfileService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -31,6 +35,43 @@ public class ProfileController {
         this.customerProfileRepository = customerProfileRepository;
     }
 
+    // =========================
+    // DTO for Edit Profile Form
+    // =========================
+    public static class EditProfileForm {
+
+        @NotBlank(message = "Họ tên không được để trống")
+        @Pattern(
+                regexp = "^[A-Za-zÀ-ỹ\\s]+$",
+                message = "Họ tên chỉ được chứa chữ cái và khoảng trắng"
+        )
+        private String fullName;
+
+        // cho phép trống (user chưa muốn cập nhật), nhưng nếu nhập thì phải đúng định dạng
+        @Pattern(
+                regexp = "^$|^0\\d{8,9}$",
+                message = "Số điện thoại phải bắt đầu bằng 0 và có 9–10 chữ số"
+        )
+        private String phone;
+
+        private String address;
+
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        private LocalDate dateOfBirth;
+
+        public String getFullName() { return fullName; }
+        public void setFullName(String fullName) { this.fullName = fullName; }
+
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
+
+        public String getAddress() { return address; }
+        public void setAddress(String address) { this.address = address; }
+
+        public LocalDate getDateOfBirth() { return dateOfBirth; }
+        public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    }
+
     @GetMapping("/profile")
     public String profile(Model model, Authentication authentication) {
         String email = extractEmail(authentication);
@@ -48,7 +89,7 @@ public class ProfileController {
         return "customer/profile";
     }
 
-    // ✅ GET: mở trang edit
+    //  mở trang edit + lấy dữ liệu vào form
     @GetMapping("/profile/edit")
     public String editProfilePage(Model model, Authentication authentication) {
         String email = extractEmail(authentication);
@@ -59,20 +100,32 @@ public class ProfileController {
 
         CustomerProfile profile = profileService.getCurrentCustomerProfile(user.getId());
 
+        // tạo form và fill dữ liệu hiện tại
+        EditProfileForm form = new EditProfileForm();
+        form.setDateOfBirth(user.getDateOfBirth());
+
+        if (profile != null) {
+            form.setFullName(profile.getFullName() == null ? "" : profile.getFullName());
+            form.setPhone(profile.getPhone() == null ? "" : profile.getPhone());
+            form.setAddress(profile.getAddress() == null ? "" : profile.getAddress());
+        } else {
+            form.setFullName("");
+            form.setPhone("");
+            form.setAddress("");
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("profile", profile);
+        model.addAttribute("form", form);
 
         return "customer/edit-profile";
     }
 
-    // ✅ POST: lưu edit
+    // lưu edit + validate
     @PostMapping("/profile/edit")
     public String handleEditProfile(
-            @RequestParam String fullName,
-            @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String address,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
+            @Valid @ModelAttribute("form") EditProfileForm form,
+            BindingResult bindingResult,
             Authentication authentication,
             Model model
     ) {
@@ -82,30 +135,43 @@ public class ProfileController {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) return "redirect:/login";
 
+        // nếu form lỗi -> trả lại trang + show lỗi field
+        if (bindingResult.hasErrors()) {
+            CustomerProfile profile = profileService.getCurrentCustomerProfile(user.getId());
+            model.addAttribute("user", user);
+            model.addAttribute("profile", profile);
+            return "customer/edit-profile";
+        }
+
         try {
             // 1) Update user
-            user.setDateOfBirth(dateOfBirth);
+            user.setDateOfBirth(form.getDateOfBirth());
             userRepository.save(user);
 
-            // 2) Update customer profile (nếu chưa có thì tạo mới)
+            // 2) Update profile + tạo mới khi chưa có trường đó
             CustomerProfile profile = profileService.getCurrentCustomerProfile(user.getId());
             if (profile == null) {
                 profile = new CustomerProfile();
                 profile.setUser(user);
             }
 
-            profile.setFullName(fullName);
-            profile.setPhone((phone == null || phone.isBlank()) ? null : phone.trim());
-            profile.setAddress((address == null || address.isBlank()) ? null : address.trim());
+            profile.setFullName(form.getFullName().trim());
+
+            String phone = (form.getPhone() == null) ? "" : form.getPhone().trim();
+            profile.setPhone(phone.isBlank() ? null : phone);
+
+            String address = (form.getAddress() == null) ? "" : form.getAddress().trim();
+            profile.setAddress(address.isBlank() ? null : address);
 
             customerProfileRepository.save(profile);
 
             model.addAttribute("success", "Cập nhật thông tin thành công!");
+
         } catch (Exception ex) {
             model.addAttribute("error", "Có lỗi khi cập nhật, vui lòng thử lại.");
         }
 
-        // load lại để render đúng
+        // load lại trang
         CustomerProfile refreshed = profileService.getCurrentCustomerProfile(user.getId());
         model.addAttribute("user", user);
         model.addAttribute("profile", refreshed);

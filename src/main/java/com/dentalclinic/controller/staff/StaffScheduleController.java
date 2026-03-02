@@ -26,7 +26,7 @@ public class StaffScheduleController {
             Model model
     ) {
 
-        model.addAttribute("pageTitle", "Lịch bác sĩ");
+        model.addAttribute("pageTitle", "Dentist's work schedule");
         model.addAttribute("staffName", "Staff");
 
         model.addAttribute("dentists", staffScheduleService.getAllDentists());

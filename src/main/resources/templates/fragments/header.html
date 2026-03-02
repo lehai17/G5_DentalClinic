@@ -4,7 +4,7 @@
 <nav th:fragment="header" class="navbar">
     <div class="navbar-container">
         <div class="navbar-logo">
-            <a th:href="@{/homepage}"><span>Nha Khoa ABC</span></a>
+            <a th:href="@{/homepage}"><span>GENZ CLINIC</span></a>
         </div>
 
         <ul class="navbar-menu">
@@ -25,8 +25,7 @@
             <!-- ĐÃ LOGIN: hiện avatar -->
             <div sec:authorize="isAuthenticated()" class="user-menu">
                 <button type="button" class="avatar-btn" onclick="toggleUserMenu(event)">
-                    <!-- hiển thị chữ cái đầu của email/username -->
-                    <span th:text="${#strings.substring(#authentication.name,0,1)}">A</span>
+                    <span th:text="${avatarLetter}">U</span>
                 </button>
 
                 <div id="userDropdown" class="dropdown hidden">

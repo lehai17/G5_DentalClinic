@@ -33,7 +33,7 @@ public class RegisterController {
                                @RequestParam(value = "success", required = false) String success) {
 
         if (!model.containsAttribute("form")) {
-            model.addAttribute("form", new RegisterRequest());
+            model.addAttribute( "form", new RegisterRequest());
         }
         model.addAttribute("success", success != null);
         return "customer/register";
@@ -44,7 +44,7 @@ public class RegisterController {
                                  BindingResult bindingResult,
                                  Model model) {
 
-        // 1) lỗi validate cơ bản (trống, email format, phone 10 số...)
+        // 1) lỗi validate cơ bản
         if (bindingResult.hasErrors()) {
             return "customer/register";
         }
@@ -78,7 +78,7 @@ public class RegisterController {
         user.setCustomerProfile(profile);
         userRepository.save(user);
 
-        // 5) đăng ký xong -> chuyển sang login kèm flag để popup
+
         return "redirect:/login?registered=true";
     }
 }

@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Clinical Examination</title>
-  <link rel="stylesheet" href="/css/app.css"/>
+  <link rel="stylesheet" href="/css/dentist/app.css"/>
+  <link rel="stylesheet" href="/css/dentist/examination.css"/>
   <style>
     .alert-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:10px 12px;border-radius:12px;margin:10px 0;font-weight:600;}
     .section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
@@ -18,18 +19,70 @@
     .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   </style>
 </head>
-<body class="page">
-
-<div class="card">
+<body class="exam-page">
+<div class="exam-container">
   <h2>Clinical Examination</h2>
   <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}">Saved successfully.</div>
 
-  <div class="meta">
-    <div><b>Appointment ID:</b> <span th:text="${appointmentId}">1</span></div>
-    <div><b>Patient:</b> <span th:text="${patientName}">Robert Wilson</span></div>
-    <div><b>Date:</b> <span th:text="${apptDate}">2026-02-01</span></div>
-    <div><b>Time:</b> <span th:text="${#temporals.format(startTime,'HH:mm')}">09:00</span> - <span th:text="${#temporals.format(endTime,'HH:mm')}">10:00</span></div>
-    <div><b>Requested:</b> <span th:text="${requestedServiceName}">Scaling</span></div>
+  <div class="exam-header">
+
+    <div class="exam-left">
+      <div class="exam-title">Clinical Examination</div>
+      <div class="exam-sub">
+        Appointment ID: <span th:text="${appointmentId}"></span>
+      </div>
+    </div>
+
+    <div class="exam-info">
+      <div>
+        <div class="info-label">Patient</div>
+        <div class="info-value" th:text="${patientName}"></div>
+      </div>
+      <div>
+        <div class="info-label">Date</div>
+        <div class="info-value" th:text="${apptDate}"></div>
+      </div>
+      <div>
+        <div class="info-label">Time</div>
+        <div class="info-value">
+          <span th:text="${#temporals.format(startTime,'HH:mm')}"></span>
+          -
+          <span th:text="${#temporals.format(endTime,'HH:mm')}"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ================= VISIT HISTORY ================= -->
+  <div class="visit-history">
+
+    <div class="visit-item"
+         th:each="r : ${historyRecords}">
+
+      <div class="visit-header">
+        <div class="visit-date"
+             th:text="${#temporals.format(r.appointment.date,'MMM dd, yyyy')}">
+        </div>
+
+        <div class="visit-diagnosis"
+             th:text="${r.diagnosis}">
+        </div>
+
+        <div class="visit-toggle">
+          <span class="toggle-text">View Detail</span>
+          <span class="toggle-icon">⌄</span>
+        </div>
+      </div>
+
+      <div class="visit-body">
+        <div class="visit-body-content">
+          <div><strong>Diagnosis:</strong> <span th:text="${r.diagnosis}"></span></div>
+          <div><strong>Notes:</strong> <span th:text="${r.treatmentNote}"></span></div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
   <!-- hidden raw payload from DB -->
@@ -136,48 +189,17 @@
         <tbody></tbody>
       </table>
     </div>
-
-    <!-- ✅ follow-up -->
-    <div class="section">
-      <div style="font-weight:900;">G) Follow-up / Re-exam Plan</div>
-      <div class="two">
-        <div class="field">
-          <label>Follow-up date</label>
-          <input id="followUpDate" type="date">
-        </div>
-        <div class="field">
-          <label>Reason</label>
-          <input id="followUpReason" type="text" placeholder="Reason...">
-        </div>
-      </div>
-    </div>
-
-    <!-- ✅ history -->
-    <div class="section">
-      <div style="font-weight:900;">H) Patient Medical History</div>
-      <div class="mini">Last records (read-only)</div>
-      <table class="tbl">
-        <thead>
-        <tr>
-          <th style="width:140px;">Date</th>
-          <th>Diagnosis</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="r : ${historyRecords}">
-          <td th:text="${r.appointment.date}">2026-01-20</td>
-          <td th:text="${r.diagnosis}">...</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-
     <!-- hidden JSON payload stored into treatmentNote -->
     <input type="hidden" name="treatmentNote" id="payloadTreatmentNote">
+    <input type="hidden" name="weekStart" th:value="${weekStart}">
 
     <div style="display:flex;gap:10px;margin-top:14px;">
       <button class="btn primary" type="submit">SAVE</button>
-      <a class="btn" th:href="@{/dentist/work-schedule(dentistUserId=${dentistUserId})}">Back</a>
+      <a class="btn"
+         th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">
+        Back
+      </a>
+
     </div>
   </form>
 </div>
@@ -276,11 +298,6 @@
 
     (obj.images || []).forEach(addImgRow);
     if(!(obj.images || []).length) addImgRow();
-
-    if(obj.followUp){
-      document.getElementById('followUpDate').value = obj.followUp.date || '';
-      document.getElementById('followUpReason').value = obj.followUp.reason || '';
-    }
   })();
 
   // ---- Build payload on submit -> store into treatmentNote ----
@@ -324,12 +341,6 @@
           payload.images.push({ url, type, note });
         }
       });
-
-      payload.followUp = {
-        date: document.getElementById('followUpDate').value,
-        reason: document.getElementById('followUpReason').value.trim()
-      };
-
       document.getElementById('payloadTreatmentNote').value = JSON.stringify(payload);
     } catch (err) {
       alert("Error preparing examination data. Data was NOT saved.");
@@ -342,16 +353,25 @@
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
 
-    if (status === 'COMPLETED') {
-      document.querySelectorAll('input, textarea, select').forEach(el => {
-        el.disabled = true;
-      });
+    if (status === 'DONE' || status === 'COMPLETED') {
 
+      // 🔒 Disable form fields
+      document.querySelectorAll('input, textarea, select, button')
+              .forEach(el => {
+                el.disabled = true;
+              });
+
+      // 🔥 Remove submit button completely
       const saveBtn = document.querySelector('button[type="submit"]');
-      if (saveBtn) saveBtn.style.display = 'none';
+      if (saveBtn) saveBtn.remove();
+
+      // 🔥 Remove all add buttons
+      document.querySelectorAll('#btnAddFinding, #btnAddImg, #btnAddRx')
+              .forEach(btn => btn.remove());
+
     }
   });
 </script>
-
+<script src="/js/dentist/examination.js"></script>
 </body>
 </html>

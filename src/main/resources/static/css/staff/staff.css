@@ -316,3 +316,23 @@ button {
     padding: 6px 14px;
     cursor: pointer;
 }
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a {
+    margin: 0 5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    background: #eee;
+    color: #333;
+}
+
+.pagination a.active {
+    background: #6c63ff;
+    color: white;
+    font-weight: bold;
+}

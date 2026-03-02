@@ -96,7 +96,8 @@ public class CustomerHomepageController {
      * tránh trùng GET /customer/appointments (API JSON).
      */
     @GetMapping("/customer/my-appointments")
-    public String appointmentsPage() {
+    public String appointmentsPage(Model model) {
+        model.addAttribute("active", "appointments");
         return "customer/appointments";
     }
 }

@@ -36,13 +36,23 @@
 
             <form id="registerForm" th:action="@{/register}" method="post"
                   th:object="${form}" class="form" novalidate>
-            <div class="field">
-                    <label class="label" for="fullName">Full name</label>
-                    <div class="input-wrap">
-                        <input id="fullName" class="input" type="text" name="fullName"
-                               placeholder="Ex: Nguyen Duc Lam" required>
+                <div class="field">
+                    <label class="label">Full name</label>
+
+                    <div class="input-wrap"
+                         th:classappend="${#fields.hasErrors('fullName')} ? ' is-invalid'">
+                        <input class="input"
+                               type="text"
+                               th:field="*{fullName}"
+                               placeholder="Ex: Nguyen Duc Lam">
                     </div>
+
+                    <small class="error"
+                           th:if="${#fields.hasErrors('fullName')}"
+                           th:errors="*{fullName}">
+                    </small>
                 </div>
+
 
                 <div class="field">
                     <label class="label" for="phone">Phone number</label>

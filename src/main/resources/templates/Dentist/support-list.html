@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Support Tickets</title>
+
+  <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dentist/support.css}"/>
+</head>
+
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR (GIỮ NGUYÊN) -->
+  <aside class="sidebar" id="sidebar"
+         style="display:flex;flex-direction:column;height:100vh;">
+    <div class="sidebar-top">
+      <div class="brand-mini">
+        <div class="brand-badge">D+</div>
+        <div style="font-weight:800">DentalPlus</div>
+      </div>
+    </div>
+
+      <nav class="nav">
+          <a class="nav-item" href="/dentist/dashboard">Dashboard</a>
+          <a class="nav-item" href="/dentist/work-schedule">Work Schedule</a>
+          <a class="nav-item" href="/dentist/busy-schedule">Busy Schedule</a>
+          <a class="nav-item" href="/dentist/support">Support Ticket</a>
+          <a class="nav-item" href="/dentist/profile">Profile</a>
+      </nav>
+
+    <div style="margin-top:auto;">
+      <a class="nav-item danger" href="/logout">Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="topbar">
+      <div style="color:var(--muted);font-size:12px;">Modules › Support Ticket</div>
+    </div>
+
+    <div class="content">
+
+      <div class="support-wrapper">
+
+        <div class="support-title">Support Tickets</div>
+        <div class="support-sub">Post-treatment patient questions</div>
+
+        <table class="support-table">
+          <thead>
+          <tr>
+            <th>PATIENT NAME</th>
+            <th>VISIT DATE & TIME</th>
+            <th>SERVICE NAME</th>
+            <th>QUESTION PREVIEW</th>
+            <th>STATUS</th>
+            <th>ACTION</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <tr th:each="t : ${tickets}">
+            <td th:text="${t.customer.customerProfile.fullName}"></td>
+            <td th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${t.appointment.service.name}"></td>
+            <td th:text="${#strings.abbreviate(t.question,60)}"></td>
+            <td>
+                            <span th:class="'badge ' + (${t.status} == 'OPEN' ? 'open' : 'closed')"
+                                  th:text="${t.status}">
+                            </span>
+            </td>
+            <td>
+              <a class="action-link"
+                 th:href="@{'/dentist/support/' + ${t.id}}">
+                View →
+              </a>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
