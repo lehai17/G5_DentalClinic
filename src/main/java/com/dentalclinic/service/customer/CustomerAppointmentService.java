@@ -185,7 +185,8 @@ public class CustomerAppointmentService {
         int safeSize = Math.max(1, size);
         PageRequest pageable = PageRequest.of(safePage, safeSize,
                 Sort.by(Sort.Order.desc("date"), Sort.Order.desc("startTime")));
-        Page<Appointment> appointments = appointmentRepository.findByCustomer_User_Id(userId, pageable);
+        Page<Appointment> appointments =
+                appointmentRepository.findByCustomer_User_IdOrderByDateDescStartTimeDesc(userId, pageable);
         List<AppointmentDto> content = appointments.getContent().stream().map(this::toDto).toList();
         return new PageImpl<>(content, pageable, appointments.getTotalElements());
     }
@@ -249,7 +250,7 @@ public class CustomerAppointmentService {
     }
 
     @Transactional
-    private List<Slot> reserveSlots(LocalDateTime startDateTime, int slotsNeeded) {
+    protected List<Slot> reserveSlots(LocalDateTime startDateTime, int slotsNeeded) {
         if (!startDateTime.isAfter(nowDateTime())) throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "KhÃ´ng thá»ƒ Ä‘áº·t lá»‹ch trong quÃ¡ khá»©.");
         if (slotsNeeded <= 0) throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thá»i lÆ°á»£ng Ä‘áº·t lá»‹ch khÃ´ng há»£p lá»‡.");
         LocalDateTime endDateTime = startDateTime.plusMinutes((long) slotsNeeded * SLOT_MIN);
@@ -265,7 +266,7 @@ public class CustomerAppointmentService {
     }
 
     @Transactional
-    private void releaseSlots(List<Slot> slots) {
+    protected void releaseSlots(List<Slot> slots) {
         for (Slot s : slots) {
             Slot locked = slotRepository.findBySlotTimeAndActiveTrueForUpdate(s.getSlotTime())
                     .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giá» khÃ´ng tá»“n táº¡i."));
@@ -276,8 +277,8 @@ public class CustomerAppointmentService {
     }
 
     @Transactional
-    private Appointment createPendingAppointment(CustomerProfile customer, Services service, List<Slot> reservedSlots,
-                                                 String contactChannel, String contactValue, String notes) {
+    protected Appointment createPendingAppointment(CustomerProfile customer, Services service, List<Slot> reservedSlots,
+                                                   String contactChannel, String contactValue, String notes) {
         if (reservedSlots.isEmpty()) throw new BookingException(BookingErrorCode.SLOT_FULL, "KhÃ´ng cÃ³ slot Ä‘Æ°á»£c giá»¯.");
         Slot first = reservedSlots.get(0), last = reservedSlots.get(reservedSlots.size() - 1);
         Appointment a = new Appointment();
@@ -290,7 +291,7 @@ public class CustomerAppointmentService {
     }
 
     @Transactional
-    private Appointment confirmAppointmentEntity(Long appointmentId) {
+    protected Appointment confirmAppointmentEntity(Long appointmentId) {
         Appointment a = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
         if (a.getStatus() != AppointmentStatus.PENDING && a.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
@@ -301,7 +302,7 @@ public class CustomerAppointmentService {
     }
 
     @Transactional
-    private Appointment cancelAppointmentEntity(Long appointmentId, String reason) {
+    protected Appointment cancelAppointmentEntity(Long appointmentId, String reason) {
         Appointment a = appointmentRepository.findByIdWithSlots(appointmentId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
         if (a.getStatus() == AppointmentStatus.CANCELLED || a.getStatus() == AppointmentStatus.COMPLETED) {

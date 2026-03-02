@@ -14,30 +14,25 @@
         <div th:replace="staff/fragments/header :: header"></div>
 
         <div class="content">
-            <h2> Appointment Management</h2>
+            <h2> Quản lý lịch khám</h2>
 
             <form method="get" th:action="@{/staff/appointments}" class="filter-form">
                 <input type="text"
                        name="keyword"
-                       placeholder=" Search by name..."
+                       placeholder=" Tìm tên bệnh nhân..."
                        th:value="${keyword}"/>
 
-                <input type="text"
-                       name="serviceKeyword"
-                       placeholder=" Search by service..."
-                       th:value="${serviceKeyword}"/>
-
                 <select name="sort">
-                    <option value="">-- Sort by date --</option>
+                    <option value="">-- Sắp xếp theo ngày --</option>
                     <option value="newest" th:selected="${sort == 'newest'}">
-                         Newest
+                         Mới nhất
                     </option>
                     <option value="oldest" th:selected="${sort == 'oldest'}">
-                         Oldest
+                         Cũ nhất
                     </option>
                 </select>
 
-                <button type="submit">Filter</button>
+                <button type="submit">Lọc</button>
             </form>
 
 
@@ -45,13 +40,13 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Service</th>
-                    <th>Dentist</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th>Bệnh nhân</th>
+                    <th>Ngày</th>
+                    <th>Giờ</th>
+                    <th>Dịch vụ</th>
+                    <th>Bác sĩ</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
                 </tr>
                 </thead>
 
@@ -61,47 +56,49 @@
                     <td th:text="${a.customer.fullName}"></td>
                     <td th:text="${a.date}"></td>
                     <td th:text="${a.startTime}"></td>
-                    <td th:text="${a.service != null ? a.service.name : 'Chưa chọn dịch vụ'}"></td>
+
+                    <!-- Dịch vụ -->
+                    <td th:text="${a.service != null ? a.service.name : 'N/A'}"></td>
+
+                    <!-- Bác sĩ -->
                     <td th:text="${a.dentist != null ? a.dentist.fullName : 'Chưa gán'}"></td>
-                    <td th:text="${a.service.name}"></td>
-                    <td th:text="${a.dentist != null ? a.dentist.fullName : 'Not yet assigned'}"></td>
+
                     <td th:text="${a.status}"></td>
 
                     <td>
-                        <button type="button" class="btn-assign"
-                                th:if="${a.status.name() == 'PENDING' and a.dentist == null}"
+                        <!-- Xác nhận: chỉ khi PENDING và đã có dentist -->
+                        <button type="button"
+                                th:if="${a.status.name() == 'PENDING' and a.dentist != null}"
+                                th:onclick="'confirmAppointment(' + ${a.id} + ')'">
+                            Xác nhận
+                        </button>
+
+                        <!-- Gán BS: khi PENDING -->
+                        <button type="button"
+                                th:if="${a.status.name() == 'PENDING'}"
                                 th:onclick="'assignDentist(' + ${a.id} + ')'">
                             Gán BS
                         </button>
 
-                        <button type="button" class="btn-confirm"
-                                th:if="${a.status.name() == 'PENDING' and a.dentist != null}"
-                                th:onclick="'confirmAppointment(' + ${a.id} + ')'">
-                            Confirm
-                        </button>
-
-                        <button type="button" class="btn-checkin"
+                        <!-- Check in: khi CONFIRMED -->
+                        <button type="button"
                                 th:if="${a.status.name() == 'CONFIRMED'}"
-                                th:onclick="'checkin(' + ${a.id} + ')'">
-                            Check-in
+                                th:onclick="'checkInAppointment(' + ${a.id} + ')'">
+                            Check in
                         </button>
 
-                        <button type="button" class="btn-complete"
+                        <!-- Hoàn thành: khi CHECKED_IN -->
+                        <button type="button"
                                 th:if="${a.status.name() == 'CHECKED_IN'}"
                                 th:onclick="'completeAppointment(' + ${a.id} + ')'">
-                            Complete
+                            Hoàn thành
                         </button>
 
-                        <button type="button" class="btn-cancel"
-                                th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}"
+                        <!-- Hủy: khi PENDING -->
+                        <button type="button"
+                                th:if="${a.status.name() == 'PENDING'}"
                                 th:onclick="'cancelAppointment(' + ${a.id} + ')'">
-                            Cancel
-                        </button>
-
-                        <button type="button" class="btn-payment"
-                                th:if="${a.status.name() == 'COMPLETED'}"
-                                th:onclick="'goToPayment(' + ${a.id} + ')'">
-                            Payment
+                            Hủy
                         </button>
                     </td>
                 </tr>
@@ -110,20 +107,20 @@
 
             <div class="pagination" th:if="${totalPages > 1}">
                 <a th:if="${currentPage > 0}"
-                   th:href="@{/staff/appointments(page=${currentPage - 1}, keyword=${keyword}, serviceKeyword=${serviceKeyword},sort=${sort})}">
-                    ◀ Previous
+                   th:href="@{/staff/appointments(page=${currentPage - 1}, keyword=${keyword}, sort=${sort})}">
+                    ◀ Trước
                 </a>
 
                 <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-                    <a th:href="@{/staff/appointments(page=${i}, keyword=${keyword},serviceKeyword=${serviceKeyword}, sort=${sort})}"
+                    <a th:href="@{/staff/appointments(page=${i}, keyword=${keyword}, sort=${sort})}"
                         th:text="${i + 1}"
                         th:classappend="${i == currentPage} ? 'active'">
                     </a>
                 </span>
 
                 <a th:if="${currentPage < totalPages - 1}"
-                   th:href="@{/staff/appointments(page=${currentPage + 1}, keyword=${keyword},serviceKeyword=${serviceKeyword}, sort=${sort})}">
-                    After ▶
+                   th:href="@{/staff/appointments(page=${currentPage + 1}, keyword=${keyword}, sort=${sort})}">
+                    Sau ▶
                 </a>
             </div>
 

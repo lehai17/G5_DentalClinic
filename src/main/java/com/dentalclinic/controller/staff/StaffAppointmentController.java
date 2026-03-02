@@ -106,6 +106,7 @@ public class StaffAppointmentController {
 
         model.addAttribute("appointments", appointmentPage.getContent());
 
+
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", appointmentPage.getTotalPages());
 
@@ -151,9 +152,9 @@ public class StaffAppointmentController {
             @RequestParam String reason) {
         staffAppointmentService.cancelAppointment(id, reason);
     }
-    @PostMapping("/appointments/checkin")
+    @PostMapping("/appointments/{id}/check-in")
     @ResponseBody
-    public void checkin(@RequestParam Long id) {
+    public void checkIn(@PathVariable Long id) {
         staffAppointmentService.checkInAppointment(id);
     }
 

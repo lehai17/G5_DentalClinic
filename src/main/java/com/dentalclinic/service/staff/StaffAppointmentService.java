@@ -141,12 +141,13 @@ public class StaffAppointmentService {
 
         return appointmentRepository.findAll(pageable);
     }
-    public void checkInAppointment(Long id) {
-        Appointment a = appointmentRepository.findById(id)
+    @Transactional
+    public void checkInAppointment(Long appointmentId) {
+        Appointment a = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         if (a.getStatus() != AppointmentStatus.CONFIRMED) {
-            throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
+            throw new RuntimeException("Only CONFIRMED appointment can be checked in");
         }
 
         a.setStatus(AppointmentStatus.CHECKED_IN);

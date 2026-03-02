@@ -74,17 +74,18 @@ function completeAppointment(id) {
         .then(() => location.reload());
 }
 
-function checkin(id) { // Đổi tên cho khớp với file HTML bạn gửi (onclick="checkin")
-    fetch('/staff/appointments/checkin', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({ id: id })
+function checkInAppointment(id) {
+    if (!confirm("Check in lịch hẹn này?")) return;
+
+    fetch(`/staff/appointments/${id}/check-in`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Check-in thất bại");
-        location.reload();
-    })
-    .catch(err => alert(err.message));
+        .then(res => {
+            if (!res.ok) return res.text().then(t => { throw new Error(t); });
+            location.reload();
+        })
+        .catch(err => alert(err.message || "Check in thất bại"));
 }
 
 function cancelAppointment(id) {
