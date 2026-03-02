@@ -41,6 +41,7 @@ public class SupportTicket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+}
     public SupportTicket() {}
 
     // --- Getters and Setters ---

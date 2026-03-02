@@ -13,8 +13,9 @@ public class Services {
     @Column(nullable = false)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
     private String description;
+
+    private String imageUrl;
 
     private double price;
 
@@ -27,12 +28,14 @@ public class Services {
     public Services() {
     }
 
-    public Services(String name, String description, double price, int durationMinutes, boolean active) {
+    public Services(String name, String description, double price, int durationMinutes, boolean active,
+            String imageUrl) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.durationMinutes = durationMinutes;
         this.active = active;
+        this.imageUrl = imageUrl;
     }
 
     // ===== Getters & Setters =====
@@ -82,5 +85,15 @@ public class Services {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    // Category removed
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
