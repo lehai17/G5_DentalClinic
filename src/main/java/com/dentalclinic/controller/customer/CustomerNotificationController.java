@@ -158,10 +158,8 @@ public class CustomerNotificationController {
     }
 
     private Long findLatestAnsweredTicketId(Long customerId) {
-        return supportTicketRepository.findByCustomer_IdOrderByCreatedAtDesc(customerId).stream()
-                .filter(t -> t.getAnswer() != null && !t.getAnswer().isBlank())
+        return supportTicketRepository.findFirstByCustomer_IdAndAnswerIsNotNullOrderByCreatedAtDesc(customerId)
                 .map(SupportTicket::getId)
-                .findFirst()
                 .orElse(null);
     }
 

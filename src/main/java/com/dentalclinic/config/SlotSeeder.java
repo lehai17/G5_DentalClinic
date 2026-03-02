@@ -14,10 +14,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
 
-/**
- * Seed slots cho hệ thống đặt lịch mới.
- * Mỗi ngày có 18 slots (08:00 - 17:00, mỗi slot 30 phút).
- */
 @Configuration
 public class SlotSeeder {
 
@@ -32,8 +28,6 @@ public class SlotSeeder {
     public ApplicationRunner seedSlotsIfNeeded(SlotRepository slotRepository) {
         return (ApplicationArguments args) -> {
             LocalDate today = LocalDate.now();
-            LocalDate endDate = today.plusDays(DAYS_TO_SEED - 1);
-
             logger.info("Seeding/repairing slots for next {} days with capacity {}", DAYS_TO_SEED, DEFAULT_CAPACITY);
 
             int totalSlotsCreated = 0;
@@ -42,6 +36,7 @@ public class SlotSeeder {
             for (int day = 0; day < DAYS_TO_SEED; day++) {
                 LocalDate date = today.plusDays(day);
 
+                // Skip Sunday.
                 if (date.getDayOfWeek().getValue() == 7) {
                     continue;
                 }
@@ -49,11 +44,12 @@ public class SlotSeeder {
                 LocalDateTime current = LocalDateTime.of(date, CLINIC_OPEN_TIME);
                 LocalDateTime end = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
 
-                while (current.isBefore(end) || current.equals(end.minusMinutes(30))) {
+                while (current.isBefore(end)) {
                     Optional<Slot> existing = slotRepository.findBySlotTime(current);
                     if (existing.isPresent()) {
                         Slot slot = existing.get();
                         boolean changed = false;
+
                         if (!slot.isActive()) {
                             slot.setActive(true);
                             changed = true;
@@ -66,6 +62,7 @@ public class SlotSeeder {
                             slot.setBookedCount(slot.getCapacity());
                             changed = true;
                         }
+
                         if (changed) {
                             slotRepository.save(slot);
                             totalSlotsUpdated++;
@@ -81,17 +78,5 @@ public class SlotSeeder {
 
             logger.info("Slot seed completed. created={}, updated={}", totalSlotsCreated, totalSlotsUpdated);
         };
-    }
-
-    /**
-     * This method used to patch legacy missing slots, kept as no-op for compatibility.
-     */
-    @SuppressWarnings("unused")
-    private void fillMissingLastSlots(SlotRepository slotRepository, LocalDate fromDate, LocalDate toDate) {
-        // No-op: seeding now does full upsert for all expected slot_time values.
-        logger.debug("fillMissingLastSlots is deprecated; full upsert seeding is used instead.");
-        if (fromDate == null || toDate == null) {
-            return;
-        }
     }
 }

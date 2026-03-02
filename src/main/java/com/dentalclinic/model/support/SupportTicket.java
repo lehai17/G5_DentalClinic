@@ -9,30 +9,31 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "support_ticket")
 public class SupportTicket {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
+
+    @ManyToOne
     @JoinColumn(name = "customer_id")
     private User customer;
 
-    // Keep mapped to existing column; expose both staff/dentist accessors for compatibility.
+    // Mapped to existing DB column `staff_id`.
     @ManyToOne
     @JoinColumn(name = "staff_id")
     private User staff;
 
-    @ManyToOne
-    @JoinColumn(name = "appointment_id")
-    private Appointment appointment;
-
     @Column(name = "title", columnDefinition = "NVARCHAR(255)")
     private String title;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "question", columnDefinition = "NVARCHAR(MAX)")
     private String question;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "answer", columnDefinition = "NVARCHAR(MAX)")
     private String answer;
 
     @Enumerated(EnumType.STRING)
@@ -48,6 +49,14 @@ public class SupportTicket {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Appointment getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
     }
 
     public User getCustomer() {
@@ -66,20 +75,13 @@ public class SupportTicket {
         this.staff = staff;
     }
 
+    // Backward-compatible alias used by some old modules.
     public User getDentist() {
         return staff;
     }
 
     public void setDentist(User dentist) {
         this.staff = dentist;
-    }
-
-    public Appointment getAppointment() {
-        return appointment;
-    }
-
-    public void setAppointment(Appointment appointment) {
-        this.appointment = appointment;
     }
 
     public String getTitle() {

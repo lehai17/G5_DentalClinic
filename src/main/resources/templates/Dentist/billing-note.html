@@ -200,7 +200,9 @@
 </script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+
     const status = document.getElementById('appointmentStatus')?.value;
+    const locked = (status === 'DONE' || status === 'COMPLETED');
 
     if (status === 'DONE' || status === 'COMPLETED') {
 

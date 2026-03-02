@@ -10,13 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -57,17 +51,17 @@ public class DentistSupportController {
                          @AuthenticationPrincipal UserDetails principal,
                          RedirectAttributes redirectAttributes) {
         if (form == null || form.getAnswer() == null || form.getAnswer().trim().isEmpty()) {
-            bindingResult.rejectValue("answer", "answer.blank", "Vui long nhap noi dung phan hoi.");
+            bindingResult.rejectValue("answer", "answer.blank", "Vui lòng nhập nội dung phản hồi.");
         }
 
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Noi dung phan hoi khong duoc de trong.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Nội dung phản hồi không được để trống.");
             return "redirect:/dentist/support/" + id;
         }
 
         Long dentistUserId = supportService.getCurrentUser(principal).getId();
         supportService.answerTicket(dentistUserId, id, form.getAnswer());
-        redirectAttributes.addFlashAttribute("successMessage", "Da phan hoi phieu ho tro thanh cong.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã phản hồi phiếu hỗ trợ thành công.");
         return "redirect:/dentist/support/" + id;
     }
 

@@ -19,8 +19,7 @@ import java.util.Optional;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    // --- 1. NHÓM NATIVE QUERY (Sửa lỗi Invalid Column Name và Incompatible Types) ---
-    // Sử dụng kiểu trả về là 'int' để tránh lỗi "Integer cannot be cast to Boolean"
+    // --- 1. NHÓM NATIVE QUERY (Xử lý Overlap) ---
 
     @Query(value = """
         SELECT COUNT(*) FROM appointment
@@ -102,7 +101,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("activeStatuses") List<String> activeStatuses
     );
 
-    // --- 2. WRAPPER METHODS (Chuyển đổi int sang boolean để tương thích với Service) ---
+    // --- 2. WRAPPER METHODS (Tương thích với logic Service) ---
 
     default boolean hasOverlappingAppointment(Long dentistId, LocalDate date, LocalTime startTime, LocalTime endTime) {
         return checkOverlappingAppointment(dentistId, date, startTime, endTime) > 0;
@@ -120,22 +119,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         return checkCustomerOverlapExcludingAppointment(userId, excludeId, date, startTime, endTime, activeStatuses) > 0;
     }
 
-    // --- 3. NHÓM JPQL (Dùng tên biến trong Java, không dùng nativeQuery) ---
-
-    @Query("""
-        SELECT a FROM Appointment a
-        WHERE a.dentist.id = :dentistId
-          AND a.date = :date
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
-          AND a.startTime < :endTime
-          AND a.endTime > :startTime
-        """)
-    List<Appointment> findOverlappingAppointments(
-            @Param("dentistId") Long dentistId,
-            @Param("date") LocalDate date,
-            @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime
-    );
+    // --- 3. NHÓM JPQL (Fetch dữ liệu chi tiết) ---
 
     @Query("""
         SELECT a FROM Appointment a
@@ -145,7 +129,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         LEFT JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+          AND a.status IN (
+                com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
+                com.dentalclinic.model.appointment.AppointmentStatus.EXAMINING,
+                com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+                com.dentalclinic.model.appointment.AppointmentStatus.REEXAM,
+                com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+          )
     """)
     List<Appointment> findScheduleForWeek(
             @Param("dentistProfileId") Long dentistProfileId,
@@ -171,6 +161,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     """)
     Optional<Appointment> findByIdWithSlots(@Param("appointmentId") Long appointmentId);
 
+    @Query("SELECT aslot FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId ORDER BY aslot.slotOrder ASC")
+    List<Object[]> findAppointmentSlotDetailsByAppointmentId(@Param("appointmentId") Long appointmentId);
+
     @Query("""
         SELECT a FROM Appointment a
         LEFT JOIN FETCH a.appointmentSlots ass
@@ -183,16 +176,36 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("userId") Long userId
     );
 
-    @Query("SELECT aslot FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId ORDER BY aslot.slotOrder ASC")
-    List<Object[]> findAppointmentSlotDetailsByAppointmentId(@Param("appointmentId") Long appointmentId);
-
-    @Query("SELECT a FROM Appointment a WHERE a.date = :date AND a.status IN :statuses")
-    List<Appointment> findByDateAndStatusIn(
-            @Param("date") LocalDate date,
-            @Param("statuses") List<AppointmentStatus> statuses
+    // Đếm tổng số lịch hẹn trong ngày của nha sĩ (trừ các lịch đã hủy)
+    @Query("""
+        SELECT COUNT(a) 
+        FROM Appointment a 
+        WHERE a.dentist.id = :dentistId 
+          AND a.date = :date 
+          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+    """)
+    long countTotalByDentistAndDate(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date
     );
 
-    // --- 4. NHÓM SPRING DATA METHOD (Tự động sinh) ---
+    // Đếm số lịch hẹn đã hoàn thành trong ngày của nha sĩ
+    @Query("""
+        SELECT COUNT(a) 
+        FROM Appointment a 
+        WHERE a.dentist.id = :dentistId 
+          AND a.date = :date 
+          AND a.status IN (
+                com.dentalclinic.model.appointment.AppointmentStatus.DONE, 
+                com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+          )
+    """)
+    long countCompletedByDentistAndDate(
+            @Param("dentistId") Long dentistId,
+            @Param("date") LocalDate date
+    );
+
+    // --- 4. NHÓM SPRING DATA QUERIES (Tự động sinh) ---
 
     boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
 
@@ -215,9 +228,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     Page<Appointment> findByCustomer_FullNameContainingIgnoreCaseAndService_NameContainingIgnoreCase(
             String customerKeyword, String serviceKeyword, Pageable pageable);
 
-    Page<Appointment> findByService_NameContainingIgnoreCase(String serviceKeyword, Pageable pageable);
-
-    // --- 5. NHÓM MODIFING ---
+    // --- 5. MODIFING QUERIES ---
 
     @Modifying
     @Query("DELETE FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId")
@@ -230,4 +241,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     }
 
     Page<Appointment> findByCustomer_User_Id(Long userId, PageRequest pageable);
+    @Query("SELECT a FROM Appointment a WHERE a.date = :date AND a.status IN :statuses")
+    List<Appointment> findByDateAndStatusIn(
+            @Param("date") LocalDate date,
+            @Param("statuses") List<AppointmentStatus> statuses
+    );
+
+    Page<Appointment> findByService_NameContainingIgnoreCase(String serviceKeyword, Pageable pageable);
 }

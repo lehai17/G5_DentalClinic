@@ -99,10 +99,10 @@ public class SupportService {
     public SupportTicket getTicketDetail(Long userId, Long ticketId) {
         User user = requireUser(userId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
-                .orElseThrow(() -> new BusinessException("Khong tim thay yeu cau ho tro."));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
         if (user.getRole() == Role.CUSTOMER && !ticket.getCustomer().getId().equals(userId)) {
-            throw new SupportAccessDeniedException("Ban khong co quyen xem yeu cau ho tro nay.");
+            throw new SupportAccessDeniedException("Bạn không có quyền xem yêu cầu hỗ trợ này.");
         }
         return ticket;
     }
@@ -111,7 +111,7 @@ public class SupportService {
     public List<SupportTicket> getAllTickets(String status, Long staffUserId) {
         User staff = requireUser(staffUserId);
         if (staff.getRole() != Role.STAFF && staff.getRole() != Role.ADMIN) {
-            throw new SupportAccessDeniedException("Ban khong co quyen xem danh sach ho tro.");
+            throw new SupportAccessDeniedException("Bạn không có quyền xem danh sách hỗ trợ.");
         }
 
         if (status == null || status.isBlank()) {
@@ -125,7 +125,7 @@ public class SupportService {
     public List<SupportTicket> getDentistVisibleTickets(Long dentistUserId, String status) {
         User dentist = requireUser(dentistUserId);
         if (dentist.getRole() != Role.DENTIST) {
-            throw new SupportAccessDeniedException("Chi bac si moi co quyen xem danh sach nay.");
+            throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem danh sách này.");
         }
 
         if (status == null || status.isBlank()) {
@@ -138,11 +138,11 @@ public class SupportService {
     public SupportTicket getDentistTicketDetail(Long dentistUserId, Long ticketId) {
         User dentist = requireUser(dentistUserId);
         if (dentist.getRole() != Role.DENTIST) {
-            throw new SupportAccessDeniedException("Chi bac si moi co quyen xem chi tiet phieu ho tro.");
+            throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem chi tiết phiếu hỗ trợ.");
         }
 
         return supportTicketRepository.findVisibleToDentistById(ticketId, dentistUserId)
-                .orElseThrow(() -> new SupportAccessDeniedException("Ban khong co quyen xem phieu ho tro nay."));
+                .orElseThrow(() -> new SupportAccessDeniedException("Bạn không có quyền xem phiếu hỗ trợ này."));
     }
 
     @Transactional
@@ -151,13 +151,13 @@ public class SupportService {
         validateAnswer(answer);
 
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
-                .orElseThrow(() -> new BusinessException("Khong tim thay yeu cau ho tro."));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
         if (ticket.getStatus() == SupportStatus.CLOSED) {
-            throw new BusinessException("Khong the tra loi yeu cau da dong.");
+            throw new BusinessException("Không thể trả lời yêu cầu đã đóng.");
         }
         if (ticket.getAnswer() != null && !ticket.getAnswer().trim().isEmpty()) {
-            throw new BusinessException("Yeu cau nay da duoc tra loi.");
+            throw new BusinessException("Yêu cầu này đã được trả lời.");
         }
 
         if (responder.getRole() == Role.DENTIST) {
@@ -186,16 +186,17 @@ public class SupportService {
     public SupportTicket closeTicket(Long staffUserId, Long ticketId) {
         User staff = requireStaffOrAdmin(staffUserId);
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
-                .orElseThrow(() -> new BusinessException("Khong tim thay yeu cau ho tro."));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
         if (ticket.getStatus() == SupportStatus.CLOSED) {
-            throw new BusinessException("Yeu cau ho tro da dong.");
+            throw new BusinessException("Yêu cầu hỗ trợ đã đóng.");
         }
         ticket.setStatus(SupportStatus.CLOSED);
         if (ticket.getStaff() == null) {
             ticket.setStaff(staff);
         }
         SupportTicket saved = supportTicketRepository.save(ticket);
+
         notificationService.createForCustomer(
                 saved.getCustomer().getId(),
                 NotificationType.TICKET_STATUS_CHANGED,
@@ -205,27 +206,28 @@ public class SupportService {
                 NotificationReferenceType.TICKET,
                 saved.getId()
         );
+
         return saved;
     }
 
     @Transactional(readOnly = true)
     public User getCurrentUser(UserDetails principal) {
         if (principal == null || principal.getUsername() == null || principal.getUsername().isBlank()) {
-            throw new SupportAccessDeniedException("Khong xac dinh duoc tai khoan hien tai.");
+            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
         }
         return userRepository.findByEmail(principal.getUsername())
-                .orElseThrow(() -> new SupportAccessDeniedException("Khong tim thay tai khoan hien tai."));
+                .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy tài khoản hiện tại."));
     }
 
     private User requireUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("Khong tim thay nguoi dung hien tai."));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng hiện tại."));
     }
 
     private User requireCustomer(Long userId) {
         User user = requireUser(userId);
         if (user.getRole() != Role.CUSTOMER) {
-            throw new SupportAccessDeniedException("Chi khach hang moi duoc thuc hien thao tac nay.");
+            throw new SupportAccessDeniedException("Chỉ khách hàng mới được thực hiện thao tác này.");
         }
         return user;
     }
@@ -233,7 +235,7 @@ public class SupportService {
     private User requireStaffOrAdmin(Long userId) {
         User user = requireUser(userId);
         if (user.getRole() != Role.STAFF && user.getRole() != Role.ADMIN) {
-            throw new SupportAccessDeniedException("Ban khong co quyen thuc hien thao tac nay.");
+            throw new SupportAccessDeniedException("Bạn không có quyền thực hiện thao tác này.");
         }
         return user;
     }
@@ -241,7 +243,7 @@ public class SupportService {
     private User requireSupportResponder(Long userId) {
         User user = requireUser(userId);
         if (user.getRole() != Role.STAFF && user.getRole() != Role.DENTIST) {
-            throw new SupportAccessDeniedException("Chi nhan vien hoac bac si moi duoc phan hoi phieu ho tro.");
+            throw new SupportAccessDeniedException("Chỉ nhân viên hoặc bác sĩ mới được phản hồi phiếu hỗ trợ.");
         }
         return user;
     }
@@ -251,12 +253,12 @@ public class SupportService {
             return;
         }
         if (ticket.getAppointment().getDentist() == null || ticket.getAppointment().getDentist().getUser() == null) {
-            throw new SupportAccessDeniedException("Phieu nay chua gan bac si ca kham, bac si khong the phan hoi.");
+            throw new SupportAccessDeniedException("Phiếu này chưa gán bác sĩ ca khám, bác sĩ không thể phản hồi.");
         }
 
         Long assignedDentistUserId = ticket.getAppointment().getDentist().getUser().getId();
         if (!assignedDentistUserId.equals(dentistUserId)) {
-            throw new SupportAccessDeniedException("Ban khong co quyen phan hoi phieu lien quan ca kham nay.");
+            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu liên quan ca khám này.");
         }
     }
 
@@ -264,7 +266,7 @@ public class SupportService {
         try {
             return SupportStatus.valueOf(status.trim().toUpperCase());
         } catch (Exception e) {
-            throw new BusinessException("Trang thai loc khong hop le.");
+            throw new BusinessException("Trạng thái lọc không hợp lệ.");
         }
     }
 
@@ -282,7 +284,7 @@ public class SupportService {
 
     private void validateAnswer(String answer) {
         if (answer == null || answer.trim().isEmpty()) {
-            throw new BusinessException("Noi dung tra loi khong duoc de trong.");
+            throw new BusinessException("Nội dung trả lời không được để trống.");
         }
     }
 }

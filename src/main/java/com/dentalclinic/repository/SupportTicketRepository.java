@@ -23,6 +23,9 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     Page<SupportTicket> findByCustomer_Id(Long customerId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
+    Optional<SupportTicket> findFirstByCustomer_IdAndAnswerIsNotNullOrderByCreatedAtDesc(Long customerId);
+
+    @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
     List<SupportTicket> findByStatusOrderByCreatedAtDesc(SupportStatus status);
 
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})

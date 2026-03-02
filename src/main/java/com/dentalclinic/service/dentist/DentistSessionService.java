@@ -113,7 +113,7 @@ public class DentistSessionService {
 
         return new BillingForm(
                 appt.getCustomer().getFullName(),
-                bn == null ? defaultPerformedJson() : safe(bn.getPerformedServicesJson()),
+                bn == null ? defaultPerformedJson(appt) : safe(bn.getPerformedServicesJson()),
                 bn == null ? defaultPrescriptionJson() : safe(bn.getPrescriptionNote()),
                 bn == null ? "" : safe(bn.getNote())
         );
@@ -178,7 +178,12 @@ public class DentistSessionService {
         return s == null ? "" : s.trim();
     }
 
-    private String defaultPerformedJson() {
+    private String defaultPerformedJson(Appointment appt) {
+
+        if (appt.getService() == null) {
+            return "[]";
+        }
+
         return """
             [
               {"serviceId":1,"qty":1,"toothNo":"Full mouth"}
