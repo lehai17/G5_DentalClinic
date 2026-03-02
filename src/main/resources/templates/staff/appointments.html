@@ -68,45 +68,38 @@
                     <td th:text="${a.status}"></td>
 
                     <td>
-                        <!-- PENDING + CHƯA gán bác sĩ -->
-                        <button type="button"
+                        <button type="button" class="btn-assign"
                                 th:if="${a.status.name() == 'PENDING' and a.dentist == null}"
                                 th:onclick="'assignDentist(' + ${a.id} + ')'">
                             Gán BS
                         </button>
 
-                        <!-- PENDING + ĐÃ gán bác sĩ => chỉ cho xác nhận -->
-                        <button type="button"
+                        <button type="button" class="btn-confirm"
                                 th:if="${a.status.name() == 'PENDING' and a.dentist != null}"
                                 th:onclick="'confirmAppointment(' + ${a.id} + ')'">
                             Confirm
                         </button>
 
-                        <!-- CONFIRMED => Check-in -->
-                        <button type="button"
+                        <button type="button" class="btn-checkin"
                                 th:if="${a.status.name() == 'CONFIRMED'}"
-                                th:onclick="'checkInAppointment(' + ${a.id} + ')'">
+                                th:onclick="'checkin(' + ${a.id} + ')'">
                             Check-in
-                                th:if="${a.status.name() == 'PENDING'}"
-                                th:onclick="'assignDentist(' + ${a.id} + ')'">
-                            Assign dentist
                         </button>
 
-                        <!-- CHECKED_IN => Hoàn thành -->
-                        <button type="button"
+                        <button type="button" class="btn-complete"
                                 th:if="${a.status.name() == 'CHECKED_IN'}"
                                 th:onclick="'completeAppointment(' + ${a.id} + ')'">
                             Complete
                         </button>
 
-                        <!-- Cho phép hủy khi chưa check-in -->
-                        <button type="button"
+                        <button type="button" class="btn-cancel"
                                 th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}"
                                 th:onclick="'cancelAppointment(' + ${a.id} + ')'">
                             Cancel
                         </button>
 
-                        <button th:if="${a.status.name() == 'COMPLETED'}"
+                        <button type="button" class="btn-payment"
+                                th:if="${a.status.name() == 'COMPLETED'}"
                                 th:onclick="'goToPayment(' + ${a.id} + ')'">
                             Payment
                         </button>
