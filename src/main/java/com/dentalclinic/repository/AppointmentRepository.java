@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -210,4 +211,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByDateAndStatusIn(LocalDate targetDate, List<AppointmentStatus> pending);
 
     List<Appointment> findByCustomerId(Long customerId);
+
+    List<Appointment> findAllByStatusAndCreatedAtBefore(AppointmentStatus status, LocalDateTime dateTime);
 }
