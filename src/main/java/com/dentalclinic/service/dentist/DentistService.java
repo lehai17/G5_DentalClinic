@@ -411,4 +411,8 @@ public class DentistService {
                     "Không thể xóa do nha sĩ đã có lịch sử khám bệnh. Vui lòng sử dụng tính năng 'Khóa' thay vì xóa.");
         }
     }
+
+    public List<DentistProfile> getAvailableDentistsForDate(LocalDate date) {
+        return dentistProfileRepository.findAvailableDentists(date);
+    }
 }

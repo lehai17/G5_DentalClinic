@@ -51,6 +51,13 @@
             <span>Slots</span>
         </a>
 
+        <a th:href="@{/admin/busy-schedule}"
+           class="nav-item"
+           th:classappend="${activePage == 'busy-schedule' ? ' active' : ''}">
+            <i class="fas fa-user-clock"></i>
+            <span>Busy Schedule</span>
+        </a>
+
         <a th:href="@{/admin/blogs}"
            class="nav-item"
            th:classappend="${activePage == 'blogs' ? ' active' : ''}">
