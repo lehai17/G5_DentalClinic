@@ -1,0 +1,66 @@
+<div th:fragment="customer-list" xmlns:th="http://www.thymeleaf.org">
+    <table th:if="${not #lists.isEmpty(customers)}">
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Contact Info</th>
+                <th>Joined Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="customer : ${customers}" class="clickable-row"
+                th:onclick="'goToDetail(' + ${customer.id} + ')'">
+                <td>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div
+                            style="width: 45px; height: 45px; border-radius: 50%; background: #F4F7FE; color: #1A237E; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <div th:text="${customer.fullName}" style="font-weight: 700; color: #1B2559;">Name</div>
+                            <div style="font-size: 11px; color: #A3AED0; margin-top: 4px;">ID: #<span
+                                    th:text="${customer.id}">ID</span></div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <div style="display: flex; align-items: center; gap: 8px; color: #707EAE; font-size: 13px;">
+                            <i class="fas fa-envelope" style="width: 15px;"></i>
+                            <span th:text="${customer.email}">email@domain.com</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; color: #707EAE; font-size: 13px;">
+                            <i class="fas fa-phone-alt" style="width: 15px;"></i>
+                            <span th:text="${customer.phone ?: 'N/A'}">0123456789</span>
+                        </div>
+                    </div>
+                </td>
+                <td style="color: #707EAE;">
+                    <i class="far fa-calendar-alt me-2" style="margin-right: 5px;"></i>
+                    <span th:text="${#temporals.format(customer.createdAt, 'dd/MM/yyyy')}">01/01/2026</span>
+                </td>
+                <td>
+                    <span class="status-badge"
+                        th:classappend="${customer.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
+                        th:text="${customer.status}">
+                    </span>
+                </td>
+                <td>
+                    <a th:href="@{/admin/customers/detail/{id}(id=${customer.id})}" class="action-btn"
+                        onclick="event.stopPropagation()">
+                        View Profile <i class="fas fa-arrow-right"></i>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="empty-state-row" th:if="${#lists.isEmpty(customers)}"
+        style="text-align: center; padding: 60px 0; color: #A3AED0;">
+        <i class="fas fa-search" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i>
+        <h3 style="margin: 0; font-size: 18px; color: #1B2559;">No customers found</h3>
+        <p style="margin-top: 8px; font-size: 14px;">Try changing your search keywords or filters</p>
+    </div>
+</div>
