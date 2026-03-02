@@ -26,20 +26,20 @@ public class CustomerHomepageController {
     private final BlogRepository blogRepo;
 
     public CustomerHomepageController(CustomerProfileService profileService,
-                                      ServiceRepository serviceRepo,
-                                      DentistProfileRepository dentistRepo, BlogRepository blogRepo) {
+            ServiceRepository serviceRepo,
+            DentistProfileRepository dentistRepo, BlogRepository blogRepo) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
         this.blogRepo = blogRepo;
     }
 
-    @GetMapping({"/", "/index", "/home"})
+    @GetMapping({ "/", "/index", "/home" })
     public String redirectToHomepage() {
         return "redirect:/homepage";
     }
 
-    @GetMapping({"/homepage", "/customer/homepage"})
+    @GetMapping({ "/homepage", "/customer/homepage" })
     public String showHomepage(@RequestParam(defaultValue = "0") int page, Model model) {
         // Sử dụng một ID giả lập hoặc lấy từ Security nếu có
         Long currentCustomerId = 3L;
@@ -57,8 +57,9 @@ public class CustomerHomepageController {
             model.addAttribute("customer", profile);
 
             // 2. Lấy danh sách Dịch vụ và Bác sĩ
-            model.addAttribute("services", serviceRepo.findAll());
-            model.addAttribute("dentists", dentistRepo.findAll());
+            model.addAttribute("services", serviceRepo.findByActiveTrue());
+            model.addAttribute("dentists",
+                    dentistRepo.filterDentists(null, com.dentalclinic.model.user.UserStatus.ACTIVE));
 
             // 3. Xử lý phân trang Blog (Lấy 2 bài mỗi trang)
             Pageable pageable = PageRequest.of(page, 2);
@@ -86,11 +87,14 @@ public class CustomerHomepageController {
     /** Trang đặt lịch khám (cùng layout với trang chủ) */
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
-        model.addAttribute("services", serviceRepo.findAll());
+        model.addAttribute("services", serviceRepo.findByActiveTrue());
         return "customer/booking";
     }
 
-    /** Trang lịch hẹn của tôi (cùng layout với trang chủ). Dùng /my-appointments để tránh trùng GET /customer/appointments (API JSON). */
+    /**
+     * Trang lịch hẹn của tôi (cùng layout với trang chủ). Dùng /my-appointments để
+     * tránh trùng GET /customer/appointments (API JSON).
+     */
     @GetMapping("/customer/my-appointments")
     public String appointmentsPage() {
         return "customer/appointments";
