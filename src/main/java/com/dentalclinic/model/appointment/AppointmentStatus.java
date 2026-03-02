@@ -10,5 +10,7 @@ public enum AppointmentStatus {
     REEXAM,
     IN_PROGRESS,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    DONE,
+    EXAMINING
 }

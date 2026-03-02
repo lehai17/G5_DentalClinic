@@ -3,6 +3,7 @@ package com.dentalclinic.repository;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -233,6 +234,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("DELETE FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId")
     void deleteAppointmentSlotsByAppointmentId(@Param("appointmentId") Long appointmentId);
 
+    // Default method hỗ trợ logic cũ
+    default boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+            Long dentistId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        return countBusyAppointments(dentistId, date, startTime, endTime) > 0;
+    }
+
+    Page<Appointment> findByCustomer_User_Id(Long userId, PageRequest pageable);
     @Query("SELECT a FROM Appointment a WHERE a.date = :date AND a.status IN :statuses")
     List<Appointment> findByDateAndStatusIn(
             @Param("date") LocalDate date,

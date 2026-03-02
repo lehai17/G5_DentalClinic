@@ -36,13 +36,13 @@ public class SlotSeeder {
             LocalDate endDate = today.plusDays(DAYS_TO_SEED - 1);
 
             logger.info("Seeding/repairing slots for next {} days with capacity {}", DAYS_TO_SEED, DEFAULT_CAPACITY);
+
             int totalSlotsCreated = 0;
             int totalSlotsUpdated = 0;
 
             for (int day = 0; day < DAYS_TO_SEED; day++) {
                 LocalDate date = today.plusDays(day);
 
-                // Bỏ qua Chủ Nhật
                 if (date.getDayOfWeek().getValue() == 7) {
                     continue;
                 }
@@ -50,19 +50,22 @@ public class SlotSeeder {
                 LocalDateTime current = LocalDateTime.of(date, CLINIC_OPEN_TIME);
                 LocalDateTime end = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
 
-                while (current.isBefore(end)) {
-                    Optional<Slot> existingSlot = slotRepository.findBySlotTime(current);
-
-                    if (existingSlot.isPresent()) {
-                        Slot slot = existingSlot.get();
+                while (current.isBefore(end) || current.equals(end.minusMinutes(30))) {
+                    Optional<Slot> existing = slotRepository.findBySlotTime(current);
+                    if (existing.isPresent()) {
+                        Slot slot = existing.get();
                         boolean changed = false;
 
                         if (!slot.isActive()) {
                             slot.setActive(true);
                             changed = true;
                         }
-                        if (slot.getCapacity() <= 0) {
+                        if (slot.getCapacity() != DEFAULT_CAPACITY) {
                             slot.setCapacity(DEFAULT_CAPACITY);
+                            changed = true;
+                        }
+                        if (slot.getBookedCount() > slot.getCapacity()) {
+                            slot.setBookedCount(slot.getCapacity());
                             changed = true;
                         }
 
@@ -71,9 +74,7 @@ public class SlotSeeder {
                             totalSlotsUpdated++;
                         }
                     } else {
-                        // Tạo mới nếu chưa tồn tại
-                        Slot slot = new Slot(current, DEFAULT_CAPACITY);
-                        slotRepository.save(slot);
+                        slotRepository.save(new Slot(current, DEFAULT_CAPACITY));
                         totalSlotsCreated++;
                     }
 
@@ -83,15 +84,19 @@ public class SlotSeeder {
 
             logger.info("Slot seeding done. Created={}, Updated={}", totalSlotsCreated, totalSlotsUpdated);
 
-            // Chạy kiểm tra bổ sung cho dữ liệu cũ
-            fillMissingLastSlots(slotRepository, today, endDate);
+            logger.info("Slot seed completed. created={}, updated={}", totalSlotsCreated, totalSlotsUpdated);
         };
     }
 
     /**
-     * Kiểm tra và lấp đầy các slot bị thiếu cho các ngày không đủ 18 slots.
+     * This method used to patch legacy missing slots, kept as no-op for compatibility.
      */
+    @SuppressWarnings("unused")
     private void fillMissingLastSlots(SlotRepository slotRepository, LocalDate fromDate, LocalDate toDate) {
+        // No-op: seeding now does full upsert for all expected slot_time values.
+        logger.debug("fillMissingLastSlots is deprecated; full upsert seeding is used instead.");
+        if (fromDate == null || toDate == null) {
+            return;
         logger.info("Checking and filling missing slots (all incomplete dates)...");
 
         LocalDate currentDay = fromDate;

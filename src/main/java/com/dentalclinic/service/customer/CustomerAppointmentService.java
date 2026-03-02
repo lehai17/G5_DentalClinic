@@ -20,6 +20,10 @@ import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.SlotRepository;
 import com.dentalclinic.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -163,6 +167,16 @@ public class CustomerAppointmentService {
 
     public List<AppointmentDto> getMyAppointments(Long userId) {
         return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, size);
+        PageRequest pageable = PageRequest.of(safePage, safeSize,
+                Sort.by(Sort.Order.desc("date"), Sort.Order.desc("startTime")));
+        Page<Appointment> appointments = appointmentRepository.findByCustomer_User_Id(userId, pageable);
+        List<AppointmentDto> content = appointments.getContent().stream().map(this::toDto).toList();
+        return new PageImpl<>(content, pageable, appointments.getTotalElements());
     }
 
     public Optional<AppointmentDto> getAppointmentDetail(Long userId, Long appointmentId) {

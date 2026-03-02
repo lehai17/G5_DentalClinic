@@ -130,6 +130,7 @@ public class CustomerPaymentController {
 
                     // Cập nhật Database
                     Appointment appointment = appointmentRepository.findById(appointmentId).orElseThrow();
+                    // Sau khi đặt cọc thành công vẫn giữ trạng thái PENDING theo business rule.
                     appointment.setStatus(AppointmentStatus.PENDING);
                     appointmentRepository.save(appointment);
 

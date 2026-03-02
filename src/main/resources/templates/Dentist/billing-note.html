@@ -204,39 +204,37 @@
     const status = document.getElementById('appointmentStatus')?.value;
     const locked = (status === 'DONE' || status === 'COMPLETED');
 
-    if (locked) {
+    if (status === 'DONE' || status === 'COMPLETED') {
 
-      // Disable tất cả input (trừ hidden)
-      document.querySelectorAll('input:not([type=hidden]), textarea, select')
-              .forEach(el => el.disabled = true);
+      // 🔒 Disable form fields
+      document.querySelectorAll('input, textarea, select, button')
+              .forEach(el => {
+                el.disabled = true;
+              });
 
-      // Xóa nút save
+      // 🔥 Remove submit button completely
       const saveBtn = document.querySelector('button[type="submit"]');
       if (saveBtn) saveBtn.remove();
 
-      // Xóa nút add medicine
-      const addBtn = document.getElementById('btnAddRx');
-      if (addBtn) addBtn.remove();
+      // 🔥 Remove all add buttons
+      document.querySelectorAll('#btnAddRx')
+              .forEach(btn => btn.remove());
+
     }
+    document.querySelectorAll('.service-item').forEach(row => {
+      const check = row.querySelector('.svc-check');
+      const qty = row.querySelector('.svc-qty');
+      const tooth = row.querySelector('.svc-tooth');
 
-    // Toggle chỉ chạy nếu chưa locked
-    if (!locked) {
-      document.querySelectorAll('.service-item').forEach(row => {
-        const check = row.querySelector('.svc-check');
-        const qty = row.querySelector('.svc-qty');
-        const tooth = row.querySelector('.svc-tooth');
+      function toggle() {
+        const enabled = check.checked;
+        qty.disabled = !enabled;
+        tooth.disabled = !enabled;
+      }
 
-        function toggle() {
-          const enabled = check.checked;
-          qty.disabled = !enabled;
-          tooth.disabled = !enabled;
-        }
-
-        check.addEventListener('change', toggle);
-        toggle();
-      });
-    }
-
+      check.addEventListener('change', toggle);
+      toggle();
+  });
   });
 </script>
 

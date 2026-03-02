@@ -1,8 +1,10 @@
 package com.dentalclinic.model.support;
 
+import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.appointment.Appointment;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,11 +23,17 @@ public class SupportTicket {
     @JoinColumn(name = "customer_id")
     private User customer;
 
+    // Keep mapped to existing column; expose both staff/dentist accessors for compatibility.
     @ManyToOne
     @JoinColumn(name = "staff_id")
     private User staff;
 
     @ManyToOne
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
+
+    @Column(name = "title", columnDefinition = "NVARCHAR(255)")
+    private String title;
     @JoinColumn(name = "dentist_id")
     private User dentist;
 
@@ -36,7 +44,8 @@ public class SupportTicket {
     private String answer;
 
     @Enumerated(EnumType.STRING)
-    private SupportStatus status;
+    @Column(name = "status", length = 20)
+    private SupportStatus status = SupportStatus.OPEN;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -79,11 +88,27 @@ public class SupportTicket {
     }
 
     public User getDentist() {
-        return dentist;
+        return staff;
     }
 
     public void setDentist(User dentist) {
-        this.dentist = dentist;
+        this.staff = dentist;
+    }
+
+    public Appointment getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getQuestion() {
