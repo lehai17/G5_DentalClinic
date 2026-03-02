@@ -5,7 +5,6 @@ import com.dentalclinic.model.support.SupportTicket;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import com.dentalclinic.model.support.SupportStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +15,8 @@ import java.util.Optional;
 
 @Repository
 public interface SupportTicketRepository extends JpaRepository<SupportTicket, Long> {
+
+    // --- Customer Methods ---
 
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
     List<SupportTicket> findByCustomer_IdOrderByCreatedAtDesc(Long customerId);
@@ -29,59 +30,28 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
     List<SupportTicket> findAllByOrderByCreatedAtDesc();
 
+    // --- Dentist Methods (Optimized with Fetch Joins) ---
+
+    /**
+     * Method này được thêm vào để khớp với SupportTicketService.
+     * Lấy danh sách phiếu hỗ trợ dựa trên ID người dùng của Bác sĩ thông qua Appointment.
+     */
     @Query("""
-        SELECT s
-        FROM SupportTicket s
-        LEFT JOIN FETCH s.appointment a
-        LEFT JOIN FETCH a.service
-        LEFT JOIN FETCH s.customer c
-        LEFT JOIN FETCH c.customerProfile
-        WHERE s.staff.id = :dentistId
-    // --- Nhóm các hàm cho Customer ---
-    List<SupportTicket> findByCustomer_IdOrderByCreatedAtDesc(Long customerId);
-
-    List<SupportTicket> findAllByOrderByCreatedAtDesc();
-
-    // Sửa lỗi kiểu dữ liệu: Repository nên nhận SupportStatus (Enum) thay vì String
-    // để khớp với kiểu dữ liệu trong Model SupportTicket
-    List<SupportTicket> findByStatusOrderByCreatedAtDesc(SupportStatus status);
-
-    // --- Nhóm các hàm cho Dentist (Sử dụng Query để tối ưu Fetching) ---
-    @Query("""
-        SELECT s
-        FROM SupportTicket s
+        SELECT s FROM SupportTicket s
         JOIN FETCH s.appointment a
-        JOIN FETCH a.service
-        JOIN FETCH s.customer
-        WHERE s.dentist.id = :dentistId
+        JOIN FETCH a.dentist d
+        JOIN FETCH d.user u
+        LEFT JOIN FETCH s.customer c
+        WHERE u.id = :dentistId
         ORDER BY s.createdAt DESC
     """)
     List<SupportTicket> findByDentistWithAppointment(@Param("dentistId") Long dentistId);
 
+    /**
+     * Lấy danh sách phiếu hỗ trợ hiển thị cho Bác sĩ (hàm cũ của bạn).
+     */
     @Query("""
-        SELECT s
-        FROM SupportTicket s
-        LEFT JOIN FETCH s.appointment a
-        LEFT JOIN FETCH a.service
-        LEFT JOIN FETCH s.customer c
-        LEFT JOIN FETCH c.customerProfile
-        WHERE s.staff.id = :dentistId
-          AND s.status = :status
-        JOIN FETCH s.appointment a
-        JOIN FETCH a.service
-        JOIN FETCH s.customer
-        WHERE s.dentist.id = :dentistId
-        AND s.status = :status
-        ORDER BY s.createdAt DESC
-    """)
-    List<SupportTicket> findByDentistAndStatusWithAppointment(
-            @Param("dentistId") Long dentistId,
-            @Param("status") SupportStatus status
-    );
-
-    @Query("""
-        SELECT s
-        FROM SupportTicket s
+        SELECT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
         LEFT JOIN FETCH a.dentist ad
@@ -89,14 +59,16 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
-        WHERE a IS NULL OR ad.user.id = :dentistUserId
+        WHERE a.dentist.user.id = :dentistUserId
         ORDER BY s.createdAt DESC
     """)
     List<SupportTicket> findVisibleToDentist(@Param("dentistUserId") Long dentistUserId);
 
+    /**
+     * Lọc danh sách phiếu hỗ trợ theo trạng thái dành cho Bác sĩ.
+     */
     @Query("""
-        SELECT s
-        FROM SupportTicket s
+        SELECT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
         LEFT JOIN FETCH a.dentist ad
@@ -104,16 +76,20 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
-        WHERE (a IS NULL OR ad.user.id = :dentistUserId)
+        WHERE a.dentist.user.id = :dentistUserId
           AND s.status = :status
         ORDER BY s.createdAt DESC
     """)
-    List<SupportTicket> findVisibleToDentistByStatus(@Param("dentistUserId") Long dentistUserId,
-                                                      @Param("status") SupportStatus status);
+    List<SupportTicket> findVisibleToDentistByStatus(
+            @Param("dentistUserId") Long dentistUserId,
+            @Param("status") SupportStatus status
+    );
 
+    /**
+     * Xem chi tiết một phiếu hỗ trợ dành cho Bác sĩ (Kiểm tra quyền sở hữu).
+     */
     @Query("""
-        SELECT s
-        FROM SupportTicket s
+        SELECT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
         LEFT JOIN FETCH a.dentist ad
@@ -122,9 +98,10 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
         WHERE s.id = :ticketId
-          AND (a IS NULL OR ad.user.id = :dentistUserId)
+          AND a.dentist.user.id = :dentistUserId
     """)
-    Optional<SupportTicket> findVisibleToDentistById(@Param("ticketId") Long ticketId,
-                                                      @Param("dentistUserId") Long dentistUserId);
-}
+    Optional<SupportTicket> findVisibleToDentistById(
+            @Param("ticketId") Long ticketId,
+            @Param("dentistUserId") Long dentistUserId
+    );
 }
