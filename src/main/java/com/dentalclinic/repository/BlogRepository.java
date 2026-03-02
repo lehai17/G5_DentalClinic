@@ -19,4 +19,6 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
 
     // Public
     Page<Blog> findByStatusOrderByApprovedAtDesc(BlogStatus status, Pageable pageable);
+    // Spring Boot sẽ tự hiểu lệnh này để lọc blog đã xuất bản và sắp xếp theo ngày
+    Page<Blog> findByIsPublishedTrueOrderByCreatedAtDesc(Pageable pageable);
 }

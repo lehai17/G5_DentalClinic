@@ -103,4 +103,7 @@ function checkInAppointment(id) {
         if (!res.ok) throw new Error("Check-in failed");
         window.location.reload();
     }).catch(err => alert(err.message));
+
+function goToPayment(id) {
+    window.location.href = "/staff/payments/" + id;
 }

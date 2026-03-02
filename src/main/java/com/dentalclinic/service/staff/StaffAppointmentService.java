@@ -5,13 +5,16 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.mail.EmailService;
+import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,13 +30,17 @@ public class StaffAppointmentService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private CustomerAppointmentService customerAppointmentService;
 
-    /* VIEW ALL APPOINTMENTS (STAFF) */
+    @Autowired
+    private NotificationService notificationService;
+
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
 
-    /* CONFIRM APPOINTMENT */
+    @Transactional
     public void confirmAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
@@ -52,21 +59,20 @@ public class StaffAppointmentService {
         emailService.sendAppointmentConfirmed(appointment);
     }
 
-    /* ASSIGN / REASSIGN DENTIST */
+    @Transactional
     public void assignDentist(Long appointmentId, Long dentistId) {
-
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        Long oldDentistId = appt.getDentist() != null ? appt.getDentist().getId() : null;
 
-        int busy = appointmentRepository.countBusyAppointmentsExcludeSelf(
+        boolean hasOverlap = appointmentRepository.hasOverlappingAppointment(
                 dentistId,
                 appt.getDate(),
                 appt.getStartTime(),
-                appt.getEndTime(),
-                appt.getId()
+                appt.getEndTime()
         );
 
-        if (busy > 0) {
+        if (hasOverlap) {
             throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
         }
 
@@ -74,10 +80,13 @@ public class StaffAppointmentService {
                 .orElseThrow(() -> new RuntimeException("Dentist not found"));
 
         appt.setDentist(dentist);
-        appointmentRepository.save(appt);
+        Appointment saved = appointmentRepository.save(appt);
+        if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
+            notificationService.notifyBookingUpdated(saved, "Thay đổi bác sĩ phụ trách");
+        }
     }
 
-
+    @Transactional
     public void completeAppointment(Long id) {
         Appointment a = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
@@ -90,20 +99,14 @@ public class StaffAppointmentService {
         appointmentRepository.save(a);
     }
 
-
-    /* CANCEL APPOINTMENT */
+    @Transactional
     public void cancelAppointment(Long appointmentId, String reason) {
-
-        Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        appt.setStatus(AppointmentStatus.CANCELLED);
-        appt.setNotes(reason);
-        appointmentRepository.save(appt);
+        customerAppointmentService.cancelAppointmentByStaff(appointmentId, reason);
     }
 
     public Page<Appointment> searchAndSort(
             String keyword,
+            String serviceKeyword,
             String sort,
             int page
     ) {
@@ -117,9 +120,23 @@ public class StaffAppointmentService {
 
         Pageable pageable = PageRequest.of(page, 3, s);
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
+        boolean hasCustomer = keyword != null && !keyword.trim().isEmpty();
+        boolean hasService = serviceKeyword != null && !serviceKeyword.trim().isEmpty();
+
+        if (hasCustomer && hasService) {
+            return appointmentRepository
+                    .findByCustomer_FullNameContainingIgnoreCaseAndService_NameContainingIgnoreCase(
+                            keyword, serviceKeyword, pageable);
+        }
+
+        if (hasCustomer) {
             return appointmentRepository
                     .findByCustomer_FullNameContainingIgnoreCase(keyword, pageable);
+        }
+
+        if (hasService) {
+            return appointmentRepository
+                    .findByService_NameContainingIgnoreCase(serviceKeyword, pageable);
         }
 
         return appointmentRepository.findAll(pageable);

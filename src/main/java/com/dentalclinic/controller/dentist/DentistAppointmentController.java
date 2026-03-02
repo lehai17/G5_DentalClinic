@@ -10,8 +10,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.dentalclinic.model.appointment.AppointmentStatus;
 
-import java.util.List;
 
 @Controller
 @RequestMapping("/dentist/appointments")
@@ -46,6 +46,22 @@ public class DentistAppointmentController {
         model.addAttribute("services", servicesRepository.findAll());
 
         Appointment appt = appointmentRepository.findById(id).orElseThrow();
+        // 🔥 Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED
+        if (appt.getStatus() != AppointmentStatus.DONE
+                && appt.getStatus() != AppointmentStatus.COMPLETED
+                && appt.getStatus() != AppointmentStatus.EXAMINING) {
+
+            appt.setStatus(AppointmentStatus.EXAMINING);
+            appointmentRepository.save(appt);
+        }
+
+        // CHUYỂN SANG IN_PROGRESS
+        if (appt.getStatus().name().equals("CONFIRMED")) {
+            appt.setStatus(
+                    com.dentalclinic.model.appointment.AppointmentStatus.IN_PROGRESS
+            );
+            appointmentRepository.save(appt);
+        }
 
         model.addAttribute("weekStart", weekStart);
         model.addAttribute("appointmentId", id);
@@ -62,7 +78,6 @@ public class DentistAppointmentController {
 
         model.addAttribute("diagnosis", record == null ? "" : record.getDiagnosis());
         model.addAttribute("treatmentNote", record == null ? "" : record.getTreatmentNote());
-        model.addAttribute("historyRecords", List.of());
 
         return "Dentist/examination";
     }
@@ -76,7 +91,12 @@ public class DentistAppointmentController {
             @RequestParam(required = false) String weekStart, // ✅ THÊM
             RedirectAttributes redirect
     ) {
-        medicalRecordService.saveOrUpdate(id, diagnosis, treatmentNote);
+        dentistSessionService.saveExam(
+                id,
+                customerUserId,
+                diagnosis,
+                treatmentNote
+        );
         redirect.addFlashAttribute("successMessage", "Examination saved");
 
         return "redirect:/dentist/appointments/" + id +
@@ -93,7 +113,8 @@ public class DentistAppointmentController {
             @RequestParam(required = false) String weekStart,
             Model model
     ) {
-        Appointment appt = appointmentRepository.findById(id).orElseThrow();
+        Appointment appt = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         model.addAttribute("services", servicesRepository.findAll());
         model.addAttribute("appointmentId", id);
@@ -107,8 +128,23 @@ public class DentistAppointmentController {
         model.addAttribute("weekStart", weekStart);
 
         var billing = dentistSessionService.loadBilling(id, customerUserId);
+
+        String performedJson = billing.performedServicesJson();
+
+        if (performedJson == null
+                || performedJson.isBlank()
+                || performedJson.equals("[]")) {
+            if (appt.getService() != null) {
+                performedJson = """
+        [
+          {"serviceId": %d, "qty": 1, "toothNo": ""}
+        ]
+        """.formatted(appt.getService().getId());
+            }
+        }
+
         model.addAttribute("note", billing.note());
-        model.addAttribute("performedServicesJson", billing.performedServicesJson());
+        model.addAttribute("performedServicesJson", performedJson);
         model.addAttribute("prescriptionNote", billing.prescriptionNote());
 
         return "Dentist/billing-note";
@@ -131,7 +167,6 @@ public class DentistAppointmentController {
                 prescriptionNote,
                 note
         );
-
         redirect.addFlashAttribute("successMessage", "Billing saved");
         return "redirect:/dentist/work-schedule?weekStart=" + weekStart;
     }

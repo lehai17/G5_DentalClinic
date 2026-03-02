@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tạo phiếu hỗ trợ chuyên môn</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="p-6 max-w-5xl mx-auto w-full">
+      <div class="mb-5">
+        <h1 class="text-2xl font-semibold text-slate-800">Tạo phiếu hỗ trợ chuyên môn</h1>
+        <p class="text-slate-600 mt-1">
+          Chọn đơn khám cần hỗ trợ hoặc chọn hỗ trợ khác, sau đó nhập tiêu đề và nội dung câu hỏi.
+        </p>
+      </div>
+
+      <div th:if="${errorMessage}" class="mb-4 px-4 py-3 rounded-lg bg-red-100 text-red-800" th:text="${errorMessage}"></div>
+
+      <form th:action="@{/support/create}" th:object="${form}" method="post"
+            class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+          <label for="appointmentId" class="font-medium text-slate-700 md:col-span-1">
+            1. Chọn đơn khám cần hỗ trợ
+          </label>
+          <div class="md:col-span-2">
+            <select id="appointmentId"
+                    th:field="*{appointmentId}"
+                    class="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white">
+              <option value="">Hỗ trợ khác (không liên quan ca khám)</option>
+              <option th:each="appt : ${appointments}"
+                      th:value="${appt.id}"
+                      th:text="'#' + ${appt.id} + ' - ' + ${#temporals.format(appt.date, 'dd/MM/yyyy')} + ' ' + ${appt.startTime} + ' - ' + (${appt.service != null ? appt.service.name : 'Dịch vụ'})">
+              </option>
+            </select>
+            <p class="text-xs text-slate-500 mt-1">
+              Nếu câu hỏi liên quan trực tiếp đến một ca khám, vui lòng chọn đúng đơn khám để bác sĩ phụ trách phản hồi nhanh hơn.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label for="title" class="block font-medium text-slate-700 mb-2">2. Tiêu đề hỗ trợ</label>
+          <input id="title"
+                 type="text"
+                 th:field="*{title}"
+                 maxlength="255"
+                 class="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                 placeholder="Ví dụ: Đau ê buốt sau khi trám răng">
+          <p th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-red-600 text-sm mt-1"></p>
+        </div>
+
+        <div>
+          <label for="question" class="block font-medium text-slate-700 mb-2">3. Nội dung câu hỏi</label>
+          <textarea id="question"
+                    th:field="*{question}"
+                    rows="7"
+                    maxlength="2000"
+                    class="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    placeholder="Mô tả chi tiết câu hỏi của bạn để phòng khám hỗ trợ chính xác hơn..."></textarea>
+          <p th:if="${#fields.hasErrors('question')}" th:errors="*{question}" class="text-red-600 text-sm mt-1"></p>
+        </div>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button type="submit"
+                  class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700">
+            <i class="bi bi-send"></i>
+            Gửi phiếu hỗ trợ
+          </button>
+          <a th:href="@{/support/my}"
+             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700">
+            <i class="bi bi-card-list"></i>
+            Xem phiếu hỗ trợ của tôi
+          </a>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+</body>
+</html>

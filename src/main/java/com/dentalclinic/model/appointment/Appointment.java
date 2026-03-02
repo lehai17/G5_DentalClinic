@@ -8,9 +8,24 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "appointment")
+@Table(
+        name = "appointment",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_appointment_customer_date_start",
+                        columnNames = {"customer_id", "appointment_date", "start_time"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_appointment_date_start", columnList = "appointment_date, start_time"),
+                @Index(name = "idx_appointment_customer_date", columnList = "customer_id, appointment_date"),
+                @Index(name = "idx_appointment_status", columnList = "status")
+        }
+)
 public class Appointment {
 
     @Id
@@ -32,6 +47,7 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "slot_id")
+    @JsonIgnore
     private DentistSchedule slot;
 
     @Column(name = "appointment_date")
@@ -56,6 +72,9 @@ public class Appointment {
     @Column(name = "contact_value", length = 100)
     private String contactValue;
 
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("slotOrder ASC")
+    private List<AppointmentSlot> appointmentSlots = new ArrayList<>();
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -81,4 +100,28 @@ public class Appointment {
     public void setContactChannel(String contactChannel) { this.contactChannel = contactChannel; }
     public String getContactValue() { return contactValue; }
     public void setContactValue(String contactValue) { this.contactValue = contactValue; }
+
+    public List<AppointmentSlot> getAppointmentSlots() {
+        return appointmentSlots;
+    }
+
+    public void setAppointmentSlots(List<AppointmentSlot> appointmentSlots) {
+        this.appointmentSlots = appointmentSlots;
+    }
+
+    public void addAppointmentSlot(AppointmentSlot appointmentSlot) {
+        appointmentSlots.add(appointmentSlot);
+        appointmentSlot.setAppointment(this);
+    }
+
+    public void removeAppointmentSlot(AppointmentSlot appointmentSlot) {
+        appointmentSlots.remove(appointmentSlot);
+        appointmentSlot.setAppointment(null);
+    }
+
+    public void clearAppointmentSlots() {
+        for (AppointmentSlot as : new ArrayList<>(appointmentSlots)) {
+            removeAppointmentSlot(as);
+        }
+    }
 }

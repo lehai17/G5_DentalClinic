@@ -9,7 +9,7 @@
   <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
   <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
   <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
-  <link rel="stylesheet" th:href="@{/css/customer-appointments.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-appointments-page.css}">
 
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -34,14 +34,13 @@
       </div>
 
       <div class="cap-layout">
-        <!-- LIST -->
         <aside class="cap-card cap-list-card" style="grid-column: 1 / -1;">
           <div class="cap-card-head">
             <div class="cap-card-title">
               <i class="bi bi-calendar2-check"></i>
               Danh sách lịch hẹn
             </div>
-            <div class="cap-card-hint">Nhấn vào 1 lịch để xem chi tiết ngay bên dưới</div>
+            <div class="cap-card-hint">Nhấn vào một lịch để xem chi tiết ngay bên dưới</div>
           </div>
 
           <div id="customer-appointments-loading" class="customer-loading cap-loading">
@@ -51,6 +50,7 @@
 
           <div id="customer-appointments-list-wrap" class="cap-list-wrap" style="display:none;">
             <ul id="customer-appointments-list" class="customer-appointments-list cap-appointments-list"></ul>
+            <div id="customer-appointments-pagination" class="cap-pagination" style="display:none;"></div>
 
             <div id="customer-appointments-empty" class="customer-empty cap-empty" style="display:none;">
               <div class="cap-empty-icon"><i class="bi bi-calendar-x"></i></div>
