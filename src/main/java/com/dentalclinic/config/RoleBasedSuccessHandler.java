@@ -49,7 +49,7 @@ public class RoleBasedSuccessHandler implements AuthenticationSuccessHandler {
                     redirectUrl = "/dentist/work-schedule";
                     break;
                 case "ROLE_CUSTOMER":
-                    redirectUrl = "/customer/homepage";
+                    redirectUrl = "/homepage";
                     userRepository.findByEmail(authentication.getName())
                             .ifPresent(user -> request.getSession().setAttribute(SESSION_USER_ID, user.getId()));
                     break;

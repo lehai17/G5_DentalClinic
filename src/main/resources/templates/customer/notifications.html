@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông báo của tôi</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-notifications.css}">
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="customer-notification-page">
+      <div class="notification-page-head">
+        <div>
+          <h1>Thông báo của tôi</h1>
+          <p>Cập nhật mới nhất về lịch hẹn, hỗ trợ chuyên môn và hồ sơ khám.</p>
+          <div class="notification-filter-tabs">
+            <a th:href="@{/customer/notifications(filter='all')}"
+               th:classappend="${selectedFilter == null || selectedFilter == 'all'} ? ' active'">Tất cả</a>
+            <a th:href="@{/customer/notifications(filter='unread')}"
+               th:classappend="${selectedFilter == 'unread'} ? ' active'">Chưa đọc</a>
+          </div>
+        </div>
+        <form method="post" th:action="@{/customer/notifications/read-all}">
+          <input type="hidden" name="returnTo" value="/customer/notifications">
+          <button type="submit" class="mark-all-btn">Đánh dấu tất cả đã đọc</button>
+        </form>
+      </div>
+
+      <div th:if="${errorMessage}" class="notification-flash error" th:text="${errorMessage}"></div>
+
+      <div th:if="${#lists.isEmpty(notifications)}" class="notification-empty">
+        <i class="bi bi-bell-slash"></i>
+        <h3>Bạn chưa có thông báo nào</h3>
+        <p>Hệ thống sẽ hiển thị thông báo khi có cập nhật mới dành cho bạn.</p>
+      </div>
+
+      <div th:if="${!#lists.isEmpty(notifications)}" class="notification-list-page">
+        <article class="notification-card"
+                 th:each="n : ${notifications}"
+                 th:classappend="${!n.read} ? ' unread'">
+          <a class="notification-main-link"
+             th:href="@{/customer/notifications/{id}/open(id=${n.id})}">
+            <div class="notification-title" th:text="${n.title}">Tiêu đề thông báo</div>
+            <div class="notification-content" th:text="${n.content}">Nội dung thông báo</div>
+            <div class="notification-meta">
+              <span class="notification-type" th:text="${n.type}">BOOKING_CREATED</span>
+              <span class="notification-time" th:text="${#temporals.format(n.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026 08:00</span>
+            </div>
+          </a>
+
+          <form method="post"
+                th:if="${!n.read}"
+                th:action="@{/customer/notifications/{id}/read(id=${n.id})}">
+            <input type="hidden" name="returnTo" value="/customer/notifications">
+            <button type="submit" class="mark-read-btn">Đánh dấu đã đọc</button>
+          </form>
+        </article>
+      </div>
+
+      <nav class="notification-pagination" th:if="${totalPages > 1}">
+        <a class="page-btn"
+           th:classappend="${currentPage == 0} ? ' disabled'"
+           th:href="${currentPage > 0} ? @{/customer/notifications(page=${currentPage - 1})} : '#'">Trước</a>
+        <th:block th:each="p : ${#numbers.sequence(0, totalPages - 1)}">
+          <a class="page-btn"
+             th:classappend="${p == currentPage} ? ' active'"
+             th:href="@{/customer/notifications(page=${p})}"
+             th:text="${p + 1}">1</a>
+        </th:block>
+        <a class="page-btn"
+           th:classappend="${currentPage + 1 >= totalPages} ? ' disabled'"
+           th:href="${currentPage + 1 < totalPages} ? @{/customer/notifications(page=${currentPage + 1})} : '#'">Sau</a>
+      </nav>
+    </section>
+  </main>
+</div>
+</body>
+</html>

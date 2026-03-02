@@ -306,21 +306,21 @@
   }
 
   var hash = window.location.hash;
+  var openFromNotificationId = null;
   if (hash && hash.indexOf("highlight=") !== -1) {
     var m = hash.match(/highlight=(\d+)/);
-    if (m) window.__lastCreatedAppointmentId = parseInt(m[1], 10);
+    if (m) {
+      openFromNotificationId = parseInt(m[1], 10);
+      window.__lastCreatedAppointmentId = openFromNotificationId;
+    }
   }
 
-  loadAppointments();
+  loadAppointments(function () {
+    if (!openFromNotificationId) return;
+    var target = listEl.querySelector('li[data-appointment-id="' + openFromNotificationId + '"]');
+    if (target) {
+      openInlineDetail(openFromNotificationId, false);
+      history.replaceState(null, "", window.location.pathname);
+    }
+  });
 })();
-
-if (appointment.status === "WAITING_PAYMENT") {
-    html += `
-        <div class="cap-payment-box" style="margin-top:20px;">
-            <a href="/customer/payment/create/${appointment.id}"
-               class="cap-pay-btn">
-               Thanh toán VNPay
-            </a>
-        </div>
-    `;
-}

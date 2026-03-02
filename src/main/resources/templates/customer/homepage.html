@@ -25,7 +25,7 @@
                 <h1 class="hero-title">Chăm Sóc Răng Chuyên Nghiệp</h1>
                 <p class="hero-subtitle">Nếp sống khỏe mạnh bắt đầu từ nụ cười đẹp. Hãy để chúng tôi giúp bạn!</p>
                 <div class="hero-buttons">
-                    <a th:href="@{/appointments/book}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                    <a th:href="@{/customer/book}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                         Đặt Lịch Khám
                     </a>
                 </div>
@@ -103,10 +103,16 @@
                 <div class="blog-grid">
                     <article th:each="blog : ${blogs}" class="blog-card">
                         <div class="blog-thumb"
-                             th:style="'background-image: url(' + @{${blog.imageUrl}} + ');'">
+                             th:if="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}"
+                             th:style="'background-image: url(' + ${blog.imageUrl} + ');'">
+                        </div>
+                        <div class="blog-thumb"
+                             th:unless="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}"
+                             style="background-image: url('/images/default-blog.jpg');">
                         </div>
                         <div class="blog-content">
-                            <span class="blog-date" th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy')}"></span>
+                            <span class="blog-date"
+                                  th:text="${blog.createdAt != null ? #temporals.format(blog.createdAt, 'dd/MM/yyyy') : 'Chưa cập nhật'}"></span>
                             <h3 th:text="${blog.title}"></h3>
                             <p class="line-clamp-3" th:text="${blog.summary}"></p>
                             <a th:href="@{/public/blogs/{id}(id=${blog.id})}" class="read-more">Đọc thêm →</a>

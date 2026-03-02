@@ -3,15 +3,16 @@ package com.dentalclinic.service.support;
 import com.dentalclinic.exception.BusinessException;
 import com.dentalclinic.exception.SupportAccessDeniedException;
 import com.dentalclinic.model.appointment.Appointment;
-import com.dentalclinic.model.notification.Notification;
+import com.dentalclinic.model.notification.NotificationReferenceType;
+import com.dentalclinic.model.notification.NotificationType;
 import com.dentalclinic.model.support.SupportStatus;
 import com.dentalclinic.model.support.SupportTicket;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
-import com.dentalclinic.repository.NotificationRepository;
 import com.dentalclinic.repository.SupportTicketRepository;
 import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -26,16 +27,16 @@ import java.util.List;
 public class SupportService {
 
     private final SupportTicketRepository supportTicketRepository;
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
 
     public SupportService(SupportTicketRepository supportTicketRepository,
-                          NotificationRepository notificationRepository,
+                          NotificationService notificationService,
                           UserRepository userRepository,
                           AppointmentRepository appointmentRepository) {
         this.supportTicketRepository = supportTicketRepository;
-        this.notificationRepository = notificationRepository;
+        this.notificationService = notificationService;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
     }
@@ -168,14 +169,15 @@ public class SupportService {
         ticket.setStatus(SupportStatus.ANSWERED);
         SupportTicket saved = supportTicketRepository.save(ticket);
 
-        Notification notification = new Notification();
-        notification.setUser(saved.getCustomer());
-        notification.setTitle("Phieu ho tro da duoc phan hoi");
-        notification.setContent("Yeu cau ho tro cua ban da duoc phan hoi.");
-        notification.setType("SUPPORT");
-        notification.setRead(false);
-        notification.setCreatedAt(LocalDateTime.now());
-        notificationRepository.save(notification);
+        notificationService.createForCustomer(
+                saved.getCustomer().getId(),
+                NotificationType.TICKET_ANSWERED,
+                "Phiếu hỗ trợ đã được phản hồi",
+                "Yêu cầu hỗ trợ #" + saved.getId() + " đã được phản hồi.",
+                "/support/" + saved.getId(),
+                NotificationReferenceType.TICKET,
+                saved.getId()
+        );
 
         return saved;
     }
@@ -193,7 +195,17 @@ public class SupportService {
         if (ticket.getStaff() == null) {
             ticket.setStaff(staff);
         }
-        return supportTicketRepository.save(ticket);
+        SupportTicket saved = supportTicketRepository.save(ticket);
+        notificationService.createForCustomer(
+                saved.getCustomer().getId(),
+                NotificationType.TICKET_STATUS_CHANGED,
+                "Phiếu hỗ trợ đã đóng",
+                "Yêu cầu hỗ trợ #" + saved.getId() + " đã được chuyển sang trạng thái CLOSED.",
+                "/support/" + saved.getId(),
+                NotificationReferenceType.TICKET,
+                saved.getId()
+        );
+        return saved;
     }
 
     @Transactional(readOnly = true)
