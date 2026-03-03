@@ -220,6 +220,15 @@
       document.querySelector('#btnAddRx')?.remove();
     }
   });
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const firstRowSelect = document.querySelector('#performedTable tbody tr:first-child select');
+
+    if (firstRowSelect) {
+      firstRowSelect.disabled = true;
+    }
+
+  });
 </script>
 </body>
 </html>
