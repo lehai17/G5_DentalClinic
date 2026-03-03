@@ -55,13 +55,6 @@ public class DentistAppointmentController {
             appointmentRepository.save(appt);
         }
 
-        // CHUYỂN SANG IN_PROGRESS
-        if (appt.getStatus().name().equals("CONFIRMED")) {
-            appt.setStatus(
-                    com.dentalclinic.model.appointment.AppointmentStatus.IN_PROGRESS
-            );
-            appointmentRepository.save(appt);
-        }
 
         model.addAttribute("weekStart", weekStart);
         model.addAttribute("appointmentId", id);

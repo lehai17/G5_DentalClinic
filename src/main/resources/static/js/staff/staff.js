@@ -76,23 +76,12 @@ function confirmAppointment(id) {
 }
 
 function completeAppointment(id) {
-    if (!confirm("Xác nhận hoàn thành lịch khám này?")) return;
-    fetch(`/staff/appointments/complete?id=${id}`, { method: 'POST' })
-        .then(() => location.reload());
-}
-
-function checkInAppointment(id) {
-    if (!confirm("Check in lịch hẹn này?")) return;
-
-    fetch(`/staff/appointments/${id}/check-in`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-    })
-        .then(res => {
-            if (!res.ok) return res.text().then(t => { throw new Error(t); });
+    fetch(`/staff/appointments/${id}/complete`, { method: 'POST' })
+        .then(r => {
+            if (!r.ok) return r.text().then(t => { throw new Error(t); });
             location.reload();
         })
-        .catch(err => alert(err.message || "Check in thất bại"));
+        .catch(err => alert("Hoàn thành lỗi: " + err.message));
 }
 
 function cancelAppointment(id) {
@@ -105,3 +94,16 @@ function cancelAppointment(id) {
 function goToPayment(id) {
     window.location.href = "/staff/payments/" + id;
 }
+function checkInAppointment(id) {
+    fetch(`/staff/appointments/${id}/check-in`, { method: "POST" })
+        .then(r => {
+            if (!r.ok) return r.text().then(t => { throw new Error(t); });
+            location.reload();
+        })
+        .catch(err => alert("Check-in lỗi: " + err.message));
+}
+
+function viewResult(id) {
+    window.location.href = `/staff/appointments/${id}/result`;
+}
+

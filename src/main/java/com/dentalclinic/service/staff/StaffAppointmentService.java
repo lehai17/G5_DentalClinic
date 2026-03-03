@@ -110,15 +110,16 @@ public class StaffAppointmentService {
 
     @Transactional
     public void completeAppointment(Long id) {
-        Appointment a = appointmentRepository.findById(id)
+        Appointment appt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (a.getStatus() != AppointmentStatus.CHECKED_IN) {
-            throw new RuntimeException("Only CHECKED_IN appointment can be completed");
+        // ✅ CHỈ CHO HOÀN THÀNH KHI EXAMINING
+        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
+            throw new RuntimeException("Only EXAMINING appointment can be completed");
         }
 
-        a.setStatus(AppointmentStatus.COMPLETED);
-        appointmentRepository.save(a);
+        appt.setStatus(AppointmentStatus.COMPLETED);
+        appointmentRepository.save(appt);
     }
 
     @Transactional
@@ -163,17 +164,15 @@ public class StaffAppointmentService {
 
         return appointmentRepository.findAll(pageable);
     }
-    @Transactional
-    public void checkInAppointment(Long appointmentId) {
-        Appointment a = appointmentRepository.findById(appointmentId)
+    public void checkIn(Long id) {
+        Appointment appt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (a.getStatus() != AppointmentStatus.CONFIRMED) {
-            throw new RuntimeException("Only CONFIRMED appointment can be checked in");
+        if (appt.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
         }
-
-        a.setStatus(AppointmentStatus.CHECKED_IN);
-        appointmentRepository.save(a);
+        appt.setStatus(AppointmentStatus.EXAMINING);
+        appointmentRepository.save(appt);
     }
 
     public List<DentistProfile> getAvailableDentistsForAppointment(Long appointmentId) {

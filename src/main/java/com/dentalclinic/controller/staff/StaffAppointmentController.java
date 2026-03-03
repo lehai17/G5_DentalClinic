@@ -139,11 +139,11 @@ public class StaffAppointmentController {
     }
 
 
-    @PostMapping("/appointments/complete")
-    @ResponseBody
-    public void complete(@RequestParam Long id) {
-        staffAppointmentService.completeAppointment(id);
-    }
+//    @PostMapping("/appointments/complete")
+//    @ResponseBody
+//    public void complete(@RequestParam Long id) {
+//        staffAppointmentService.completeAppointment(id);
+//    }
 
 
     @PostMapping("/appointments/cancel")
@@ -154,9 +154,16 @@ public class StaffAppointmentController {
         staffAppointmentService.cancelAppointment(id, reason);
     }
     @PostMapping("/appointments/{id}/check-in")
+    public ResponseEntity<?> checkIn(@PathVariable Long id) {
+        staffAppointmentService.checkIn(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/appointments/{id}/complete")
     @ResponseBody
-    public void checkIn(@PathVariable Long id) {
-        staffAppointmentService.checkInAppointment(id);
+    public ResponseEntity<?> complete(@PathVariable Long id) {
+        staffAppointmentService.completeAppointment(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/appointments/available-dentists") // Thêm /appointments vào đây

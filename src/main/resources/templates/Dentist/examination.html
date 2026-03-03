@@ -342,6 +342,7 @@
         }
       });
       document.getElementById('payloadTreatmentNote').value = JSON.stringify(payload);
+      console.log("payloadTreatmentNote=", document.getElementById('payloadTreatmentNote').value);
     } catch (err) {
       alert("Error preparing examination data. Data was NOT saved.");
       e.preventDefault();
@@ -372,6 +373,6 @@
     }
   });
 </script>
-<script src="/js/dentist/examination.js"></script>
+<!--<script src="/js/dentist/examination.js"></script>-->
 </body>
 </html>
