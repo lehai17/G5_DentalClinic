@@ -65,11 +65,6 @@ public class DentistSessionService {
             throw new IllegalStateException("Appointment already finalized");
         }
 
-        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
-            appt.setStatus(AppointmentStatus.EXAMINING);
-            appointmentRepository.save(appt);
-        }
-
         MedicalRecord mr = medicalRecordRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
                         appointmentId, customerUserId

@@ -78,6 +78,7 @@
                 <div class="detail-section">
                     <div class="detail-section-title">Dentist Response</div>
 
+                    <!-- Nếu ticket còn OPEN thì hiển thị form -->
                     <th:block th:if="${ticket.status.name() == 'OPEN'}">
 
                         <form th:action="@{'/dentist/support/' + ${ticket.id} + '/answer'}"
@@ -96,7 +97,8 @@
 
                     </th:block>
 
-                    <th:block th:if="${ticket.status.name() == 'CLOSED'}">
+                    <!-- Nếu đã ANSWERED thì hiển thị câu trả lời -->
+                    <th:block th:if="${ticket.status.name() == 'ANSWERED'}">
 
     <textarea rows="4"
               readonly
