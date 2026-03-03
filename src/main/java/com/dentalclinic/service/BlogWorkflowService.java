@@ -20,6 +20,12 @@ public class BlogWorkflowService {
     public Blog createDraft(Blog blog, User staff) {
         blog.setId(null);
         blog.setCreatedBy(staff);
+
+        blog.setTitle(cleanRequired(blog.getTitle(), "Title"));
+        blog.setSummary(cleanRequired(blog.getSummary(), "Summary"));
+        blog.setContent(cleanRequired(blog.getContent(), "Content"));
+        blog.setImageUrl(cleanOptional(blog.getImageUrl()));
+
         blog.setStatus(BlogStatus.DRAFT);
         blog.setApprovedBy(null);
         blog.setApprovedAt(null);
@@ -34,10 +40,11 @@ public class BlogWorkflowService {
             throw new IllegalStateException("Only DRAFT/REJECTED blog can be edited by staff.");
         }
 
-        blog.setTitle(formData.getTitle());
-        blog.setSummary(formData.getSummary());
-        blog.setContent(formData.getContent());
-        blog.setImageUrl(formData.getImageUrl());
+        blog.setTitle(cleanRequired(formData.getTitle(), "Title"));
+        blog.setSummary(cleanRequired(formData.getSummary(), "Summary"));
+        blog.setContent(cleanRequired(formData.getContent(), "Content"));
+        blog.setImageUrl(cleanOptional(formData.getImageUrl()));
+
         return blogRepository.save(blog);
     }
 
@@ -93,5 +100,17 @@ public class BlogWorkflowService {
         if (!blog.getCreatedBy().getId().equals(staff.getId())) {
             throw new SecurityException("You are not owner of this blog.");
         }
+    }
+    private String cleanRequired(String s, String field) {
+        if (s == null || s.isBlank()) {   // isBlank chặn luôn toàn space
+            throw new com.dentalclinic.exception.BlogValidationException(field + " must not be blank");
+        }
+        return s.trim();
+    }
+
+    private String cleanOptional(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
     }
 }
