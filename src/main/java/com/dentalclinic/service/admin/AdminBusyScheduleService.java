@@ -5,6 +5,7 @@ import com.dentalclinic.model.schedule.BusySchedule;
 import com.dentalclinic.repository.DentistBusyScheduleRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.repository.SlotRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,5 +81,20 @@ public class AdminBusyScheduleService {
 
     public List<BusySchedule> getRequestsByDentist(Long dentistId) {
         return repository.findByDentistIdOrderByCreatedAtDesc(dentistId);
+    }
+
+    public List<BusySchedule> searchAndSortRequests(String name, String sortStrategy) {
+        // 1. Xác định hướng sắp xếp dựa trên tham số sortStrategy
+        Sort sort = "oldest".equals(sortStrategy)
+                ? Sort.by("createdAt").ascending()
+                : Sort.by("createdAt").descending();
+
+        // 2. Nếu không có tên thì trả về tất cả kèm sắp xếp (Dùng đúng biến 'repository')
+        if (name == null || name.trim().isEmpty()) {
+            return repository.findAll(sort);
+        }
+
+        // 3. Nếu có tên thì lọc theo tên bác sĩ (Dùng đúng biến 'repository')
+        return repository.findByDentistFullNameContainingIgnoreCase(name, sort);
     }
 }

@@ -73,10 +73,10 @@
 
 <div class="main-content">
     <div class="header">
-        <div class="search-bar">
-            <i class="fas fa-search" style="color: #707EAE;"></i>
-            <input type="text" placeholder="Search requests...">
-        </div>
+<!--        <div class="search-bar">-->
+<!--            <i class="fas fa-search" style="color: #707EAE;"></i>-->
+<!--            <input type="text" placeholder="Search requests...">-->
+<!--        </div>-->
 
         <div style="display: flex; align-items: center; gap: 20px;">
             <button style="background:none; border:none; color:#707EAE;"><i class="far fa-bell"></i></button>
@@ -90,8 +90,21 @@
         </div>
     </div>
 
+    <form th:action="@{/admin/busy-schedule}" method="get" class="search-container" style="display: flex; gap: 15px; align-items: center;">
+        <div class="search-bar">
+            <i class="fas fa-search" style="color: #707EAE;"></i>
+            <input type="text" name="dentistName" th:value="${dentistName}" placeholder="Tìm tên bác sĩ...">
+        </div>
+
+        <select name="sort" onchange="this.form.submit()" style="padding: 8px 15px; border-radius: 12px; border: 1px solid #E0E7FF; color: #2B3674; font-weight: 600; outline: none;">
+            <option value="newest" th:selected="${sort == 'newest'}">Mới nhất</option>
+            <option value="oldest" th:selected="${sort == 'oldest'}">Cũ nhất</option>
+        </select>
+
+        <button type="submit" class="status-badge status-approved" style="border: none; cursor: pointer;">Lọc</button>
+    </form>
     <div style="margin-bottom: 25px;">
-        <h2 style="color: #2B3674; margin: 0; font-weight: 800;">Dentist Absence Requests</h2>
+        <h2 style="color: #2B3674; margin: 0; font-weight: 800;">Dentist Busy Schedules</h2>
         <p style="color: #A3AED0; font-size: 14px; margin-top: 5px;">Manage and approve dentist leave applications.</p>
     </div>
 
