@@ -18,11 +18,6 @@ public class MedicalRecord {
     @Column(name = "diagnosis", columnDefinition = "NVARCHAR(MAX)")
     private String diagnosis;
 
-    @Column(name = "secondary_diagnosis", columnDefinition = "NVARCHAR(MAX)")
-    private String secondaryDiagnosis;
-
-    @Column(name = "complaint_code", length = 50)
-    private String complaintCode;
 
     @Column(name = "complaint_note", columnDefinition = "NVARCHAR(MAX)")
     private String complaintNote;
@@ -60,11 +55,6 @@ public class MedicalRecord {
     public java.util.List<MedicalProposedService> getProposedServices() { return proposedServices; }
     public void setProposedServices(java.util.List<MedicalProposedService> proposedServices) { this.proposedServices = proposedServices; }
 
-    public String getSecondaryDiagnosis() { return secondaryDiagnosis; }
-    public void setSecondaryDiagnosis(String secondaryDiagnosis) { this.secondaryDiagnosis = secondaryDiagnosis; }
-
-    public String getComplaintCode() { return complaintCode; }
-    public void setComplaintCode(String complaintCode) { this.complaintCode = complaintCode; }
 
     public String getComplaintNote() { return complaintNote; }
     public void setComplaintNote(String complaintNote) { this.complaintNote = complaintNote; }

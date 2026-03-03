@@ -80,8 +80,6 @@ public class DentistSessionService {
                 });
 
         mr.setDiagnosis(form.getDiagnosis());
-        mr.setSecondaryDiagnosis(form.getSecondaryDiagnosis());
-        mr.setComplaintCode(form.getComplaintCode());
         mr.setComplaintNote(form.getComplaintNote());
         mr.setClinicalNotes(form.getClinicalNotes());
 
@@ -89,6 +87,15 @@ public class DentistSessionService {
         mr.getFindings().clear();
         if (form.getFindings() != null) {
             for (MedicalFinding f : form.getFindings()) {
+
+                boolean isEmpty =
+                        (f.getToothNo() == null || f.getToothNo().isBlank()) &&
+                                (f.getCondition() == null || f.getCondition().isBlank()) &&
+                                (f.getSeverity() == null || f.getSeverity().isBlank()) &&
+                                (f.getNote() == null || f.getNote().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
+
                 f.setMedicalRecord(mr);
                 mr.getFindings().add(f);
             }
@@ -96,6 +103,14 @@ public class DentistSessionService {
         mr.getImages().clear();
         if (form.getImages() != null) {
             for (MedicalImage i : form.getImages()) {
+
+                boolean isEmpty =
+                        (i.getUrl() == null || i.getUrl().isBlank()) &&
+                                (i.getType() == null || i.getType().isBlank()) &&
+                                (i.getNote() == null || i.getNote().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
+
                 i.setMedicalRecord(mr);
                 mr.getImages().add(i);
             }
@@ -175,6 +190,15 @@ public class DentistSessionService {
         bn.getPerformedServices().clear();
         if (form.getPerformedServices() != null) {
             for (BillingPerformedService ps : form.getPerformedServices()) {
+
+                boolean isEmpty =
+                        ps.getService() == null &&
+                                (ps.getToothNo() == null || ps.getToothNo().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng trống
+
+                if (ps.getQty() <= 0) ps.setQty(1); // đảm bảo >=1
+
                 ps.setBillingNote(bn);
                 bn.getPerformedServices().add(ps);
             }
@@ -183,6 +207,14 @@ public class DentistSessionService {
         bn.getPrescriptionItems().clear();
         if (form.getPrescriptionItems() != null) {
             for (BillingPrescriptionItem pi : form.getPrescriptionItems()) {
+
+                boolean isEmpty =
+                        (pi.getMedicineName() == null || pi.getMedicineName().isBlank()) &&
+                                (pi.getDosage() == null || pi.getDosage().isBlank()) &&
+                                (pi.getNote() == null || pi.getNote().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng trống
+
                 pi.setBillingNote(bn);
                 bn.getPrescriptionItems().add(pi);
             }

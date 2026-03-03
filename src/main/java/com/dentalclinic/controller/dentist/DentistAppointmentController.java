@@ -46,6 +46,7 @@ public class DentistAppointmentController {
     ) {
         model.addAttribute("services", servicesRepository.findAll());
 
+
         Appointment appt = appointmentRepository.findById(id).orElseThrow();
         // 🔥 Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED
         if (appt.getStatus() != AppointmentStatus.DONE
@@ -59,6 +60,7 @@ public class DentistAppointmentController {
         model.addAttribute("weekStart", weekStart);
         model.addAttribute("appointmentId", id);
         model.addAttribute("customerUserId", customerUserId);
+        model.addAttribute("dentistUserId", appt.getDentist() != null ? appt.getDentist().getUser().getId() : "");
         model.addAttribute("patientName", appt.getCustomer().getFullName());
         model.addAttribute("apptDate", appt.getDate());
         model.addAttribute("startTime", appt.getStartTime());
@@ -70,6 +72,16 @@ public class DentistAppointmentController {
                 medicalRecordService.findByAppointmentId(id).orElse(new MedicalRecord());
         record.setAppointment(appt);
         model.addAttribute("medicalRecord", record);
+        model.addAttribute(
+                "selectedServiceIds",
+                record.getProposedServices()
+                        .stream()
+                        .filter(ps -> ps.getService() != null)
+                        .map(ps -> ps.getService().getId())
+                        .toList()
+        );
+        // history records for past exams
+        model.addAttribute("historyRecords", java.util.Collections.emptyList());
 
         return "Dentist/examination";
     }

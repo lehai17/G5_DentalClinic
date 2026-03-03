@@ -92,7 +92,7 @@
   <form id="examForm" method="post" th:object="${medicalRecord}"
         th:action="@{/dentist/appointments/{id}/examination(id=${appointmentId})}">
     <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
-    <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
+    <input type="hidden" name="weekStart" th:value="${weekStart}"/>
     <input type="hidden" id="appointmentStatus" th:value="${appointmentStatus}">
 
     <!-- ✅ primary diagnosis -->
@@ -102,22 +102,12 @@
       <textarea th:field="*{diagnosis}" rows="3" placeholder="Primary diagnosis..."></textarea>
     </div>
 
-    <!-- ✅ patient complaint / secondary diagnosis -->
+    <!-- ✅ patient complaint -->
     <div class="section">
-      <div style="font-weight:900;">B) Complaint / Secondary Diagnosis</div>
-      <div class="two">
-        <div class="field">
-          <label>Secondary diagnosis</label>
-          <textarea th:field="*{secondaryDiagnosis}" placeholder="Secondary diagnosis..."></textarea>
-        </div>
-        <div class="field">
-          <label>Complaint code</label>
-          <input th:field="*{complaintCode}" placeholder="e.g. TOOTHACHE" />
-        </div>
-        <div class="field">
-          <label>Complaint note</label>
-          <textarea th:field="*{complaintNote}" placeholder="Optional note..."></textarea>
-        </div>
+      <div style="font-weight:900;">B) Complaint</div>
+      <div class="field" style="width:100%;">
+        <label>Complaint note</label>
+        <textarea th:field="*{complaintNote}" rows="3" placeholder="Optional note..." style="width:100%;"></textarea>
       </div>
     </div>
 
@@ -143,18 +133,18 @@
         </thead>
         <tbody>
           <tr th:each="f,stat : *{findings}">
-            <td><input th:field="*{findings[__${stat.index}__].toothNo}" /></td>
-            <td><input th:field="*{findings[__${stat.index}__].condition}" /></td>
+            <td><input th:field="*{findings[__${stat.index}__].toothNo}" placeholder="36"/></td>
+            <td><input th:field="*{findings[__${stat.index}__].condition}" placeholder="Caries ..."/></td>
             <td>
               <select th:field="*{findings[__${stat.index}__].severity}">
                 <option value=""></option>
-                <option>Mild</option>
-                <option>Moderate</option>
-                <option>Severe</option>
+                <option value="Mild">Mild</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Severe">Severe</option>
               </select>
             </td>
-            <td><input th:field="*{findings[__${stat.index}__].note}" /></td>
-            <td><button type="button" class="icon-mini f-del">✕</button></td>
+            <td><input th:field="*{findings[__${stat.index}__].note}" placeholder="Note"/></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
           </tr>
         </tbody>
       </table>
@@ -167,7 +157,10 @@
 
       <div class="chipbox" id="proposeBox">
         <label class="svc-chip" th:each="s : ${services}">
-          <input type="checkbox" class="prop-check" th:attr="data-service-id=${s.id}">
+          <input type="checkbox"
+                 class="prop-check"
+                 th:attr="data-service-id=${s.id}"
+                 th:checked="${selectedServiceIds.contains(s.id)}">
           <span th:text="${s.name}">Scaling</span>
         </label>
       </div>
@@ -209,13 +202,11 @@
               </select>
             </td>
             <td><input th:field="*{images[__${stat.index}__].note}" /></td>
-            <td><button type="button" class="icon-mini i-del">✕</button></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <input type="hidden" name="weekStart" th:value="${weekStart}">
 
     <div style="display:flex;gap:10px;margin-top:14px;">
       <button class="btn primary" type="submit">SAVE</button>
@@ -225,56 +216,78 @@
 </div>
 
 <script>
-  // simple helper to manage adding/removing rows with proper Spring binding names
-  function addRow(tableId, templateHtml) {
-    const tbody = document.querySelector(tableId + ' tbody');
-    const count = tbody.querySelectorAll('tr').length;
-    const tr = document.createElement('tr');
-    tr.innerHTML = templateHtml.replace(/__INDEX__/g, count);
-    tr.querySelector('.del').addEventListener('click', () => tr.remove());
-    tbody.appendChild(tr);
+  // Utility to get next index for dynamic rows
+  function getNextIndex(tableId) {
+    return document.querySelectorAll(tableId + ' tbody tr').length;
   }
 
+  // Add finding row
   document.getElementById('btnAddFinding').addEventListener('click', () => {
-    const tpl = `
-      <td><input name="findings[__INDEX__].toothNo"></td>
-      <td><input name="findings[__INDEX__].condition"></td>
-      <td><select name="findings[__INDEX__].severity">
-            <option value=""></option><option>Mild</option><option>Moderate</option><option>Severe</option>
-          </select></td>
-      <td><input name="findings[__INDEX__].note"></td>
+    const tbody = document.querySelector('#findingTable tbody');
+    const idx = getNextIndex('#findingTable');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input name="findings[${idx}].toothNo" placeholder="36"/></td>
+      <td><input name="findings[${idx}].condition" placeholder="Caries ..."/></td>
+      <td>
+        <select name="findings[${idx}].severity">
+          <option value=""></option>
+          <option value="Mild">Mild</option>
+          <option value="Moderate">Moderate</option>
+          <option value="Severe">Severe</option>
+        </select>
+      </td>
+      <td><input name="findings[${idx}].note" placeholder="Note"/></td>
       <td><button type="button" class="icon-mini del">✕</button></td>
     `;
-    addRow('#findingTable', tpl);
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
+    tbody.appendChild(tr);
   });
 
+  // Add image row
   document.getElementById('btnAddImg').addEventListener('click', () => {
-    const tpl = `
-      <td><input name="images[__INDEX__].url"></td>
-      <td><select name="images[__INDEX__].type">
-            <option value=""></option><option value="INTRAORAL">Intraoral</option>
-            <option value="X_RAY">X-ray</option><option value="BEFORE_AFTER">Before/After</option>
-          </select></td>
-      <td><input name="images[__INDEX__].note"></td>
+    const tbody = document.querySelector('#imgTable tbody');
+    const idx = getNextIndex('#imgTable');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input name="images[${idx}].url" placeholder="https://..."/></td>
+      <td>
+        <select name="images[${idx}].type">
+          <option value=""></option>
+          <option value="INTRAORAL">Intraoral</option>
+          <option value="X_RAY">X-ray</option>
+          <option value="BEFORE_AFTER">Before/After</option>
+        </select>
+      </td>
+      <td><input name="images[${idx}].note" placeholder="Note"/></td>
       <td><button type="button" class="icon-mini del">✕</button></td>
     `;
-    addRow('#imgTable', tpl);
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
+    tbody.appendChild(tr);
   });
 
-  // proposed services: on submit generate inputs from checked boxes
-  document.getElementById('examForm').addEventListener('submit', () => {
+  // Handle proposed services
+  document.getElementById('examForm').addEventListener('submit', (e) => {
     const container = document.getElementById('proposedInputs');
+    if (!container) return;
     container.innerHTML = '';
     let idx = 0;
     document.querySelectorAll('.prop-check:checked').forEach(ch => {
-      const sid = ch.dataset.serviceId;
       const inp = document.createElement('input');
       inp.type = 'hidden';
       inp.name = `proposedServices[${idx}].service.id`;
-      inp.value = sid;
+      inp.value = ch.dataset.serviceId;
       container.appendChild(inp);
       idx++;
     });
+  });
+
+  // Delete button handlers for existing rows
+  document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
+    tr.querySelector('.del')?.addEventListener('click', () => tr.remove());
+  });
+  document.querySelectorAll('#imgTable tbody tr').forEach(tr => {
+    tr.querySelector('.del')?.addEventListener('click', () => tr.remove());
   });
 </script>
 <script>
@@ -282,21 +295,12 @@
     const status = document.getElementById('appointmentStatus')?.value;
 
     if (status === 'DONE' || status === 'COMPLETED') {
-
-      // 🔒 Disable form fields
       document.querySelectorAll('input, textarea, select, button')
-              .forEach(el => {
-                el.disabled = true;
-              });
-
-      // 🔥 Remove submit button completely
+              .forEach(el => el.disabled = true);
       const saveBtn = document.querySelector('button[type="submit"]');
       if (saveBtn) saveBtn.remove();
-
-      // 🔥 Remove all add buttons
-      document.querySelectorAll('#btnAddFinding, #btnAddImg, #btnAddRx')
-              .forEach(btn => btn.remove());
-
+      document.querySelectorAll('#btnAddFinding, #btnAddImg')
+              .forEach(btn => btn instanceof HTMLElement && btn.remove());
     }
   });
 </script>

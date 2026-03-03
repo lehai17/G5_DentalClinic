@@ -68,9 +68,21 @@
                 <option th:each="s: ${services}" th:value="${s.id}" th:text="${s.name}"></option>
               </select>
             </td>
-            <td><input type="number" th:field="*{performedServices[__${stat.index}__].qty}" min="1"/></td>
-            <td><input th:field="*{performedServices[__${stat.index}__].toothNo}" placeholder="Tooth"/></td>
-            <td><button type="button" class="icon-mini pr-del">✕</button></td>
+            <td>
+              <input type="number"
+                     th:field="*{performedServices[__${stat.index}__].qty}"
+                     min="1"
+                     step="1"
+                     value="1"
+                     onkeydown="return false"
+                     class="svc-qty"/>
+            </td>
+            <td>
+              <input th:field="*{performedServices[__${stat.index}__].toothNo}"
+                     placeholder="Tooth"
+                     class="svc-tooth"/>
+            </td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
           </tr>
         </tbody>
       </table>
@@ -91,7 +103,7 @@
             <td><input th:field="*{prescriptionItems[__${stat.index}__].medicineName}"/></td>
             <td><input th:field="*{prescriptionItems[__${stat.index}__].dosage}"/></td>
             <td><input th:field="*{prescriptionItems[__${stat.index}__].note}"/></td>
-            <td><button type="button" class="icon-mini pi-del">✕</button></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
           </tr>
         </tbody>
       </table>
@@ -115,65 +127,99 @@
 </div>
 
 <script>
-  // helpers to add rows
-  function addPerformedRow() {
+  function getNextIndex(tableId) {
+    return document.querySelectorAll(tableId + ' tbody tr').length;
+  }
+
+  /* =========================
+     ADD SERVICE
+  ========================= */
+  document.getElementById('btnAddService').addEventListener('click', () => {
     const tbody = document.querySelector('#performedTable tbody');
-    const idx = tbody.querySelectorAll('tr').length;
+    const idx = getNextIndex('#performedTable');
+
+    const firstSelect = document.querySelector('#performedTable select');
+    const optionsHtml = firstSelect ? firstSelect.innerHTML : '';
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><select name="performedServices[${idx}].service.id">
-        <!-- options will be cloned server-side or generated dynamically -->
-        ${servicesOptions}
-      </select></td>
-      <td><input type="number" name="performedServices[${idx}].qty" min="1" value="1"/></td>
-      <td><input name="performedServices[${idx}].toothNo"/></td>
-      <td><button type="button" class="icon-mini pr-del">✕</button></td>
-    `;
-    tr.querySelector('.pr-del').addEventListener('click', () => tr.remove());
-    tbody.appendChild(tr);
-  }
-  document.getElementById('btnAddService').addEventListener('click', addPerformedRow);
+    <td>
+      <select name="performedServices[${idx}].service.id">
+        ${optionsHtml}
+      </select>
+    </td>
+    <td>
+      <input type="number"
+             name="performedServices[${idx}].qty"
+             min="1"
+             step="1"
+             value="1"
+             onkeydown="return false"
+             class="svc-qty"/>
+    </td>
+    <td>
+      <input name="performedServices[${idx}].toothNo"
+             class="svc-tooth"
+             placeholder="Tooth"/>
+    </td>
+    <td>
+      <button type="button" class="icon-mini del">✕</button>
+    </td>
+  `;
 
-  function addRxRow() {
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
+
+    const qtyInput = tr.querySelector('.svc-qty');
+    qtyInput.addEventListener('change', () => {
+      if (!qtyInput.value || qtyInput.value < 1) {
+        qtyInput.value = 1;
+      }
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  /* =========================
+     ADD PRESCRIPTION
+  ========================= */
+  document.getElementById('btnAddRx').addEventListener('click', () => {
     const tbody = document.querySelector('#rxTable tbody');
-    const idx = tbody.querySelectorAll('tr').length;
+    const idx = getNextIndex('#rxTable');
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input name="prescriptionItems[${idx}].medicineName"/></td>
-      <td><input name="prescriptionItems[${idx}].dosage"/></td>
-      <td><input name="prescriptionItems[${idx}].note"/></td>
-      <td><button type="button" class="icon-mini pi-del">✕</button></td>
-    `;
-    tr.querySelector('.pi-del').addEventListener('click', () => tr.remove());
+    <td><input name="prescriptionItems[${idx}].medicineName"/></td>
+    <td><input name="prescriptionItems[${idx}].dosage"/></td>
+    <td><input name="prescriptionItems[${idx}].note"/></td>
+    <td><button type="button" class="icon-mini del">✕</button></td>
+  `;
+
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
     tbody.appendChild(tr);
-  }
-  document.getElementById('btnAddRx').addEventListener('click', addRxRow);
-</script>
-<script>
+  });
+
+  /* =========================
+     DELETE EXISTING ROWS
+  ========================= */
+  document.querySelectorAll('#performedTable tbody .del, #rxTable tbody .del')
+          .forEach(btn => {
+            btn.addEventListener('click', () => btn.closest('tr').remove());
+          });
+
+  /* =========================
+     LOCK WHEN DONE
+  ========================= */
   document.addEventListener('DOMContentLoaded', function () {
-
     const status = document.getElementById('appointmentStatus')?.value;
-    const locked = (status === 'DONE' || status === 'COMPLETED');
-
     if (status === 'DONE' || status === 'COMPLETED') {
-
-      // 🔒 Disable form fields
       document.querySelectorAll('input, textarea, select, button')
-              .forEach(el => {
-                el.disabled = true;
-              });
+              .forEach(el => el.disabled = true);
 
-      // 🔥 Remove submit button completely
-      const saveBtn = document.querySelector('button[type="submit"]');
-      if (saveBtn) saveBtn.remove();
-
-      // 🔥 Remove all add buttons
-      document.querySelectorAll('#btnAddRx')
-              .forEach(btn => btn.remove());
-
+      document.querySelector('button[type="submit"]')?.remove();
+      document.querySelector('#btnAddService')?.remove();
+      document.querySelector('#btnAddRx')?.remove();
     }
   });
 </script>
-
 </body>
 </html>
