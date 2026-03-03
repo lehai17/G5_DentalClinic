@@ -52,12 +52,22 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
 //            "ORDER BY u.createdAt DESC")
 //    List<DentistProfile> findByKeyword(@Param("keyword") String keyword);
 
-    // Trong DentistProfileRepository.java
-    @Query("SELECT d FROM DentistProfile d WHERE d.id NOT IN (" +
-            "SELECT b.dentist.id FROM BusySchedule b " +
-            "WHERE b.status = 'APPROVED' " +
-            "AND :targetDate BETWEEN b.startDate AND b.endDate)")
-    List<DentistProfile> findAvailableDentists(@Param("targetDate") LocalDate targetDate);
+    @Query("""
+    SELECT DISTINCT d FROM DentistProfile d 
+    JOIN d.schedules s 
+    JOIN d.user u
+    WHERE u.status = 'ACTIVE' 
+    AND s.dayOfWeek = :dayOfWeek
+    AND d.id NOT IN (
+        SELECT b.dentist.id FROM BusySchedule b 
+        WHERE b.status = 'APPROVED' 
+        AND :targetDate BETWEEN b.startDate AND b.endDate
+    )
+""")
+    List<DentistProfile> findAvailableDentistsWithSchedule(
+            @Param("targetDate") LocalDate targetDate,
+            @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek
+    );
 
     @Query("""
     SELECT d FROM DentistProfile d 
