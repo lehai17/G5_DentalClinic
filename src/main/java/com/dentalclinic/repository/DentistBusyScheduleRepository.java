@@ -1,6 +1,7 @@
 package com.dentalclinic.repository;
 
 import com.dentalclinic.model.schedule.BusySchedule;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,4 +34,8 @@ public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedul
     long countOverlappingRequests(@Param("dentistId") Long dentistId,
                                   @Param("startDate") LocalDate startDate,
                                   @Param("endDate") LocalDate endDate);
+    @Query("SELECT b FROM BusySchedule b WHERE (:name IS NULL OR b.dentist.fullName LIKE %:name%)")
+    List<BusySchedule> findByDentistName(@Param("name") String name, Sort sort);
+
+    List<BusySchedule> findByDentistFullNameContainingIgnoreCase(String name, Sort sort);
 }
