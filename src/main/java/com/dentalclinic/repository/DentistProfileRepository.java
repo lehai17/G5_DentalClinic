@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,9 +44,38 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
     long countByUserStatus(@Param("status") UserStatus status);
     @Query("SELECT p FROM DentistProfile p JOIN p.user u ORDER BY u.createdAt DESC")
     List<DentistProfile> findAllOrderByNewest();
+
+    Optional<Object> findByUserEmail(String email);
     // Tìm kiếm theo tên hoặc chuyên khoa, sắp xếp người mới nhất lên đầu
 //    @Query("SELECT p FROM DentistProfile p JOIN p.user u " +
 //            "WHERE p.fullName LIKE %:keyword% OR p.specialization LIKE %:keyword% " +
 //            "ORDER BY u.createdAt DESC")
 //    List<DentistProfile> findByKeyword(@Param("keyword") String keyword);
+
+    @Query("""
+    SELECT DISTINCT d FROM DentistProfile d 
+    JOIN d.schedules s 
+    JOIN d.user u
+    WHERE u.status = 'ACTIVE' 
+    AND s.dayOfWeek = :dayOfWeek
+    AND d.id NOT IN (
+        SELECT b.dentist.id FROM BusySchedule b 
+        WHERE b.status = 'APPROVED' 
+        AND :targetDate BETWEEN b.startDate AND b.endDate
+    )
+""")
+    List<DentistProfile> findAvailableDentistsWithSchedule(
+            @Param("targetDate") LocalDate targetDate,
+            @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek
+    );
+
+    @Query("""
+    SELECT d FROM DentistProfile d 
+    WHERE d.id NOT IN (
+        SELECT b.dentist.id FROM BusySchedule b 
+        WHERE b.status = 'APPROVED' 
+        AND :targetDate BETWEEN b.startDate AND b.endDate
+    )
+""")
+    List<DentistProfile> findAvailableDentistsForDate(@Param("targetDate") LocalDate targetDate);
 }

@@ -61,10 +61,13 @@ public class StaffAppointmentService {
 
     @Transactional
     public void assignDentist(Long appointmentId, Long dentistId) {
+        // 1. Tìm lịch hẹn
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
         Long oldDentistId = appt.getDentist() != null ? appt.getDentist().getId() : null;
 
+        // 2. Kiểm tra trùng lịch của bác sĩ mới
         boolean hasOverlap = appointmentRepository.hasOverlappingAppointment(
                 dentistId,
                 appt.getDate(),
@@ -76,13 +79,32 @@ public class StaffAppointmentService {
             throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
         }
 
+        // 3. Tìm thông tin bác sĩ
         DentistProfile dentist = dentistProfileRepository.findById(dentistId)
                 .orElseThrow(() -> new RuntimeException("Dentist not found"));
 
+        // 4. Cập nhật bác sĩ phụ trách
         appt.setDentist(dentist);
+
+        // 5. TỰ ĐỘNG CHUYỂN TRẠNG THÁI: Nếu đang PENDING thì chuyển sang CONFIRMED
+        if (appt.getStatus() == AppointmentStatus.PENDING) {
+            appt.setStatus(AppointmentStatus.CONFIRMED);
+        }
+
+        // 6. Lưu thay đổi
         Appointment saved = appointmentRepository.save(appt);
+
+        // 7. Gửi Email xác nhận cho khách hàng (Tận dụng hàm confirm đã có của bạn)
+        try {
+            emailService.sendAppointmentConfirmed(saved);
+        } catch (Exception e) {
+            // Log lỗi gửi mail nhưng không làm rollback giao dịch gán bác sĩ
+            System.err.println("Lỗi gửi email xác nhận: " + e.getMessage());
+        }
+
+        // 8. Thông báo hệ thống
         if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
-            notificationService.notifyBookingUpdated(saved, "Thay đổi bác sĩ phụ trách");
+            notificationService.notifyBookingUpdated(saved, "Đã gán bác sĩ và xác nhận lịch hẹn thành công");
         }
     }
 
@@ -154,4 +176,12 @@ public class StaffAppointmentService {
         appointmentRepository.save(a);
     }
 
+    public List<DentistProfile> getAvailableDentistsForAppointment(Long appointmentId) {
+        // 1. Tìm thông tin cuộc hẹn để biết ngày khách đặt
+        Appointment appt = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        // 2. Gọi Repository để lấy bác sĩ không nghỉ phép vào ngày appt.getDate()
+        return dentistProfileRepository.findAvailableDentistsForDate(appt.getDate());
+    }
 }

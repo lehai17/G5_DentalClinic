@@ -2,6 +2,7 @@ package com.dentalclinic.controller.staff;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
+import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.service.staff.StaffAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -158,5 +159,10 @@ public class StaffAppointmentController {
         staffAppointmentService.checkInAppointment(id);
     }
 
-
+    @GetMapping("/appointments/available-dentists") // Thêm /appointments vào đây
+    @ResponseBody
+    public ResponseEntity<List<DentistProfile>> getAvailableDentists(@RequestParam Long appointmentId) {
+        List<DentistProfile> availableDentists = staffAppointmentService.getAvailableDentistsForAppointment(appointmentId);
+        return ResponseEntity.ok(availableDentists);
+    }
 }
