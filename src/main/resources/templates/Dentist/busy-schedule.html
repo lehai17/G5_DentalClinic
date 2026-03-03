@@ -163,7 +163,7 @@
             // 2. Không được cách nhau quá 1 ngày (Ví dụ T2 đến T3 là ok, T2 đến T4 là lỗi)
             const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
             if (dayDiff > 1) {
-                showError("Thời gian nghỉ mỗi đơn không được quá 1 ngày (tối đa 2 ngày làm việc).");
+                showError("Thời gian nghỉ mỗi đơn không được quá 1 ngày.");
                 endDateInput.classList.add('input-error');
                 return false;
             }

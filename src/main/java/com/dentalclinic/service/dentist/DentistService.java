@@ -413,6 +413,10 @@ public class DentistService {
     }
 
     public List<DentistProfile> getAvailableDentistsForDate(LocalDate date) {
-        return dentistProfileRepository.findAvailableDentists(date);
+        // Lấy ra thứ trong tuần từ ngày chọn (Ví dụ: MONDAY, TUESDAY...)
+        java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+        // Gọi hàm Repository mới đã sửa
+        return dentistProfileRepository.findAvailableDentistsWithSchedule(date, dayOfWeek);
     }
 }
