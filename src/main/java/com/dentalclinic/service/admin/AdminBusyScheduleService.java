@@ -46,7 +46,6 @@ public class AdminBusyScheduleService {
     }
 
     private void lockDentistSlots(BusySchedule request) {
-        // Giả định giờ làm việc từ 08:00 đến 17:00
         var startDateTime = request.getStartDate().atTime(8, 0);
         var endDateTime = request.getEndDate().atTime(17, 0);
 

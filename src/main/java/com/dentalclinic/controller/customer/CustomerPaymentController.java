@@ -53,7 +53,7 @@ public class CustomerPaymentController {
         cld.add(Calendar.MINUTE, 15);
         vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
-        // --- BẮT ĐẦU PHẦN QUAN TRỌNG NHẤT ---
+
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames); // Sắp xếp Alphabet
 

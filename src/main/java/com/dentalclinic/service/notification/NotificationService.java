@@ -5,6 +5,7 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.notification.Notification;
 import com.dentalclinic.model.notification.NotificationReferenceType;
 import com.dentalclinic.model.notification.NotificationType;
+import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
@@ -182,6 +183,19 @@ public class NotificationService {
                 "/customer/my-appointments#highlight=" + appointmentId,
                 NotificationReferenceType.FOLLOWUP,
                 appointmentId
+        );
+    }
+
+    public void notifyWalletRefund(CustomerProfile customer, java.math.BigDecimal amount) {
+        String amountStr = String.format("%,.0f", amount.doubleValue());
+        createForCustomer(
+                customer.getUser().getId(),
+                NotificationType.BOOKING_CANCELLED,
+                "Hoàn tiền đặt cọc",
+                "Bạn nhận được hoàn tiền " + amountStr + " VND từ lịch hẹn đã hủy. Số dư ví hiện tại có thể dùng cho lần đặt tiếp theo.",
+                "/customer/wallet",
+                NotificationReferenceType.WALLET,
+                null
         );
     }
 
