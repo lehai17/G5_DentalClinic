@@ -1,4 +1,7 @@
 (function () {
+    if (window.__userDropdownInitialized) return;
+    window.__userDropdownInitialized = true;
+
     function getDropdown() {
         return document.getElementById("userDropdown");
     }

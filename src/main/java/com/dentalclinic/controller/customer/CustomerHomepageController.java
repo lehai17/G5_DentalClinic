@@ -30,14 +30,11 @@ public class CustomerHomepageController {
     private final BlogRepository blogRepo;
     private final UserRepository userRepository;
 
-    // Chỉ giữ lại một Constructor duy nhất
-    public CustomerHomepageController(
-            CustomerProfileService profileService,
-            ServiceRepository serviceRepo,
-            DentistProfileRepository dentistRepo,
-            BlogRepository blogRepo,
-            UserRepository userRepository
-    ) {
+    public CustomerHomepageController(CustomerProfileService profileService,
+                                      ServiceRepository serviceRepo,
+                                      DentistProfileRepository dentistRepo,
+                                      BlogRepository blogRepo,
+                                      UserRepository userRepository) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
@@ -51,53 +48,40 @@ public class CustomerHomepageController {
     }
 
     @GetMapping({"/homepage", "/customer/homepage"})
-    public String showHomepage(
-            @RequestParam(defaultValue = "0") int page,
-            Authentication authentication,
-            Model model
-    ) {
+    public String showHomepage(@RequestParam(defaultValue = "0") int page,
+                               Authentication authentication,
+                               Model model) {
         model.addAttribute("active", "homepage");
-
-        Long currentUserId = resolveCurrentUserId(authentication);
-        // Nếu chưa đăng nhập, vẫn cho xem trang chủ nhưng không có thông tin cá nhân
-        // (Hoặc return "redirect:/login" nếu bạn muốn bắt buộc đăng nhập)
+        Long currentCustomerId = resolveCurrentUserId(authentication);
+        if (currentCustomerId == null) {
+            return "redirect:/login";
+        }
 
         try {
-            // 1) Xử lý thông tin khách hàng và lịch hẹn
-            if (currentUserId != null) {
-                CustomerProfile profile = profileService.getCurrentCustomerProfile(currentUserId);
-                if (profile != null) {
-                    model.addAttribute("customer", profile);
-                    model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
-                } else {
-                    setDefaultCustomerModel(model);
-                }
+            CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
+            if (profile == null) {
+                profile = new CustomerProfile();
+                profile.setFullName("Khách hàng");
+                model.addAttribute("appointments", new ArrayList<>());
             } else {
-                setDefaultCustomerModel(model);
+                model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
             }
+            model.addAttribute("customer", profile);
 
-            // 2) Load danh sách Dịch vụ và Bác sĩ (chỉ lấy những cái đang Active)
             model.addAttribute("services", serviceRepo.findByActiveTrue());
             model.addAttribute("dentists", dentistRepo.filterDentists(null, UserStatus.ACTIVE));
 
-            // 3) Load danh sách Blogs (Phân trang và chỉ lấy APPROVED)
             int safePage = Math.max(page, 0);
             Pageable pageable = PageRequest.of(safePage, 2);
-
-            // Lưu ý: Tên hàm repository phải khớp với file BlogRepository của bạn
-            // Ở đây tôi dùng findByStatus khớp với nghiệp vụ APPROVED
             Page<Blog> blogPage = blogRepo.findByStatusOrderByApprovedAtDesc(BlogStatus.APPROVED, pageable);
-
             model.addAttribute("blogs", blogPage.getContent());
             model.addAttribute("currentPage", safePage);
             model.addAttribute("totalPages", blogPage.getTotalPages());
 
             return "customer/homepage";
-
         } catch (Exception e) {
-            // Trường hợp lỗi hệ thống, trả về list rỗng để tránh crash giao diện Thymeleaf
-            model.addAttribute("error", "Có lỗi xảy ra khi tải dữ liệu.");
-            setDefaultCustomerModel(model);
+            model.addAttribute("customer", new CustomerProfile());
+            model.addAttribute("appointments", new ArrayList<>());
             model.addAttribute("services", new ArrayList<>());
             model.addAttribute("dentists", new ArrayList<>());
             model.addAttribute("blogs", new ArrayList<>());
@@ -110,6 +94,7 @@ public class CustomerHomepageController {
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
         model.addAttribute("services", serviceRepo.findByActiveTrue());
+        model.addAttribute("active", "booking");
         return "customer/booking";
     }
 
@@ -119,29 +104,19 @@ public class CustomerHomepageController {
         return "customer/appointments";
     }
 
-    // Helper method để tránh lặp code
-    private void setDefaultCustomerModel(Model model) {
-        CustomerProfile guest = new CustomerProfile();
-        guest.setFullName("Khách hàng");
-        model.addAttribute("customer", guest);
-        model.addAttribute("appointments", new ArrayList<>());
-    }
-
     private Long resolveCurrentUserId(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
 
         Object principal = authentication.getPrincipal();
-        String email;
-
         if (principal instanceof UserDetails userDetails) {
-            email = userDetails.getUsername();
-        } else {
-            email = authentication.getName();
+            return userRepository.findByEmail(userDetails.getUsername())
+                    .map(user -> user.getId())
+                    .orElse(null);
         }
 
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmail(authentication.getName())
                 .map(user -> user.getId())
                 .orElse(null);
     }

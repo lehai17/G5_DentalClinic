@@ -411,4 +411,12 @@ public class DentistService {
                     "Không thể xóa do nha sĩ đã có lịch sử khám bệnh. Vui lòng sử dụng tính năng 'Khóa' thay vì xóa.");
         }
     }
+
+    public List<DentistProfile> getAvailableDentistsForDate(LocalDate date) {
+        // Lấy ra thứ trong tuần từ ngày chọn (Ví dụ: MONDAY, TUESDAY...)
+        java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+        // Gọi hàm Repository mới đã sửa
+        return dentistProfileRepository.findAvailableDentistsWithSchedule(date, dayOfWeek);
+    }
 }
