@@ -181,7 +181,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT a FROM Appointment a JOIN FETCH a.customer JOIN FETCH a.service WHERE a.id = :id")
     Optional<Appointment> findByIdWithDetails(@Param("id") Long id);
 
-    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.appointmentSlots ass LEFT JOIN FETCH ass.slot WHERE a.id = :id")
+    @Query("""
+        SELECT a FROM Appointment a 
+        JOIN FETCH a.customer c 
+        JOIN FETCH c.user u 
+        JOIN FETCH a.service s 
+        LEFT JOIN FETCH a.appointmentSlots ass 
+        LEFT JOIN FETCH ass.slot 
+        WHERE a.id = :id
+    """)
     Optional<Appointment> findByIdWithSlots(@Param("id") Long id);
 
     // =========================================================

@@ -22,7 +22,6 @@ public class DentistBusyController {
     private final DentistProfileRepository dentistProfileRepository;
     private final DentistBusyScheduleRepository dentistBusyScheduleRepository;
 
-    // Inject đầy đủ các Bean cần thiết để xử lý logic và truy vấn dữ liệu
     public DentistBusyController(AdminBusyScheduleService adminBusyScheduleService,
                                  DentistProfileRepository dentistProfileRepository,
                                  DentistBusyScheduleRepository dentistBusyScheduleRepository) {

@@ -22,7 +22,6 @@ public class VNPayConfig {
     @Value("${vnpay.returnUrl}")
     public String returnUrl;
 
-    // Trong VNPayConfig.java
     public String hmacSHA512(String key, String data) throws Exception {
         Mac hmac512 = Mac.getInstance("HmacSHA512");
         SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");

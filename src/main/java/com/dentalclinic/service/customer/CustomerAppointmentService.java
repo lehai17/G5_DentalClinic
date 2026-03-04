@@ -21,6 +21,7 @@ import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.SlotRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.notification.NotificationService;
+import com.dentalclinic.service.wallet.WalletService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -64,19 +66,22 @@ public class CustomerAppointmentService {
     private final ServiceRepository serviceRepository;
     private final SlotRepository slotRepository;
     private final NotificationService notificationService;
+    private final WalletService walletService;
 
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
                                       UserRepository userRepository,
                                       AppointmentRepository appointmentRepository,
                                       ServiceRepository serviceRepository,
                                       SlotRepository slotRepository,
-                                      NotificationService notificationService) {
+                                      NotificationService notificationService,
+                                      WalletService walletService) {
         this.customerProfileRepository = customerProfileRepository;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
         this.serviceRepository = serviceRepository;
         this.slotRepository = slotRepository;
         this.notificationService = notificationService;
+        this.walletService = walletService;
     }
 
     public static int calculateSlotsNeeded(int durationMinutes) {
@@ -163,10 +168,23 @@ public class CustomerAppointmentService {
 
     @Transactional
     public AppointmentDto cancelAppointment(Long userId, Long appointmentId) {
+        // 1. Tìm lịch hẹn (Kiểm tra đúng ID và đúng chủ sở hữu)
         Appointment a = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
-        ensureCancelAllowed(a);
-        return toDto(cancelAppointmentEntity(appointmentId, null));
+                .orElseThrow(() -> new RuntimeException("Lịch hẹn không tồn tại."));
+
+        // 2. Kiểm tra nếu lịch đã hoàn thành hoặc đã hủy rồi thì không cho hủy nữa
+        if (a.getStatus() == AppointmentStatus.COMPLETED || a.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new RuntimeException("Không thể hủy lịch hẹn ở trạng thái này.");
+        }
+
+        // 3. Chỉ cập nhật trạng thái sang CANCELLED
+        a.setStatus(AppointmentStatus.CANCELLED);
+
+        // 4. Lưu lại vào Database
+        Appointment savedAppt = appointmentRepository.save(a);
+
+        // 5. Chuyển sang DTO để trả về cho Client
+        return toDto(savedAppt);
     }
 
     @Transactional
@@ -177,7 +195,9 @@ public class CustomerAppointmentService {
     }
 
     public List<AppointmentDto> getMyAppointments(Long userId) {
-        return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream().map(this::toDto).collect(Collectors.toList());
+        return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream()
+                .filter(a -> a.getStatus() != AppointmentStatus.PENDING_DEPOSIT)
+                .map(this::toDto).collect(Collectors.toList());
     }
 
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size) {
@@ -186,7 +206,9 @@ public class CustomerAppointmentService {
         PageRequest pageable = PageRequest.of(safePage, safeSize,
                 Sort.by(Sort.Order.desc("date"), Sort.Order.desc("startTime")));
         Page<Appointment> appointments = appointmentRepository.findByCustomer_User_Id(userId, pageable);
-        List<AppointmentDto> content = appointments.getContent().stream().map(this::toDto).toList();
+        List<AppointmentDto> content = appointments.getContent().stream()
+                .filter(a -> a.getStatus() != AppointmentStatus.PENDING_DEPOSIT)
+                .map(this::toDto).toList();
         return new PageImpl<>(content, pageable, appointments.getTotalElements());
     }
 
@@ -283,7 +305,7 @@ public class CustomerAppointmentService {
         Appointment a = new Appointment();
         a.setCustomer(customer); a.setService(service);
         a.setDate(first.getSlotTime().toLocalDate()); a.setStartTime(first.getStartTime()); a.setEndTime(last.getEndTime());
-        a.setStatus(AppointmentStatus.PENDING); a.setContactChannel(contactChannel); a.setContactValue(contactValue);
+        a.setStatus(AppointmentStatus.PENDING_DEPOSIT); a.setContactChannel(contactChannel); a.setContactValue(contactValue);
         a.setNotes(notes != null ? notes.trim() : null);
         for (int i = 0; i < reservedSlots.size(); i++) a.addAppointmentSlot(new AppointmentSlot(a, reservedSlots.get(i), i));
         return appointmentRepository.save(a);
@@ -302,11 +324,42 @@ public class CustomerAppointmentService {
 
     @Transactional
     private Appointment cancelAppointmentEntity(Long appointmentId, String reason) {
+        System.out.println("=== cancelAppointmentEntity called with appointmentId: " + appointmentId);
         Appointment a = appointmentRepository.findByIdWithSlots(appointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lá»‹ch háº¹n khÃ´ng tá»“n táº¡i."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lich hen khong ton tai."));
+        System.out.println("Appointment found, status: " + a.getStatus() + ", service: " + a.getService());
+        
         if (a.getStatus() == AppointmentStatus.CANCELLED || a.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "KhÃ´ng thá»ƒ há»§y lá»‹ch vá»›i tráº¡ng thÃ¡i hiá»‡n táº¡i.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Khong the huy lich voi trang thai hien tai.");
         }
+        
+        // Hoàn tiền nếu đã thanh toán cọc (status = PENDING hoặc CONFIRMED)
+        if (a.getStatus() == AppointmentStatus.PENDING || a.getStatus() == AppointmentStatus.CONFIRMED) {
+            try {
+                if (a.getService() == null) {
+                    System.out.println("LOG: Appointment " + a.getId() + " has no service. Skipping refund.");
+                } else {
+                    System.out.println("Processing refund for appointment " + a.getId() + ", service: " + a.getService().getId());
+                    BigDecimal servicePrice = BigDecimal.valueOf(a.getService().getPrice());
+                    // Giả định hoàn 50% tiền cọc (tính theo giá dịch vụ)
+                    BigDecimal refundAmount = servicePrice.multiply(BigDecimal.valueOf(0.5));
+                    
+                    if (refundAmount.compareTo(BigDecimal.ZERO) > 0) {
+                        walletService.refund(
+                            a.getCustomer(),
+                            refundAmount,
+                            "Hoan tien dat coc lich hen #" + a.getId(),
+                            a.getId()
+                        );
+                        System.out.println("Refund of " + refundAmount + " processed successfully");
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("ERROR processing refund: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
         List<Slot> toRelease = a.getAppointmentSlots().stream().map(AppointmentSlot::getSlot).toList();
         a.setStatus(AppointmentStatus.CANCELLED);
         if (reason != null && !reason.isBlank()) a.setNotes(reason.trim());

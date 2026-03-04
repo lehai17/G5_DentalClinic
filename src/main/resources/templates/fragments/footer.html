@@ -1,33 +1,344 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-<footer th:fragment="footer" class="footer">
-    <div class="footer-container">
-        <div class="footer-section">
-            <h3>Nha Khoa ABC</h3>
-            <p>Nụ cười của bạn là sứ mệnh và là niềm hạnh phúc của đội ngũ chúng tôi.</p>
+  <body>
+    <footer
+      th:fragment="footer"
+      class="footer"
+      style="
+        background: #1a202c;
+        color: white;
+        padding: 4.375rem 0 1.875rem 0;
+        margin-top: 6.25rem;
+      "
+    >
+      <div
+        class="container-max"
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 2.5rem;
+          margin-bottom: 2rem;
+        "
+      >
+        <!-- Branding Section -->
+        <div style="color: #cbd5e0">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              margin-bottom: 1rem;
+            "
+          >
+            <div
+              style="
+                width: 2.5rem;
+                height: 2.5rem;
+                background: #667eea;
+                border-radius: 0.75rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 1.25rem;
+              "
+            >
+              G
+            </div>
+            <div>
+              <h1
+                style="
+                  font-weight: bold;
+                  font-size: 1.25rem;
+                  margin: 0;
+                  color: white;
+                "
+              >
+                GENZ CLINIC
+              </h1>
+            </div>
+          </div>
+          <p style="margin-bottom: 1rem; line-height: 1.6">
+            Cung cấp dịch vụ nha khoa chất lượng cao với tâm huyết chăm sóc sức
+            khỏe của bạn. Nụ cười của bạn là sứ mệnh của chúng tôi.
+          </p>
+          <div style="display: flex; gap: 1rem">
+            <a
+              href="#"
+              style="
+                width: 2.5rem;
+                height: 2.5rem;
+                border-radius: 50%;
+                background: #2d3748;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                transition: all 0.3s;
+                text-decoration: none;
+              "
+              onmouseover="this.style.background = '#667eea'"
+              onmouseout="this.style.background = '#2d3748'"
+            >
+              <i class="bi bi-facebook"></i>
+            </a>
+            <a
+              href="#"
+              style="
+                width: 2.5rem;
+                height: 2.5rem;
+                border-radius: 50%;
+                background: #2d3748;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                transition: all 0.3s;
+                text-decoration: none;
+              "
+              onmouseover="this.style.background = '#667eea'"
+              onmouseout="this.style.background = '#2d3748'"
+            >
+              <i class="bi bi-twitter"></i>
+            </a>
+            <a
+              href="#"
+              style="
+                width: 2.5rem;
+                height: 2.5rem;
+                border-radius: 50%;
+                background: #2d3748;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                transition: all 0.3s;
+                text-decoration: none;
+              "
+              onmouseover="this.style.background = '#667eea'"
+              onmouseout="this.style.background = '#2d3748'"
+            >
+              <i class="bi bi-instagram"></i>
+            </a>
+            <a
+              href="#"
+              style="
+                width: 2.5rem;
+                height: 2.5rem;
+                border-radius: 50%;
+                background: #2d3748;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                transition: all 0.3s;
+                text-decoration: none;
+              "
+              onmouseover="this.style.background = '#667eea'"
+              onmouseout="this.style.background = '#2d3748'"
+            >
+              <i class="bi bi-linkedin"></i>
+            </a>
+          </div>
         </div>
 
-        <div class="footer-section">
-            <h4>Liên Kết</h4>
-            <ul>
-                <li><a th:href="@{/homepage}">Trang chủ</a></li>
-                <li><a th:href="@{/public/blogs}">Tin tức & Blog</a></li>
-                <li><a href="#services">Dịch vụ</a></li>
-            </ul>
+        <!-- Quick Links -->
+        <div style="color: #cbd5e0">
+          <h3
+            style="
+              font-weight: bold;
+              font-size: 1.125rem;
+              margin-bottom: 1.5rem;
+              color: white;
+            "
+          >
+            Liên Kết Nhanh
+          </h3>
+          <ul style="list-style: none; padding: 0">
+            <li style="margin-bottom: 0.75rem">
+              <a
+                th:href="@{/homepage}"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Trang Chủ</a
+              >
+            </li>
+            <li style="margin-bottom: 0.75rem">
+              <a
+                th:href="@{/public/blogs}"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Blog & Tin Tức</a
+              >
+            </li>
+            <li style="margin-bottom: 0.75rem">
+              <a
+                href="#services"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Dịch Vụ</a
+              >
+            </li>
+            <li style="margin-bottom: 0.75rem">
+              <a
+                href="#dentists"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Các Bác Sĩ</a
+              >
+            </li>
+          </ul>
         </div>
 
-        <div class="footer-section" id="contact">
-            <h4>Liên Hệ</h4>
-            <p>📍 123 Đường ABC, Hà Nội</p>
-            <p>📞 Hotline: 1900 1234</p>
-            <p>📧 Email: info@nhakhoaabc.vn</p>
+        <!-- Services -->
+        <div style="color: #cbd5e0">
+          <h3
+            style="
+              font-weight: bold;
+              font-size: 1.125rem;
+              margin-bottom: 1.5rem;
+              color: white;
+            "
+          >
+            Dịch Vụ
+          </h3>
+          <ul style="list-style: none; padding: 0">
+            <li style="margin-bottom: 0.75rem">
+              <a
+                href="#"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Nha Khoa Tổng Quát</a
+              >
+            </li>
+            <li style="margin-bottom: 0.75rem">
+              <a
+                href="#"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Nha Khoa Thẩm Mỹ</a
+              >
+            </li>
+            <li style="margin-bottom: 0.75rem">
+              <a
+                href="#"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Niềng Răng</a
+              >
+            </li>
+            <li style="margin-bottom: 0.75rem">
+              <a
+                href="#"
+                style="
+                  text-decoration: none;
+                  color: #cbd5e0;
+                  transition: color 0.3s;
+                "
+                onmouseover="this.style.color = '#667eea'"
+                onmouseout="this.style.color = '#cbd5e0'"
+                >Cấy Ghép Implant</a
+              >
+            </li>
+          </ul>
         </div>
-    </div>
 
-    <div class="footer-bottom">
-        &copy; 2026 Nha Khoa ABC. Bảo lưu mọi quyền.
-    </div>
-</footer>
-</body>
+        <!-- Contact -->
+        <div style="color: #cbd5e0">
+          <h3
+            style="
+              font-weight: bold;
+              font-size: 1.125rem;
+              margin-bottom: 1.5rem;
+              color: white;
+            "
+          >
+            Liên Hệ Chúng Tôi
+          </h3>
+          <ul style="list-style: none; padding: 0">
+            <li style="margin-bottom: 1rem; display: flex; gap: 0.75rem">
+              <i
+                class="bi bi-geo-alt-fill"
+                style="color: #667eea; flex-shrink: 0"
+              ></i>
+              <span>123 Đường ABC, Quận 1, TP.HCM</span>
+            </li>
+            <li style="margin-bottom: 1rem; display: flex; gap: 0.75rem">
+              <i
+                class="bi bi-telephone-fill"
+                style="color: #667eea; flex-shrink: 0"
+              ></i>
+              <span>+84 (28) 3822-1234</span>
+            </li>
+            <li style="margin-bottom: 1rem; display: flex; gap: 0.75rem">
+              <i
+                class="bi bi-envelope-fill"
+                style="color: #667eea; flex-shrink: 0"
+              ></i>
+              <span>contact@dentalcareprime.vn</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer Bottom -->
+      <div
+        style="
+          border-top: 1px solid #2d3748;
+          margin-top: 2rem;
+          padding-top: 1.5rem;
+          text-align: center;
+          color: #718096;
+          font-size: 0.875rem;
+        "
+      >
+        <p style="margin: 0">
+          &copy; 2026 DentalCare Prime. Bảo lưu mọi quyền. |
+          <a href="#" style="color: #667eea; text-decoration: none"
+            >Chính Sách Bảo Mật</a
+          >
+          |
+          <a href="#" style="color: #667eea; text-decoration: none"
+            >Điều Khoản Dịch Vụ</a
+          >
+        </p>
+      </div>
+    </footer>
+  </body>
 </html>
