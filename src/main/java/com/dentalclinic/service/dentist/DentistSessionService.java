@@ -3,7 +3,12 @@ package com.dentalclinic.service.dentist;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.medical.MedicalRecord;
+import com.dentalclinic.model.medical.MedicalFinding;
+import com.dentalclinic.model.medical.MedicalImage;
+import com.dentalclinic.model.medical.MedicalProposedService;
 import com.dentalclinic.model.payment.BillingNote;
+import com.dentalclinic.model.payment.BillingPerformedService;
+import com.dentalclinic.model.payment.BillingPrescriptionItem;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.BillingNoteRepository;
 import com.dentalclinic.repository.MedicalRecordRepository;
@@ -31,8 +36,7 @@ public class DentistSessionService {
 
     public record ExamForm(
             String patientName,
-            String diagnosis,
-            String treatmentNote
+            com.dentalclinic.model.medical.MedicalRecord record
     ) {}
 
     @Transactional(readOnly = true)
@@ -45,18 +49,18 @@ public class DentistSessionService {
                 )
                 .orElse(null);
 
-        return new ExamForm(
-                appt.getCustomer().getFullName(),
-                mr == null ? "" : safe(mr.getDiagnosis()),
-                mr == null ? "" : safe(mr.getTreatmentNote())
-        );
+        if (mr == null) {
+            mr = new MedicalRecord();
+            mr.setAppointment(appt);
+        }
+
+        return new ExamForm(appt.getCustomer().getFullName(), mr);
     }
 
     @Transactional
     public void saveExam(Long appointmentId,
                          Long customerUserId,
-                         String diagnosis,
-                         String treatmentNote) {
+                         MedicalRecord form) {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
@@ -75,8 +79,50 @@ public class DentistSessionService {
                     return x;
                 });
 
-        mr.setDiagnosis(safe(diagnosis));
-        mr.setTreatmentNote(safe(treatmentNote));
+        mr.setDiagnosis(form.getDiagnosis());
+        mr.setComplaintNote(form.getComplaintNote());
+        mr.setClinicalNotes(form.getClinicalNotes());
+
+        // replace child collections
+        mr.getFindings().clear();
+        if (form.getFindings() != null) {
+            for (MedicalFinding f : form.getFindings()) {
+
+                boolean isEmpty =
+                        (f.getToothNo() == null || f.getToothNo().isBlank()) &&
+                                (f.getCondition() == null || f.getCondition().isBlank()) &&
+                                (f.getSeverity() == null || f.getSeverity().isBlank()) &&
+                                (f.getNote() == null || f.getNote().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
+
+                f.setMedicalRecord(mr);
+                mr.getFindings().add(f);
+            }
+        }
+        mr.getImages().clear();
+        if (form.getImages() != null) {
+            for (MedicalImage i : form.getImages()) {
+
+                boolean isEmpty =
+                        (i.getUrl() == null || i.getUrl().isBlank()) &&
+                                (i.getType() == null || i.getType().isBlank()) &&
+                                (i.getNote() == null || i.getNote().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
+
+                i.setMedicalRecord(mr);
+                mr.getImages().add(i);
+            }
+        }
+        mr.getProposedServices().clear();
+        if (form.getProposedServices() != null) {
+            for (MedicalProposedService ps : form.getProposedServices()) {
+                ps.setMedicalRecord(mr);
+                mr.getProposedServices().add(ps);
+            }
+        }
+
         medicalRecordRepository.save(mr);
     }
 
@@ -86,9 +132,7 @@ public class DentistSessionService {
 
     public record BillingForm(
             String patientName,
-            String performedServicesJson,
-            String prescriptionNote,
-            String note
+            BillingNote billingNote
     ) {}
 
     @Transactional(readOnly = true)
@@ -101,21 +145,27 @@ public class DentistSessionService {
                 )
                 .orElse(null);
 
-        return new BillingForm(
-                appt.getCustomer().getFullName(),
-                // FIX BUG: cần truyền appt để sinh default service JSON
-                bn == null ? defaultPerformedJson(appt) : safe(bn.getPerformedServicesJson()),
-                bn == null ? defaultPrescriptionJson() : safe(bn.getPrescriptionNote()),
-                bn == null ? "" : safe(bn.getNote())
-        );
+        if (bn == null) {
+            bn = new BillingNote();
+            bn.setAppointment(appt);
+            // default performed service based on appointment
+            if (appt.getService() != null) {
+                BillingPerformedService ps = new BillingPerformedService();
+                ps.setBillingNote(bn);
+                ps.setService(appt.getService());
+                ps.setQty(1);
+                ps.setToothNo("");
+                bn.getPerformedServices().add(ps);
+            }
+        }
+
+        return new BillingForm(appt.getCustomer().getFullName(), bn);
     }
 
     @Transactional
     public void saveBilling(Long appointmentId,
                             Long customerUserId,
-                            String performedServicesJson,
-                            String prescriptionNote,
-                            String note) {
+                            BillingNote form) {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
@@ -134,9 +184,42 @@ public class DentistSessionService {
                     return x;
                 });
 
-        bn.setPerformedServicesJson(safe(performedServicesJson));
-        bn.setPrescriptionNote(safe(prescriptionNote));
-        bn.setNote(safe(note));
+        // copy fields from form
+        bn.setNote(form.getNote());
+
+        bn.getPerformedServices().clear();
+        if (form.getPerformedServices() != null) {
+            for (BillingPerformedService ps : form.getPerformedServices()) {
+
+                boolean isEmpty =
+                        ps.getService() == null &&
+                                (ps.getToothNo() == null || ps.getToothNo().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng trống
+
+                if (ps.getQty() <= 0) ps.setQty(1); // đảm bảo >=1
+
+                ps.setBillingNote(bn);
+                bn.getPerformedServices().add(ps);
+            }
+        }
+
+        bn.getPrescriptionItems().clear();
+        if (form.getPrescriptionItems() != null) {
+            for (BillingPrescriptionItem pi : form.getPrescriptionItems()) {
+
+                boolean isEmpty =
+                        (pi.getMedicineName() == null || pi.getMedicineName().isBlank()) &&
+                                (pi.getDosage() == null || pi.getDosage().isBlank()) &&
+                                (pi.getNote() == null || pi.getNote().isBlank());
+
+                if (isEmpty) continue; // 🔥 bỏ dòng trống
+
+                pi.setBillingNote(bn);
+                bn.getPrescriptionItems().add(pi);
+            }
+        }
+
         billingNoteRepository.save(bn);
 
         appt.setStatus(AppointmentStatus.DONE);
@@ -158,22 +241,5 @@ public class DentistSessionService {
         return appt;
     }
 
-    private String safe(String s) {
-        return s == null ? "" : s.trim();
-    }
-
-    private String defaultPerformedJson(Appointment appt) {
-        if (appt.getService() == null) {
-            return "[]";
-        }
-        return """
-            [
-              {"serviceId":%d,"qty":1,"toothNo":"Full mouth"}
-            ]
-        """.formatted(appt.getService().getId());
-    }
-
-    private String defaultPrescriptionJson() {
-        return "[]";
-    }
+    // no more JSON helpers; all handling is via relational entities
 }

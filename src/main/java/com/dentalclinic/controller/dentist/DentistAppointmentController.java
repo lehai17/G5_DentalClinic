@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.dentalclinic.model.appointment.AppointmentStatus;
+import com.dentalclinic.model.payment.BillingNote;
 
 
 @Controller
@@ -45,6 +46,7 @@ public class DentistAppointmentController {
     ) {
         model.addAttribute("services", servicesRepository.findAll());
 
+
         Appointment appt = appointmentRepository.findById(id).orElseThrow();
         // 🔥 Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED
         if (appt.getStatus() != AppointmentStatus.DONE
@@ -58,6 +60,7 @@ public class DentistAppointmentController {
         model.addAttribute("weekStart", weekStart);
         model.addAttribute("appointmentId", id);
         model.addAttribute("customerUserId", customerUserId);
+        model.addAttribute("dentistUserId", appt.getDentist() != null ? appt.getDentist().getUser().getId() : "");
         model.addAttribute("patientName", appt.getCustomer().getFullName());
         model.addAttribute("apptDate", appt.getDate());
         model.addAttribute("startTime", appt.getStartTime());
@@ -66,10 +69,19 @@ public class DentistAppointmentController {
         model.addAttribute("appointmentStatus", appt.getStatus().name());
 
         MedicalRecord record =
-                medicalRecordService.findByAppointmentId(id).orElse(null);
-
-        model.addAttribute("diagnosis", record == null ? "" : record.getDiagnosis());
-        model.addAttribute("treatmentNote", record == null ? "" : record.getTreatmentNote());
+                medicalRecordService.findByAppointmentId(id).orElse(new MedicalRecord());
+        record.setAppointment(appt);
+        model.addAttribute("medicalRecord", record);
+        model.addAttribute(
+                "selectedServiceIds",
+                record.getProposedServices()
+                        .stream()
+                        .filter(ps -> ps.getService() != null)
+                        .map(ps -> ps.getService().getId())
+                        .toList()
+        );
+        // history records for past exams
+        model.addAttribute("historyRecords", java.util.Collections.emptyList());
 
         return "Dentist/examination";
     }
@@ -78,16 +90,14 @@ public class DentistAppointmentController {
     public String saveExamination(
             @PathVariable Long id,
             @RequestParam Long customerUserId,
-            @RequestParam String diagnosis,
-            @RequestParam String treatmentNote,
+            @ModelAttribute MedicalRecord medicalRecord,
             @RequestParam(required = false) String weekStart, // ✅ THÊM
             RedirectAttributes redirect
     ) {
         dentistSessionService.saveExam(
                 id,
                 customerUserId,
-                diagnosis,
-                treatmentNote
+                medicalRecord
         );
         redirect.addFlashAttribute("successMessage", "Examination saved");
 
@@ -120,24 +130,8 @@ public class DentistAppointmentController {
         model.addAttribute("weekStart", weekStart);
 
         var billing = dentistSessionService.loadBilling(id, customerUserId);
-
-        String performedJson = billing.performedServicesJson();
-
-        if (performedJson == null
-                || performedJson.isBlank()
-                || performedJson.equals("[]")) {
-            if (appt.getService() != null) {
-                performedJson = """
-        [
-          {"serviceId": %d, "qty": 1, "toothNo": ""}
-        ]
-        """.formatted(appt.getService().getId());
-            }
-        }
-
-        model.addAttribute("note", billing.note());
-        model.addAttribute("performedServicesJson", performedJson);
-        model.addAttribute("prescriptionNote", billing.prescriptionNote());
+        model.addAttribute("billingNote", billing.billingNote());
+        model.addAttribute("patientName", billing.patientName());
 
         return "Dentist/billing-note";
     }
@@ -146,18 +140,14 @@ public class DentistAppointmentController {
     public String saveBillingTransfer(
             @PathVariable Long id,
             @RequestParam Long customerUserId,
-            @RequestParam String note,
-            @RequestParam String performedServicesJson,
-            @RequestParam String prescriptionNote,
+            @ModelAttribute BillingNote billingNote,
             @RequestParam String weekStart,
             RedirectAttributes redirect
     ) {
         dentistSessionService.saveBilling(
                 id,
                 customerUserId,
-                performedServicesJson,
-                prescriptionNote,
-                note
+                billingNote
         );
         redirect.addFlashAttribute("successMessage", "Billing saved");
         return "redirect:/dentist/work-schedule?weekStart=" + weekStart;

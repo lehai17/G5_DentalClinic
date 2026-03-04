@@ -79,7 +79,7 @@
       <div class="visit-body">
         <div class="visit-body-content">
           <div><strong>Diagnosis:</strong> <span th:text="${r.diagnosis}"></span></div>
-          <div><strong>Notes:</strong> <span th:text="${r.treatmentNote}"></span></div>
+          <div><strong>Notes:</strong> <span th:text="${r.clinicalNotes}"></span></div>
         </div>
       </div>
 
@@ -88,44 +88,26 @@
   </div>
 
   <!-- hidden raw payload from DB -->
-  <textarea id="rawTreatmentNote" style="display:none;" th:text="${treatmentNote}"></textarea>
 
-  <form id="examForm" method="post" th:action="@{/dentist/appointments/{id}/examination(id=${appointmentId})}">
+  <form id="examForm" method="post" th:object="${medicalRecord}"
+        th:action="@{/dentist/appointments/{id}/examination(id=${appointmentId})}">
     <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
-    <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
-    <input type="hidden" id="appointmentStatus"
-           th:value="${appointmentStatus}">
+    <input type="hidden" name="weekStart" th:value="${weekStart}"/>
+    <input type="hidden" id="appointmentStatus" th:value="${appointmentStatus}">
 
     <!-- ✅ primary diagnosis -->
     <div class="section">
       <div style="font-weight:900;">A) Diagnosis</div>
       <div class="mini">Primary diagnosis saved to MedicalRecord.diagnosis</div>
-      <textarea id="primaryDiagnosis" name="diagnosis" rows="3" th:text="${diagnosis}" placeholder="Primary diagnosis..."></textarea>
-
-      <label style="margin-top:10px;">Secondary diagnosis (optional)</label>
-      <input id="secondaryDiagnosis" type="text" placeholder="Secondary diagnosis...">
+      <textarea th:field="*{diagnosis}" rows="3" placeholder="Primary diagnosis..."></textarea>
     </div>
 
-    <!-- ✅ complaint -->
+    <!-- ✅ patient complaint -->
     <div class="section">
-      <div style="font-weight:900;">B) Patient Complaint</div>
-      <div class="two">
-        <div class="field">
-          <label>Predefined complaint</label>
-          <select id="complaintCode">
-            <option value="">-- Select --</option>
-            <option value="TOOTHACHE">Toothache</option>
-            <option value="SENSITIVITY">Sensitivity</option>
-            <option value="BLEEDING_GUMS">Bleeding gums</option>
-            <option value="SWELLING">Swelling</option>
-            <option value="BAD_BREATH">Bad breath</option>
-            <option value="CHECKUP">Routine checkup</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Complaint note (optional)</label>
-          <input id="complaintNote" type="text" placeholder="Add note...">
-        </div>
+      <div style="font-weight:900;">B) Complaint</div>
+      <div class="field" style="width:100%;">
+        <label>Complaint note</label>
+        <textarea th:field="*{complaintNote}" rows="3" placeholder="Optional note..." style="width:100%;"></textarea>
       </div>
     </div>
 
@@ -149,27 +131,47 @@
           <th style="width:60px;"></th>
         </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+          <tr th:each="f,stat : *{findings}">
+            <td><input th:field="*{findings[__${stat.index}__].toothNo}" placeholder="36"/></td>
+            <td><input th:field="*{findings[__${stat.index}__].condition}" placeholder="Caries ..."/></td>
+            <td>
+              <select th:field="*{findings[__${stat.index}__].severity}">
+                <option value=""></option>
+                <option value="Mild">Mild</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Severe">Severe</option>
+              </select>
+            </td>
+            <td><input th:field="*{findings[__${stat.index}__].note}" placeholder="Note"/></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
+          </tr>
+        </tbody>
       </table>
     </div>
 
-    <!-- ✅ proposed services -->
+    <!-- ✅ proposed services (checkboxes with indexed hidden inputs) -->
     <div class="section">
       <div style="font-weight:900;">D) Propose Additional Services</div>
       <div class="mini">Tick services discovered during exam.</div>
 
       <div class="chipbox" id="proposeBox">
         <label class="svc-chip" th:each="s : ${services}">
-          <input type="checkbox" class="prop-check" th:attr="data-service-id=${s.id}">
+          <input type="checkbox"
+                 class="prop-check"
+                 th:attr="data-service-id=${s.id}"
+                 th:checked="${selectedServiceIds.contains(s.id)}">
           <span th:text="${s.name}">Scaling</span>
         </label>
       </div>
+      <!-- container for generated hidden inputs -->
+      <div id="proposedInputs"></div>
     </div>
 
     <!-- ✅ clinical notes -->
     <div class="section">
       <div style="font-weight:900;">E) Clinical Notes</div>
-      <textarea id="clinicalNotes" rows="5" placeholder="Detailed notes..."></textarea>
+      <textarea th:field="*{clinicalNotes}" rows="5" placeholder="Detailed notes..."></textarea>
     </div>
 
     <!-- ✅ images (URL metadata) -->
@@ -188,189 +190,117 @@
           <th>URL</th><th style="width:140px;">Type</th><th>Note</th><th style="width:60px;"></th>
         </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+          <tr th:each="i,stat : *{images}">
+            <td><input th:field="*{images[__${stat.index}__].url}" /></td>
+            <td>
+              <select th:field="*{images[__${stat.index}__].type}">
+                <option value=""></option>
+                <option value="INTRAORAL">Intraoral</option>
+                <option value="X_RAY">X-ray</option>
+                <option value="BEFORE_AFTER">Before/After</option>
+              </select>
+            </td>
+            <td><input th:field="*{images[__${stat.index}__].note}" /></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
+          </tr>
+        </tbody>
       </table>
     </div>
-    <!-- hidden JSON payload stored into treatmentNote -->
-    <input type="hidden" name="treatmentNote" id="payloadTreatmentNote">
-    <input type="hidden" name="weekStart" th:value="${weekStart}">
 
     <div style="display:flex;gap:10px;margin-top:14px;">
       <button class="btn primary" type="submit">SAVE</button>
-      <a class="btn"
-         th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">
-        Back
-      </a>
-
+      <a class="btn" th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">Back</a>
     </div>
   </form>
 </div>
 
 <script>
-  function safeJsonParse(s){
-    try { return JSON.parse(s); } catch(e){ return null; }
+  // Utility to get next index for dynamic rows
+  function getNextIndex(tableId) {
+    return document.querySelectorAll(tableId + ' tbody tr').length;
   }
 
-  // ---- Findings table ----
-  const fTbody = document.querySelector('#findingTable tbody');
-  function addFindingRow(item){
+  // Add finding row
+  document.getElementById('btnAddFinding').addEventListener('click', () => {
+    const tbody = document.querySelector('#findingTable tbody');
+    const idx = getNextIndex('#findingTable');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input class="f-tooth" placeholder="36"></td>
-      <td><input class="f-cond" placeholder="Caries / Fracture / ..."></td>
+      <td><input name="findings[${idx}].toothNo" placeholder="36"/></td>
+      <td><input name="findings[${idx}].condition" placeholder="Caries ..."/></td>
       <td>
-        <select class="f-sev">
-          <option value="">--</option>
-          <option>Mild</option>
-          <option>Moderate</option>
-          <option>Severe</option>
+        <select name="findings[${idx}].severity">
+          <option value=""></option>
+          <option value="Mild">Mild</option>
+          <option value="Moderate">Moderate</option>
+          <option value="Severe">Severe</option>
         </select>
       </td>
-      <td><input class="f-note" placeholder="Note"></td>
-      <td><button type="button" class="icon-mini f-del">✕</button></td>
+      <td><input name="findings[${idx}].note" placeholder="Note"/></td>
+      <td><button type="button" class="icon-mini del">✕</button></td>
     `;
-    tr.querySelector('.f-del').addEventListener('click', ()=> tr.remove());
-    if(item){
-      tr.querySelector('.f-tooth').value = item.toothNo || '';
-      tr.querySelector('.f-cond').value = item.condition || '';
-      tr.querySelector('.f-sev').value = item.severity || '';
-      tr.querySelector('.f-note').value = item.note || '';
-    }
-    fTbody.appendChild(tr);
-  }
-  document.getElementById('btnAddFinding').addEventListener('click', ()=> addFindingRow());
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
+    tbody.appendChild(tr);
+  });
 
-  // ---- Images table ----
-  const iTbody = document.querySelector('#imgTable tbody');
-  function addImgRow(item){
+  // Add image row
+  document.getElementById('btnAddImg').addEventListener('click', () => {
+    const tbody = document.querySelector('#imgTable tbody');
+    const idx = getNextIndex('#imgTable');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input class="i-url" placeholder="https://... or /uploads/..."></td>
+      <td><input name="images[${idx}].url" placeholder="https://..."/></td>
       <td>
-        <select class="i-type">
-          <option value="">--</option>
+        <select name="images[${idx}].type">
+          <option value=""></option>
           <option value="INTRAORAL">Intraoral</option>
           <option value="X_RAY">X-ray</option>
           <option value="BEFORE_AFTER">Before/After</option>
         </select>
       </td>
-      <td><input class="i-note" placeholder="Note"></td>
-      <td><button type="button" class="icon-mini i-del">✕</button></td>
+      <td><input name="images[${idx}].note" placeholder="Note"/></td>
+      <td><button type="button" class="icon-mini del">✕</button></td>
     `;
-    tr.querySelector('.i-del').addEventListener('click', ()=> tr.remove());
-    if(item){
-      tr.querySelector('.i-url').value = item.url || '';
-      tr.querySelector('.i-type').value = item.type || '';
-      tr.querySelector('.i-note').value = item.note || '';
-    }
-    iTbody.appendChild(tr);
-  }
-  document.getElementById('btnAddImg').addEventListener('click', ()=> addImgRow());
-
-  // ---- Prefill from treatmentNote JSON payload (if any) ----
-  (function prefill(){
-    const raw = document.getElementById('rawTreatmentNote').value || '';
-    const obj = safeJsonParse(raw);
-
-    // if not json -> treat as clinical notes
-    if(!obj){
-      document.getElementById('clinicalNotes').value = raw;
-      addFindingRow();
-      addImgRow();
-      return;
-    }
-
-    document.getElementById('secondaryDiagnosis').value = obj.secondaryDiagnosis || '';
-
-    if(obj.complaint){
-      document.getElementById('complaintCode').value = obj.complaint.code || '';
-      document.getElementById('complaintNote').value = obj.complaint.note || '';
-    }
-
-    (obj.findings || []).forEach(addFindingRow);
-    if(!(obj.findings || []).length) addFindingRow();
-
-    // proposed services
-    const ids = new Set((obj.proposedServices || []).map(x => String(x.serviceId)));
-    document.querySelectorAll('.prop-check').forEach(ch => {
-      if(ids.has(String(ch.dataset.serviceId))) ch.checked = true;
-    });
-
-    document.getElementById('clinicalNotes').value = obj.clinicalNotes || '';
-
-    (obj.images || []).forEach(addImgRow);
-    if(!(obj.images || []).length) addImgRow();
-  })();
-
-  // ---- Build payload on submit -> store into treatmentNote ----
-  document.getElementById('examForm').addEventListener('submit', (e) => {
-    try {
-      const payload = {};
-
-      payload.secondaryDiagnosis = document.getElementById('secondaryDiagnosis').value.trim();
-
-      payload.complaint = {
-        code: document.getElementById('complaintCode').value,
-        note: document.getElementById('complaintNote').value.trim()
-      };
-
-      payload.findings = [];
-      document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
-        const toothNo = tr.querySelector('.f-tooth').value.trim();
-        const condition = tr.querySelector('.f-cond').value.trim();
-        const severity = tr.querySelector('.f-sev').value;
-        const note = tr.querySelector('.f-note').value.trim();
-        if (toothNo || condition || severity || note) {
-          payload.findings.push({ toothNo, condition, severity, note });
-        }
-      });
-
-      payload.proposedServices = [];
-      document.querySelectorAll('.prop-check').forEach(ch => {
-        if (ch.checked) {
-          payload.proposedServices.push({ serviceId: Number(ch.dataset.serviceId) });
-        }
-      });
-
-      payload.clinicalNotes = document.getElementById('clinicalNotes').value;
-
-      payload.images = [];
-      document.querySelectorAll('#imgTable tbody tr').forEach(tr => {
-        const url = tr.querySelector('.i-url').value.trim();
-        const type = tr.querySelector('.i-type').value;
-        const note = tr.querySelector('.i-note').value.trim();
-        if (url || type || note) {
-          payload.images.push({ url, type, note });
-        }
-      });
-      document.getElementById('payloadTreatmentNote').value = JSON.stringify(payload);
-    } catch (err) {
-      alert("Error preparing examination data. Data was NOT saved.");
-      e.preventDefault();
-    }
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
+    tbody.appendChild(tr);
   });
 
+  // Handle proposed services
+  document.getElementById('examForm').addEventListener('submit', (e) => {
+    const container = document.getElementById('proposedInputs');
+    if (!container) return;
+    container.innerHTML = '';
+    let idx = 0;
+    document.querySelectorAll('.prop-check:checked').forEach(ch => {
+      const inp = document.createElement('input');
+      inp.type = 'hidden';
+      inp.name = `proposedServices[${idx}].service.id`;
+      inp.value = ch.dataset.serviceId;
+      container.appendChild(inp);
+      idx++;
+    });
+  });
+
+  // Delete button handlers for existing rows
+  document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
+    tr.querySelector('.del')?.addEventListener('click', () => tr.remove());
+  });
+  document.querySelectorAll('#imgTable tbody tr').forEach(tr => {
+    tr.querySelector('.del')?.addEventListener('click', () => tr.remove());
+  });
 </script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
 
     if (status === 'DONE' || status === 'COMPLETED') {
-
-      // 🔒 Disable form fields
       document.querySelectorAll('input, textarea, select, button')
-              .forEach(el => {
-                el.disabled = true;
-              });
-
-      // 🔥 Remove submit button completely
+              .forEach(el => el.disabled = true);
       const saveBtn = document.querySelector('button[type="submit"]');
       if (saveBtn) saveBtn.remove();
-
-      // 🔥 Remove all add buttons
-      document.querySelectorAll('#btnAddFinding, #btnAddImg, #btnAddRx')
-              .forEach(btn => btn.remove());
-
+      document.querySelectorAll('#btnAddFinding, #btnAddImg')
+              .forEach(btn => btn instanceof HTMLElement && btn.remove());
     }
   });
 </script>
