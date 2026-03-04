@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html
   xmlns:th="http://www.thymeleaf.org"
   xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
@@ -6,7 +6,6 @@
   <body>
     <nav th:fragment="header" class="navbar" id="navbar">
       <div class="navbar-container">
-        <!-- Logo -->
         <div class="navbar-logo">
           <a th:href="@{/homepage}">
             <div style="display: flex; align-items: center; gap: 0.5rem">
@@ -36,7 +35,6 @@
           </a>
         </div>
 
-        <!-- Menu -->
         <ul class="navbar-menu">
           <li>
             <a onclick="scrollToSection('services')" style="cursor: pointer"
@@ -52,7 +50,6 @@
           <li><a href="#contact" style="cursor: pointer">Liên hệ</a></li>
         </ul>
 
-        <!-- Actions -->
         <div class="navbar-actions">
           <div sec:authorize="isAnonymous()" style="display: flex; gap: 0.5rem">
             <a
@@ -73,7 +70,6 @@
             sec:authorize="isAuthenticated()"
             style="display: flex; gap: 0.5rem; align-items: center"
           >
-            <!-- Notification Bell -->
             <div sec:authorize="hasRole('CUSTOMER')" class="notification-menu">
               <button
                 type="button"
@@ -239,7 +235,6 @@
               </div>
             </div>
 
-            <!-- User Menu -->
             <div class="user-menu">
               <button
                 type="button"
@@ -289,7 +284,7 @@
                     color: var(--slate-900);
                     transition: background 0.3s;
                   "
-                  >Profile</a
+                  >Thông tin cá nhân</a
                 >
                 <a
                   class="dropdown-item"
@@ -302,7 +297,7 @@
                     color: var(--slate-900);
                     transition: background 0.3s;
                   "
-                  >My Wallet</a
+                  >Ví của tôi</a
                 >
                 <a
                   class="dropdown-item"
@@ -344,14 +339,36 @@
             class="navbar-cta"
             style="text-decoration: none"
           >
-            Đặt Lịch
+            Đặt lịch
           </a>
         </div>
       </div>
+      <script th:src="@{/js/user-dropdown.js}" defer></script>
+      <th:block sec:authorize="hasRole('CUSTOMER')">
+        <link rel="stylesheet" th:href="@{/css/chat-widget.css}" />
+        <div id="chat-widget" class="chat-widget">
+          <button id="chat-toggle" class="chat-toggle" type="button" aria-label="Mở chat với lễ tân">
+            <span>&#128172; Chat với lễ tân</span>
+            <span id="chat-badge" class="chat-badge hidden">0</span>
+          </button>
+
+          <div id="chat-window" class="chat-window hidden" aria-live="polite">
+            <div class="chat-header">
+              <span>Chat với lễ tân</span>
+              <button id="chat-close" class="chat-close" type="button" aria-label="Đóng chat">&times;</button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input">
+              <input id="chat-text" type="text" maxlength="1000" placeholder="Nhập tin nhắn..." />
+              <button id="chat-send" type="button">Gửi</button>
+            </div>
+          </div>
+        </div>
+        <script th:src="@{/js/chat-widget.js}" defer></script>
+      </th:block>
     </nav>
 
     <script>
-      // Navbar scroll effect
       window.addEventListener("scroll", function () {
         const navbar = document.getElementById("navbar");
         if (window.scrollY > 50) {
@@ -363,7 +380,6 @@
         }
       });
 
-      // Initialize navbar state
       document.addEventListener("DOMContentLoaded", function () {
         const navbar = document.getElementById("navbar");
         if (window.scrollY > 50) {
@@ -398,16 +414,10 @@
         const notifBtn = document.querySelector(".notification-btn");
         const avatarBtn = document.querySelector(".user-menu .avatar-btn");
 
-        if (
-          !notifBtn?.contains(e.target) &&
-          !notifDropdown?.contains(e.target)
-        ) {
+        if (!notifBtn?.contains(e.target) && !notifDropdown?.contains(e.target)) {
           notifDropdown?.classList.add("hidden");
         }
-        if (
-          !avatarBtn?.contains(e.target) &&
-          !userDropdown?.contains(e.target)
-        ) {
+        if (!avatarBtn?.contains(e.target) && !userDropdown?.contains(e.target)) {
           userDropdown?.classList.add("hidden");
         }
       });
