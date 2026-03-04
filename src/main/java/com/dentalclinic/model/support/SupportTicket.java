@@ -138,6 +138,6 @@ public class SupportTicket {
      * Phương thức tiện ích để kiểm tra xem Ticket đã đóng chưa
      */
     public boolean isClosed() {
-        return SupportStatus.CLOSED.equals(this.status);
+        return SupportStatus.ANSWERED.equals(this.status);
     }
 }
