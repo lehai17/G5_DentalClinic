@@ -216,4 +216,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByDateAndStatusIn(LocalDate targetDate, List<AppointmentStatus> pending);
 
     List<Appointment> findByCustomerId(Long customerId);
+
+    // =========================================================
+    // 7. REEXAM QUERIES
+    // =========================================================
+
+    Optional<Appointment> findByOriginalAppointment_IdAndStatus(Long originalAppointmentId, AppointmentStatus status);
+
+    @Query("SELECT a FROM Appointment a WHERE a.originalAppointment.id = :originalAppointmentId")
+    Optional<Appointment> findReexamByOriginalAppointmentId(@Param("originalAppointmentId") Long originalAppointmentId);
+
+    @Query("SELECT COUNT(a) > 0 FROM Appointment a WHERE a.originalAppointment.id = :originalAppointmentId")
+    boolean hasReexam(@Param("originalAppointmentId") Long originalAppointmentId);
+
+    @Modifying
+    @Query(nativeQuery = true, value = "UPDATE dbo.appointment SET status = 'CONFIRMED' WHERE original_appointment_id = :originalAppointmentId AND status = 'REEXAM'")
+    int updateReexamStatusToConfirmed(@Param("originalAppointmentId") Long originalAppointmentId);
+
+    @Query(nativeQuery = true, value = "SELECT id, original_appointment_id, status FROM dbo.appointment WHERE original_appointment_id = :originalAppointmentId")
+    List<Object[]> debugFindReexamByOriginalId(@Param("originalAppointmentId") Long originalAppointmentId);
 }

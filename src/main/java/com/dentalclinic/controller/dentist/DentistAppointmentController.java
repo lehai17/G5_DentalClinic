@@ -66,6 +66,7 @@ public class DentistAppointmentController {
         model.addAttribute("startTime", appt.getStartTime());
         model.addAttribute("endTime", appt.getEndTime());
         model.addAttribute("requestedServiceName", appt.getService().getName());
+        model.addAttribute("appointmentNote", appt.getNotes());
         model.addAttribute("appointmentStatus", appt.getStatus().name());
 
         MedicalRecord record =

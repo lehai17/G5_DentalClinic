@@ -76,6 +76,11 @@ public class Appointment {
     @OrderBy("slotOrder ASC")
     private List<AppointmentSlot> appointmentSlots = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "original_appointment_id")
+    @JsonIgnore
+    private Appointment originalAppointment;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public CustomerProfile getCustomer() { return customer; }
@@ -124,4 +129,7 @@ public class Appointment {
             removeAppointmentSlot(as);
         }
     }
+
+    public Appointment getOriginalAppointment() { return originalAppointment; }
+    public void setOriginalAppointment(Appointment originalAppointment) { this.originalAppointment = originalAppointment; }
 }

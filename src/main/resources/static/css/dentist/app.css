@@ -284,8 +284,11 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 /* Buttons row */
 .modal-actions{
     display:flex;
-    gap:12px;
-    margin-top:18px;
+    justify-content:center;   /* căn giữa */
+    align-items:center;
+    gap:16px;
+    margin-top:26px;
+    flex-wrap:wrap;           /* tránh tràn modal */
 }
 
 /* Nút trong modal */
