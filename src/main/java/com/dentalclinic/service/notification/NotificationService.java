@@ -118,6 +118,15 @@ public class NotificationService {
     @Transactional
     public void notifyBookingCreated(Appointment appointment) {
         Long recipientId = appointment.getCustomer().getUser().getId();
+        boolean existed = notificationRepository.existsByUser_IdAndTypeAndReferenceTypeAndReferenceId(
+                recipientId,
+                NotificationType.BOOKING_CREATED,
+                NotificationReferenceType.APPOINTMENT,
+                appointment.getId()
+        );
+        if (existed) {
+            return;
+        }
         String title = "Đặt lịch thành công";
         String message = "Bạn đã tạo lịch hẹn #" + appointment.getId() + " thành công.";
         String url = "/customer/my-appointments#highlight=" + appointment.getId();
