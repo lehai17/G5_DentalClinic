@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Highlight service when checked
     document.querySelectorAll('.service-item input[type="checkbox"]')
         .forEach(cb => {
-            cb.addEventListener('change', function () {
+            cb.addEventListener('change',function () {
                 const row = this.closest('.service-item');
                 if (this.checked) {
                     row.style.background = '#ffffff';

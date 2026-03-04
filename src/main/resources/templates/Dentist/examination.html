@@ -32,6 +32,10 @@
         Appointment ID: <span th:text="${appointmentId}"></span>
         <br>
         Service: <span th:text="${requestedServiceName}"></span>
+        <div th:if="${appointmentNote != null and !#strings.isEmpty(appointmentNote)}"
+             style="margin-top:4px;color:#64748b;font-size:13px;">
+          Note: <span th:text="${appointmentNote}"></span>
+        </div>
       </div>
     </div>
 

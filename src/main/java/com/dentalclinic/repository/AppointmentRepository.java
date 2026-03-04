@@ -216,5 +216,35 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("DELETE FROM AppointmentSlot aslot WHERE aslot.appointment.id = :appointmentId")
     void deleteAppointmentSlotsByAppointmentId(@Param("appointmentId") Long appointmentId);
 
+    boolean existsBySlot_IdAndStatusNot(Long slotId, AppointmentStatus status);
+
+    default boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+            Long dId, LocalDate d, LocalTime s, LocalTime e) {
+        return checkOverlappingAppointment(dId, d, s, e) > 0;
+    }
+
+    List<Appointment> findByDateAndStatusIn(LocalDate targetDate, List<AppointmentStatus> pending);
+
+    List<Appointment> findByCustomerId(Long customerId);
+
+    // =========================================================
+    // 7. REEXAM QUERIES
+    // =========================================================
+
+    Optional<Appointment> findByOriginalAppointment_IdAndStatus(Long originalAppointmentId, AppointmentStatus status);
+
+    @Query("SELECT a FROM Appointment a WHERE a.originalAppointment.id = :originalAppointmentId")
+    Optional<Appointment> findReexamByOriginalAppointmentId(@Param("originalAppointmentId") Long originalAppointmentId);
+
+    @Query("SELECT COUNT(a) > 0 FROM Appointment a WHERE a.originalAppointment.id = :originalAppointmentId")
+    boolean hasReexam(@Param("originalAppointmentId") Long originalAppointmentId);
+
+    @Modifying
+    @Query(nativeQuery = true, value = "UPDATE dbo.appointment SET status = 'CONFIRMED' WHERE original_appointment_id = :originalAppointmentId AND status = 'REEXAM'")
+    int updateReexamStatusToConfirmed(@Param("originalAppointmentId") Long originalAppointmentId);
+
+    @Query(nativeQuery = true, value = "SELECT id, original_appointment_id, status FROM dbo.appointment WHERE original_appointment_id = :originalAppointmentId")
+    List<Object[]> debugFindReexamByOriginalId(@Param("originalAppointmentId") Long originalAppointmentId);
+}
     Page<Appointment> findByCustomer_User_Id(Long userId, Pageable pageable);
 }

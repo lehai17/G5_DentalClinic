@@ -12,22 +12,29 @@ import com.dentalclinic.model.payment.BillingPrescriptionItem;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.BillingNoteRepository;
 import com.dentalclinic.repository.MedicalRecordRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DentistSessionService {
 
+    private static final Logger logger = LoggerFactory.getLogger(DentistSessionService.class);
+
     private final AppointmentRepository appointmentRepository;
     private final MedicalRecordRepository medicalRecordRepository;
     private final BillingNoteRepository billingNoteRepository;
+    private final ReexamService reexamService;
 
     public DentistSessionService(AppointmentRepository appointmentRepository,
                                  MedicalRecordRepository medicalRecordRepository,
-                                 BillingNoteRepository billingNoteRepository) {
+                                 BillingNoteRepository billingNoteRepository,
+                                 ReexamService reexamService) {
         this.appointmentRepository = appointmentRepository;
         this.medicalRecordRepository = medicalRecordRepository;
         this.billingNoteRepository = billingNoteRepository;
+        this.reexamService = reexamService;
     }
 
     /* =========================================================
@@ -224,6 +231,40 @@ public class DentistSessionService {
 
         appt.setStatus(AppointmentStatus.DONE);
         appointmentRepository.save(appt);
+        appointmentRepository.flush();  // Force flush to DB
+        
+        // Auto-confirm any pending reexams for this appointment
+        logger.info("[SESSION] Appointment {} status changed to DONE, attempting to auto-confirm reexam", appt.getId());
+        try {
+            // Debug: check database directly
+            var debugData = appointmentRepository.debugFindReexamByOriginalId(appt.getId());
+            logger.info("[SESSION] Debug: Found {} reexam records for appointment ID: {}", debugData.size(), appt.getId());
+            for (Object[] row : debugData) {
+                logger.info("[SESSION] Debug: id={}, original_appointment_id={}, status={}", row[0], row[1], row[2]);
+            }
+            
+            // Find reexam for this appointment
+            var reexamOpt = appointmentRepository.findReexamByOriginalAppointmentId(appt.getId());
+            if (reexamOpt.isPresent()) {
+                Appointment reexam = reexamOpt.get();
+                logger.info("[SESSION] Found reexam ID: {} with status: {}", reexam.getId(), reexam.getStatus());
+                
+                if (reexam.getStatus() == AppointmentStatus.REEXAM) {
+                    logger.info("[SESSION] Updating reexam ID: {} from REEXAM to CONFIRMED", reexam.getId());
+                    reexam.setStatus(AppointmentStatus.CONFIRMED);
+                    appointmentRepository.save(reexam);
+                    appointmentRepository.flush();
+                    logger.info("[SESSION] Reexam ID: {} successfully updated to CONFIRMED", reexam.getId());
+                } else {
+                    logger.info("[SESSION] Reexam ID: {} has status: {}, not updating", reexam.getId(), reexam.getStatus());
+                }
+            } else {
+                logger.info("[SESSION] No reexam found for appointment ID: {}", appt.getId());
+            }
+        } catch (Exception e) {
+            logger.error("[SESSION] Error auto-confirming reexam", e);
+            e.printStackTrace();
+        }
     }
 
     /* =========================================================
