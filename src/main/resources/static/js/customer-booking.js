@@ -10,17 +10,61 @@
   };
 
   function init() {
-    var calendarBody = document.getElementById('customer-calendar-body');
-    if (!calendarBody) return;
+      var calendarBody = document.getElementById('customer-calendar-body');
+      if (!calendarBody) return;
 
-    bindStaticEvents();
-    renderCalendar();
-    setStep(1);
-    updateSummary();
+      bindStaticEvents();
+      renderCalendar();
+      setStep(1);
+      updateSummary();
 
-    // Kiểm tra xem có phải vừa thanh toán từ VNPay về không
-    checkReturnStatus();
-  }
+      // KIỂM TRA TRẠNG THÁI THANH TOÁN
+      const urlParams = new URLSearchParams(window.location.search);
+      const status = urlParams.get('status');
+      const pendingId = sessionStorage.getItem('pendingAppointmentId');
+
+      if (status === 'success') {
+          // Nếu thành công, xóa ID treo và chạy logic hiện step 4
+          sessionStorage.removeItem('pendingAppointmentId');
+          checkReturnStatus();
+      } else if (pendingId) {
+          // Nếu có ID treo trong bộ nhớ nhưng URL không có status=success
+          // -> Khách đã bấm Back hoặc tắt trang giữa chừng
+          handleCancellationOnBack(pendingId);
+      } else {
+          checkReturnStatus();
+      }
+    }
+
+    // Hàm mới để gọi API hủy đơn khi phát hiện khách quay lại
+    function handleCancellationOnBack(appointmentId) {
+        console.warn("Đang xử lý hủy đơn treo ID: " + appointmentId);
+
+        // Gọi API Backend mà bạn đã tạo trong Controller
+        fetch('/customer/payment/appointments/cancel-back/' + appointmentId, {
+          method: 'POST',
+          credentials: 'same-origin'
+        })
+          .then(function (response) {
+            // Xóa ID khỏi bộ nhớ dù API thành công hay thất bại để tránh lặp lại logic
+            sessionStorage.removeItem('pendingAppointmentId');
+
+            if (response.ok) {
+              console.log("Đã giải phóng Slot thành công.");
+              // Thông báo cho khách hàng
+              alert("Giao dịch thanh toán đã bị gián đoạn. Vui lòng thực hiện đặt lịch lại.");
+
+              // Tải lại trang để cập nhật danh sách Slot (tránh việc Slot cũ vẫn hiện 'Đã có lịch')
+              window.location.reload();
+            } else {
+              console.error("Backend không thể hủy đơn, có thể đơn đã được xử lý.");
+            }
+          })
+          .catch(function (err) {
+            sessionStorage.removeItem('pendingAppointmentId');
+            console.error("Lỗi kết nối khi hủy đơn treo:", err);
+          });
+      }
 
   // MỚI: Kiểm tra tham số URL để hiển thị trang thành công sau khi thanh toán
   function checkReturnStatus() {
@@ -65,6 +109,10 @@
               .then(data => updateSuccessSummary(data))
               .catch(() => console.log("Thanh toán thành công!"));
           }
+        }else if (status === 'fail') {
+                 alert("Thanh toán không thành công hoặc bạn đã hủy giao dịch. Lịch hẹn #" + (appointmentId || "") + " đã bị hủy.");
+                 // Bạn có thể Reset lại các bước hoặc giữ nguyên ở Step 3 để khách chọn lại
+                 setStep(1);
         }
   }
 
@@ -402,60 +450,65 @@
 
   // SỬA ĐỔI CHÍNH: Thay vì hiện Step 4, hàm này sẽ chuyển hướng sang VNPay
   function submitBooking(nextStepBtn) {
-    var slotId = (document.getElementById('customer-booking-slot-id') || {}).value;
-    var serviceId = (document.getElementById('customer-booking-service') || {}).value;
-    var contactChannel = (document.getElementById('customer-booking-contact-channel') || {}).value;
-    var contactValue = (document.getElementById('customer-booking-contact-value') || {}).value.trim();
-    var note = (document.getElementById('customer-booking-note') || {}).value;
+      var slotId = (document.getElementById('customer-booking-slot-id') || {}).value;
+      var serviceId = (document.getElementById('customer-booking-service') || {}).value;
+      var contactChannel = (document.getElementById('customer-booking-contact-channel') || {}).value;
+      var contactValue = (document.getElementById('customer-booking-contact-value') || {}).value.trim();
+      var note = (document.getElementById('customer-booking-note') || {}).value;
 
-    if (!slotId || !serviceId || !contactChannel || !contactValue) {
-      alert('Vui lòng điền đầy đủ thông tin liên hệ.');
-      return;
-    }
+      // Kiểm tra dữ liệu đầu vào
+      if (!slotId || !serviceId || !contactChannel || !contactValue) {
+        alert('Vui lòng điền đầy đủ thông tin liên hệ.');
+        return;
+      }
 
-    nextStepBtn.disabled = true;
-    nextStepBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
+      // Hiệu ứng loading cho nút bấm
+      nextStepBtn.disabled = true;
+      var originalText = nextStepBtn.innerHTML;
+      nextStepBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang kết nối VNPay...';
 
-    // 1. Lưu lịch hẹn tạm thời (Status mặc định ở Backend nên là WAITING_PAYMENT)
-    fetch('/customer/appointments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify({
-        slotId: parseInt(slotId, 10),
-        serviceId: parseInt(serviceId, 10),
-        patientNote: note || null,
-        contactChannel: contactChannel,
-        contactValue: contactValue
+      // 1. Gửi yêu cầu tạo lịch hẹn tạm thời (Status: WAITING_PAYMENT)
+      fetch('/customer/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          slotId: parseInt(slotId, 10),
+          serviceId: parseInt(serviceId, 10),
+          patientNote: note || null,
+          contactChannel: contactChannel,
+          contactValue: contactValue
+        })
       })
-    })
-      .then(function (r) {
-        if (r.status === 401) {
-          alert('Bạn cần đăng nhập.');
+        .then(function (response) {
+          if (response.status === 401) {
+            throw new Error('Bạn cần đăng nhập để tiếp tục.');
+          }
+          if (!response.ok) {
+            return response.json().then(function (err) {
+              throw new Error(err.message || 'Không thể tạo lịch hẹn.');
+            });
+          }
+          return response.json();
+        })
+        .then(function (data) {
+          if (data && data.id) {
+            // QUAN TRỌNG: Lưu ID vào sessionStorage để theo dõi nếu khách bấm Back
+            sessionStorage.setItem('pendingAppointmentId', data.id);
+
+            // 2. Chuyển hướng sang Controller tạo URL thanh toán VNPay
+            window.location.href = '/customer/payment/create-deposit/' + data.id;
+          } else {
+            throw new Error('Dữ liệu trả về không hợp lệ.');
+          }
+        })
+        .catch(function (err) {
+          // Reset nút nếu có lỗi xảy ra
           nextStepBtn.disabled = false;
-          nextStepBtn.textContent = 'Thanh toán cọc 50%';
-          return null;
-        }
-        if (!r.ok) {
-          return r.json().then(function (e) {
-            throw new Error(e.message || e.error || 'Đặt lịch thất bại.');
-          });
-        }
-        return r.json();
-      })
-      .then(function (data) {
-        if (!data || !data.id) return;
-
-        // 2. CHUYỂN HƯỚNG SANG VNPAY
-        // Client-side chuyển hướng sang controller thanh toán với ID vừa nhận
-        window.location.href = '/customer/payment/create-deposit/' + data.id;
-      })
-      .catch(function (err) {
-        nextStepBtn.disabled = false;
-        nextStepBtn.textContent = 'Thanh toán cọc 50%';
-        alert(err.message || 'Đặt lịch thất bại.');
-      });
-  }
+          nextStepBtn.innerHTML = originalText;
+          alert(err.message || 'Đặt lịch thất bại. Vui lòng thử lại.');
+        });
+    }
 
   function formatDateDisplay(dateStr) {
     if (!dateStr) return '';

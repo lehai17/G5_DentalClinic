@@ -190,7 +190,18 @@ public class CustomerAppointmentService {
 
     @Transactional
     public Appointment cancelUnpaidAppointment(Long appointmentId, String reason) {
-        return cancelAppointmentEntity(appointmentId, reason, false);
+        System.out.println("=== cancelUnpaidAppointment (delete) called with appointmentId: " + appointmentId);
+        Appointment a = appointmentRepository.findByIdWithSlots(appointmentId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lich hen khong ton tai."));
+        
+        if (a.getStatus() == AppointmentStatus.CANCELLED || a.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Khong the huy lich voi trang thai hien tai.");
+        }
+        
+        List<Slot> toRelease = a.getAppointmentSlots().stream().map(AppointmentSlot::getSlot).toList();
+        releaseSlots(toRelease);
+        appointmentRepository.delete(a);
+        return a;
     }
 
     @Transactional

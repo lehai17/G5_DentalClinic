@@ -6,10 +6,9 @@ import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -65,6 +64,7 @@ public class CustomerPaymentController {
         cld.add(Calendar.MINUTE, 15);
         vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
+        // 1. Sắp xếp các tham số theo alphabet
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
 
@@ -74,13 +74,15 @@ public class CustomerPaymentController {
         for (String fieldName : fieldNames) {
             String fieldValue = vnp_Params.get(fieldName);
             if (fieldValue != null && !fieldValue.isEmpty()) {
-                hashData.append(fieldName)
-                        .append('=')
-                        .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                // Build Query
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
+                query.append('=');
+                query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
 
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()))
-                        .append('=')
-                        .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                // Build Hash Data (VNPay yêu cầu key=value, nối với nhau bằng &)
+                hashData.append(fieldName);
+                hashData.append('=');
+                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
 
                 if (fieldNames.indexOf(fieldName) != fieldNames.size() - 1) {
                     query.append('&');
@@ -89,8 +91,11 @@ public class CustomerPaymentController {
             }
         }
 
+        // 2. Tạo Secure Hash
         String vnp_SecureHash = vnPayConfig.hmacSHA512(vnPayConfig.hashSecret, hashData.toString());
-        String paymentUrl = vnPayConfig.payUrl + "?" + query + "&vnp_SecureHash=" + vnp_SecureHash;
+
+        // 3. Tạo URL cuối cùng (Lưu ý: dùng query.toString())
+        String paymentUrl = vnPayConfig.payUrl + "?" + query.toString() + "&vnp_SecureHash=" + vnp_SecureHash;
 
         return "redirect:" + paymentUrl;
     }
@@ -134,8 +139,10 @@ public class CustomerPaymentController {
             if (appointmentId != null) {
                 customerAppointmentService.cancelUnpaidAppointment(
                         appointmentId,
-                        "Huy tu dong vi khong hoan tat thanh toan dat coc."
+                        "Khách hàng đã hủy hoặc không hoàn tất thanh toán VNPay."
                 );
+                // Truyền thêm id để giao diện xử lý thông báo
+                return "redirect:/customer/book?status=fail&id=" + appointmentId;
             }
             return "redirect:/customer/book?status=fail";
 
@@ -154,5 +161,13 @@ public class CustomerPaymentController {
             return null;
         }
         return Long.parseLong(numeric);
+    }
+
+    @PostMapping("/appointments/cancel-back/{id}")
+    @ResponseBody
+    public ResponseEntity<?> cancelOnBack(@PathVariable Long id) {
+        // Gọi service để hủy/xóa đơn hàng và giải phóng Slot ngay lập tức
+        customerAppointmentService.cancelUnpaidAppointment(id, "Khách hàng quay lại từ trang thanh toán");
+        return ResponseEntity.ok().build();
     }
 }
