@@ -3,6 +3,7 @@ package com.dentalclinic.controller.staff;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.service.staff.StaffAppointmentResultService;
 import com.dentalclinic.service.staff.StaffAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,9 @@ public class StaffAppointmentController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private StaffAppointmentResultService staffAppointmentResultService;
 
 
     @GetMapping("/dashboard")
@@ -171,5 +175,19 @@ public class StaffAppointmentController {
     public ResponseEntity<List<DentistProfile>> getAvailableDentists(@RequestParam Long appointmentId) {
         List<DentistProfile> availableDentists = staffAppointmentService.getAvailableDentistsForAppointment(appointmentId);
         return ResponseEntity.ok(availableDentists);
+    }
+
+
+
+    @GetMapping("/appointments/{id}/result")
+    public String viewResult(@PathVariable Long id, Model model) {
+        var data = staffAppointmentResultService.load(id);
+
+        model.addAttribute("pageTitle", "Appointment Result");
+        model.addAttribute("staffName", "Staff");
+        model.addAttribute("appointment", data.appointment());
+        model.addAttribute("medicalRecord", data.medicalRecord());
+
+        return "staff/appointment-result";
     }
 }

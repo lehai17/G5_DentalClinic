@@ -4,7 +4,6 @@ import com.dentalclinic.dto.admin.CustomerListDTO;
 import com.dentalclinic.dto.admin.CustomerDetailDTO;
 import com.dentalclinic.dto.admin.CustomerStatDTO;
 import com.dentalclinic.model.appointment.Appointment;
-import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.AppointmentRepository;
@@ -77,9 +76,6 @@ public class AdminCustomerServiceImpl implements AdminCustomerService {
 
     @Override
     public List<Appointment> getUpcomingAppointments(Long customerId) {
-        return appointmentRepository.findUpcomingAppointmentsByCustomerId(
-                customerId,
-                List.of(AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED)
-        );
+        return appointmentRepository.findUpcomingAppointmentsByCustomerId(customerId);
     }
 }
