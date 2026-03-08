@@ -32,6 +32,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/staff/support/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/staff/chat/**").hasAnyRole("STAFF", "ADMIN")
                         .requestMatchers("/staff/**").hasRole("STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/dentist/**").hasRole("DENTIST")

@@ -66,7 +66,7 @@
             <td th:text="${t.customer.customerProfile.fullName}"></td>
             <td th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}"></td>
             <td th:text="${t.appointment.service.name}"></td>
-            <td th:text="${#strings.abbreviate(t.question,60)}"></td>
+            <td th:text="${#strings.abbreviate(t.title,60)}"></td>
             <td>
                             <span th:class="'badge ' + (${t.status} == 'OPEN' ? 'open' : 'closed')"
                                   th:text="${t.status}">

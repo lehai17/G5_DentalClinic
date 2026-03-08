@@ -77,6 +77,10 @@ public class Appointment {
     @OrderBy("slotOrder ASC")
     private List<AppointmentSlot> appointmentSlots = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "original_appointment_id")
+    @JsonIgnore
+    private Appointment originalAppointment;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -143,4 +147,7 @@ public class Appointment {
             removeAppointmentSlot(as);
         }
     }
+
+    public Appointment getOriginalAppointment() { return originalAppointment; }
+    public void setOriginalAppointment(Appointment originalAppointment) { this.originalAppointment = originalAppointment; }
 }

@@ -6,8 +6,11 @@ import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
+import com.dentalclinic.service.dentist.ReexamService;
 import com.dentalclinic.service.mail.EmailService;
 import com.dentalclinic.service.notification.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +23,8 @@ import java.util.List;
 
 @Service
 public class StaffAppointmentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(StaffAppointmentService.class);
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -35,6 +40,9 @@ public class StaffAppointmentService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private ReexamService reexamService;
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
@@ -110,16 +118,49 @@ public class StaffAppointmentService {
 
     @Transactional
     public void completeAppointment(Long id) {
-        Appointment appt = appointmentRepository.findById(id)
+        Appointment a = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        // ✅ CHỈ CHO HOÀN THÀNH KHI EXAMINING
-        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
-            throw new RuntimeException("Only EXAMINING appointment can be completed");
+        if (a.getStatus() != AppointmentStatus.CHECKED_IN) {
+            throw new RuntimeException("Only CHECKED_IN appointment can be completed");
         }
 
-        appt.setStatus(AppointmentStatus.COMPLETED);
-        appointmentRepository.save(appt);
+        a.setStatus(AppointmentStatus.COMPLETED);
+        appointmentRepository.save(a);
+        appointmentRepository.flush();  // Force flush to DB
+        
+        // Auto-confirm any pending reexams for this appointment
+        logger.info("[STAFF] Appointment {} status changed to COMPLETED, attempting to auto-confirm reexam", a.getId());
+        try {
+            // Debug: check database directly
+            var debugData = appointmentRepository.debugFindReexamByOriginalId(a.getId());
+            logger.info("[STAFF] Debug: Found {} reexam records for appointment ID: {}", debugData.size(), a.getId());
+            for (Object[] row : debugData) {
+                logger.info("[STAFF] Debug: id={}, original_appointment_id={}, status={}", row[0], row[1], row[2]);
+            }
+            
+            // Find reexam for this appointment
+            var reexamOpt = appointmentRepository.findReexamByOriginalAppointmentId(a.getId());
+            if (reexamOpt.isPresent()) {
+                Appointment reexam = reexamOpt.get();
+                logger.info("[STAFF] Found reexam ID: {} with status: {}", reexam.getId(), reexam.getStatus());
+                
+                if (reexam.getStatus() == AppointmentStatus.REEXAM) {
+                    logger.info("[STAFF] Updating reexam ID: {} from REEXAM to CONFIRMED", reexam.getId());
+                    reexam.setStatus(AppointmentStatus.CONFIRMED);
+                    appointmentRepository.save(reexam);
+                    appointmentRepository.flush();
+                    logger.info("[STAFF] Reexam ID: {} successfully updated to CONFIRMED", reexam.getId());
+                } else {
+                    logger.info("[STAFF] Reexam ID: {} has status: {}, not updating", reexam.getId(), reexam.getStatus());
+                }
+            } else {
+                logger.info("[STAFF] No reexam found for appointment ID: {}", a.getId());
+            }
+        } catch (Exception e) {
+            logger.error("[STAFF] Error auto-confirming reexam", e);
+            e.printStackTrace();
+        }
     }
 
     @Transactional
@@ -164,15 +205,16 @@ public class StaffAppointmentService {
 
         return appointmentRepository.findAll(pageable);
     }
-    public void checkIn(Long id) {
-        Appointment appt = appointmentRepository.findById(id)
+    public void checkInAppointment(Long id) {
+        Appointment a = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (appt.getStatus() != AppointmentStatus.CONFIRMED) {
+        if (a.getStatus() != AppointmentStatus.CONFIRMED) {
             throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
         }
-        appt.setStatus(AppointmentStatus.EXAMINING);
-        appointmentRepository.save(appt);
+
+        a.setStatus(AppointmentStatus.CHECKED_IN);
+        appointmentRepository.save(a);
     }
 
     public List<DentistProfile> getAvailableDentistsForAppointment(Long appointmentId) {
