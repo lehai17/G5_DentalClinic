@@ -20,22 +20,22 @@ public class AdminStaffController {
     @Autowired
     private StaffService staffService;
 
-    // 1. Hiển thị danh sách nhân viên kèm bộ lọc
+    // 1. Hiển thị danh s�ch nh�n viên kèm bộ lọc
     @GetMapping
     public String showStaffList(
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "position", required = false) String position,
             Model model) {
 
-        // Gọi hàm lọc an toàn từ Service đã xử lý Enum
+        // Gọi hàm lọc an toàn từ Service d� xử lý Enum
         List<StaffProfile> staffs = staffService.searchStaffs(status, position);
 
         model.addAttribute("staffs", staffs);
-        model.addAttribute("selectedStatus", status); // Giữ trạng thái dropdown sau khi lọc
+        model.addAttribute("selectedStatus", status); // Giữ trạng th�i dropdown sau khi lọc
         model.addAttribute("selectedPos", position);
         model.addAttribute("activePage", "staff");
 
-        // Cập nhật dữ liệu cho các thẻ thống kê (Stat Cards)
+        // Cập nhật dữ liệu cho c�c thẻ thống kê (Stat Cards)
         model.addAttribute("totalStaff", staffService.countTotal());
         model.addAttribute("lockedStaffCount", staffService.countByStatus("LOCKED"));
         model.addAttribute("activeStaffCount", staffService.countByStatus("ACTIVE"));
@@ -43,7 +43,7 @@ public class AdminStaffController {
         return "admin/staff-list";
     }
 
-    // 2. Hiển thị Form thêm mới nhân viên
+    // 2. Hiển thị Form thêm mới nh�n viên
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("staffDTO", new StaffDTO());
@@ -61,7 +61,7 @@ public class AdminStaffController {
         }
         try {
             staffService.saveStaff(dto);
-            ra.addFlashAttribute("success", "Thêm nhân viên thành công!");
+            ra.addFlashAttribute("success", "Thêm nh�n viên thành công!");
             return "redirect:/admin/staff";
         } catch (RuntimeException e) {
             // Giữ lại form và hiển thị lỗi
@@ -75,16 +75,16 @@ public class AdminStaffController {
     public String lockStaff(@PathVariable("id") Long userId, RedirectAttributes ra) {
         // userId này là ID của bảng User để khớp với hàm trong Service của bạn
         staffService.deactivateStaff(userId);
-        ra.addFlashAttribute("success", "Đã khóa nhân viên thành công!");
+        ra.addFlashAttribute("success", "�� khóa nh�n viên thành công!");
         return "redirect:/admin/staff";
     }
 
     @PostMapping("/unlock/{id}")
     public String unlockStaff(@PathVariable("id") Long id, RedirectAttributes ra) {
         try {
-            // Gọi hàm dùng chung để đưa trạng thái về ACTIVE
+            // Gọi hàm dùng chung để đưa trạng th�i về ACTIVE
             staffService.updateStaffStatus(id, UserStatus.ACTIVE);
-            ra.addFlashAttribute("success", "Đã mở khóa nhân viên thành công!");
+            ra.addFlashAttribute("success", "�� mở khóa nh�n viên thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -115,7 +115,7 @@ public class AdminStaffController {
         }
         try {
             staffService.updateStaff(id, dto);
-            ra.addFlashAttribute("success", "Cập nhật nhân viên thành công!");
+            ra.addFlashAttribute("success", "Cập nhật nh�n viên thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -128,7 +128,7 @@ public class AdminStaffController {
         try {
             staffService.deleteStaff(id);
             return org.springframework.http.ResponseEntity.ok()
-                    .body(java.util.Map.of("success", true, "message", "Xóa nhân viên thành công!"));
+                    .body(java.util.Map.of("success", true, "message", "Xóa nh�n viên thành công!"));
         } catch (Exception e) {
             return org.springframework.http.ResponseEntity.badRequest()
                     .body(java.util.Map.of("success", false, "message", e.getMessage()));

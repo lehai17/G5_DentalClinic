@@ -203,7 +203,7 @@ public class NotificationService {
                 "Hoàn tiền đặt cọc",
                 "Bạn nhận được hoàn tiền " + amountStr + " VND từ lịch hẹn đã hủy. Số dư ví hiện tại có thể dùng cho lần đặt tiếp theo.",
                 "/customer/wallet",
-                NotificationReferenceType.WALLET,
+                null,
                 null
         );
     }

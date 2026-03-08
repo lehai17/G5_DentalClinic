@@ -104,3 +104,4 @@ function cancelAppointment(id) {
 function goToPayment(id) {
     window.location.href = "/staff/payments/" + id;
 }
+

@@ -20,11 +20,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Service
 public class SupportService {
+
+    private static final String TRANSCRIPT_PREFIX = "CHATV2";
+    private static final String SENDER_CUSTOMER = "CUSTOMER";
+    private static final String SENDER_STAFF = "STAFF";
+    private static final int MAX_TITLE_LENGTH = 255;
+    private static final int MAX_MESSAGE_LENGTH = 2000;
 
     private final SupportTicketRepository supportTicketRepository;
     private final NotificationService notificationService;
@@ -58,32 +67,41 @@ public class SupportService {
     @Transactional
     public SupportTicket createTicket(Long customerUserId, Long appointmentId, String title, String question) {
         User customer = requireCustomer(customerUserId);
-        validateTitle(title);
-        validateQuestion(question);
+        String safeTitle = normalizeTitle(title);
+        String safeQuestion = normalizeMessage(question, "Nội dung câu hỏi không được để trống.");
 
         Appointment appointment = null;
         User assignedResponder = null;
+        User assignedDentist = null;
 
         if (appointmentId != null) {
             appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, customerUserId)
                     .orElseThrow(() -> new BusinessException("Không tìm thấy ca khám phù hợp để hỗ trợ."));
 
-            // Auto-assign dentist of the appointment as responder (if any)
             if (appointment.getDentist() != null && appointment.getDentist().getUser() != null) {
                 assignedResponder = appointment.getDentist().getUser();
+                assignedDentist = appointment.getDentist().getUser();
             }
         }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<TranscriptEntry> transcriptEntries = new ArrayList<>();
+        transcriptEntries.add(new TranscriptEntry(SENDER_CUSTOMER, resolveCustomerLabel(customer), safeQuestion, now));
 
         SupportTicket ticket = new SupportTicket();
         ticket.setCustomer(customer);
         ticket.setAppointment(appointment);
         ticket.setStaff(assignedResponder);
-        ticket.setTitle(title.trim());
-        ticket.setQuestion(question.trim());
+        ticket.setDentist(assignedDentist);
+        ticket.setTitle(safeTitle);
+        ticket.setQuestion(serializeTranscript(transcriptEntries, false));
+        ticket.setAnswer(null);
         ticket.setStatus(SupportStatus.OPEN);
-        ticket.setCreatedAt(LocalDateTime.now());
+        ticket.setCreatedAt(now);
 
-        return supportTicketRepository.save(ticket);
+        SupportTicket saved = supportTicketRepository.save(ticket);
+        hydrateTicket(saved);
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -95,7 +113,10 @@ public class SupportService {
     @Transactional(readOnly = true)
     public List<SupportTicket> getMyTickets(Long customerUserId) {
         requireCustomer(customerUserId);
-        return supportTicketRepository.findByCustomer_IdOrderByCreatedAtDesc(customerUserId);
+        return supportTicketRepository.findByCustomer_IdOrderByCreatedAtDesc(customerUserId)
+                .stream()
+                .map(this::hydrateTicket)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -104,7 +125,8 @@ public class SupportService {
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, size);
         PageRequest pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return supportTicketRepository.findByCustomer_Id(customerUserId, pageable);
+        return supportTicketRepository.findByCustomer_Id(customerUserId, pageable)
+                .map(this::hydrateTicket);
     }
 
     @Transactional(readOnly = true)
@@ -116,7 +138,7 @@ public class SupportService {
         if (user.getRole() == Role.CUSTOMER && !ticket.getCustomer().getId().equals(userId)) {
             throw new SupportAccessDeniedException("Bạn không có quyền xem yêu cầu hỗ trợ này.");
         }
-        return ticket;
+        return hydrateTicket(ticket);
     }
 
     @Transactional(readOnly = true)
@@ -126,10 +148,15 @@ public class SupportService {
             throw new SupportAccessDeniedException("Bạn không có quyền xem danh sách hỗ trợ.");
         }
 
-        if (status == null || status.isBlank()) {
-            return supportTicketRepository.findAllByOrderByCreatedAtDesc();
-        }
-        return supportTicketRepository.findByStatusOrderByCreatedAtDesc(parseStatus(status));
+        String normalizedStatus = normalizeStatusFilter(status);
+        List<SupportTicket> tickets = (normalizedStatus == null)
+                ? supportTicketRepository.findAllByOrderByCreatedAtDesc()
+                : supportTicketRepository.findByStatusOrderByCreatedAtDesc(parseStatus(normalizedStatus));
+
+        return tickets.stream()
+                .map(this::hydrateTicket)
+                .filter(ticket -> matchesDisplayStatus(ticket, normalizedStatus))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -139,10 +166,15 @@ public class SupportService {
             throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem danh sách này.");
         }
 
-        if (status == null || status.isBlank()) {
-            return supportTicketRepository.findVisibleToDentist(dentistUserId);
-        }
-        return supportTicketRepository.findVisibleToDentistByStatus(dentistUserId, parseStatus(status));
+        String normalizedStatus = normalizeStatusFilter(status);
+        List<SupportTicket> tickets = (normalizedStatus == null)
+                ? supportTicketRepository.findVisibleToDentist(dentistUserId)
+                : supportTicketRepository.findVisibleToDentistByStatus(dentistUserId, parseStatus(normalizedStatus));
+
+        return tickets.stream()
+                .map(this::hydrateTicket)
+                .filter(ticket -> matchesDisplayStatus(ticket, normalizedStatus))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -152,43 +184,68 @@ public class SupportService {
             throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem chi tiết phiếu hỗ trợ.");
         }
 
-        return supportTicketRepository.findVisibleToDentistById(ticketId, dentistUserId)
+        SupportTicket ticket = supportTicketRepository.findVisibleToDentistById(ticketId, dentistUserId)
                 .orElseThrow(() -> new SupportAccessDeniedException("Bạn không có quyền xem phiếu hỗ trợ này."));
+        return hydrateTicket(ticket);
+    }
+
+    @Transactional
+    public SupportTicket replyTicket(Long customerUserId, Long ticketId, String message) {
+        User customer = requireCustomer(customerUserId);
+        String safeMessage = normalizeMessage(message, "Nội dung phản hồi không được để trống.");
+        SupportTicket ticket = supportTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
+
+        if (!ticket.getCustomer().getId().equals(customerUserId)) {
+            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu hỗ trợ này.");
+        }
+        if (isConversationClosed(ticket)) {
+            throw new BusinessException("Phiếu hỗ trợ đã đóng, không thể phản hồi thêm.");
+        }
+
+        List<TranscriptEntry> transcriptEntries = parseTranscript(ticket);
+        transcriptEntries.add(new TranscriptEntry(SENDER_CUSTOMER, resolveCustomerLabel(customer), safeMessage, LocalDateTime.now()));
+
+        ticket.setQuestion(serializeTranscript(transcriptEntries, false));
+        ticket.setStatus(SupportStatus.OPEN);
+
+        SupportTicket saved = supportTicketRepository.save(ticket);
+        return hydrateTicket(saved);
     }
 
     @Transactional
     public SupportTicket answerTicket(Long responderUserId, Long ticketId, String answer) {
         User responder = requireSupportResponder(responderUserId);
-        validateAnswer(answer);
+        String safeAnswer = normalizeMessage(answer, "Nội dung trả lời không được để trống.");
 
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
-        if (ticket.getStatus() == SupportStatus.ANSWERED) {
-            throw new BusinessException("Không thể trả lời yêu cầu đã đóng.");
-        }
-
-        // Không cho trả lời lại nếu đã có câu trả lời
-        if (ticket.getAnswer() != null && !ticket.getAnswer().trim().isEmpty()) {
-            throw new BusinessException("Yêu cầu này đã được trả lời.");
+        if (isConversationClosed(ticket)) {
+            throw new BusinessException("Phiếu hỗ trợ đã đóng, không thể phản hồi thêm.");
         }
 
         if (responder.getRole() == Role.DENTIST) {
             validateDentistCanAnswer(responder.getId(), ticket);
+            ticket.setDentist(responder);
         }
 
+        List<TranscriptEntry> transcriptEntries = parseTranscript(ticket);
+        transcriptEntries.add(new TranscriptEntry(SENDER_STAFF, resolveResponderLabel(responder), safeAnswer, LocalDateTime.now()));
+
         ticket.setStaff(responder);
-        ticket.setAnswer(answer.trim());
+        ticket.setQuestion(serializeTranscript(transcriptEntries, false));
+        ticket.setAnswer(safeAnswer);
         ticket.setStatus(SupportStatus.ANSWERED);
 
         SupportTicket saved = supportTicketRepository.save(ticket);
+        hydrateTicket(saved);
 
-        // Notify customer: ticket answered
         notificationService.createForCustomer(
                 saved.getCustomer().getId(),
                 NotificationType.TICKET_ANSWERED,
                 "Phiếu hỗ trợ đã được phản hồi",
-                "Yêu cầu hỗ trợ #" + saved.getId() + " đã được phản hồi.",
+                "Phiếu hỗ trợ #" + saved.getId() + " đã có phản hồi mới.",
                 "/support/" + saved.getId(),
                 NotificationReferenceType.TICKET,
                 saved.getId()
@@ -203,22 +260,24 @@ public class SupportService {
         SupportTicket ticket = supportTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
-        if (ticket.getStatus() == SupportStatus.ANSWERED) {
-            throw new BusinessException("Yêu cầu hỗ trợ đã đóng.");
+        if (isConversationClosed(ticket)) {
+            throw new BusinessException("Phiếu hỗ trợ đã được đóng trước đó.");
         }
 
-        ticket.setStatus(SupportStatus.ANSWERED);
+        List<TranscriptEntry> transcriptEntries = parseTranscript(ticket);
+        ticket.setQuestion(serializeTranscript(transcriptEntries, true));
         if (ticket.getStaff() == null) {
             ticket.setStaff(staff);
         }
 
         SupportTicket saved = supportTicketRepository.save(ticket);
+        hydrateTicket(saved);
 
         notificationService.createForCustomer(
                 saved.getCustomer().getId(),
                 NotificationType.TICKET_STATUS_CHANGED,
-                "Phiếu hỗ trợ đã đóng",
-                "Yêu cầu hỗ trợ #" + saved.getId() + " đã được chuyển sang trạng thái CLOSED.",
+                "Phiếu hỗ trợ đã được đóng",
+                "Phiếu hỗ trợ #" + saved.getId() + " đã được đóng.",
                 "/support/" + saved.getId(),
                 NotificationReferenceType.TICKET,
                 saved.getId()
@@ -226,8 +285,6 @@ public class SupportService {
 
         return saved;
     }
-
-    // ================== INTERNAL HELPERS ==================
 
     private User requireUser(Long userId) {
         return userRepository.findById(userId)
@@ -259,10 +316,12 @@ public class SupportService {
     }
 
     private void validateDentistCanAnswer(Long dentistUserId, SupportTicket ticket) {
-        if (ticket.getAppointment() == null) return;
+        if (ticket.getAppointment() == null) {
+            return;
+        }
 
         if (ticket.getAppointment().getDentist() == null || ticket.getAppointment().getDentist().getUser() == null) {
-            throw new SupportAccessDeniedException("Phiếu này chưa gán bác sĩ ca khám, bác sĩ không thể phản hồi.");
+            throw new SupportAccessDeniedException("Phiếu này chưa gắn bác sĩ ca khám, bác sĩ không thể phản hồi.");
         }
 
         Long assignedDentistUserId = ticket.getAppointment().getDentist().getUser().getId();
@@ -272,28 +331,196 @@ public class SupportService {
     }
 
     private SupportStatus parseStatus(String status) {
+        String safe = status == null ? "" : status.trim().toUpperCase();
+        if ("CLOSED".equals(safe)) {
+            return SupportStatus.ANSWERED;
+        }
         try {
-            return SupportStatus.valueOf(status.trim().toUpperCase());
+            return SupportStatus.valueOf(safe);
         } catch (Exception e) {
             throw new BusinessException("Trạng thái lọc không hợp lệ.");
         }
     }
 
-    private void validateTitle(String title) {
+    private String normalizeStatusFilter(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        String safe = status.trim().toUpperCase();
+        if (!"OPEN".equals(safe) && !"ANSWERED".equals(safe) && !"CLOSED".equals(safe)) {
+            throw new BusinessException("Trạng thái lọc không hợp lệ.");
+        }
+        return safe;
+    }
+
+    private boolean matchesDisplayStatus(SupportTicket ticket, String normalizedStatus) {
+        if (normalizedStatus == null) {
+            return true;
+        }
+        return normalizedStatus.equalsIgnoreCase(ticket.getDisplayStatus());
+    }
+
+    private String normalizeTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
             throw new BusinessException("Tiêu đề không được để trống.");
         }
+        String safeTitle = title.trim();
+        if (safeTitle.length() > MAX_TITLE_LENGTH) {
+            throw new BusinessException("Tiêu đề quá dài.");
+        }
+        return safeTitle;
     }
 
-    private void validateQuestion(String question) {
-        if (question == null || question.trim().isEmpty()) {
-            throw new BusinessException("Nội dung câu hỏi không được để trống.");
+    private String normalizeMessage(String message, String emptyMessage) {
+        if (message == null || message.trim().isEmpty()) {
+            throw new BusinessException(emptyMessage);
+        }
+        String safeMessage = message.trim();
+        if (safeMessage.length() > MAX_MESSAGE_LENGTH) {
+            throw new BusinessException("Nội dung vượt quá giới hạn cho phép.");
+        }
+        return safeMessage;
+    }
+
+    private SupportTicket hydrateTicket(SupportTicket ticket) {
+        List<TranscriptEntry> transcriptEntries = parseTranscript(ticket);
+        List<SupportTicket.ConversationEntry> conversationEntries = transcriptEntries.stream()
+                .map(entry -> new SupportTicket.ConversationEntry(
+                        entry.senderType,
+                        entry.senderLabel,
+                        entry.content,
+                        entry.createdAt,
+                        SENDER_CUSTOMER.equals(entry.senderType)
+                ))
+                .toList();
+
+        ticket.setConversationEntries(conversationEntries);
+        ticket.setLatestCustomerMessage(transcriptEntries.stream()
+                .filter(entry -> SENDER_CUSTOMER.equals(entry.senderType))
+                .map(entry -> entry.content)
+                .reduce((first, second) -> second)
+                .orElse(""));
+        ticket.setLatestStaffReply(transcriptEntries.stream()
+                .filter(entry -> SENDER_STAFF.equals(entry.senderType))
+                .map(entry -> entry.content)
+                .reduce((first, second) -> second)
+                .orElse(ticket.getAnswer()));
+        ticket.setDisplayStatus(isConversationClosed(ticket) ? "CLOSED" : ticket.getStatus().name());
+        return ticket;
+    }
+
+    private boolean isConversationClosed(SupportTicket ticket) {
+        String rawQuestion = ticket.getQuestion();
+        if (rawQuestion == null || rawQuestion.isBlank()) {
+            return false;
+        }
+        String[] lines = rawQuestion.split("\\R", -1);
+        return lines.length > 0
+                && lines[0].startsWith(TRANSCRIPT_PREFIX + "|")
+                && lines[0].endsWith("|1");
+    }
+
+    private List<TranscriptEntry> parseTranscript(SupportTicket ticket) {
+        String rawQuestion = ticket.getQuestion();
+        List<TranscriptEntry> entries = new ArrayList<>();
+
+        if (rawQuestion != null && rawQuestion.startsWith(TRANSCRIPT_PREFIX + "|")) {
+            String[] lines = rawQuestion.split("\\R");
+            for (int i = 1; i < lines.length; i++) {
+                String line = lines[i];
+                if (line == null || line.isBlank()) {
+                    continue;
+                }
+                String[] parts = line.split("\\|", 4);
+                if (parts.length < 4) {
+                    continue;
+                }
+                entries.add(new TranscriptEntry(
+                        parts[0],
+                        decode(parts[2]),
+                        decode(parts[3]),
+                        LocalDateTime.parse(parts[1])
+                ));
+            }
+            return entries;
+        }
+
+        if (rawQuestion != null && !rawQuestion.isBlank()) {
+            entries.add(new TranscriptEntry(
+                    SENDER_CUSTOMER,
+                    ticket.getCustomer() != null ? resolveCustomerLabel(ticket.getCustomer()) : "Khách hàng",
+                    rawQuestion,
+                    ticket.getCreatedAt()
+            ));
+        }
+
+        if (ticket.getAnswer() != null && !ticket.getAnswer().isBlank()) {
+            entries.add(new TranscriptEntry(
+                    SENDER_STAFF,
+                    ticket.getStaff() != null ? resolveResponderLabel(ticket.getStaff()) : "Phòng khám",
+                    ticket.getAnswer(),
+                    ticket.getCreatedAt()
+            ));
+        }
+
+        return entries;
+    }
+
+    private String serializeTranscript(List<TranscriptEntry> entries, boolean closed) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(TRANSCRIPT_PREFIX).append("|META|").append(closed ? "1" : "0");
+
+        for (TranscriptEntry entry : entries) {
+            builder.append("\n")
+                    .append(entry.senderType).append("|")
+                    .append(entry.createdAt).append("|")
+                    .append(encode(entry.senderLabel)).append("|")
+                    .append(encode(entry.content));
+        }
+
+        return builder.toString();
+    }
+
+    private String encode(String value) {
+        return Base64.getEncoder().encodeToString((value == null ? "" : value).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String decode(String value) {
+        try {
+            return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ex) {
+            return "";
         }
     }
 
-    private void validateAnswer(String answer) {
-        if (answer == null || answer.trim().isEmpty()) {
-            throw new BusinessException("Nội dung trả lời không được để trống.");
+    private String resolveCustomerLabel(User customer) {
+        return customer != null && customer.getEmail() != null ? customer.getEmail() : "Khách hàng";
+    }
+
+    private String resolveResponderLabel(User responder) {
+        if (responder == null) {
+            return "Phòng khám";
+        }
+        if (responder.getRole() == Role.DENTIST) {
+            return "Bác sĩ " + responder.getEmail();
+        }
+        if (responder.getRole() == Role.ADMIN) {
+            return "Quản trị viên " + responder.getEmail();
+        }
+        return "Lễ tân " + responder.getEmail();
+    }
+
+    private static final class TranscriptEntry {
+        private final String senderType;
+        private final String senderLabel;
+        private final String content;
+        private final LocalDateTime createdAt;
+
+        private TranscriptEntry(String senderType, String senderLabel, String content, LocalDateTime createdAt) {
+            this.senderType = senderType;
+            this.senderLabel = senderLabel;
+            this.content = content;
+            this.createdAt = createdAt;
         }
     }
 }

@@ -6,6 +6,7 @@ import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.service.Services;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -46,6 +47,10 @@ public class Appointment {
     @JoinColumn(name = "service_id")
     private Services service;
 
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("detailOrder ASC")
+    private List<AppointmentDetail> appointmentDetails = new ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name = "slot_id")
     @JsonIgnore
@@ -59,6 +64,15 @@ public class Appointment {
 
     @Column(name = "end_time")
     private LocalTime endTime;
+
+    @Column(name = "total_duration_minutes")
+    private Integer totalDurationMinutes;
+
+    @Column(name = "total_amount", precision = 18, scale = 2)
+    private BigDecimal totalAmount;
+
+    @Column(name = "deposit_amount", precision = 18, scale = 2)
+    private BigDecimal depositAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name="status")
@@ -107,12 +121,20 @@ public class Appointment {
     public void setDentist(DentistProfile dentist) { this.dentist = dentist; }
     public Services getService() { return service; }
     public void setService(Services service) { this.service = service; }
+    public List<AppointmentDetail> getAppointmentDetails() { return appointmentDetails; }
+    public void setAppointmentDetails(List<AppointmentDetail> appointmentDetails) { this.appointmentDetails = appointmentDetails; }
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
     public LocalTime getStartTime() { return startTime; }
     public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
     public LocalTime getEndTime() { return endTime; }
     public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    public Integer getTotalDurationMinutes() { return totalDurationMinutes; }
+    public void setTotalDurationMinutes(Integer totalDurationMinutes) { this.totalDurationMinutes = totalDurationMinutes; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getDepositAmount() { return depositAmount; }
+    public void setDepositAmount(BigDecimal depositAmount) { this.depositAmount = depositAmount; }
     public AppointmentStatus getStatus() { return status; }
     public void setStatus(AppointmentStatus status) { this.status = status; }
     public String getNotes() { return notes; }
@@ -145,6 +167,22 @@ public class Appointment {
     public void clearAppointmentSlots() {
         for (AppointmentSlot as : new ArrayList<>(appointmentSlots)) {
             removeAppointmentSlot(as);
+        }
+    }
+
+    public void addAppointmentDetail(AppointmentDetail appointmentDetail) {
+        appointmentDetails.add(appointmentDetail);
+        appointmentDetail.setAppointment(this);
+    }
+
+    public void removeAppointmentDetail(AppointmentDetail appointmentDetail) {
+        appointmentDetails.remove(appointmentDetail);
+        appointmentDetail.setAppointment(null);
+    }
+
+    public void clearAppointmentDetails() {
+        for (AppointmentDetail detail : new ArrayList<>(appointmentDetails)) {
+            removeAppointmentDetail(detail);
         }
     }
 
