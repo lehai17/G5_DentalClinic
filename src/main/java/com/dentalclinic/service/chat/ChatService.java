@@ -7,10 +7,16 @@ import com.dentalclinic.model.chat.ChatThread;
 import com.dentalclinic.model.chat.ChatThreadStatus;
 import com.dentalclinic.model.notification.NotificationReferenceType;
 import com.dentalclinic.model.notification.NotificationType;
+import com.dentalclinic.model.profile.CustomerProfile;
+import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.model.profile.StaffProfile;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.ChatMessageRepository;
 import com.dentalclinic.repository.ChatThreadRepository;
+import com.dentalclinic.repository.CustomerProfileRepository;
+import com.dentalclinic.repository.DentistProfileRepository;
+import com.dentalclinic.repository.StaffProfileRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,15 +39,24 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final CustomerProfileRepository customerProfileRepository;
+    private final StaffProfileRepository staffProfileRepository;
+    private final DentistProfileRepository dentistProfileRepository;
 
     public ChatService(ChatThreadRepository chatThreadRepository,
                        ChatMessageRepository chatMessageRepository,
                        UserRepository userRepository,
-                       NotificationService notificationService) {
+                       NotificationService notificationService,
+                       CustomerProfileRepository customerProfileRepository,
+                       StaffProfileRepository staffProfileRepository,
+                       DentistProfileRepository dentistProfileRepository) {
         this.chatThreadRepository = chatThreadRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.customerProfileRepository = customerProfileRepository;
+        this.staffProfileRepository = staffProfileRepository;
+        this.dentistProfileRepository = dentistProfileRepository;
     }
 
     @Transactional
@@ -232,8 +247,10 @@ public class ChatService {
         dto.setId(thread.getId());
         dto.setCustomerId(thread.getCustomer() != null ? thread.getCustomer().getId() : null);
         dto.setCustomerEmail(thread.getCustomer() != null ? thread.getCustomer().getEmail() : null);
+        dto.setCustomerName(resolveUserDisplayName(thread.getCustomer()));
         dto.setAssignedStaffId(thread.getAssignedStaff() != null ? thread.getAssignedStaff().getId() : null);
         dto.setAssignedStaffEmail(thread.getAssignedStaff() != null ? thread.getAssignedStaff().getEmail() : null);
+        dto.setAssignedStaffName(resolveUserDisplayName(thread.getAssignedStaff()));
         dto.setStatus(thread.getStatus().name());
         dto.setCreatedAt(thread.getCreatedAt());
         dto.setLastMessageAt(thread.getLastMessageAt());
@@ -258,6 +275,7 @@ public class ChatService {
         dto.setThreadId(message.getThread() != null ? message.getThread().getId() : null);
         dto.setSenderId(message.getSender() != null ? message.getSender().getId() : null);
         dto.setSenderEmail(message.getSender() != null ? message.getSender().getEmail() : null);
+        dto.setSenderName(resolveUserDisplayName(message.getSender()));
         dto.setSenderRole(message.getSender() != null && message.getSender().getRole() != null
                 ? message.getSender().getRole().name()
                 : null);
@@ -265,6 +283,39 @@ public class ChatService {
         dto.setCreatedAt(message.getCreatedAt());
         dto.setRead(message.isRead());
         return dto;
+    }
+
+    private String resolveUserDisplayName(User user) {
+        if (user == null) {
+            return null;
+        }
+        if (user.getRole() == Role.CUSTOMER) {
+            return customerProfileRepository.findByUser_Id(user.getId())
+                    .map(CustomerProfile::getFullName)
+                    .filter(this::hasText)
+                    .orElseGet(() -> fallbackUserLabel(user));
+        }
+        if (user.getRole() == Role.DENTIST) {
+            return dentistProfileRepository.findByUser_Id(user.getId())
+                    .map(DentistProfile::getFullName)
+                    .filter(this::hasText)
+                    .orElseGet(() -> fallbackUserLabel(user));
+        }
+        if (user.getRole() == Role.STAFF || user.getRole() == Role.ADMIN) {
+            return staffProfileRepository.findByUserId(user.getId())
+                    .map(StaffProfile::getFullName)
+                    .filter(this::hasText)
+                    .orElseGet(() -> fallbackUserLabel(user));
+        }
+        return fallbackUserLabel(user);
+    }
+
+    private String fallbackUserLabel(User user) {
+        return hasText(user.getEmail()) ? user.getEmail() : "Chua ro";
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     private enum ViewerType {

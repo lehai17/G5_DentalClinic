@@ -188,6 +188,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     Optional<Appointment> findByIdAndCustomer_User_Id(Long appointmentId, Long customerUserId);
 
+    @EntityGraph(attributePaths = {"appointmentSlots", "appointmentDetails", "appointmentDetails.service"})
+    Optional<Appointment> findByCustomer_IdAndDateAndStartTimeAndStatus(Long customerId,
+                                                                        LocalDate date,
+                                                                        LocalTime startTime,
+                                                                        AppointmentStatus status);
+
     List<Appointment> findByCustomer_User_IdAndStatus(Long customerUserId, AppointmentStatus status);
 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})

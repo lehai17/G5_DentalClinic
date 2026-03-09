@@ -7,6 +7,7 @@ public class ChatMessageDto {
     private Long threadId;
     private Long senderId;
     private String senderEmail;
+    private String senderName;
     private String senderRole;
     private String content;
     private LocalDateTime createdAt;
@@ -50,6 +51,14 @@ public class ChatMessageDto {
 
     public void setSenderRole(String senderRole) {
         this.senderRole = senderRole;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
     }
 
     public String getContent() {

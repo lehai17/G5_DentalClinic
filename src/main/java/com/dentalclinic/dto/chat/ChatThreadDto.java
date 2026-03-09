@@ -6,8 +6,10 @@ public class ChatThreadDto {
     private Long id;
     private Long customerId;
     private String customerEmail;
+    private String customerName;
     private Long assignedStaffId;
     private String assignedStaffEmail;
+    private String assignedStaffName;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime lastMessageAt;
@@ -38,6 +40,14 @@ public class ChatThreadDto {
         this.customerEmail = customerEmail;
     }
 
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
     public Long getAssignedStaffId() {
         return assignedStaffId;
     }
@@ -52,6 +62,14 @@ public class ChatThreadDto {
 
     public void setAssignedStaffEmail(String assignedStaffEmail) {
         this.assignedStaffEmail = assignedStaffEmail;
+    }
+
+    public String getAssignedStaffName() {
+        return assignedStaffName;
+    }
+
+    public void setAssignedStaffName(String assignedStaffName) {
+        this.assignedStaffName = assignedStaffName;
     }
 
     public String getStatus() {

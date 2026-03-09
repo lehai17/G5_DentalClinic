@@ -18,6 +18,7 @@ import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.BillingNoteRepository;
 import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.SlotRepository;
@@ -70,6 +71,7 @@ public class CustomerAppointmentService {
     private final CustomerProfileRepository customerProfileRepository;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
+    private final BillingNoteRepository billingNoteRepository;
     private final ServiceRepository serviceRepository;
     private final SlotRepository slotRepository;
     private final NotificationService notificationService;
@@ -78,6 +80,7 @@ public class CustomerAppointmentService {
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
                                       UserRepository userRepository,
                                       AppointmentRepository appointmentRepository,
+                                      BillingNoteRepository billingNoteRepository,
                                       ServiceRepository serviceRepository,
                                       SlotRepository slotRepository,
                                       NotificationService notificationService,
@@ -85,6 +88,7 @@ public class CustomerAppointmentService {
         this.customerProfileRepository = customerProfileRepository;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
+        this.billingNoteRepository = billingNoteRepository;
         this.serviceRepository = serviceRepository;
         this.slotRepository = slotRepository;
         this.notificationService = notificationService;
@@ -456,8 +460,7 @@ public class CustomerAppointmentService {
         Slot first = reservedSlots.get(0);
         Slot last = reservedSlots.get(reservedSlots.size() - 1);
 
-        Appointment appointment = new Appointment();
-        appointment.setCustomer(customer);
+        Appointment appointment = resolveAppointmentEntityForCreate(customer, first.getSlotTime().toLocalDate(), first.getStartTime());
         appointment.setService(selectedServices.get(0));
 
         appointment.setTotalDurationMinutes(totals.totalDurationMinutes());
@@ -482,6 +485,34 @@ public class CustomerAppointmentService {
         }
 
         return appointmentRepository.save(appointment);
+    }
+
+    private Appointment resolveAppointmentEntityForCreate(CustomerProfile customer, LocalDate date, LocalTime startTime) {
+        return appointmentRepository.findByCustomer_IdAndDateAndStartTimeAndStatus(
+                        customer.getId(),
+                        date,
+                        startTime,
+                        AppointmentStatus.CANCELLED
+                )
+                .filter(appointment -> billingNoteRepository.findByAppointment_Id(appointment.getId()).isEmpty())
+                .map(appointment -> resetCancelledAppointmentForReuse(appointment, customer))
+                .orElseGet(() -> {
+                    Appointment appointment = new Appointment();
+                    appointment.setCustomer(customer);
+                    return appointment;
+                });
+    }
+
+    private Appointment resetCancelledAppointmentForReuse(Appointment appointment, CustomerProfile customer) {
+        appointment.clearAppointmentSlots();
+        appointment.clearAppointmentDetails();
+        appointment.setCustomer(customer);
+        appointment.setDentist(null);
+        appointment.setService(null);
+        appointment.setSlot(null);
+        appointment.setOriginalAppointment(null);
+        appointment.setCreatedAt(nowDateTime());
+        return appointment;
     }
 
     @Transactional

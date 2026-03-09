@@ -113,7 +113,7 @@
     const html = messages
       .map((message) => {
         const customerSide = message.senderRole === "CUSTOMER";
-        const senderLabel = customerSide ? "Bạn" : "Lễ tân";
+        const senderLabel = customerSide ? "Bạn" : (message.senderName || "Lễ tân");
         return `
           <div class="chat-row ${customerSide ? "customer" : "staff"}">
             <div class="chat-bubble">
@@ -141,7 +141,8 @@
     threadSummary = await response.json();
     threadId = threadSummary.id;
     setStatus("Đang hoạt động", "success");
-    setAssignee(threadSummary.assignedStaffEmail ? "Đang phụ trách: " + threadSummary.assignedStaffEmail : "");
+    const assignee = threadSummary.assignedStaffName || threadSummary.assignedStaffEmail;
+    setAssignee(assignee ? "Đang phụ trách: " + assignee : "");
     updateCounter();
     return threadId;
   }

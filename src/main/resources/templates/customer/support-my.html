@@ -62,10 +62,20 @@
                 <i class="bi bi-clock-history"></i>
                 <span th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
               </div>
+            </div>
 
+            <div class="support-ticket-meta" style="margin-top: 10px;">
+              <div class="support-ticket-info" th:if="${ticket.appointment != null}">
+                <i class="bi bi-calendar2-check"></i>
+                <span th:text="'Ca khám #' + ${ticket.appointment.id} + ' - ' + ${#temporals.format(ticket.appointment.date, 'dd/MM/yyyy')}"></span>
+              </div>
+              <div class="support-ticket-info" th:if="${ticket.appointment == null}">
+                <i class="bi bi-headset"></i>
+                <span>Hỗ trợ khác</span>
+              </div>
               <div class="support-ticket-info">
-                <i class="bi bi-person-circle"></i>
-                <span th:text="${ticket.staff != null ? ticket.staff.email : 'Chưa phân công'}"></span>
+                <i class="bi bi-person-badge"></i>
+                <span th:text="${ticket.appointment != null ? 'Người phụ trách: ' + ticket.responderDisplayName : 'Người xử lý: ' + ticket.responderDisplayName}"></span>
               </div>
             </div>
           </div>
