@@ -53,10 +53,9 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
 //    List<DentistProfile> findByKeyword(@Param("keyword") String keyword);
 
     @Query("""
-    SELECT DISTINCT d FROM DentistProfile d 
+    SELECT d FROM DentistProfile d
     JOIN d.schedules s 
-    JOIN d.user u
-    WHERE u.status = 'ACTIVE' 
+    WHERE d.user.status = 'ACTIVE' 
     AND s.dayOfWeek = :dayOfWeek
     AND d.id NOT IN (
         SELECT b.dentist.id FROM BusySchedule b 
@@ -68,7 +67,6 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
             @Param("targetDate") LocalDate targetDate,
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek
     );
-
     @Query("""
     SELECT d FROM DentistProfile d 
     WHERE d.id NOT IN (
