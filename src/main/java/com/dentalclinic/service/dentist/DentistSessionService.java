@@ -198,13 +198,7 @@ public class DentistSessionService {
         if (form.getPerformedServices() != null) {
             for (BillingPerformedService ps : form.getPerformedServices()) {
 
-                boolean isEmpty =
-                        ps.getService() == null &&
-                                (ps.getToothNo() == null || ps.getToothNo().isBlank());
-
-                if (isEmpty) continue; // 🔥 bỏ dòng trống
-
-                if (ps.getQty() <= 0) ps.setQty(1); // đảm bảo >=1
+                if (ps.getQty() <= 0) ps.setQty(1);
 
                 ps.setBillingNote(bn);
                 bn.getPerformedServices().add(ps);

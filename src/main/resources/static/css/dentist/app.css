@@ -444,3 +444,20 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     background:#eef5ff;
     border-color:#cfe1ff;
 }
+
+/* ===== FUTURE APPOINTMENT BLOCK ===== */
+
+.appt-future{
+    cursor:not-allowed;
+    opacity:.65;
+}
+
+/* icon 🚫 */
+
+.appt-future::after{
+    content:"🚫";
+    position:absolute;
+    top:6px;
+    right:8px;
+    font-size:16px;
+}
