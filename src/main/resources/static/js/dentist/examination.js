@@ -12,7 +12,7 @@
                 if(i !== item){
                     i.classList.remove('active');
                     const text = i.querySelector('.toggle-text');
-                    if(text) text.textContent = "View Detail";
+                    if(text) text.textContent = "Xem chi tiết";
                 }
             });
 
@@ -21,9 +21,9 @@
 
             const text = item.querySelector('.toggle-text');
             if(item.classList.contains('active')){
-                text.textContent = "Hide Detail";
+                text.textContent = "Ẩn chi tiết";
             }else{
-                text.textContent = "View Detail";
+                text.textContent = "Xem chi tiết";
             }
 
         });

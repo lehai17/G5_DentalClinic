@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - GenZ Clinic</title>
+    <title>Đăng ký - GENZ CLINIC</title>
 
     <link rel="stylesheet" th:href="@{/css/register.css}">
     <script defer th:src="@{/js/register.js}"></script>
@@ -15,10 +15,10 @@
     <aside class="auth__left">
         <div class="hero">
             <div class="hero__brand">
-                <span class="hero__logo">ðŸ¦·</span>
+                    <span class="hero__logo">&#129463;</span>
                 <div>
                     <div class="hero__name">GENZ CLINIC</div>
-                    <div class="hero__tagline">Brighten the Vietnamese smile</div>
+                    <div class="hero__tagline">Nâng tầm nụ cười Việt</div>
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@
     <!-- RIGHT: Form -->
     <section class="auth__right">
         <div class="form-card">
-            <h1 class="title">Create an Account</h1>
+            <h1 class="title">Tạo tài khoản</h1>
 
             <!-- Error -->
             <div class="alert alert--error" th:if="${error}">
@@ -37,14 +37,14 @@
             <form id="registerForm" th:action="@{/register}" method="post"
                   th:object="${form}" class="form" novalidate>
                 <div class="field">
-                    <label class="label">Full name</label>
+                    <label class="label">Họ và tên</label>
 
                     <div class="input-wrap"
                          th:classappend="${#fields.hasErrors('fullName')} ? ' is-invalid'">
                         <input class="input"
                                type="text"
                                th:field="*{fullName}"
-                               placeholder="Ex: Nguyen Duc Lam">
+                               placeholder="Ví dụ: Nguyễn Đức Lâm">
                     </div>
 
                     <small class="error"
@@ -55,10 +55,10 @@
 
 
                 <div class="field">
-                    <label class="label" for="phone">Phone number</label>
+                    <label class="label" for="phone">Số điện thoại</label>
                     <div class="input-wrap" th:classappend="${#fields.hasErrors('phone')} ? ' is-invalid' : ''">
                         <input id="phone" class="input" type="text" th:field="*{phone}"
-                               placeholder="Ex: 0412341231" required inputmode="numeric" maxlength="10">
+                               placeholder="Ví dụ: 0912345678" required inputmode="numeric" maxlength="10">
                     </div>
                     <small class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></small>
                 </div>
@@ -73,29 +73,29 @@
                 </div>
 
                 <div class="field">
-                    <label class="label" for="password">Password</label>
+                    <label class="label" for="password">Mật khẩu</label>
                     <div class="input-wrap">
                         <input id="password" class="input" type="password" name="password"
-                               placeholder="Ex: fastdfa32ss2!" required>
+                               placeholder="Ví dụ: Matkhau@123" required>
                     </div>
                 </div>
 
                 <div class="grid2">
                     <div class="field">
-                        <label class="label" for="dateOfBirth">Date of Birth</label>
+                        <label class="label" for="dateOfBirth">Ngày sinh</label>
                         <div class="input-wrap">
                             <input id="dateOfBirth" class="input" type="date" th:field="*{dateOfBirth}" required>
                         </div>
                     </div>
 
                     <div class="field">
-                        <label class="label" for="gender">Gender</label>
+                        <label class="label" for="gender">Giới tính</label>
                         <div class="input-wrap">
                             <select id="gender" class="input" th:field="*{gender}" required>
-                            <option value="">-- Select --</option>
-                                <option value="MALE">Male</option>
-                                <option value="FEMALE">Female</option>
-                                <option value="OTHER">Other</option>
+                            <option value="">-- Chọn --</option>
+                                <option value="MALE">Nam</option>
+                                <option value="FEMALE">Nữ</option>
+                                <option value="OTHER">Khác</option>
                             </select>
                         </div>
                     </div>
@@ -103,27 +103,27 @@
 
                 <label class="check">
                     <input type="checkbox" th:field="*{agree}">
-                    <span>I agree with the Terms and Conditions</span>
+                    <span>Tôi đồng ý với điều khoản và điều kiện của phòng khám</span>
                 </label>
                 <small class="error" th:if="${#fields.hasErrors('agree')}" th:errors="*{agree}"></small>
 
                 <button id="signupBtn" class="btn btn--primary" type="submit">
-                    <span class="btn__text">Sign Up</span>
+                    <span class="btn__text">Đăng ký</span>
                     <span class="btn__spinner" aria-hidden="true"></span>
                 </button>
 
                 <div class="divider">
-                    <span>OR SIGN UP</span>
+                    <span>HOẶC ĐĂNG KÝ</span>
                 </div>
 
                 <a class="btn btn--google" th:href="@{/oauth2/authorization/google}">
                     <span class="g">G</span>
-                    <span>Sign up with Google</span>
+                    <span>Đăng ký với Google</span>
                 </a>
 
                 <p class="bottom">
-                    Already have an account?
-                    <a class="link" th:href="@{/login}">Sign in</a>
+                    Đã có tài khoản?
+                    <a class="link" th:href="@{/login}">Đăng nhập</a>
                 </p>
             </form>
         </div>

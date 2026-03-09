@@ -48,7 +48,7 @@
       .map((thread) => {
         const isActive = currentThreadId === thread.id;
         const unread = Number(thread.unreadCount || 0);
-        const customerLabel = thread.customerName || thread.customerEmail || "Kh�ch hàng";
+        const customerLabel = thread.customerName || thread.customerEmail || "Khách hàng";
         return `
           <button class="thread-item ${isActive ? "active" : ""}" data-thread-id="${thread.id}" type="button">
             <span class="thread-top">
@@ -80,7 +80,7 @@
     messagesEl.innerHTML = messages
       .map((message) => {
         const staffSide = message.senderRole === "STAFF" || message.senderRole === "ADMIN" || message.senderRole === "DENTIST";
-        const senderLabel = message.senderName || (staffSide ? "Lễ t�n" : "Kh�ch hàng");
+        const senderLabel = message.senderName || (staffSide ? "Lễ tân" : "Khách hàng");
         return `
           <div class="message-row ${staffSide ? "staff" : "customer"}">
             <div class="message-bubble">
@@ -128,7 +128,7 @@
   async function selectThread(threadId) {
     currentThreadId = threadId;
     const thread = threads.find((item) => item.id === threadId);
-    const customerLabel = thread?.customerName || thread?.customerEmail || "Kh�ch hàng";
+    const customerLabel = thread?.customerName || thread?.customerEmail || "Khách hàng";
     titleEl.textContent = `Đang chat với: ${customerLabel}`;
     setConversationEnabled(true);
     renderThreadList();
