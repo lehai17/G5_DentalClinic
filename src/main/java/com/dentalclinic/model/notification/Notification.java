@@ -3,6 +3,7 @@ package com.dentalclinic.model.notification;
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Entity
@@ -70,7 +71,7 @@ public class Notification {
     }
 
     public String getTitle() {
-        return title;
+        return normalizeDisplayText(title);
     }
 
     public void setTitle(String title) {
@@ -78,7 +79,7 @@ public class Notification {
     }
 
     public String getContent() {
-        return content;
+        return normalizeDisplayText(content);
     }
 
     public void setContent(String content) {
@@ -139,5 +140,25 @@ public class Notification {
 
     public void setReadAt(LocalDateTime readAt) {
         this.readAt = readAt;
+    }
+
+    private String normalizeDisplayText(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        if (!looksMojibake(value)) {
+            return value;
+        }
+        String repaired = new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        return repaired.isBlank() ? value : repaired;
+    }
+
+    private boolean looksMojibake(String value) {
+        return value.contains("Ã")
+                || value.contains("Ä")
+                || value.contains("á»")
+                || value.contains("áº")
+                || value.contains("Æ")
+                || value.contains("Â");
     }
 }

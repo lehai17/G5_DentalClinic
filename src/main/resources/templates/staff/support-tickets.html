@@ -44,22 +44,28 @@
                 <tr>
                     <th>Khách hàng</th>
                     <th>Nội dung mới nhất</th>
+                    <th>Loại hỗ trợ</th>
                     <th>Trạng thái</th>
                     <th>Tạo lúc</th>
-                    <th>Nhân viên xử lý</th>
+                    <th>Người xử lý</th>
                     <th>Hành động</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(tickets)}">
-                    <td colspan="6">Không có phiếu hỗ trợ.</td>
+                    <td colspan="7">Không có phiếu hỗ trợ.</td>
                 </tr>
                 <tr th:each="ticket : ${tickets}">
-                    <td th:text="${ticket.customer != null ? ticket.customer.email : '-'}"></td>
+                    <td th:text="${ticket.customerDisplayName != null ? ticket.customerDisplayName : '-'}"></td>
                     <td>
                         <div class="preview-line"
                              th:text="${ticket.latestCustomerMessage != null && ticket.latestCustomerMessage.length() > 120 ? ticket.latestCustomerMessage.substring(0,120) + '...' : ticket.latestCustomerMessage}"></div>
                         <div class="muted-line" th:text="${ticket.title}"></div>
+                    </td>
+                    <td>
+                        <div class="muted-line" th:if="${ticket.appointment != null}"
+                             th:text="'Ca khám #' + ${ticket.appointment.id} + ' - ' + ${#temporals.format(ticket.appointment.date, 'dd/MM/yyyy')}"></div>
+                        <div class="muted-line" th:if="${ticket.appointment == null}">Hỗ trợ khác</div>
                     </td>
                     <td>
                         <span th:if="${ticket.displayStatus == 'OPEN'}" class="status-open">Đang chờ phản hồi</span>
@@ -67,7 +73,7 @@
                         <span th:if="${ticket.displayStatus == 'CLOSED'}" class="status-closed">Đã đóng</span>
                     </td>
                     <td th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td th:text="${ticket.staff != null ? ticket.staff.email : '-'}"></td>
+                    <td th:text="${ticket.responderDisplayName != null ? ticket.responderDisplayName : '-'}"></td>
                     <td class="action-col">
                         <form th:if="${ticket.displayStatus != 'CLOSED'}"
                               th:action="@{/staff/support/{id}/answer(id=${ticket.id})}"

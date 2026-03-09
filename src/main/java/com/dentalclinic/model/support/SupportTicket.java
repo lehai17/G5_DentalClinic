@@ -60,6 +60,12 @@ public class SupportTicket {
     @Transient
     private List<ConversationEntry> conversationEntries = new ArrayList<>();
 
+    @Transient
+    private String customerDisplayName;
+
+    @Transient
+    private String responderDisplayName;
+
     public SupportTicket() {
     }
 
@@ -173,6 +179,22 @@ public class SupportTicket {
 
     public void setConversationEntries(List<ConversationEntry> conversationEntries) {
         this.conversationEntries = conversationEntries == null ? new ArrayList<>() : conversationEntries;
+    }
+
+    public String getCustomerDisplayName() {
+        return customerDisplayName;
+    }
+
+    public void setCustomerDisplayName(String customerDisplayName) {
+        this.customerDisplayName = customerDisplayName;
+    }
+
+    public String getResponderDisplayName() {
+        return responderDisplayName;
+    }
+
+    public void setResponderDisplayName(String responderDisplayName) {
+        this.responderDisplayName = responderDisplayName;
     }
 
     public boolean isClosed() {

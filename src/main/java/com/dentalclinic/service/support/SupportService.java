@@ -3,13 +3,20 @@ package com.dentalclinic.service.support;
 import com.dentalclinic.exception.BusinessException;
 import com.dentalclinic.exception.SupportAccessDeniedException;
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.notification.NotificationReferenceType;
 import com.dentalclinic.model.notification.NotificationType;
+import com.dentalclinic.model.profile.CustomerProfile;
+import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.model.profile.StaffProfile;
 import com.dentalclinic.model.support.SupportStatus;
 import com.dentalclinic.model.support.SupportTicket;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.CustomerProfileRepository;
+import com.dentalclinic.repository.DentistProfileRepository;
+import com.dentalclinic.repository.StaffProfileRepository;
 import com.dentalclinic.repository.SupportTicketRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.notification.NotificationService;
@@ -34,20 +41,30 @@ public class SupportService {
     private static final String SENDER_STAFF = "STAFF";
     private static final int MAX_TITLE_LENGTH = 255;
     private static final int MAX_MESSAGE_LENGTH = 2000;
+    private static final int APPOINTMENT_SUPPORT_WINDOW_DAYS = 14;
 
     private final SupportTicketRepository supportTicketRepository;
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
+    private final CustomerProfileRepository customerProfileRepository;
+    private final StaffProfileRepository staffProfileRepository;
+    private final DentistProfileRepository dentistProfileRepository;
 
     public SupportService(SupportTicketRepository supportTicketRepository,
                           NotificationService notificationService,
                           UserRepository userRepository,
-                          AppointmentRepository appointmentRepository) {
+                          AppointmentRepository appointmentRepository,
+                          CustomerProfileRepository customerProfileRepository,
+                          StaffProfileRepository staffProfileRepository,
+                          DentistProfileRepository dentistProfileRepository) {
         this.supportTicketRepository = supportTicketRepository;
         this.notificationService = notificationService;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
+        this.customerProfileRepository = customerProfileRepository;
+        this.staffProfileRepository = staffProfileRepository;
+        this.dentistProfileRepository = dentistProfileRepository;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +95,8 @@ public class SupportService {
             appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, customerUserId)
                     .orElseThrow(() -> new BusinessException("Không tìm thấy ca khám phù hợp để hỗ trợ."));
 
+            validateAppointmentSupportEligibility(appointment);
+
             if (appointment.getDentist() != null && appointment.getDentist().getUser() != null) {
                 assignedResponder = appointment.getDentist().getUser();
                 assignedDentist = appointment.getDentist().getUser();
@@ -107,7 +126,10 @@ public class SupportService {
     @Transactional(readOnly = true)
     public List<Appointment> getAppointmentsForSupport(Long customerUserId) {
         requireCustomer(customerUserId);
-        return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(customerUserId);
+        return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(customerUserId)
+                .stream()
+                .filter(this::isEligibleSupportAppointment)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -342,6 +364,28 @@ public class SupportService {
         }
     }
 
+    private void validateAppointmentSupportEligibility(Appointment appointment) {
+        if (!isEligibleSupportAppointment(appointment)) {
+            throw new BusinessException("Chỉ có thể gửi hỗ trợ cho ca khám đã hoàn thành, có bác sĩ phụ trách và còn trong thời hạn 14 ngày.");
+        }
+    }
+
+    private boolean isEligibleSupportAppointment(Appointment appointment) {
+        if (appointment == null) {
+            return false;
+        }
+        if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
+            return false;
+        }
+        if (appointment.getDentist() == null || appointment.getDentist().getUser() == null) {
+            return false;
+        }
+        if (appointment.getDate() == null) {
+            return false;
+        }
+        return !appointment.getDate().plusDays(APPOINTMENT_SUPPORT_WINDOW_DAYS).isBefore(LocalDateTime.now().toLocalDate());
+    }
+
     private String normalizeStatusFilter(String status) {
         if (status == null || status.isBlank()) {
             return null;
@@ -395,6 +439,8 @@ public class SupportService {
                 .toList();
 
         ticket.setConversationEntries(conversationEntries);
+        ticket.setCustomerDisplayName(resolveCustomerLabel(ticket.getCustomer()));
+        ticket.setResponderDisplayName(resolveTicketResponderDisplayName(ticket));
         ticket.setLatestCustomerMessage(transcriptEntries.stream()
                 .filter(entry -> SENDER_CUSTOMER.equals(entry.senderType))
                 .map(entry -> entry.content)
@@ -494,20 +540,64 @@ public class SupportService {
     }
 
     private String resolveCustomerLabel(User customer) {
-        return customer != null && customer.getEmail() != null ? customer.getEmail() : "Khách hàng";
+        if (customer == null) {
+            return "Khách hàng";
+        }
+        return customerProfileRepository.findByUser_Id(customer.getId())
+                .map(CustomerProfile::getFullName)
+                .filter(name -> name != null && !name.isBlank())
+                .orElseGet(() -> customer.getEmail() != null ? customer.getEmail() : "Khách hàng");
     }
 
     private String resolveResponderLabel(User responder) {
         if (responder == null) {
             return "Phòng khám";
         }
+        String fullName = resolveUserFullName(responder);
         if (responder.getRole() == Role.DENTIST) {
-            return "Bác sĩ " + responder.getEmail();
+            return "Bác sĩ " + fullName;
         }
         if (responder.getRole() == Role.ADMIN) {
-            return "Quản trị viên " + responder.getEmail();
+            return "Quản trị viên " + fullName;
         }
-        return "Lễ tân " + responder.getEmail();
+        return "Lễ tân " + fullName;
+    }
+
+    private String resolveTicketResponderDisplayName(SupportTicket ticket) {
+        if (ticket.getDentist() != null) {
+            return resolveResponderLabel(ticket.getDentist());
+        }
+        if (ticket.getStaff() != null) {
+            return resolveResponderLabel(ticket.getStaff());
+        }
+        if (ticket.getAppointment() != null && ticket.getAppointment().getDentist() != null) {
+            return "Bác sĩ " + safeText(ticket.getAppointment().getDentist().getFullName(),
+                    ticket.getAppointment().getDentist().getUser() != null ? ticket.getAppointment().getDentist().getUser().getEmail() : "Chưa phân công");
+        }
+        return "Chưa phân công";
+    }
+
+    private String resolveUserFullName(User user) {
+        if (user == null) {
+            return "Chưa rõ";
+        }
+        if (user.getRole() == Role.DENTIST) {
+            return dentistProfileRepository.findByUser_Id(user.getId())
+                    .map(DentistProfile::getFullName)
+                    .filter(name -> name != null && !name.isBlank())
+                    .orElseGet(() -> safeText(user.getEmail(), "Chưa rõ"));
+        }
+        if (user.getRole() == Role.STAFF || user.getRole() == Role.ADMIN) {
+            return staffProfileRepository.findByUserId(user.getId())
+                    .map(StaffProfile::getFullName)
+                    .filter(name -> name != null && !name.isBlank())
+                    .orElseGet(() -> safeText(user.getEmail(), "Chưa rõ"));
+        }
+        return safeText(user.getEmail(), "Chưa rõ");
+    }
+
+    private String safeText(String value, String fallback) {
+        return value != null && !value.isBlank() ? value : fallback;
     }
 
     private static final class TranscriptEntry {
