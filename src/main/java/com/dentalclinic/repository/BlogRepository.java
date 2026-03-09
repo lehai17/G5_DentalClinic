@@ -19,7 +19,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     Page<Blog> findByStatusOrderByUpdatedAtDesc(BlogStatus status, Pageable pageable);
     long countByStatus(BlogStatus status);
 
-    // Public logic (SỬA LỖI TẠI ĐÂY)
+    // Public logic (SỬA LỖI TẠI ��Y)
     // Thay vì findByIsPublishedTrue, ta dùng status = APPROVED
     Page<Blog> findByStatusOrderByApprovedAtDesc(BlogStatus status, Pageable pageable);
 

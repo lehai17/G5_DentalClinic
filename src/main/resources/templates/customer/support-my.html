@@ -20,7 +20,7 @@
       <div class="support-my-head">
         <div class="support-my-title-wrap">
           <h1 class="support-my-title">Phiếu hỗ trợ của tôi</h1>
-          <p class="support-my-subtitle">Theo dõi quá trình xử lý và xem phản hồi từ phòng khám.</p>
+          <p class="support-my-subtitle">Theo dõi lịch sử trao đổi với phòng khám và tiếp tục phản hồi ngay khi cần.</p>
         </div>
         <a th:href="@{/support/create}" class="support-create-btn">
           <i class="bi bi-plus-circle"></i>
@@ -30,16 +30,6 @@
 
       <div th:if="${successMessage}" class="support-flash support-flash-success" th:text="${successMessage}"></div>
       <div th:if="${errorMessage}" class="support-flash support-flash-error" th:text="${errorMessage}"></div>
-
-      <div class="support-future-tools" aria-hidden="true">
-        <div class="support-tool-placeholder"></div>
-        <div class="support-tool-placeholder"></div>
-      </div>
-
-      <div class="support-loading" th:if="${tickets == null}">
-        <span class="support-loading-spinner" aria-hidden="true"></span>
-        <span>Đang tải dữ liệu phiếu hỗ trợ...</span>
-      </div>
 
       <div class="support-empty" th:if="${#lists.isEmpty(tickets)}">
         <div class="support-empty-icon">
@@ -59,13 +49,13 @@
             <h2 class="support-ticket-title"
                 th:text="${ticket.title != null && !#strings.isEmpty(ticket.title) ? ticket.title : 'Không có tiêu đề'}"></h2>
             <p class="support-ticket-preview"
-               th:text="${ticket.question != null && ticket.question.length() > 180 ? ticket.question.substring(0,180) + '...' : ticket.question}"></p>
+               th:text="${ticket.latestCustomerMessage != null && ticket.latestCustomerMessage.length() > 180 ? ticket.latestCustomerMessage.substring(0,180) + '...' : ticket.latestCustomerMessage}"></p>
 
             <div class="support-ticket-meta">
               <div class="support-ticket-badge-wrap">
-                <span th:if="${ticket.status == 'OPEN'}" class="support-ticket-badge support-badge-open">Đang mở</span>
-                <span th:if="${ticket.status == 'ANSWERED'}" class="support-ticket-badge support-badge-answered">Đã trả lời</span>
-                <span th:if="${ticket.status == 'CLOSED'}" class="support-ticket-badge support-badge-closed">Đã đóng</span>
+                <span th:if="${ticket.displayStatus == 'OPEN'}" class="support-ticket-badge support-badge-open">Đang chờ phản hồi</span>
+                <span th:if="${ticket.displayStatus == 'ANSWERED'}" class="support-ticket-badge support-badge-answered">Đã có phản hồi</span>
+                <span th:if="${ticket.displayStatus == 'CLOSED'}" class="support-ticket-badge support-badge-closed">Đã đóng</span>
               </div>
 
               <div class="support-ticket-info">

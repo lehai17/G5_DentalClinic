@@ -13,6 +13,7 @@ import com.dentalclinic.repository.ChatMessageRepository;
 import com.dentalclinic.repository.ChatThreadRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.notification.NotificationService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class ChatService {
 
     private static final Set<ChatThreadStatus> ACTIVE_STATUSES = Set.of(ChatThreadStatus.OPEN, ChatThreadStatus.ACTIVE);
     private static final List<Role> STAFF_SIDE_ROLES = List.of(Role.STAFF, Role.ADMIN, Role.DENTIST);
+    private static final int MAX_MESSAGE_LENGTH = 1000;
 
     private final ChatThreadRepository chatThreadRepository;
     private final ChatMessageRepository chatMessageRepository;
@@ -57,14 +59,16 @@ public class ChatService {
                     return chatThreadRepository.save(newThread);
                 });
 
-        return toThreadDto(thread, customerIsViewer());
+        return toThreadDto(thread, ViewerType.CUSTOMER);
     }
 
     @Transactional(readOnly = true)
     public List<ChatMessageDto> getMessagesForCustomer(Long customerId, Long threadId) {
         ChatThread thread = getThreadForCustomer(customerId, threadId);
         return chatMessageRepository.findByThread_IdOrderByCreatedAtAsc(thread.getId())
-                .stream().map(this::toMessageDto).toList();
+                .stream()
+                .map(this::toMessageDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -73,7 +77,9 @@ public class ChatService {
         ensureStaffRole(staff);
         ChatThread thread = getThread(threadId);
         return chatMessageRepository.findByThread_IdOrderByCreatedAtAsc(thread.getId())
-                .stream().map(this::toMessageDto).toList();
+                .stream()
+                .map(this::toMessageDto)
+                .toList();
     }
 
     @Transactional
@@ -81,6 +87,8 @@ public class ChatService {
         User customer = getRequiredUser(customerId);
         ensureRole(customer, Role.CUSTOMER);
         ChatThread thread = getThreadForCustomer(customerId, threadId);
+        ensureThreadWritable(thread);
+
         ChatMessage saved = saveMessage(thread, customer, content);
         if (thread.getAssignedStaff() == null) {
             thread.setAssignedStaff(pickAssignableStaff());
@@ -96,7 +104,8 @@ public class ChatService {
         User staff = getRequiredUser(staffId);
         ensureStaffRole(staff);
         ChatThread thread = getThread(threadId);
-        // Staff/Admin who replies becomes current assignee for follow-up continuity.
+        ensureThreadWritable(thread);
+
         thread.setAssignedStaff(staff);
         ChatMessage saved = saveMessage(thread, staff, content);
         thread.setStatus(ChatThreadStatus.ACTIVE);
@@ -106,8 +115,8 @@ public class ChatService {
         notificationService.createForCustomer(
                 thread.getCustomer().getId(),
                 NotificationType.SUPPORT,
-                "Le tan da phan hoi tin nhan",
-                "Ban co tin nhan moi tu le tan.",
+                "Lễ tân đã phản hồi tin nhắn",
+                "Bạn có tin nhắn mới từ lễ tân.",
                 "/customer/chat",
                 NotificationReferenceType.TICKET,
                 thread.getId()
@@ -121,7 +130,7 @@ public class ChatService {
         ensureStaffRole(staff);
         return chatThreadRepository.findByStatusInOrderByLastMessageAtDesc(ACTIVE_STATUSES)
                 .stream()
-                .map(thread -> toThreadDto(thread, staffIsViewer()))
+                .map(thread -> toThreadDto(thread, ViewerType.STAFF))
                 .sorted(Comparator.comparing(ChatThreadDto::getLastMessageAt).reversed())
                 .toList();
     }
@@ -148,14 +157,20 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public User getCurrentUserByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new AccessDeniedException("Không xác định được tài khoản hiện tại.");
+        }
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay nguoi dung."));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng."));
     }
 
     private ChatMessage saveMessage(ChatThread thread, User sender, String content) {
         String safeContent = content == null ? "" : content.trim();
         if (safeContent.isEmpty()) {
-            throw new IllegalArgumentException("Noi dung tin nhan khong duoc de trong.");
+            throw new IllegalArgumentException("Nội dung tin nhắn không được để trống.");
+        }
+        if (safeContent.length() > MAX_MESSAGE_LENGTH) {
+            throw new IllegalArgumentException("Tin nhắn vượt quá giới hạn cho phép.");
         }
 
         ChatMessage message = new ChatMessage();
@@ -167,32 +182,41 @@ public class ChatService {
     }
 
     private ChatThread getThread(Long threadId) {
+        if (threadId == null) {
+            throw new IllegalArgumentException("Thiếu mã cuộc hội thoại.");
+        }
         return chatThreadRepository.findById(threadId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay cuoc hoi thoai."));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy cuộc hội thoại."));
     }
 
     private ChatThread getThreadForCustomer(Long customerId, Long threadId) {
         ChatThread thread = getThread(threadId);
         if (!thread.getCustomer().getId().equals(customerId)) {
-            throw new IllegalArgumentException("Ban khong co quyen truy cap cuoc hoi thoai nay.");
+            throw new AccessDeniedException("Bạn không có quyền truy cập cuộc hội thoại này.");
         }
         return thread;
     }
 
     private User getRequiredUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay nguoi dung."));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng."));
     }
 
     private void ensureRole(User user, Role role) {
         if (user.getRole() != role) {
-            throw new IllegalArgumentException("Nguoi dung khong hop le.");
+            throw new AccessDeniedException("Người dùng không hợp lệ.");
         }
     }
 
     private void ensureStaffRole(User user) {
         if (!(user.getRole() == Role.STAFF || user.getRole() == Role.ADMIN || user.getRole() == Role.DENTIST)) {
-            throw new IllegalArgumentException("Nguoi dung khong co quyen staff.");
+            throw new AccessDeniedException("Người dùng không có quyền staff.");
+        }
+    }
+
+    private void ensureThreadWritable(ChatThread thread) {
+        if (thread.getStatus() == ChatThreadStatus.CLOSED) {
+            throw new IllegalStateException("Cuộc trò chuyện này đã đóng.");
         }
     }
 
@@ -241,14 +265,6 @@ public class ChatService {
         dto.setCreatedAt(message.getCreatedAt());
         dto.setRead(message.isRead());
         return dto;
-    }
-
-    private ViewerType customerIsViewer() {
-        return ViewerType.CUSTOMER;
-    }
-
-    private ViewerType staffIsViewer() {
-        return ViewerType.STAFF;
     }
 
     private enum ViewerType {

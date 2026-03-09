@@ -13,14 +13,14 @@ import java.util.Optional;
 @Repository
 public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long> {
 
-    // 1. Tìm kiếm hồ sơ nhân viên dựa trên ID của User
+    // 1. Tìm kiếm hồ sơ nh�n viên dựa trên ID của User
     Optional<StaffProfile> findByUserId(Long userId);
 
-    // 2. Tìm nhân viên theo số điện thoại
+    // 2. Tìm nh�n viên theo số điện thoại
     Optional<StaffProfile> findByPhone(String phone);
 
     /**
-     * Lọc danh sách nhân viên theo Trạng thái tài khoản và Vị trí công việc
+     * Lọc danh s�ch nh�n viên theo Trạng th�i tài khoản và Vị trí công việc
      * Sử dụng JOIN để truy cập thuộc tính status nằm trong thực thể User
      */
 //    @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
@@ -38,8 +38,9 @@ public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long
                                     @Param("position") String position);
 
     /**
-     * Đếm số lượng nhân viên dựa trên trạng thái (Dùng cho các Stat Cards)
+     * Đếm số lượng nh�n viên dựa trên trạng th�i (Dùng cho c�c Stat Cards)
      */
     @Query("SELECT COUNT(s) FROM StaffProfile s WHERE s.user.status = :status")
     long countByUserStatus(@Param("status") UserStatus status);
 }
+

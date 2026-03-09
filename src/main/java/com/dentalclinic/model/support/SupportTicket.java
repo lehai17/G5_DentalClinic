@@ -3,7 +3,10 @@ package com.dentalclinic.model.support;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "support_ticket")
@@ -45,11 +48,21 @@ public class SupportTicket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // --- Constructors ---
+    @Transient
+    private String latestCustomerMessage;
+
+    @Transient
+    private String latestStaffReply;
+
+    @Transient
+    private String displayStatus;
+
+    @Transient
+    private List<ConversationEntry> conversationEntries = new ArrayList<>();
+
     public SupportTicket() {
     }
 
-    // --- Getters and Setters ---
     public Long getId() {
         return id;
     }
@@ -82,16 +95,12 @@ public class SupportTicket {
         this.staff = staff;
     }
 
-    /**
-     * Alias cho Dentist/Staff để tương thích với các logic cũ.
-     * Thường dùng khi Dentist là người trả lời ticket trực tiếp.
-     */
     public User getDentist() {
         return dentist;
     }
 
     public void setDentist(User dentist) {
-        this.staff = dentist;
+        this.dentist = dentist;
     }
 
     public String getTitle() {
@@ -134,10 +143,102 @@ public class SupportTicket {
         this.createdAt = createdAt;
     }
 
-    /**
-     * Phương thức tiện ích để kiểm tra xem Ticket đã đóng chưa
-     */
+    public String getLatestCustomerMessage() {
+        return latestCustomerMessage;
+    }
+
+    public void setLatestCustomerMessage(String latestCustomerMessage) {
+        this.latestCustomerMessage = latestCustomerMessage;
+    }
+
+    public String getLatestStaffReply() {
+        return latestStaffReply;
+    }
+
+    public void setLatestStaffReply(String latestStaffReply) {
+        this.latestStaffReply = latestStaffReply;
+    }
+
+    public String getDisplayStatus() {
+        return displayStatus;
+    }
+
+    public void setDisplayStatus(String displayStatus) {
+        this.displayStatus = displayStatus;
+    }
+
+    public List<ConversationEntry> getConversationEntries() {
+        return conversationEntries;
+    }
+
+    public void setConversationEntries(List<ConversationEntry> conversationEntries) {
+        this.conversationEntries = conversationEntries == null ? new ArrayList<>() : conversationEntries;
+    }
+
     public boolean isClosed() {
-        return SupportStatus.ANSWERED.equals(this.status);
+        return "CLOSED".equalsIgnoreCase(displayStatus);
+    }
+
+    public static class ConversationEntry {
+        private String senderType;
+        private String senderLabel;
+        private String content;
+        private LocalDateTime createdAt;
+        private boolean customerSide;
+
+        public ConversationEntry() {
+        }
+
+        public ConversationEntry(String senderType, String senderLabel, String content, LocalDateTime createdAt, boolean customerSide) {
+            this.senderType = senderType;
+            this.senderLabel = senderLabel;
+            this.content = content;
+            this.createdAt = createdAt;
+            this.customerSide = customerSide;
+        }
+
+        public String getSenderType() {
+            return senderType;
+        }
+
+        public void setSenderType(String senderType) {
+            this.senderType = senderType;
+        }
+
+        public String getSenderLabel() {
+            return senderLabel;
+        }
+
+        public void setSenderLabel(String senderLabel) {
+            this.senderLabel = senderLabel;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
+        }
+
+        public LocalDateTime getCreatedAt() {
+            return createdAt;
+        }
+
+        public void setCreatedAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+        }
+
+        public boolean isCustomerSide() {
+            return customerSide;
+        }
+
+        public void setCustomerSide(boolean customerSide) {
+            this.customerSide = customerSide;
+        }
+
+        public boolean isStaffSide() {
+            return !customerSide;
+        }
     }
 }

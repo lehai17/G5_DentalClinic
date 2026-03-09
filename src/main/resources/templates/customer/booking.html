@@ -60,22 +60,31 @@
                 <div class="calendar-section">
                   <h2>Chọn ngày khám</h2>
 
-                  <!-- Service Selection -->
-                  <div class="form-group" style="margin-bottom: 1.5rem">
+                  <div class="form-group booking-services-group" style="margin-bottom: 1.5rem">
                     <label class="form-label">
-                      Dịch vụ <span class="required">*</span>
+                      Chọn dịch vụ (có thể chọn nhiều) <span class="required">*</span>
                     </label>
-                    <select id="customer-booking-service" class="form-select">
-                      <option value="">-- Chọn dịch vụ --</option>
-                      <option
+                    <div class="booking-services-list" id="customer-booking-services">
+                      <label
+                        class="booking-service-item"
                         th:each="s : ${services}"
-                        th:value="${s.id}"
-                        th:text="${s.name}"
-                        th:attr="data-duration=${s.durationMinutes}"
                       >
-                        Dịch vụ
-                      </option>
-                    </select>
+                        <input
+                          type="checkbox"
+                          class="customer-service-checkbox"
+                          th:value="${s.id}"
+                          th:attr="data-name=${s.name},data-duration=${s.durationMinutes},data-price=${s.price}"
+                        />
+                        <span class="booking-service-content">
+                          <span class="booking-service-name" th:text="${s.name}">Dịch vụ</span>
+                          <span class="booking-service-meta">
+                            <span th:text="${s.durationMinutes} + ' phút'">30 phút</span>
+                            <span>•</span>
+                            <span th:text="${#numbers.formatDecimal(s.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">500.000 VNĐ</span>
+                          </span>
+                        </span>
+                      </label>
+                    </div>
                   </div>
 
                   <!-- Calendar Navigation -->
@@ -327,15 +336,15 @@
                 </div>
               </div>
 
-              <!-- Dịch vụ -->
-              <div class="summary-item">
-                <div class="summary-item-label">
-                  <i class="bi bi-hospital"></i> Dịch vụ
-                </div>
-                <div class="summary-item-value" id="summary-service">
-                  <span class="empty">Chưa chọn</span>
-                </div>
-              </div>
+                  <!-- Dịch vụ -->
+                  <div class="summary-item">
+                    <div class="summary-item-label">
+                      <i class="bi bi-hospital"></i> Dịch vụ đã chọn
+                    </div>
+                    <div class="summary-item-value" id="summary-service">
+                      <span class="empty">Chưa chọn</span>
+                    </div>
+                  </div>
 
               <!-- Thời lượng -->
               <div class="summary-item">
@@ -349,9 +358,16 @@
 
               <div class="summary-divider"></div>
 
-              <!-- Phí đặt cọc -->
-              <div class="summary-item">
-                <div class="summary-item-label">Phí đặt cọc</div>
+                  <div class="summary-item">
+                    <div class="summary-item-label">Tổng tiền dịch vụ</div>
+                    <div class="summary-item-value" id="summary-total">
+                      <span class="empty">--</span>
+                    </div>
+                  </div>
+
+                  <!-- Phí đặt cọc -->
+                  <div class="summary-item">
+                    <div class="summary-item-label">Phí đặt cọc</div>
                 <div class="summary-item-value" id="summary-deposit">
                   <span class="empty">--</span>
                 </div>

@@ -49,7 +49,7 @@ public class SecurityConfig {
                         .permitAll()
                 )
 
-                // ✅ BẬT GOOGLE LOGIN Ở ĐÂY
+                // ✅ BẬT GOOGLE LOGIN Ở ��Y
                 .oauth2Login(oauth -> oauth
                         .loginPage("/login")
                         .successHandler(googleOAuth2SuccessHandler) //
@@ -85,3 +85,4 @@ public class SecurityConfig {
         };
     }
 }
+

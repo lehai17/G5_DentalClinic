@@ -1,12 +1,19 @@
 package com.dentalclinic.dto.customer;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public class AppointmentDto {
     private Long id;
     private Long serviceId;
     private String serviceName;
+    private List<Long> serviceIds;
+    private List<AppointmentServiceItemDto> services;
+    private Integer totalDurationMinutes;
+    private BigDecimal totalAmount;
+    private BigDecimal depositAmount;
     private Long dentistId;
     private String dentistName;
     private LocalDate date;
@@ -24,6 +31,16 @@ public class AppointmentDto {
     public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
     public String getServiceName() { return serviceName; }
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
+    public List<Long> getServiceIds() { return serviceIds; }
+    public void setServiceIds(List<Long> serviceIds) { this.serviceIds = serviceIds; }
+    public List<AppointmentServiceItemDto> getServices() { return services; }
+    public void setServices(List<AppointmentServiceItemDto> services) { this.services = services; }
+    public Integer getTotalDurationMinutes() { return totalDurationMinutes; }
+    public void setTotalDurationMinutes(Integer totalDurationMinutes) { this.totalDurationMinutes = totalDurationMinutes; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getDepositAmount() { return depositAmount; }
+    public void setDepositAmount(BigDecimal depositAmount) { this.depositAmount = depositAmount; }
     public Long getDentistId() { return dentistId; }
     public void setDentistId(Long dentistId) { this.dentistId = dentistId; }
     public String getDentistName() { return dentistName; }
