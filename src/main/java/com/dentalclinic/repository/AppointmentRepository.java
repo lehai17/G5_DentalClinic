@@ -4,6 +4,7 @@ import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -184,10 +185,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findAllByStatusAndCreatedAtBefore(AppointmentStatus status, LocalDateTime createdAt);
 
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     Optional<Appointment> findByIdAndCustomer_User_Id(Long appointmentId, Long customerUserId);
+
+    @EntityGraph(attributePaths = {"appointmentSlots", "appointmentDetails", "appointmentDetails.service"})
+    Optional<Appointment> findByCustomer_IdAndDateAndStartTimeAndStatus(Long customerId,
+                                                                        LocalDate date,
+                                                                        LocalTime startTime,
+                                                                        AppointmentStatus status);
 
     List<Appointment> findByCustomer_User_IdAndStatus(Long customerUserId, AppointmentStatus status);
 
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     List<Appointment> findByCustomer_User_IdOrderByDateDesc(Long customerUserId);
 
     Page<Appointment> findByCustomer_User_Id(Long userId, Pageable pageable);

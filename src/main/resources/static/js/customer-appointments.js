@@ -1,17 +1,17 @@
-(function () {
+﻿(function () {
   "use strict";
 
   var listEl = document.getElementById("customer-appointments-list");
   if (!listEl) return;
 
-  var paginationEl = document.getElementById(
-    "customer-appointments-pagination",
-  );
+  var paginationEl = document.getElementById("customer-appointments-pagination");
+  var summaryTotalEl = document.getElementById("cap-summary-total");
+  var summaryPageEl = document.getElementById("cap-summary-page");
   var state = { page: 0, size: 5, totalPages: 0 };
 
   var currentOpen = {
     appointmentId: null,
-    detailEl: null,
+    detailEl: null
   };
 
   function formatDate(dateStr) {
@@ -32,47 +32,58 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
+      .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function getStatusMeta(status) {
+    var key = String(status || "").toUpperCase();
+    var map = {
+      PENDING: { label: "Chờ khám", className: "pending" },
+      CONFIRMED: { label: "Đã xác nhận", className: "confirmed" },
+      CHECKED_IN: { label: "Đã check-in", className: "checked-in" },
+      EXAMINING: { label: "Đang khám", className: "examining" },
+      IN_PROGRESS: { label: "Đang xử lý", className: "examining" },
+      COMPLETED: { label: "Đã hoàn thành", className: "completed" },
+      DONE: { label: "Đã hoàn thành", className: "completed" },
+      CANCELLED: { label: "Đã hủy", className: "cancelled" },
+      REEXAM: { label: "Tái khám", className: "reexam" }
+    };
+    return map[key] || { label: key || "Không xác định", className: "default" };
   }
 
   function closeCurrentDetail() {
     if (currentOpen.detailEl && currentOpen.detailEl.parentNode) {
       currentOpen.detailEl.parentNode.removeChild(currentOpen.detailEl);
     }
+
     currentOpen.appointmentId = null;
     currentOpen.detailEl = null;
 
-    document
-      .querySelectorAll("#customer-appointments-list li.cap-item-active")
-      .forEach(function (li) {
-        li.classList.remove("cap-item-active");
-      });
+    document.querySelectorAll("#customer-appointments-list li.cap-item-active").forEach(function (li) {
+      li.classList.remove("cap-item-active");
+    });
   }
 
   function createInlineDetailShell() {
     var wrap = document.createElement("div");
     wrap.className = "cap-inline-detail";
-
     wrap.innerHTML =
-      "" +
       '<div class="cap-inline-detail-card">' +
       '  <div class="cap-inline-head">' +
       '    <div class="cap-inline-title"><i class="bi bi-info-circle"></i> Chi tiết lịch hẹn</div>' +
       '    <button type="button" class="cap-inline-close" aria-label="Đóng">' +
       '      <i class="bi bi-x-lg"></i>' +
-      "    </button>" +
-      "  </div>" +
-      '  <div class="cap-inline-loading"><span class="cap-spinner" aria-hidden="true"></span> Đang tải chi tiết...</div>' +
+      '    </button>' +
+      '  </div>' +
+      '  <div class="cap-inline-loading">Đang tải chi tiết...</div>' +
       '  <div class="cap-inline-content" style="display:none;"></div>' +
-      "</div>";
+      '</div>';
 
-    wrap
-      .querySelector(".cap-inline-close")
-      .addEventListener("click", function (e) {
-        e.stopPropagation();
-        closeCurrentDetail();
-      });
+    wrap.querySelector(".cap-inline-close").addEventListener("click", function (e) {
+      e.stopPropagation();
+      closeCurrentDetail();
+    });
 
     return wrap;
   }
@@ -80,16 +91,21 @@
   function renderInlineDetail(detailWrap, data, appointmentId) {
     var content = detailWrap.querySelector(".cap-inline-content");
     var loading = detailWrap.querySelector(".cap-inline-loading");
+    var statusMeta = getStatusMeta(data.status);
 
     if (loading) loading.style.display = "none";
     if (content) content.style.display = "";
 
     var dentistHtml = data.dentistName
       ? escapeHtml(data.dentistName)
-      : '<span class="cap-muted">—</span>';
-    var notesHtml = data.notes
-      ? escapeHtml(data.notes)
-      : '<span class="cap-muted">—</span>';
+      : '<span class="cap-muted">Chưa phân công</span>';
+    var notesValue = data.notes == null ? "" : String(data.notes).trim();
+    var notesHtml = notesValue
+      ? escapeHtml(notesValue)
+      : '<span class="cap-muted">Không có ghi chú</span>';
+    var contactHtml = data.contactChannel && data.contactValue
+      ? escapeHtml(data.contactChannel + ": " + data.contactValue)
+      : '<span class="cap-muted">Không có thông tin</span>';
 
     var canCancel = data.status !== "CANCELLED" && data.status !== "COMPLETED";
     var canCheckin = !!data.canCheckIn;
@@ -102,47 +118,28 @@
       data.status === "REEXAM" ||
       data.status === "IN_PROGRESS" ||
       data.status === "COMPLETED"
-        ? '<div class="cap-inline-row" style="background: #f0fff4; padding: 12px; border-radius: 8px; border-left: 4px solid #22c55e; margin-top: 12px;"><span style="color: #22c55e; font-weight: bold;"><i class="bi bi-check-circle-fill"></i> Đã thanh toán đặt cọc 50%</span></div>'
+        ? '<div class="cap-inline-note cap-inline-note-success"><i class="bi bi-check-circle-fill"></i><span>Đã thanh toán đặt cọc 50%</span></div>'
         : "";
 
     content.innerHTML =
-      "" +
       '<div class="cap-inline-grid">' +
-      '  <div class="cap-inline-row"><div class="cap-inline-label">Dịch vụ</div><div class="cap-inline-value">' +
-      escapeHtml(data.serviceName || "") +
-      "</div></div>" +
-      '  <div class="cap-inline-row"><div class="cap-inline-label">Bác sĩ</div><div class="cap-inline-value">' +
-      dentistHtml +
-      "</div></div>" +
-      '  <div class="cap-inline-row"><div class="cap-inline-label">Ngày</div><div class="cap-inline-value">' +
-      escapeHtml(formatDate(data.date)) +
-      "</div></div>" +
-      '  <div class="cap-inline-row"><div class="cap-inline-label">Giờ</div><div class="cap-inline-value">' +
-      escapeHtml(formatTime(data.startTime)) +
-      " - " +
-      escapeHtml(formatTime(data.endTime)) +
-      "</div></div>" +
-      '  <div class="cap-inline-row"><div class="cap-inline-label">Trạng thái</div><div class="cap-inline-value"><span class="cap-status-badge">' +
-      escapeHtml(data.status || "") +
-      "</span></div></div>" +
-      '  <div class="cap-inline-row"><div class="cap-inline-label">Liên hệ</div><div class="cap-inline-value">' +
-      escapeHtml(
-        (data.contactChannel || "") + ": " + (data.contactValue || ""),
-      ) +
-      "</div></div>" +
-      '  <div class="cap-inline-row cap-inline-notes"><div class="cap-inline-label">Ghi chú</div><div class="cap-inline-value">' +
-      notesHtml +
-      "</div></div>" +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Dịch vụ</div><div class="cap-inline-value">' + escapeHtml(data.serviceName || "") + '</div></div>' +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Bác sĩ</div><div class="cap-inline-value">' + dentistHtml + '</div></div>' +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Ngày khám</div><div class="cap-inline-value">' + escapeHtml(formatDate(data.date)) + '</div></div>' +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Giờ khám</div><div class="cap-inline-value">' + escapeHtml(formatTime(data.startTime)) + ' - ' + escapeHtml(formatTime(data.endTime)) + '</div></div>' +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Trạng thái</div><div class="cap-inline-value"><span class="cap-status-badge ' + statusMeta.className + '">' + escapeHtml(statusMeta.label) + '</span></div></div>' +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Liên hệ</div><div class="cap-inline-value">' + contactHtml + '</div></div>' +
+      '  <div class="cap-inline-row cap-inline-notes"><div class="cap-inline-label">Ghi chú</div><div class="cap-inline-value">' + notesHtml + '</div></div>' +
       depositPaidHtml +
-      "</div>" +
+      '</div>' +
       '<div class="cap-inline-actions">' +
       (canCheckin
         ? '<button type="button" class="cap-btn cap-btn-primary" data-action="checkin"><i class="bi bi-check2-circle"></i> Check-in online</button>'
-        : "") +
+        : '') +
       (canCancel
         ? '<button type="button" class="cap-btn cap-btn-danger" data-action="cancel"><i class="bi bi-x-circle"></i> Hủy lịch</button>'
-        : "") +
-      "</div>";
+        : '') +
+      '</div>';
 
     var checkinBtn = content.querySelector('[data-action="checkin"]');
     if (checkinBtn) {
@@ -152,7 +149,7 @@
 
         fetch("/customer/appointments/" + appointmentId + "/checkin", {
           method: "POST",
-          credentials: "same-origin",
+          credentials: "same-origin"
         })
           .then(function (res) {
             if (res.status === 401) {
@@ -160,10 +157,11 @@
               checkinBtn.disabled = false;
               return null;
             }
-            if (!res.ok)
+            if (!res.ok) {
               return res.json().then(function (er) {
                 throw new Error(er.error || "Check-in thất bại");
               });
+            }
             return res.json();
           })
           .then(function () {
@@ -189,7 +187,7 @@
 
         fetch("/customer/appointments/" + appointmentId + "/cancel", {
           method: "POST",
-          credentials: "same-origin",
+          credentials: "same-origin"
         })
           .then(function (res) {
             if (res.status === 401) {
@@ -197,10 +195,11 @@
               cancelBtn.disabled = false;
               return null;
             }
-            if (!res.ok)
+            if (!res.ok) {
               return res.json().then(function (er) {
                 throw new Error(er.error || "Hủy lịch thất bại");
               });
+            }
             return res.json();
           })
           .then(function () {
@@ -225,9 +224,7 @@
 
     closeCurrentDetail();
 
-    var li = listEl.querySelector(
-      'li[data-appointment-id="' + appointmentId + '"]',
-    );
+    var li = listEl.querySelector('li[data-appointment-id="' + appointmentId + '"]');
     if (!li) return;
 
     li.classList.add("cap-item-active");
@@ -239,7 +236,7 @@
     currentOpen.detailEl = detailWrap;
 
     fetch("/customer/appointments/" + appointmentId, {
-      credentials: "same-origin",
+      credentials: "same-origin"
     })
       .then(function (r) {
         if (r.status === 401) {
@@ -247,10 +244,11 @@
           return null;
         }
         if (r.status === 404) throw new Error("Không tìm thấy lịch hẹn.");
-        if (!r.ok)
+        if (!r.ok) {
           return r.json().then(function (e) {
             throw new Error(e.error || "Không thể tải chi tiết.");
           });
+        }
         return r.json();
       })
       .then(function (data) {
@@ -260,8 +258,7 @@
       })
       .catch(function (err) {
         var loading = detailWrap.querySelector(".cap-inline-loading");
-        if (loading)
-          loading.textContent = err.message || "Không thể tải chi tiết.";
+        if (loading) loading.textContent = err.message || "Không thể tải chi tiết.";
       });
   }
 
@@ -296,13 +293,48 @@
     addBtn("Sau", state.page + 1, state.page >= state.totalPages - 1, false);
   }
 
+  function renderAppointmentItem(apt) {
+    var statusMeta = getStatusMeta(apt.status);
+    var li = document.createElement("li");
+    li.dataset.appointmentId = apt.id;
+    li.setAttribute("data-appointment-id", apt.id);
+
+    if (window.__lastCreatedAppointmentId && window.__lastCreatedAppointmentId === apt.id) {
+      li.classList.add("highlight-new");
+    }
+
+    li.innerHTML =
+      '<div class="cap-item-row">' +
+      '  <div class="cap-item-main">' +
+      '    <div class="apt-date"><i class="bi bi-calendar3"></i> ' +
+      escapeHtml(formatDate(apt.date)) +
+      ' <span class="cap-dot"></span> ' +
+      escapeHtml(formatTime(apt.startTime)) +
+      '</div>' +
+      '    <div class="apt-service">' + escapeHtml(apt.serviceName || "") + '</div>' +
+      '    <div class="apt-meta">Mã lịch hẹn #' + escapeHtml(apt.id) + '</div>' +
+      '  </div>' +
+      '  <div class="cap-item-side">' +
+      '    <span class="apt-status ' + statusMeta.className + '" data-status="' + escapeHtml(apt.status || "") + '">' +
+      escapeHtml(statusMeta.label) +
+      '</span>' +
+      '    <i class="bi bi-chevron-down cap-item-chevron"></i>' +
+      '  </div>' +
+      '</div>';
+
+    li.addEventListener("click", function () {
+      openInlineDetail(apt.id, false);
+    });
+
+    return li;
+  }
+
   function loadAppointments(doneCb, targetPage) {
     var listWrap = document.getElementById("customer-appointments-list-wrap");
     var empty = document.getElementById("customer-appointments-empty");
     var loading = document.getElementById("customer-appointments-loading");
 
-    var requestedPage =
-      typeof targetPage === "number" ? targetPage : state.page;
+    var requestedPage = typeof targetPage === "number" ? targetPage : state.page;
     if (requestedPage < 0) requestedPage = 0;
 
     if (listWrap) listWrap.style.display = "none";
@@ -313,10 +345,9 @@
 
     closeCurrentDetail();
 
-    fetch(
-      "/customer/appointments?page=" + requestedPage + "&size=" + state.size,
-      { credentials: "same-origin" },
-    )
+    fetch("/customer/appointments?page=" + requestedPage + "&size=" + state.size, {
+      credentials: "same-origin"
+    })
       .then(function (r) {
         if (r.status === 401) {
           alert("Bạn cần đăng nhập để xem lịch hẹn.");
@@ -333,58 +364,23 @@
             page: 0,
             size: state.size,
             totalPages: Array.isArray(data) && data.length > 0 ? 1 : 0,
+            totalElements: Array.isArray(data) ? data.length : 0
           };
         }
 
         state.page = data.page || 0;
         state.totalPages = data.totalPages || 0;
 
+        if (summaryTotalEl) summaryTotalEl.textContent = String(data.totalElements || data.content.length || 0);
+        if (summaryPageEl) summaryPageEl.textContent = String((state.page || 0) + 1);
+
         if (loading) loading.style.display = "none";
         if (listWrap) listWrap.style.display = "";
 
         if (data.content.length > 0) {
           data.content.forEach(function (apt) {
-            var li = document.createElement("li");
-            li.dataset.appointmentId = apt.id;
-            li.setAttribute("data-appointment-id", apt.id);
-
-            if (
-              window.__lastCreatedAppointmentId &&
-              window.__lastCreatedAppointmentId === apt.id
-            ) {
-              li.classList.add("highlight-new");
-            }
-
-            li.innerHTML =
-              "" +
-              '<div class="cap-item-row">' +
-              '  <div class="cap-item-main">' +
-              '    <div class="apt-date"><i class="bi bi-clock"></i> ' +
-              escapeHtml(formatDate(apt.date)) +
-              " • " +
-              escapeHtml(formatTime(apt.startTime)) +
-              "</div>" +
-              '    <div class="apt-service">' +
-              escapeHtml(apt.serviceName || "") +
-              "</div>" +
-              "  </div>" +
-              '  <div class="cap-item-side">' +
-              '    <span class="apt-status" data-status="' +
-              escapeHtml(apt.status || "") +
-              '">' +
-              escapeHtml(apt.status || "") +
-              "</span>" +
-              '    <i class="bi bi-chevron-down cap-item-chevron"></i>' +
-              "  </div>" +
-              "</div>";
-
-            li.addEventListener("click", function () {
-              openInlineDetail(apt.id, false);
-            });
-
-            listEl.appendChild(li);
+            listEl.appendChild(renderAppointmentItem(apt));
           });
-
           renderPagination();
         } else if (empty) {
           empty.style.display = "";
@@ -411,9 +407,7 @@
 
   loadAppointments(function () {
     if (!openFromNotificationId) return;
-    var target = listEl.querySelector(
-      'li[data-appointment-id="' + openFromNotificationId + '"]',
-    );
+    var target = listEl.querySelector('li[data-appointment-id="' + openFromNotificationId + '"]');
     if (target) {
       openInlineDetail(openFromNotificationId, false);
       history.replaceState(null, "", window.location.pathname);

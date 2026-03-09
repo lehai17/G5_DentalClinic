@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.math.BigDecimal;
 
 @Controller
 @RequestMapping("/customer/payment")
@@ -41,7 +42,17 @@ public class CustomerPaymentController {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen ID: " + id));
 
-        long amount = (long) (appointment.getService().getPrice() * 0.5 * 100);
+        BigDecimal depositAmount = appointment.getDepositAmount();
+        if (depositAmount == null && appointment.getTotalAmount() != null) {
+            depositAmount = appointment.getTotalAmount().multiply(BigDecimal.valueOf(0.5d));
+        }
+        if (depositAmount == null && appointment.getService() != null) {
+            depositAmount = BigDecimal.valueOf(appointment.getService().getPrice()).multiply(BigDecimal.valueOf(0.5d));
+        }
+        if (depositAmount == null || depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("So tien dat coc khong hop le cho lich hen ID: " + id);
+        }
+        long amount = depositAmount.multiply(BigDecimal.valueOf(100L)).longValue();
         String txnRef = String.valueOf(System.currentTimeMillis());
 
         Map<String, String> vnp_Params = new HashMap<>();

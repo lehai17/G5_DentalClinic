@@ -23,7 +23,7 @@ public class AdminUserController {
     @Autowired
     private DentistService dentistService;
 
-    // 1. Hiển thị danh sách kèm bộ lọc Tìm kiếm
+    // 1. Hiển thị danh s�ch kèm bộ lọc Tìm kiếm
     @GetMapping
     public String showDentistList(
             @RequestParam(value = "specialty", required = false) String specialty,
@@ -34,9 +34,9 @@ public class AdminUserController {
         List<DentistProfile> dentists = dentistService.searchDentists(specialty, status);
 
         model.addAttribute("dentists", dentists);
-        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thái Dropdown
+        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng th�i Dropdown
         model.addAttribute("selectedStatus", status);
-        model.addAttribute("activePage", "dentists"); // Làm sáng Menu Sidebar
+        model.addAttribute("activePage", "dentists"); // Làm s�ng Menu Sidebar
 
         // Cập nhật số liệu thực tế cho Stat Cards
         model.addAttribute("totalDentists", dentistProfileRepository.count());
@@ -63,7 +63,7 @@ public class AdminUserController {
         }
         try {
             dentistService.saveDentist(dto);
-            ra.addFlashAttribute("success", "Thêm bác sĩ thành công!");
+            ra.addFlashAttribute("success", "Thêm b�c sĩ thành công!");
             return "redirect:/admin/dentists";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
@@ -74,18 +74,18 @@ public class AdminUserController {
 
     @PostMapping("/lock/{id}")
     public String lockDentist(@PathVariable("id") Long userId, RedirectAttributes ra) {
-        // Sử dụng chung logic khóa từ hệ thống (trạng thái User sang LOCKED)
+        // Sử dụng chung logic khóa từ hệ thống (trạng th�i User sang LOCKED)
         dentistService.deactivateDentist(userId);
-        ra.addFlashAttribute("success", "Đã khóa tài khoản bác sĩ thành công!");
+        ra.addFlashAttribute("success", "�� khóa tài khoản b�c sĩ thành công!");
         return "redirect:/admin/dentists";
     }
 
     @PostMapping("/unlock/{id}")
     public String unlockDentist(@PathVariable("id") Long id, RedirectAttributes ra) {
         try {
-            // Đã có userService để gọi hàm này
+            // �� có userService để gọi hàm này
             dentistService.updateDentistStatus(id, UserStatus.ACTIVE);
-            ra.addFlashAttribute("success", "Đã mở khóa tài khoản thành công!");
+            ra.addFlashAttribute("success", "�� mở khóa tài khoản thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -94,8 +94,8 @@ public class AdminUserController {
 
     @GetMapping("/detail/{id}")
     public String showDentistDetail(@PathVariable("id") Long id, Model model) {
-        // Log ra để kiểm tra xem request đã vào tới đây chưa
-        System.out.println("Đang xem chi tiết bác sĩ có ID: " + id);
+        // Log ra để kiểm tra xem request d� vào tới d�y chưa
+        System.out.println("Đang xem chi tiết b�c sĩ có ID: " + id);
 
         DentistDTO dentist = dentistService.getDentistById(id);
         model.addAttribute("dentist", dentist);
@@ -111,10 +111,10 @@ public class AdminUserController {
     //
     // model.addAttribute("dentists", dentists);
     //
-    // // BẮT BUỘC: Gửi keyword về View để ô input giữ lại nội dung đã gõ
+    // // BẮT BUỘC: Gửi keyword về View để ô input giữ lại nội dung d� gõ
     // model.addAttribute("keyword", keyword != null ? keyword : "");
     //
-    // // (Các logic đếm số lượng Total, On Duty... vẫn giữ nguyên)
+    // // (C�c logic đếm số lượng Total, On Duty... vẫn giữ nguyên)
     // return "admin/dentist-list";
     // }
     // @GetMapping("/admin/dentists/api/search")
@@ -142,7 +142,7 @@ public class AdminUserController {
         }
         try {
             dentistService.updateDentist(id, dto);
-            ra.addFlashAttribute("success", "Cập nhật hồ sơ bác sĩ thành công!");
+            ra.addFlashAttribute("success", "Cập nhật hồ sơ b�c sĩ thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -162,3 +162,4 @@ public class AdminUserController {
         }
     }
 }
+

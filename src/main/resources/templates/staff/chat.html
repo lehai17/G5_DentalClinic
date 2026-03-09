@@ -27,7 +27,7 @@
                                 th:attr="data-thread-id=${thread.id}">
                             <span class="thread-top">
                                 <span class="thread-email"
-                                      th:text="${thread.customerEmail != null ? thread.customerEmail : 'Khách hàng'}">Khách hàng</span>
+                                      th:text="${thread.customerName != null ? thread.customerName : (thread.customerEmail != null ? thread.customerEmail : 'Khách hàng')}">Khách hàng</span>
                                 <span class="thread-time"
                                       th:text="${thread.lastMessageAt != null ? #temporals.format(thread.lastMessageAt, 'dd/MM HH:mm') : '--'}">--</span>
                             </span>

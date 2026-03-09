@@ -16,38 +16,92 @@
   <main class="main-content">
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <section class="p-6 max-w-4xl mx-auto w-full">
-      <div class="flex justify-between items-center mb-5">
-        <h1 class="text-2xl font-semibold">Chi tiết phiếu hỗ trợ #<span th:text="${ticket.id}"></span></h1>
-        <a th:href="@{/support/my}" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">Quay lại</a>
+    <section class="p-6 max-w-5xl mx-auto w-full">
+      <div class="flex flex-wrap justify-between items-start gap-4 mb-5">
+        <div>
+          <h1 class="text-2xl font-semibold text-slate-800">Chi tiết phiếu hỗ trợ #<span th:text="${ticket.id}"></span></h1>
+          <p class="text-slate-500 mt-1" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></p>
+        </div>
+        <a th:href="@{/support/my}" class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700">Quay lại</a>
       </div>
 
-      <div class="mb-3">
-        <span th:if="${ticket.status == 'OPEN'}" class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700">Đang mở</span>
-        <span th:if="${ticket.status == 'ANSWERED'}" class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">Đã trả lời</span>
-        <span th:if="${ticket.status == 'CLOSED'}" class="px-2 py-1 rounded text-xs font-semibold bg-gray-200 text-gray-700">Đã đóng</span>
-        <span class="ml-3 text-gray-500" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+      <div th:if="${successMessage}" class="mb-4 px-4 py-3 rounded-xl bg-green-100 text-green-800" th:text="${successMessage}"></div>
+      <div th:if="${errorMessage}" class="mb-4 px-4 py-3 rounded-xl bg-red-100 text-red-800" th:text="${errorMessage}"></div>
+
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span th:if="${ticket.displayStatus == 'OPEN'}" class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Đang chờ phản hồi</span>
+        <span th:if="${ticket.displayStatus == 'ANSWERED'}" class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Đã có phản hồi</span>
+        <span th:if="${ticket.displayStatus == 'CLOSED'}" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">Đã đóng</span>
       </div>
 
-      <div class="rounded-xl p-4 bg-white border border-gray-200 mb-4">
-        <h2 class="font-semibold mb-1">Tiêu đề</h2>
-        <p class="text-gray-800" th:text="${ticket.title != null && !#strings.isEmpty(ticket.title) ? ticket.title : 'Không có tiêu đề'}"></p>
+      <div class="grid gap-4 md:grid-cols-2 mb-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="text-sm uppercase tracking-wide text-slate-500 mb-2">Tiêu đề</div>
+          <div class="text-lg font-semibold text-slate-800"
+               th:text="${ticket.title != null && !#strings.isEmpty(ticket.title) ? ticket.title : 'Không có tiêu đề'}"></div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+          <div>
+            <div class="text-sm uppercase tracking-wide text-slate-500 mb-1">Loại hỗ trợ</div>
+            <div class="text-slate-800 font-medium" th:text="${ticket.appointment != null ? 'Hỗ trợ theo ca khám' : 'Hỗ trợ khác'}"></div>
+          </div>
+
+          <div th:if="${ticket.appointment != null}">
+            <div class="text-sm uppercase tracking-wide text-slate-500 mb-1">Ca khám liên quan</div>
+            <div class="text-slate-800 font-medium"
+                 th:text="'Ca khám #' + ${ticket.appointment.id} + ' - ' + ${#temporals.format(ticket.appointment.date, 'dd/MM/yyyy')} + ' - ' + ${ticket.appointment.startTime}"></div>
+          </div>
+
+          <div>
+            <div class="text-sm uppercase tracking-wide text-slate-500 mb-1">Người phản hồi</div>
+            <div class="text-slate-800 font-medium"
+                 th:text="${ticket.responderDisplayName}"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="rounded-xl p-4 bg-blue-50 border border-blue-100">
-        <h2 class="font-semibold mb-2">Câu hỏi</h2>
-        <p class="whitespace-pre-wrap" th:text="${ticket.question}"></p>
-      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <h2 class="text-lg font-semibold text-slate-800">Trao đổi hỗ trợ</h2>
+          <span class="text-sm text-slate-500" th:text="${#lists.size(ticket.conversationEntries)} + ' lượt trao đổi'"></span>
+        </div>
 
-      <div class="rounded-xl p-4 bg-gray-100 border border-gray-200 mt-4">
-        <h2 class="font-semibold mb-2">Trả lời</h2>
-        <p th:if="${ticket.answer == null || #strings.isEmpty(ticket.answer)}" class="text-gray-500">Phiếu hỗ trợ chưa có phần trả lời.</p>
-        <p th:if="${ticket.answer != null && !#strings.isEmpty(ticket.answer)}" class="whitespace-pre-wrap" th:text="${ticket.answer}"></p>
-      </div>
+        <div class="space-y-4">
+          <div th:each="entry : ${ticket.conversationEntries}"
+               th:class="${entry.customerSide} ? 'ml-auto max-w-3xl rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3' : 'mr-auto max-w-3xl rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3'">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div class="text-sm font-semibold text-slate-800" th:text="${entry.customerSide} ? 'Bạn' : entry.senderLabel"></div>
+              <div class="text-xs text-slate-500" th:text="${entry.createdAt != null ? #temporals.format(entry.createdAt, 'dd/MM/yyyy HH:mm') : ''}"></div>
+            </div>
+            <div class="whitespace-pre-wrap text-sm leading-6 text-slate-700" th:text="${entry.content}"></div>
+          </div>
+        </div>
 
-      <div class="mt-4 text-sm text-gray-600">
-        Nhân viên phụ trách:
-        <span class="font-medium" th:text="${ticket.staff != null ? ticket.staff.email : 'Chưa có'}"></span>
+        <div th:if="${ticket.closed}" class="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Phiếu hỗ trợ này đã được đóng. Bạn không thể gửi thêm phản hồi mới.
+        </div>
+
+        <form th:if="${!ticket.closed}"
+              th:action="@{/support/{id}/reply(id=${ticket.id})}"
+              th:object="${replyForm}"
+              method="post"
+              class="mt-5 border-t border-slate-200 pt-5 space-y-3">
+          <label for="message" class="block text-sm font-semibold text-slate-700">Phản hồi thêm</label>
+          <textarea id="message"
+                    th:field="*{message}"
+                    rows="5"
+                    maxlength="2000"
+                    class="w-full rounded-2xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    placeholder="Nhập thêm thông tin để phòng khám tiếp tục hỗ trợ bạn..."></textarea>
+          <div class="flex justify-end">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-white hover:bg-blue-700">
+              <i class="bi bi-send"></i>
+              Gửi phản hồi
+            </button>
+          </div>
+        </form>
       </div>
     </section>
   </main>
