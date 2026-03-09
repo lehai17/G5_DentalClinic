@@ -56,11 +56,11 @@ public class DentistProfileController {
 
             int age = Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears();
 
-            if (age < 24) {
+            if (age < 25) {
                 result.rejectValue(
                         "dateOfBirth",
                         "error.dob",
-                        "Dentist must be at least 24 years old"
+                        "Dentist must be at least 25 years old"
                 );
             }
         }
