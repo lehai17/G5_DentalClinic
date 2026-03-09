@@ -69,7 +69,7 @@ public class SupportController {
 
         try {
             supportService.createTicket(currentUser.getId(), form.getAppointmentId(), form.getTitle(), form.getQuestion());
-            redirectAttributes.addFlashAttribute("successMessage", "Gửi phiếu hỗ trợ thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Gửi phiếu hỗ trợ th� nh công.");
             return "redirect:/support/my";
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -103,13 +103,17 @@ public class SupportController {
     @GetMapping("/my")
     public String myTickets(@AuthenticationPrincipal UserDetails principal,
                             @RequestParam(defaultValue = "0") int page,
+                            @RequestParam(required = false) String keyword,
+                            @RequestParam(required = false, defaultValue = "newest") String sort,
                             Model model) {
         User currentUser = supportService.getCurrentUser(principal);
         int pageSize = 5;
-        var ticketsPage = supportService.getMyTicketsPage(currentUser.getId(), page, pageSize);
+        var ticketsPage = supportService.getMyTicketsPage(currentUser.getId(), page, pageSize, keyword, sort);
         model.addAttribute("tickets", ticketsPage.getContent());
         model.addAttribute("currentPage", ticketsPage.getNumber());
         model.addAttribute("totalPages", ticketsPage.getTotalPages());
+        model.addAttribute("keyword", keyword == null ? "" : keyword.trim());
+        model.addAttribute("selectedSort", sort == null ? "newest" : sort.trim());
         model.addAttribute("active", "support");
         return "customer/support-my";
     }
@@ -181,3 +185,4 @@ public class SupportController {
         }
     }
 }
+

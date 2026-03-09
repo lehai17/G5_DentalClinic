@@ -50,7 +50,7 @@ public class NotificationService {
         User recipient = userRepository.findById(recipientId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người nhận thông báo."));
         if (recipient.getRole() != Role.CUSTOMER) {
-            throw new IllegalArgumentException("Người nhận thông báo phải là khách hàng.");
+            throw new IllegalArgumentException("Người nhận thông báo phải l�  khách h� ng.");
         }
 
         Notification notification = new Notification();
@@ -112,7 +112,7 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông báo."));
         if (!notification.getUser().getId().equals(recipientId)) {
-            throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo này.");
+            throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo n� y.");
         }
         return notification;
     }
@@ -129,8 +129,8 @@ public class NotificationService {
         if (existed) {
             return;
         }
-        String title = "Đặt lịch thành công";
-        String message = "Bạn đã tạo lịch hẹn #" + appointment.getId() + " thành công.";
+        String title = "Đặt lịch th� nh công";
+        String message = "Bạn đã tạo lịch hẹn #" + appointment.getId() + " th� nh công.";
         String url = "/customer/my-appointments#highlight=" + appointment.getId();
         createForCustomer(recipientId, NotificationType.BOOKING_CREATED, title, message, url,
                 NotificationReferenceType.APPOINTMENT, appointment.getId());
@@ -202,8 +202,8 @@ public class NotificationService {
         createForCustomer(
                 customer.getUser().getId(),
                 NotificationType.BOOKING_CANCELLED,
-                "Hoàn tiền đặt cọc",
-                "Bạn nhận được hoàn tiền " + amountStr + " VND từ lịch hẹn đã hủy. Số dư ví hiện tại có thể dùng cho lần đặt tiếp theo.",
+                "Ho� n tiền đặt cọc",
+                "Bạn nhận được ho� n tiền " + amountStr + " VND từ lịch hẹn đã hủy. Số dư ví hiện tại có thể dùng cho lần đặt tiếp theo.",
                 "/customer/wallet",
                 null,
                 null
@@ -243,7 +243,7 @@ public class NotificationService {
             }
 
             String title = "Nhắc lịch hẹn";
-            String message = "Bạn có lịch hẹn #" + appointment.getId() + " vào ngày "
+            String message = "Bạn có lịch hẹn #" + appointment.getId() + " v� o ng� y "
                     + appointment.getDate() + " lúc " + appointment.getStartTime() + ".";
             String url = "/customer/my-appointments#highlight=" + appointment.getId();
             createForCustomer(recipientId, NotificationType.APPOINTMENT_REMINDER, title, message, url,
@@ -251,3 +251,4 @@ public class NotificationService {
         }
     }
 }
+

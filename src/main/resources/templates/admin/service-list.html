@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -482,7 +482,7 @@
                                     <input type="hidden" name="status" value="true">
                                     <button type="submit" class="action-btn"
                                         style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Kích hoạt dịch vụ này?')" title="Activate">
+                                        onclick="return confirm('Kích hoạt dịch vụ n� y?')" title="Activate">
                                         <i class="fas fa-user-check"></i>
                                     </button>
                                 </form>
@@ -492,7 +492,7 @@
                                     <input type="hidden" name="status" value="false">
                                     <button type="submit" class="action-btn"
                                         style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Vô hiệu hóa dịch vụ này?')" title="Deactivate">
+                                        onclick="return confirm('Vô hiệu hóa dịch vụ n� y?')" title="Deactivate">
                                         <i class="fas fa-user-lock"></i>
                                     </button>
                                 </form>
@@ -505,7 +505,7 @@
             <div class="empty-state" th:if="${#lists.isEmpty(services)}"
                 style="text-align: center; padding: 80px 0; color: #A3AED0;">
                 <i class="fas fa-box-open" style="font-size: 50px; margin-bottom: 15px;"></i>
-                <h3>Chưa có dịch vụ nào</h3>
+                <h3>Chưa có dịch vụ n� o</h3>
             </div>
         </div>
     </div>
@@ -591,7 +591,7 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Hình ảnh đại diện</label>
+                            <label>Hình áº£nh đại diện</label>
                             <div class="input-wrapper"><input type="file" name="image" accept="image/*"></div>
                         </div>
                     </div>
@@ -654,7 +654,7 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Hình ảnh mới (Tùy chọn)</label>
+                            <label>Hình áº£nh mới (Tùy chọn)</label>
                             <div class="input-wrapper"><input type="file" name="image" accept="image/*"></div>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-// Các hàm tiện ích
+﻿// Các h� m tiện Ã­ch
 function scrollToSection(id) {
     const el = document.getElementById(id);
     if(el) el.scrollIntoView({ behavior: 'smooth' });
@@ -7,11 +7,11 @@ function scrollToSection(id) {
 function handleServiceClick(element) {
     const name = element.getAttribute('data-name');
     const price = element.getAttribute('data-price');
-    alert("Dịch vụ: " + name + "\nGiá: " + price + " ₫");
+    alert("Dịch vụ: " + name + "\nGiá: " + price + " â‚«");
 }
 
 window.loadBlogPage = function(page) {
-    console.log("===> Đang kích hoạt AJAX cho trang:", page);
+    console.log("===> Äang kích hoạt AJAX cho trang:", page);
 
     const blogSection = document.getElementById('blog');
     if (!blogSection) {
@@ -35,7 +35,7 @@ window.loadBlogPage = function(page) {
             blogSection.innerHTML = newContent;
             blogSection.style.opacity = '1';
 
-            // Cuộn lên đầu phần blog mượt mà
+            // Cuộn lên đầu phần blog mượt m� 
             blogSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             console.log("===> Cập nhật thành công trang:", page);
         })
@@ -59,5 +59,7 @@ window.toggleSidebar = function () {
     sidebar.classList.toggle("collapsed");
     mainContent.classList.toggle("sidebar-collapsed");
 };
+
+
 
 

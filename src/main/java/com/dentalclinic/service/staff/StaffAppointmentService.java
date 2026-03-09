@@ -84,7 +84,7 @@ public class StaffAppointmentService {
         );
 
         if (hasOverlap) {
-            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
+            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ n� y");
         }
 
         // 3. Tìm thông tin bác sĩ
@@ -94,7 +94,7 @@ public class StaffAppointmentService {
         // 4. Cập nhật bác sĩ phụ trách
         appt.setDentist(dentist);
 
-        // 5. TỰ ĐỘNG CHUYỂN TRẠNG THÁI: Nếu đang PENDING thì chuyển sang CONFIRMED
+        // 5. TỰ ĐỘNG CHUYỂN TR� NG THÁI: Nếu Ä‘ang PENDING thì chuyển sang CONFIRMED
         if (appt.getStatus() == AppointmentStatus.PENDING) {
             appt.setStatus(AppointmentStatus.CONFIRMED);
         }
@@ -102,17 +102,17 @@ public class StaffAppointmentService {
         // 6. Lưu thay đổi
         Appointment saved = appointmentRepository.save(appt);
 
-        // 7. Gửi Email xác nhận cho khách hàng (Tận dụng hàm confirm đã có của bạn)
+        // 7. Gửi Email xác nhận cho khách h� ng (Tận dụng h� m confirm đã có của bạn)
         try {
             emailService.sendAppointmentConfirmed(saved);
         } catch (Exception e) {
-            // Log lỗi gửi mail nhưng không làm rollback giao dịch gán bác sĩ
+            // Log lỗi gửi mail nhưng không l� m rollback giao dịch gán bác sĩ
             System.err.println("Lỗi gửi email xác nhận: " + e.getMessage());
         }
 
         // 8. Thông báo hệ thống
         if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
-            notificationService.notifyBookingUpdated(saved, "Đã gán bác sĩ và xác nhận lịch hẹn thành công");
+            notificationService.notifyBookingUpdated(saved, "Đã gán bác sĩ v�  xác nhận lịch hẹn th� nh công");
         }
     }
 
@@ -218,11 +218,12 @@ public class StaffAppointmentService {
     }
 
     public List<DentistProfile> getAvailableDentistsForAppointment(Long appointmentId) {
-        // 1. Tìm thông tin cuộc hẹn để biết ngày khách đặt
+        // 1. Tìm thông tin cuộc hẹn để biết ng� y khách đặt
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        // 2. Gọi Repository để lấy bác sĩ không nghỉ phép vào ngày appt.getDate()
+        // 2. Gọi Repository để lấy bác sĩ không nghỉ phép v� o ng� y appt.getDate()
         return dentistProfileRepository.findAvailableDentistsForDate(appt.getDate());
     }
 }
+

@@ -1,4 +1,4 @@
-/* ========== Trang đặt lịch / lịch hẹn (cùng layout trang chủ) ========== */
+﻿/* ========== Trang đặt lịch / lịch hẹn (cùng layout trang chủ) ========== */
 .customer-page-section {
   padding: 32px 24px;
   max-width: 1000px;
@@ -469,7 +469,7 @@
   color: #0369a1 !important;
 }
 
-/* ========== Thanh toán thành công ========== */
+/* ========== Thanh toán th� nh công ========== */
 .customer-success-message {
   text-align: center;
   padding: 28px 16px;
@@ -578,3 +578,4 @@
   border-color: #fca5a5;
   color: #7f1d1d;
 }
+

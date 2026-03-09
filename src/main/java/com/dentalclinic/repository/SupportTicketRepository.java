@@ -36,8 +36,8 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     // --- Dentist Methods (Optimized with Fetch Joins) ---
 
     /**
-     * Lấy danh sách ticket theo Dentist (userId) thông qua Appointment.dentist.user.
-     * Giữ tên method để khớp các service/controller đang gọi.
+     * Láº¥y danh sÃ¡ch ticket theo Dentist (userId) thÃ´ng qua Appointment.dentist.user.
+     * Giá»¯ tÃªn method Ä‘á»ƒ khá»›p cÃ¡c service/controller Ä‘ang gá»i.
      */
     @Query("""
         SELECT s
@@ -55,7 +55,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     List<SupportTicket> findByDentistWithAppointment(@Param("dentistId") Long dentistId);
 
     /**
-     * Lấy danh sách phiếu hỗ trợ hiển thị cho Bác sĩ.
+     * Láº¥y danh sÃ¡ch phiáº¿u há»— trá»£ hiá»ƒn thá»‹ cho BÃ¡c sÄ©.
      */
     @Query("""
         SELECT s FROM SupportTicket s
@@ -72,7 +72,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     List<SupportTicket> findVisibleToDentist(@Param("dentistUserId") Long dentistUserId);
 
     /**
-     * Lọc danh sách phiếu hỗ trợ theo trạng thái dành cho Bác sĩ.
+     * Lá»c danh sÃ¡ch phiáº¿u há»— trá»£ theo tráº¡ng thÃ¡i dÃ nh cho BÃ¡c sÄ©.
      */
     @Query("""
         SELECT s FROM SupportTicket s
@@ -93,7 +93,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     );
 
     /**
-     * Xem chi tiết một phiếu hỗ trợ dành cho Bác sĩ (Kiểm tra quyền sở hữu).
+     * Xem chi tiáº¿t má»™t phiáº¿u há»— trá»£ dÃ nh cho BÃ¡c sÄ© (Kiá»ƒm tra quyá»n sá»Ÿ há»¯u).
      */
     @Query("""
         SELECT s FROM SupportTicket s

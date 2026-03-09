@@ -1,4 +1,4 @@
-/* Sidebar cơ bản (customer = khách hàng) */
+﻿/* Sidebar cơ bản (customer = khách h� ng) */
 .patient-sidebar {
   width: 260px !important;
   background: #ffffff;
@@ -39,7 +39,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Khi sidebar thụt vào, nội dung chính thò ra */
+/* Khi sidebar thụt v� o, nội dung chính thò ra */
 .main-content.expanded {
 }
 
@@ -112,3 +112,4 @@
   background: #fee2e2;
   color: #ef4444 !important;
 }
+

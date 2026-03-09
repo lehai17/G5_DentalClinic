@@ -13,36 +13,36 @@ import jakarta.validation.constraints.Past;
 public class UpdateDentistDTO {
     private Long id;
 
-    @NotBlank(message = "Họ tên không được để trống")
+    @NotBlank(message = "Há» tÃªn khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private String fullName;
 
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không hợp lệ")
+    @NotBlank(message = "Email khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Email(message = "Email khÃ´ng há»£p lá»‡")
     private String email;
 
-    @NotBlank(message = "Số điện thoại không được để trống")
-    @Pattern(regexp = "^(0|\\+84)[0-9]{9}$", message = "Số điện thoại không hợp lệ")
+    @NotBlank(message = "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Pattern(regexp = "^(0|\\+84)[0-9]{9}$", message = "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡")
     private String phone;
 
-    @NotNull(message = "Ngày sinh không được để trống")
-    @Past(message = "Ngày sinh phải ở quá khứ")
+    @NotNull(message = "NgÃ y sinh khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Past(message = "NgÃ y sinh pháº£i á»Ÿ quÃ¡ khá»©")
     private LocalDate dateOfBirth;
 
-    @NotBlank(message = "Giới tính không được để trống")
+    @NotBlank(message = "Giá»›i tÃ­nh khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private String gender;
 
-    @NotBlank(message = "Chuyên khoa không được để trống")
+    @NotBlank(message = "ChuyÃªn khoa khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private String specialization;
 
     private int experienceYears;
     private String bio;
 
-    // Các trường phục vụ hiển thị lịch trực
+    // CÃ¡c trÆ°á»ng phá»¥c vá»¥ hiá»ƒn thá»‹ lá»‹ch trá»±c
     private List<String> availableDays;
     private String shiftStartTime;
     private String shiftEndTime;
 
-    // Các trường phục vụ upload ảnh Avatar
+    // CÃ¡c trÆ°á»ng phá»¥c vá»¥ upload áº£nh Avatar
     private MultipartFile avatarFile;
     private String avatarPath;
 
@@ -62,7 +62,7 @@ public class UpdateDentistDTO {
         this.avatarPath = avatarPath;
     }
 
-    @NotBlank(message = "Trạng thái không được để trống")
+    @NotBlank(message = "Tráº¡ng thÃ¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private String status;
 
     public Long getId() {

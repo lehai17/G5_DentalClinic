@@ -1,4 +1,4 @@
-/* --- RESET & CƠ BẢN --- */
+﻿/* --- RESET & C�  BẢN --- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Segoe UI', sans-serif; background: #ffffff; color: #333; line-height: 1.6; }
 
@@ -25,7 +25,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #ffffff; color: #333; li
 }
 
 .navbar-menu {
-    display: flex; /* Dàn hàng ngang cho menu */
+    display: flex; /* D� n h� ng ngang cho menu */
     list-style: none;
     gap: 30px;
 }
@@ -227,7 +227,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #ffffff; color: #333; li
 
 /* --- FOOTER ĐẬM MÀU (FIX image_e40121.png) --- */
 .footer {
-    background-color: #1a202c !important; /* Xanh đen đậm */
+    background-color: #1a202c !important; /* Xanh Ä‘en đậm */
     color: #ffffff !important;
     padding: 70px 0 30px 0;
     margin-top: 100px;
@@ -259,3 +259,4 @@ body { font-family: 'Segoe UI', sans-serif; background: #ffffff; color: #333; li
 }
 
 .hidden { display: none !important; }
+

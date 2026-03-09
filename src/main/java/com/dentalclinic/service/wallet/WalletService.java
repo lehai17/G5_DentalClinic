@@ -67,7 +67,7 @@ public class WalletService {
     @Transactional
     public void refund(CustomerProfile customer, BigDecimal amount, String description, Long appointmentId) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Số tiền hoàn phải lớn hơn 0");
+            throw new IllegalArgumentException("Số tiền ho� n phải lớn hơn 0");
         }
 
         Wallet wallet = getOrCreateWallet(customer);
@@ -84,7 +84,7 @@ public class WalletService {
                 .build();
         walletTransactionRepository.save(transaction);
 
-        // Gửi notification hoàn tiền
+        // Gửi notification ho� n tiền
         try {
             notificationService.notifyWalletRefund(customer, amount);
         } catch (Exception e) {
@@ -108,3 +108,4 @@ public class WalletService {
         return walletTransactionRepository.findByAppointmentId(appointmentId);
     }
 }
+

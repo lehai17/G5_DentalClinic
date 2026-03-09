@@ -7,7 +7,11 @@
   var paginationEl = document.getElementById("customer-appointments-pagination");
   var summaryTotalEl = document.getElementById("cap-summary-total");
   var summaryPageEl = document.getElementById("cap-summary-page");
-  var state = { page: 0, size: 5, totalPages: 0 };
+  var searchInputEl = document.getElementById("customer-appointments-search");
+  var clearSearchEl = document.getElementById("customer-appointments-clear");
+  var sortSelectEl = document.getElementById("customer-appointments-sort");
+  var searchTimer = null;
+  var state = { page: 0, size: 5, totalPages: 0, keyword: "", sort: "newest" };
 
   var currentOpen = {
     appointmentId: null,
@@ -345,7 +349,15 @@
 
     closeCurrentDetail();
 
-    fetch("/customer/appointments?page=" + requestedPage + "&size=" + state.size, {
+    var query = "/customer/appointments?page=" + requestedPage + "&size=" + state.size;
+    if (state.keyword) {
+      query += "&keyword=" + encodeURIComponent(state.keyword);
+    }
+    if (state.sort) {
+      query += "&sort=" + encodeURIComponent(state.sort);
+    }
+
+    fetch(query, {
       credentials: "same-origin"
     })
       .then(function (r) {
@@ -370,6 +382,10 @@
 
         state.page = data.page || 0;
         state.totalPages = data.totalPages || 0;
+        state.sort = data.sort || state.sort || "newest";
+        if (sortSelectEl) {
+          sortSelectEl.value = state.sort;
+        }
 
         if (summaryTotalEl) summaryTotalEl.textContent = String(data.totalElements || data.content.length || 0);
         if (summaryPageEl) summaryPageEl.textContent = String((state.page || 0) + 1);
@@ -384,6 +400,17 @@
           renderPagination();
         } else if (empty) {
           empty.style.display = "";
+          var emptyTitle = empty.querySelector(".cap-empty-title");
+          var emptyDesc = empty.querySelector(".cap-empty-desc");
+          if (emptyTitle && emptyDesc) {
+            if (state.keyword) {
+              emptyTitle.textContent = "Không tìm thấy lịch hẹn phù hợp";
+              emptyDesc.textContent = "Hãy thử đổi từ khóa hoặc xóa tìm kiếm để xem lại toàn bộ lịch hẹn.";
+            } else {
+              emptyTitle.textContent = "Bạn chưa có lịch hẹn nào";
+              emptyDesc.textContent = "Hãy đặt lịch khám để phòng khám có thể sắp xếp thời gian hỗ trợ bạn.";
+            }
+          }
         }
 
         if (typeof doneCb === "function") doneCb();
@@ -405,6 +432,42 @@
     }
   }
 
+  function applySearch(keyword) {
+    state.keyword = String(keyword || "").trim();
+    if (clearSearchEl) {
+      clearSearchEl.disabled = state.keyword.length === 0;
+    }
+    loadAppointments(null, 0);
+  }
+
+  if (searchInputEl) {
+    searchInputEl.addEventListener("input", function () {
+      if (searchTimer) {
+        window.clearTimeout(searchTimer);
+      }
+      searchTimer = window.setTimeout(function () {
+        applySearch(searchInputEl.value);
+      }, 250);
+    });
+  }
+
+  if (clearSearchEl) {
+    clearSearchEl.addEventListener("click", function () {
+      if (searchInputEl) {
+        searchInputEl.value = "";
+      }
+      applySearch("");
+    });
+    clearSearchEl.disabled = true;
+  }
+
+  if (sortSelectEl) {
+    sortSelectEl.addEventListener("change", function () {
+      state.sort = sortSelectEl.value || "newest";
+      loadAppointments(null, 0);
+    });
+  }
+
   loadAppointments(function () {
     if (!openFromNotificationId) return;
     var target = listEl.querySelector('li[data-appointment-id="' + openFromNotificationId + '"]');
@@ -414,3 +477,5 @@
     }
   });
 })();
+
+

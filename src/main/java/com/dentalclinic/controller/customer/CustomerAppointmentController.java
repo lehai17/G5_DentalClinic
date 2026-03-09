@@ -98,20 +98,23 @@ public class CustomerAppointmentController {
     @GetMapping("/appointments")
     public ResponseEntity<?> getMyAppointments(@RequestParam(required = false) Integer page,
                                                @RequestParam(required = false) Integer size,
+                                               @RequestParam(required = false) String keyword,
+                                               @RequestParam(required = false, defaultValue = "newest") String sort,
                                                HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
 
-        if (page != null || size != null) {
+        if (page != null || size != null || (keyword != null && !keyword.isBlank()) || (sort != null && !sort.isBlank())) {
             int p = page == null ? 0 : page;
             int s = size == null ? 5 : size;
-            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s);
+            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, sort);
             return ResponseEntity.ok(Map.of(
                     "content", resultPage.getContent(),
                     "page", resultPage.getNumber(),
                     "size", resultPage.getSize(),
                     "totalPages", resultPage.getTotalPages(),
-                    "totalElements", resultPage.getTotalElements()
+                    "totalElements", resultPage.getTotalElements(),
+                    "sort", sort
             ));
         }
 
@@ -200,3 +203,4 @@ public class CustomerAppointmentController {
     }
 
 }
+

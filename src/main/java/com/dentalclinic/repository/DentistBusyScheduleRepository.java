@@ -12,7 +12,7 @@ import java.util.List;
 public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedule, Long> {
     List<BusySchedule> findAllByOrderByCreatedAtDesc();
 
-    // Thêm hàm này để đếm số yêu cầu nghỉ trong tháng (không tính những cái bị REJECTED)
+    // ThÃªm hÃ m nÃ y Ä‘á»ƒ Ä‘áº¿m sá»‘ yÃªu cáº§u nghá»‰ trong thÃ¡ng (khÃ´ng tÃ­nh nhá»¯ng cÃ¡i bá»‹ REJECTED)
     @Query("SELECT COUNT(b) FROM BusySchedule b WHERE b.dentist.id = :dentistId " +
             "AND b.status <> 'REJECTED' " +
             "AND b.startDate >= :startOfMonth AND b.startDate <= :endOfMonth")

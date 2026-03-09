@@ -1,6 +1,6 @@
-/* ===== customer-appointments-page.css ===== */
+﻿/* ===== customer-appointments-page.css ===== */
 /* ===== CSS Fix cho trang Lịch hẹn của tôi ===== */
-/* Chỉ sửa lỗi mà không thay đổi giao diện gốc */
+/* Chỉ sửa lỗi m�  không thay đổi giao diện gốc */
 
 /* ===== Fix Inline detail card ===== */
 .cap-inline-detail-card,
@@ -302,7 +302,7 @@
 }
 
 /* ===== Enhanced Inline Detail Card ===== */
-/* ✅ FIX: JS tạo div class="cap-inline-card", nên phải style thêm class này */
+/* âœ… FIX: JS tạo div class="cap-inline-card", nên phải style thêm class n� y */
 .cap-inline-detail-card,
 .cap-inline-card {
     background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%) !important;
@@ -1208,7 +1208,8 @@
     margin: 0;
     font-size: 2rem;
     line-height: 1.15;
-    color: #0f172a;
+    color: #0b3b8c;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .customer-appointments-page .cap-subtitle {
@@ -1241,8 +1242,15 @@
 
 .customer-appointments-page .cap-refresh-btn {
     border: 1px solid rgba(148, 163, 184, 0.3);
-    background: #ffffff;
-    color: #0f172a;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1d4ed8;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+}
+
+.customer-appointments-page .cap-refresh-btn:hover {
+    border-color: rgba(37, 99, 235, 0.30);
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
 }
 
 .customer-appointments-page .cap-summary-strip {
@@ -1537,6 +1545,97 @@
     flex-wrap: wrap;
 }
 
+.cap-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.cap-toolbar-secondary {
+    margin-top: -6px;
+    margin-bottom: 20px;
+}
+
+.cap-search-box {
+    flex: 1 1 320px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.cap-search-box i {
+    color: #64748b;
+}
+
+.cap-search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background: transparent;
+}
+
+.cap-search-clear {
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 14px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cap-search-clear:hover:not(:disabled) {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+.cap-search-clear:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.cap-sort-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.cap-sort-label {
+    color: #475569;
+    font-size: 0.92rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cap-sort-select {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 700;
+    min-width: 230px;
+    cursor: pointer;
+}
+
 .customer-appointments-page .cap-btn {
     min-height: 46px;
     border-radius: 14px;
@@ -1605,3 +1704,4 @@
         flex-direction: column;
     }
 }
+

@@ -1,4 +1,4 @@
-// --- QUẢN LÝ MODAL ---
+﻿// --- QUẢN LÝ MODAL ---
 function closeModal() {
     const modal = document.querySelector(".modal-overlay");
     if (modal) modal.remove();
@@ -6,7 +6,7 @@ function closeModal() {
 
 // --- GÁN BÁC SĨ ---
 function assignDentist(appointmentId) {
-    // SỬA TẠI ĐÂY: Gọi API mới có kèm theo appointmentId để lọc bác sĩ rảnh cho ngày đó
+    // SỬA T� I ĐÂY: Gọi API mới có kèm theo appointmentId để lọc bác sĩ rảnh cho ngày đó
     fetch(`/staff/appointments/available-dentists?appointmentId=${appointmentId}`)
         .then(res => {
             if (!res.ok) throw new Error("Không lấy được danh sách bác sĩ rảnh");
@@ -17,7 +17,7 @@ function assignDentist(appointmentId) {
 
             // Kiểm tra nếu không có bác sĩ nào rảnh
             if (dentists.length === 0) {
-                alert("Không có bác sĩ nào sẵn sàng (tất cả đều nghỉ hoặc bận) vào ngày này!");
+                alert("Không có bác sĩ nào sẵn s� ng (tất cả đều nghỉ hoặc bận) vào ngày n� y!");
                 return;
             }
 
@@ -29,7 +29,7 @@ function assignDentist(appointmentId) {
                 <div class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:9999;">
                     <div class="modal" style="background:white; padding:20px; border-radius:8px; width:350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                         <h3 style="margin-top:0; color:#1A237E;">Gán bác sĩ phụ trách</h3>
-                        <p style="font-size:13px; color:#666;">Danh sách hiển thị các bác sĩ có lịch làm việc và không xin nghỉ vào ngày này.</p>
+                        <p style="font-size:13px; color:#666;">Danh sách hiển thị các bác sĩ có lịch làm việc và không xin nghỉ vào ngày n� y.</p>
                         <div id="assignError" style="display:none; color:red; font-size:12px; margin-bottom:10px; padding:8px; background:#fff5f5; border-radius:4px;"></div>
                         <select id="dentistSelect" style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #ddd;">
                             ${options}
@@ -69,14 +69,14 @@ function submitAssign(appointmentId) {
     });
 }
 
-// --- CÁC HÀM TRẠNG THÁI KHÁC ---
+// --- CÁC HÀM TR� NG THÁI KHÁC ---
 function confirmAppointment(id) {
     fetch(`/staff/appointments/confirm?id=${id}`, { method: 'POST' })
         .then(() => location.reload());
 }
 
 function completeAppointment(id) {
-    if (!confirm("Xác nhận hoàn thành lịch khám này?")) return;
+    if (!confirm("Xác nhận hoàn thành lịch khám n� y?")) return;
     fetch(`/staff/appointments/complete?id=${id}`, { method: 'POST' })
         .then(() => location.reload());
 }
@@ -104,4 +104,6 @@ function cancelAppointment(id) {
 function goToPayment(id) {
     window.location.href = "/staff/payments/" + id;
 }
+
+
 

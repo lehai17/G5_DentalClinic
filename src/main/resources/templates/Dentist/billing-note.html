@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
@@ -82,7 +82,7 @@
                      placeholder="Tooth"
                      class="svc-tooth"/>
             </td>
-            <td><button type="button" class="icon-mini del">✕</button></td>
+            <td><button type="button" class="icon-mini del">âœ•</button></td>
           </tr>
         </tbody>
       </table>
@@ -103,7 +103,7 @@
             <td><input th:field="*{prescriptionItems[__${stat.index}__].medicineName}"/></td>
             <td><input th:field="*{prescriptionItems[__${stat.index}__].dosage}"/></td>
             <td><input th:field="*{prescriptionItems[__${stat.index}__].note}"/></td>
-            <td><button type="button" class="icon-mini del">✕</button></td>
+            <td><button type="button" class="icon-mini del">âœ•</button></td>
           </tr>
         </tbody>
       </table>
@@ -163,7 +163,7 @@
              placeholder="Tooth"/>
     </td>
     <td>
-      <button type="button" class="icon-mini del">✕</button>
+      <button type="button" class="icon-mini del">âœ•</button>
     </td>
   `;
 
@@ -191,7 +191,7 @@
     <td><input name="prescriptionItems[${idx}].medicineName"/></td>
     <td><input name="prescriptionItems[${idx}].dosage"/></td>
     <td><input name="prescriptionItems[${idx}].note"/></td>
-    <td><button type="button" class="icon-mini del">✕</button></td>
+    <td><button type="button" class="icon-mini del">âœ•</button></td>
   `;
 
     tr.querySelector('.del').addEventListener('click', () => tr.remove());
@@ -232,3 +232,4 @@
 </script>
 </body>
 </html>
+

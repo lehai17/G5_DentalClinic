@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -32,7 +32,7 @@
             <form method="get" th:action="@{/staff/support}" class="filter-form">
                 <select name="status">
                     <option value="" th:selected="${selectedStatus == ''}">Tất cả trạng thái</option>
-                    <option value="OPEN" th:selected="${selectedStatus == 'OPEN'}">Đang chờ phản hồi</option>
+                    <option value="OPEN" th:selected="${selectedStatus == 'OPEN'}">Äang chờ phản hồi</option>
                     <option value="ANSWERED" th:selected="${selectedStatus == 'ANSWERED'}">Đã có phản hồi</option>
                     <option value="CLOSED" th:selected="${selectedStatus == 'CLOSED'}">Đã đóng</option>
                 </select>
@@ -42,13 +42,13 @@
             <table>
                 <thead>
                 <tr>
-                    <th>Khách hàng</th>
+                    <th>Khách h� ng</th>
                     <th>Nội dung mới nhất</th>
                     <th>Loại hỗ trợ</th>
                     <th>Trạng thái</th>
                     <th>Tạo lúc</th>
                     <th>Người xử lý</th>
-                    <th>Hành động</th>
+                    <th>H� nh động</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -68,7 +68,7 @@
                         <div class="muted-line" th:if="${ticket.appointment == null}">Hỗ trợ khác</div>
                     </td>
                     <td>
-                        <span th:if="${ticket.displayStatus == 'OPEN'}" class="status-open">Đang chờ phản hồi</span>
+                        <span th:if="${ticket.displayStatus == 'OPEN'}" class="status-open">Äang chờ phản hồi</span>
                         <span th:if="${ticket.displayStatus == 'ANSWERED'}" class="status-answered">Đã có phản hồi</span>
                         <span th:if="${ticket.displayStatus == 'CLOSED'}" class="status-closed">Đã đóng</span>
                     </td>
@@ -95,3 +95,4 @@
 </div>
 </body>
 </html>
+
