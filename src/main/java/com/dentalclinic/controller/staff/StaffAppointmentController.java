@@ -164,6 +164,17 @@ public class StaffAppointmentController {
         List<DentistProfile> availableDentists = staffAppointmentService.getAvailableDentistsForAppointment(appointmentId);
         return ResponseEntity.ok(availableDentists);
     }
+
+    @PostMapping("/appointments/process-payment")
+    @ResponseBody
+    public ResponseEntity<?> processPayment(@RequestParam Long id) {
+        try {
+            staffAppointmentService.processPayment(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
 
 

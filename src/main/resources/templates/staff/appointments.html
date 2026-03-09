@@ -84,12 +84,6 @@
                             Check-in
                         </button>
 
-                        <button type="button" class="btn-complete"
-                                th:if="${a.status.name() == 'CHECKED_IN'}"
-                                th:onclick="'completeAppointment(' + ${a.id} + ')'">
-                            Complete
-                        </button>
-
                         <button type="button" class="btn-cancel"
                                 th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}"
                                 th:onclick="'cancelAppointment(' + ${a.id} + ')'">
@@ -97,7 +91,7 @@
                         </button>
 
                         <button type="button" class="btn-payment"
-                                th:if="${a.status.name() == 'COMPLETED'}"
+                                th:if="${a.status.name() == 'DONE'}"
                                 th:onclick="'goToPayment(' + ${a.id} + ')'">
                             Payment
                         </button>

@@ -132,6 +132,18 @@
         const errorDiv = document.getElementById('clientError');
         const errorText = document.getElementById('errorText');
 
+        // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+        const today = new Date().toISOString().split('T')[0];
+
+        // Chặn ngày quá khứ cho cả 2 input
+        startDateInput.setAttribute('min', today);
+        endDateInput.setAttribute('min', today);
+
+        // Khi chọn ngày bắt đầu, ngày kết thúc không được nhỏ hơn ngày bắt đầu
+        startDateInput.addEventListener('change', function() {
+            endDateInput.setAttribute('min', startDateInput.value);
+        });
+
         const historyRows = document.querySelectorAll('.history-row');
         const existingRanges = Array.from(historyRows)
             .filter(row => row.dataset.status !== 'REJECTED')
