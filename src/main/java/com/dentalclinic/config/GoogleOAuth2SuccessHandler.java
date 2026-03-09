@@ -35,3 +35,4 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         response.sendRedirect("/homepage");
     }
 }
+

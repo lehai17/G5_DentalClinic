@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+﻿document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.querySelector('input[name="keyword"]');
     const tableContainer = document.querySelector('#dentistTableBody'); // Vùng chứa Fragment
 
@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (searchInput) {
         searchInput.addEventListener('input', function() {
-            // Xóa timeout cũ để tránh gửi yêu cầu liên tục (Debouncing)
+            // Xóa timeout cÅ© để tránh gửi yêu cầu liên tục (Debouncing)
             clearTimeout(timeout);
             const keyword = this.value;
 

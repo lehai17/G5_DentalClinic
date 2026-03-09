@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
@@ -31,12 +31,38 @@
       <div th:if="${successMessage}" class="support-flash support-flash-success" th:text="${successMessage}"></div>
       <div th:if="${errorMessage}" class="support-flash support-flash-error" th:text="${errorMessage}"></div>
 
+      <form class="support-toolbar" method="get" th:action="@{/support/my}">
+        <input type="hidden" name="sort" th:value="${selectedSort}">
+        <label class="support-search-box" for="support-keyword">
+          <i class="bi bi-search"></i>
+          <input id="support-keyword"
+                 name="keyword"
+                 type="search"
+                 th:value="${keyword}"
+                 placeholder="Tìm theo tiêu đề, nội dung, mã ca khám hoặc người phản hồi">
+        </label>
+        <button type="submit" class="support-search-btn">Tìm kiếm</button>
+        <a th:href="@{/support/my}" class="support-search-reset">Xóa tìm kiếm</a>
+      </form>
+
+      <form class="support-toolbar support-toolbar-secondary" method="get" th:action="@{/support/my}">
+        <input type="hidden" name="keyword" th:value="${keyword}">
+        <label class="support-sort-box" for="support-sort">
+          <span class="support-sort-label">Sắp xếp theo</span>
+          <select id="support-sort" name="sort" class="support-sort-select" onchange="this.form.submit()">
+            <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất trước</option>
+            <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ nhất trước</option>
+            <option value="status" th:selected="${selectedSort == 'status'}">Theo trạng thái</option>
+          </select>
+        </label>
+      </form>
+
       <div class="support-empty" th:if="${#lists.isEmpty(tickets)}">
         <div class="support-empty-icon">
           <i class="bi bi-chat-square-dots"></i>
         </div>
-        <h3>Bạn chưa có phiếu hỗ trợ nào</h3>
-        <p>Hãy tạo phiếu hỗ trợ để được đội ngũ phòng khám tư vấn nhanh chóng.</p>
+        <h3 th:text="${keyword != null && !keyword.isBlank()} ? 'Không tìm thấy phiếu hỗ trợ phù hợp' : 'Bạn chưa có phiếu hỗ trợ nào'">Bạn chưa có phiếu hỗ trợ nào</h3>
+        <p th:text="${keyword != null && !keyword.isBlank()} ? 'Hãy thử đổi từ khóa tìm kiếm hoặc xóa bộ lọc hiện tại.' : 'Hãy tạo phiếu hỗ trợ để được đội ngũ phòng khám tư vấn nhanh chóng.'">Hãy tạo phiếu hỗ trợ để được đội ngũ phòng khám tư vấn nhanh chóng.</p>
         <a th:href="@{/support/create}" class="support-empty-cta">
           <i class="bi bi-plus-circle"></i>
           <span>Tạo phiếu hỗ trợ</span>
@@ -94,19 +120,19 @@
            aria-label="Phân trang phiếu hỗ trợ">
         <a class="support-page-btn"
            th:classappend="${currentPage == 0} ? ' disabled'"
-           th:href="${currentPage > 0} ? @{/support/my(page=${currentPage - 1})} : '#'"
+           th:href="${currentPage > 0} ? @{/support/my(page=${currentPage - 1}, keyword=${keyword}, sort=${selectedSort})} : '#'"
            aria-label="Trang trước">Trước</a>
 
         <th:block th:each="p : ${#numbers.sequence(0, totalPages - 1)}">
           <a class="support-page-btn"
              th:classappend="${p == currentPage} ? ' active'"
-             th:href="@{/support/my(page=${p})}"
+             th:href="@{/support/my(page=${p}, keyword=${keyword}, sort=${selectedSort})}"
              th:text="${p + 1}">1</a>
         </th:block>
 
         <a class="support-page-btn"
            th:classappend="${currentPage + 1 >= totalPages} ? ' disabled'"
-           th:href="${currentPage + 1 < totalPages} ? @{/support/my(page=${currentPage + 1})} : '#'"
+           th:href="${currentPage + 1 < totalPages} ? @{/support/my(page=${currentPage + 1}, keyword=${keyword}, sort=${selectedSort})} : '#'"
            aria-label="Trang sau">Sau</a>
       </nav>
     </section>
@@ -114,3 +140,6 @@
 </div>
 </body>
 </html>
+
+
+

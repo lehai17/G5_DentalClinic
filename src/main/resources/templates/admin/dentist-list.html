@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -10,7 +10,7 @@
         /* CSS nội bộ để định hình khung Dashboard theo mẫu của bạn */
         :root {
             --sidebar-color: #1A237E;
-            /* Màu Navy Blue từ mẫu GENZ CLINIC */
+            /* M� u Navy Blue từ mẫu GENZ CLINIC */
             --bg-light: #F4F7FE;
             --navy-dark: #1B2559;
         }
@@ -23,7 +23,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA BẠN */
+        /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA B� N */
         .sidebar {
             width: 250px;
             background: var(--sidebar-color);
@@ -590,7 +590,7 @@
                                     style="display:inline;">
                                     <button type="submit" class="action-btn"
                                         style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Mở khóa tài khoản bác sĩ này?')">
+                                        onclick="return confirm('Mở khóa t� i khoản bác sĩ n� y?')">
                                         <i class="fas fa-user-check"></i>
                                     </button>
                                 </form>
@@ -600,7 +600,7 @@
                                     style="display:inline;">
                                     <button type="submit" class="action-btn"
                                         style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
+                                        onclick="return confirm('Bạn có chắc chắn muốn khóa t� i khoản bác sĩ n� y?')">
                                         <i class="fas fa-user-lock"></i>
                                     </button>
                                 </form>
@@ -688,7 +688,7 @@
             <div class="modal-body" style="text-align: center;">
                 <p style="color: #1B2559; font-size: 15px; margin-bottom: 20px;">
                     Bạn có chắc chắn muốn xóa nha sĩ <strong id="deleteDentistName"></strong> không? <br>
-                    <span style="color: #F44336; font-size: 13px;">Hành động này không thể hoàn tác.</span>
+                    <span style="color: #F44336; font-size: 13px;">H� nh động n� y không thể ho� n tác.</span>
                 </p>
                 <div style="display: flex; justify-content: center; gap: 15px;">
                     <button type="button" onclick="closeDeleteModal()"
@@ -898,7 +898,7 @@
                     closeDeleteModal();
                     if (data.success) {
                         showToast(data.message, 'success');
-                        // Xóa dòng tương ứng khỏi DOM
+                        // Xóa dòng tương á»©ng khỏi DOM
                         const row = document.getElementById('dentist-row-' + dentistToDelete);
                         if (row) {
                             row.remove();
@@ -973,7 +973,7 @@
             document.getElementById('editDentistModal').style.display = 'none';
         }
 
-        // Đóng Edit Modal khi click bên ngoài
+        // Đóng Edit Modal khi click bên ngo� i
         window.addEventListener('click', function (event) {
             let editModal = document.getElementById('editDentistModal');
             if (event.target == editModal) {

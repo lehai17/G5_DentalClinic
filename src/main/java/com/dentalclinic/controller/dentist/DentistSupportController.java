@@ -66,7 +66,7 @@ public class DentistSupportController {
         try {
             User currentUser = supportService.getCurrentUser(principal);
             supportService.answerTicket(currentUser.getId(), id, answer.trim());
-            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi phản hồi thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi phản hồi th� nh công.");
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -80,3 +80,4 @@ public class DentistSupportController {
         return "redirect:/dentist/support";
     }
 }
+

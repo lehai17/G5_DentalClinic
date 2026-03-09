@@ -111,7 +111,7 @@ public class WalletTransaction {
         this.createdAt = createdAt;
     }
 
-    // --- BỔ SUNG BUILDER THỦ CÔNG ---
+    // --- Bá»” SUNG BUILDER THá»¦ CÃ”NG ---
     public static WalletTransactionBuilder builder() {
         return new WalletTransactionBuilder();
     }

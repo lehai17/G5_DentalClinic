@@ -23,7 +23,7 @@ public class AppointmentCleanupTask {
     // Chạy mỗi 5 phút một lần
     @Scheduled(fixedRate = 300000)
     public void cleanupExpiredAppointments() {
-        // Tìm c�c đơn PENDING tạo c�ch d�y qu� 15 phút (thời gian sống của URL VNPay)
+        // Tìm cï¿½c đơn PENDING tạo cï¿½ch dï¿½y quï¿½ 15 phút (thời gian sống của URL VNPay)
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(15);
 
         // Bạn cần viết thêm query findAllByStatusAndCreatedAtBefore trong Repository
@@ -31,8 +31,9 @@ public class AppointmentCleanupTask {
                 AppointmentStatus.PENDING, threshold);
 
         for (Appointment app : expiredApps) {
-            // Hủy đơn và nhả slot
-            customerAppointmentService.cancelAppointmentByStaff(app.getId(), "Tự động hủy do qu� thời gian thanh to�n.");
+            // Hủy đơn v�  nhả slot
+            customerAppointmentService.cancelAppointmentByStaff(app.getId(), "Tự động hủy do quï¿½ thời gian thanh toï¿½n.");
         }
     }
 }
+

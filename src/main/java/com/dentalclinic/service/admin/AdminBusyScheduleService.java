@@ -39,7 +39,7 @@ public class AdminBusyScheduleService {
         request.setStatus(status);
         repository.save(request);
 
-        // Nếu Admin duyệt, tiến hành khóa các Slot lịch hẹn của bác sĩ đó
+        // Nếu Admin duyệt, tiến h� nh khóa các Slot lịch hẹn của bác sĩ đó
         if ("APPROVED".equalsIgnoreCase(status)) {
             lockDentistSlots(request);
         }
@@ -49,20 +49,20 @@ public class AdminBusyScheduleService {
         var startDateTime = request.getStartDate().atTime(8, 0);
         var endDateTime = request.getEndDate().atTime(17, 0);
 
-        // Cần đảm bảo SlotRepository có method disable các slot của Dentist cụ thể trong khoảng thời gian này
+        // Cần đảm bảo SlotRepository có method disable các slot của Dentist cụ thể trong khoảng thời gian n� y
         slotRepository.disableSlotsInPeriod(startDateTime, endDateTime);
     }
 
     @Transactional
     public void submitBusyRequest(Long dentistId, LocalDate start, LocalDate end, String reason) {
-        // Logic kiểm tra hạn mức nghỉ (tối đa 2 buổi/tháng)
+        // Logic kiểm tra hạn mức nghỉ (tối Ä‘a 2 buổi/tháng)
         LocalDate firstDayOfMonth = start.withDayOfMonth(1);
         LocalDate lastDayOfMonth = start.withDayOfMonth(start.lengthOfMonth());
 
         long count = repository.countLeavesInMonth(dentistId, firstDayOfMonth, lastDayOfMonth);
 
         if (count >= 2) {
-            throw new RuntimeException("Bác sĩ đã dùng hết giới hạn nghỉ trong tháng " + start.getMonthValue() + " (Tối đa 2 lần/tháng)!");
+            throw new RuntimeException("Bác sĩ đã dùng hết giới hạn nghỉ trong tháng " + start.getMonthValue() + " (Tối Ä‘a 2 lần/tháng)!");
         }
 
         DentistProfile dentist = dentistProfileRepository.findById(dentistId)

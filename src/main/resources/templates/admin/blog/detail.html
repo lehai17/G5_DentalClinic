@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -157,7 +157,7 @@
         <div class="content" th:text="${blog.content}">Nội dung blog...</div>
 
         <div class="actions">
-            <a th:href="@{/admin/blogs(status=${blog.status})}" class="btn btn-secondary">← Back</a>
+            <a th:href="@{/admin/blogs(status=${blog.status})}" class="btn btn-secondary">â† Back</a>
 
             <!-- EDIT: CHỈ PENDING/APPROVED -->
             <a class="btn btn-edit"
@@ -204,3 +204,4 @@
 </script>
 </body>
 </html>
+

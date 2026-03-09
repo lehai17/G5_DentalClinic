@@ -25,7 +25,7 @@ public class SlotSeeder {
     private static final int DAYS_TO_SEED = 30;
 
     /**
-     * Seed & repair slot cho 30 ngày tiếp theo khi ứng dụng khởi động.
+     * Seed & repair slot cho 30 ng� y tiếp theo khi á»©ng dụng khởi động.
      */
     @Bean
     public ApplicationRunner seedSlotsIfNeeded(SlotRepository slotRepository) {

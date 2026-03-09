@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
@@ -49,7 +49,7 @@
 
     <div class="main">
         <div class="topbar">
-            <div style="color:var(--muted);font-size:12px;">Modules › Work Schedule › Report Absence</div>
+            <div style="color:var(--muted);font-size:12px;">Modules â€º Work Schedule â€º Report Absence</div>
         </div>
 
         <div class="content">
@@ -60,7 +60,7 @@
 
             <div class="busy-form-card">
                 <h2 style="margin-bottom: 10px;">Request Time Off</h2>
-                <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Mỗi đơn đăng ký tối đa 2 ngày liên tiếp.</p>
+                <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Mỗi đơn đăng ký tối Ä‘a 2 ng� y liên tiếp.</p>
 
                 <form th:action="@{/dentist/busy-schedule/submit}" method="post" id="absenceForm">
                     <div class="grid-2">
@@ -107,7 +107,7 @@
                         th:data-status="${req.status}">
                         <td>
                             <i class="far fa-calendar-alt" style="color:#4A90E2; margin-right:8px;"></i>
-                            <span th:text="${req.startDate} + ' → ' + ${req.endDate}"></span>
+                            <span th:text="${req.startDate} + ' â†’ ' + ${req.endDate}"></span>
                         </td>
                         <td th:text="${req.reason}"></td>
                         <td>
@@ -115,7 +115,7 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(myRequests)}">
-                        <td colspan="3" style="text-align:center; padding:30px; color:#999;">Bạn chưa có yêu cầu nghỉ nào.</td>
+                        <td colspan="3" style="text-align:center; padding:30px; color:#999;">Bạn chưa có yêu cầu nghỉ n� o.</td>
                     </tr>
                     </tbody>
                 </table>
@@ -153,17 +153,17 @@
             startDateInput.classList.remove('input-error');
             endDateInput.classList.remove('input-error');
 
-            // 1. Ngày kết thúc trước ngày bắt đầu
+            // 1. Ng� y kết thúc trước ng� y bắt đầu
             if (endVal < startVal) {
-                showError("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+                showError("Ng� y kết thúc phải sau hoặc bằng ng� y bắt đầu.");
                 endDateInput.classList.add('input-error');
                 return false;
             }
 
-            // 2. Không được cách nhau quá 1 ngày (Ví dụ T2 đến T3 là ok, T2 đến T4 là lỗi)
+            // 2. Không được cách nhau quá 1 ng� y (Ví dụ T2 đến T3 l�  ok, T2 đến T4 l�  lỗi)
             const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
             if (dayDiff > 1) {
-                showError("Thời gian nghỉ mỗi đơn không được quá 1 ngày.");
+                showError("Thời gian nghỉ mỗi đơn không được quá 1 ng� y.");
                 endDateInput.classList.add('input-error');
                 return false;
             }
@@ -174,7 +174,7 @@
             });
 
             if (isOverlapping) {
-                showError("Thời gian này trùng với một yêu cầu nghỉ khác đã đăng ký.");
+                showError("Thời gian n� y trùng với một yêu cầu nghỉ khác đã đăng ký.");
                 startDateInput.classList.add('input-error');
                 endDateInput.classList.add('input-error');
                 return false;

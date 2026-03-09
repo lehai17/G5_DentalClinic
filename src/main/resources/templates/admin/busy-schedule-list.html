@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -98,7 +98,7 @@
 
         <select name="sort" onchange="this.form.submit()" style="padding: 8px 15px; border-radius: 12px; border: 1px solid #E0E7FF; color: #2B3674; font-weight: 600; outline: none;">
             <option value="newest" th:selected="${sort == 'newest'}">Mới nhất</option>
-            <option value="oldest" th:selected="${sort == 'oldest'}">Cũ nhất</option>
+            <option value="oldest" th:selected="${sort == 'oldest'}">CÅ© nhất</option>
         </select>
 
         <button type="submit" class="status-badge status-approved" style="border: none; cursor: pointer;">Lọc</button>
@@ -129,7 +129,7 @@
                 </td>
                 <td style="color: #707EAE; font-weight: 600;">
                     <i class="far fa-calendar-alt"></i>
-                    <span th:text="${req.startDate} + ' → ' + ${req.endDate}"></span>
+                    <span th:text="${req.startDate} + ' â†’ ' + ${req.endDate}"></span>
                 </td>
                 <td style="color: #707EAE; font-size: 14px;" th:text="${req.reason}"></td>
                 <td style="text-align: center;">

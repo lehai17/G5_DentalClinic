@@ -18,7 +18,7 @@ public class BillingNote {
     @JoinColumn(name = "appointment_id", nullable = false, unique = true)
     private Appointment appointment;
 
-    // Ghi chú nội bộ (optional)
+    // Ghi chÃº ná»™i bá»™ (optional)
     @Column(name = "note", columnDefinition = "NVARCHAR(MAX)")
     private String note;
 

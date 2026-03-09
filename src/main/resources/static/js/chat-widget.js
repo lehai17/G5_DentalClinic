@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   if (window.__customerChatWidgetInitialized) return;
   window.__customerChatWidgetInitialized = true;
 
@@ -353,3 +353,5 @@
 
   init();
 })();
+
+

@@ -101,7 +101,7 @@ public class DentistSessionService {
                                 (f.getSeverity() == null || f.getSeverity().isBlank()) &&
                                 (f.getNote() == null || f.getNote().isBlank());
 
-                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
+                if (isEmpty) continue; // ðŸ”¥ bỏ dòng rỗng
 
                 f.setMedicalRecord(mr);
                 mr.getFindings().add(f);
@@ -116,7 +116,7 @@ public class DentistSessionService {
                                 (i.getType() == null || i.getType().isBlank()) &&
                                 (i.getNote() == null || i.getNote().isBlank());
 
-                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
+                if (isEmpty) continue; // ðŸ”¥ bỏ dòng rỗng
 
                 i.setMedicalRecord(mr);
                 mr.getImages().add(i);
@@ -202,7 +202,7 @@ public class DentistSessionService {
                         ps.getService() == null &&
                                 (ps.getToothNo() == null || ps.getToothNo().isBlank());
 
-                if (isEmpty) continue; // 🔥 bỏ dòng trống
+                if (isEmpty) continue; // ðŸ”¥ bỏ dòng trống
 
                 if (ps.getQty() <= 0) ps.setQty(1); // đảm bảo >=1
 
@@ -220,7 +220,7 @@ public class DentistSessionService {
                                 (pi.getDosage() == null || pi.getDosage().isBlank()) &&
                                 (pi.getNote() == null || pi.getNote().isBlank());
 
-                if (isEmpty) continue; // 🔥 bỏ dòng trống
+                if (isEmpty) continue; // ðŸ”¥ bỏ dòng trống
 
                 pi.setBillingNote(bn);
                 bn.getPrescriptionItems().add(pi);
