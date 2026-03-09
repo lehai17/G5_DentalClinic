@@ -72,7 +72,12 @@
                             <label>Date of Birth</label>
                             <input type="date"
                                    name="dateOfBirth"
-                                   th:value="${#temporals.format(editDTO.dateOfBirth, 'yyyy-MM-dd')}" />
+                                   th:value="${#temporals.format(editDTO.dateOfBirth, 'yyyy-MM-dd')}"
+                                   required />
+                            <div class="form-error"
+                                 th:if="${#fields.hasErrors('dateOfBirth')}"
+                                 th:errors="*{dateOfBirth}">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -85,28 +90,42 @@
                             <label>Full Name</label>
                             <input type="text"
                                    name="fullName"
-                                   th:value="${editDTO.fullName}" />
+                                   th:value="${editDTO.fullName}"
+                                   required
+                                   minlength="2"
+                                   maxlength="50"
+                                   pattern="^[A-Za-zÀ-ỹ\\s]{2,50}$"
+                                   title="Full name must be 2–50 letters and cannot contain numbers"/>
                         </div>
 
                         <div>
                             <label>Phone</label>
                             <input type="text"
                                    name="phone"
-                                   th:value="${editDTO.phone}" />
+                                   th:value="${editDTO.phone}"
+                                   required
+                                   pattern="^[0-9]{9,11}$"
+                                   title="Phone must contain 9–11 digits"/>
                         </div>
 
                         <div>
                             <label>Specialization</label>
                             <input type="text"
                                    name="specialization"
-                                   th:value="${editDTO.specialization}" />
+                                   th:value="${editDTO.specialization}"
+                                   required
+                                   minlength="2"
+                                   maxlength="100"/>
                         </div>
 
                         <div>
                             <label>Experience</label>
                             <input type="number"
                                    name="experienceYears"
-                                   th:value="${editDTO.experienceYears}" />
+                                   th:value="${editDTO.experienceYears}"
+                                   required
+                                   min="0"
+                                   max="60"/>
                         </div>
                     </div>
 
@@ -114,6 +133,7 @@
                         <label>Biography</label>
                         <textarea rows="4"
                                   name="bio"
+                                  maxlength="1000"
                                   th:text="${editDTO.bio}"></textarea>
                     </div>
                 </div>

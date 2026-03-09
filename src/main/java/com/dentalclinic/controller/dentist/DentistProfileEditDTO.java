@@ -2,16 +2,32 @@ package com.dentalclinic.controller.dentist;
 
 import com.dentalclinic.model.user.Gender;
 import java.time.LocalDate;
+import jakarta.validation.constraints.*;
 
 public class DentistProfileEditDTO {
 
     private Gender gender;
+    @NotNull
+    @Past
     private LocalDate dateOfBirth;
-
+    @NotBlank
+    @Size(min = 2, max = 50)
+    @Pattern(regexp = "^[A-Za-zÀ-ỹ\\s]+$")
     private String fullName;
+
+    @NotBlank
+    @Pattern(regexp = "^[0-9]{9,11}$")
     private String phone;
+
+    @NotBlank
+    @Size(min = 2, max = 100)
     private String specialization;
+
+    @Min(0)
+    @Max(60)
     private int experienceYears;
+
+    @Size(max = 1000)
     private String bio;
 
     public Gender getGender() { return gender; }
