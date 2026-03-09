@@ -43,7 +43,34 @@
 
     <div class="content">
 
-      <h2>Weekly Schedule</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h2 style="margin:0;">Weekly Schedule</h2>
+
+        <!-- STATUS LEGEND -->
+        <div class="schedule-legend">
+          <div class="legend-item">
+            <span class="legend-box confirmed"></span>
+            <span>Confirmed</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-box checkin"></span>
+            <span>Check-in</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-box examining"></span>
+            <span>Examining</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-box done"></span>
+            <span>Done</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-box completed"></span>
+            <span>Completed</span>
+          </div>
+        </div>
+      </div>
+
       <div style="color:var(--muted);margin-bottom:10px;">
         <span th:text="${#temporals.format(weekStart,'dd/MM/yyyy')}"></span>
         -

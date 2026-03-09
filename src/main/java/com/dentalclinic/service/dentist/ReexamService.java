@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.DayOfWeek;
 
 @Service
 public class ReexamService {
@@ -252,6 +253,13 @@ public class ReexamService {
     public void validateReexamTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
         // Check if date is in past
         LocalDate today = LocalDate.now();
+        DayOfWeek day = date.getDayOfWeek();
+        if (day == DayOfWeek.SUNDAY) {
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Reexam appointments are only allowed from Monday to Saturday"
+            );
+        }
         if (date.isBefore(today)) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
                     "Cannot schedule reexam in the past");
