@@ -46,7 +46,7 @@ public class DentistProfile {
         this.avatar = avatar;
     }
 
-    // --- PHẦN THÊM MỚI ---
+    // --- PHáº¦N THÃŠM Má»šI ---
 
     public List<DentistSchedule> getSchedules() {
         return schedules;
@@ -56,7 +56,7 @@ public class DentistProfile {
         this.schedules = schedules;
     }
 
-    // 1. Quan hệ với lịch làm việc
+    // 1. Quan há»‡ vá»›i lá»‹ch lÃ m viá»‡c
     @JsonIgnore
     @OneToMany(mappedBy = "dentist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DentistSchedule> schedules;

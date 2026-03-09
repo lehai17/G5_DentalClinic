@@ -42,7 +42,7 @@ public class AdminBusyScheduleController {
     public String approveRequest(@RequestParam Long id, RedirectAttributes ra) {
         try {
             busyScheduleService.updateStatus(id, "APPROVED");
-            ra.addFlashAttribute("message", "Đã phê duyệt đơn nghỉ thành công.");
+            ra.addFlashAttribute("message", "Đã phê duyệt đơn nghỉ th� nh công.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }

@@ -68,6 +68,32 @@
             </div>
           </div>
 
+          <div class="cap-toolbar">
+            <label class="cap-search-box" for="customer-appointments-search">
+              <i class="bi bi-search"></i>
+              <input
+                id="customer-appointments-search"
+                type="search"
+                placeholder="Tìm theo mã lịch hẹn, dịch vụ, bác sĩ hoặc trạng thái"
+                autocomplete="off">
+            </label>
+            <button type="button" class="cap-search-clear" id="customer-appointments-clear">
+              Xóa tìm kiếm
+            </button>
+          </div>
+
+          <div class="cap-toolbar cap-toolbar-secondary">
+            <label class="cap-sort-box" for="customer-appointments-sort">
+              <span class="cap-sort-label">Sắp xếp theo</span>
+              <select id="customer-appointments-sort" class="cap-sort-select">
+                <option value="newest">Mới đặt gần đây nhất</option>
+                <option value="oldest">Đặt từ lâu đến mới</option>
+                <option value="visit_desc">Lịch khám xa nhất trước</option>
+                <option value="visit_asc">Lịch khám gần nhất trước</option>
+              </select>
+            </label>
+          </div>
+
           <div id="customer-appointments-loading" class="customer-loading cap-loading">
             <span class="cap-spinner" aria-hidden="true"></span>
             Đang tải danh sách lịch hẹn...
@@ -96,3 +122,5 @@
 <script th:src="@{/js/customer-appointments.js}"></script>
 </body>
 </html>
+
+

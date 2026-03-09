@@ -31,7 +31,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class SupportService {
@@ -70,7 +72,7 @@ public class SupportService {
     @Transactional(readOnly = true)
     public User getCurrentUser(UserDetails principal) {
         if (principal == null || principal.getUsername() == null || principal.getUsername().isBlank()) {
-            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
+            throw new SupportAccessDeniedException("Không xác định được t� i khoản hiện tại.");
         }
         return userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy người dùng hiện tại."));
@@ -143,12 +145,67 @@ public class SupportService {
 
     @Transactional(readOnly = true)
     public Page<SupportTicket> getMyTicketsPage(Long customerUserId, int page, int size) {
+        return getMyTicketsPage(customerUserId, page, size, null, "newest");
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SupportTicket> getMyTicketsPage(Long customerUserId, int page, int size, String keyword) {
+        return getMyTicketsPage(customerUserId, page, size, keyword, "newest");
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SupportTicket> getMyTicketsPage(Long customerUserId, int page, int size, String keyword, String sort) {
         requireCustomer(customerUserId);
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, size);
-        PageRequest pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return supportTicketRepository.findByCustomer_Id(customerUserId, pageable)
-                .map(this::hydrateTicket);
+        List<SupportTicket> filteredTickets = supportTicketRepository.findByCustomer_IdOrderByCreatedAtDesc(customerUserId)
+                .stream()
+                .map(this::hydrateTicket)
+                .sorted(resolveTicketComparator(sort))
+                .filter(ticket -> matchesTicketKeyword(ticket, keyword))
+                .toList();
+
+        int fromIndex = Math.min(safePage * safeSize, filteredTickets.size());
+        int toIndex = Math.min(fromIndex + safeSize, filteredTickets.size());
+
+        return new org.springframework.data.domain.PageImpl<>(
+                filteredTickets.subList(fromIndex, toIndex),
+                PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt")),
+                filteredTickets.size()
+        );
+    }
+
+    private Comparator<SupportTicket> resolveTicketComparator(String sort) {
+        String normalized = sort == null ? "newest" : sort.trim().toLowerCase(Locale.ROOT);
+
+        Comparator<SupportTicket> byNewest = Comparator
+                .comparing(SupportTicket::getCreatedAt, Comparator.nullsLast(LocalDateTime::compareTo))
+                .reversed();
+
+        Comparator<SupportTicket> byOldest = Comparator
+                .comparing(SupportTicket::getCreatedAt, Comparator.nullsLast(LocalDateTime::compareTo));
+
+        Comparator<SupportTicket> byStatus = Comparator
+                .comparing((SupportTicket ticket) -> supportStatusRank(ticket.getDisplayStatus()))
+                .thenComparing(SupportTicket::getCreatedAt, Comparator.nullsLast(LocalDateTime::compareTo).reversed());
+
+        return switch (normalized) {
+            case "oldest" -> byOldest;
+            case "status" -> byStatus;
+            default -> byNewest;
+        };
+    }
+
+    private int supportStatusRank(String status) {
+        if (status == null) {
+            return 99;
+        }
+        return switch (status.toUpperCase(Locale.ROOT)) {
+            case "OPEN" -> 0;
+            case "ANSWERED" -> 1;
+            case "CLOSED" -> 2;
+            default -> 99;
+        };
     }
 
     @Transactional(readOnly = true)
@@ -158,7 +215,7 @@ public class SupportService {
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
         if (user.getRole() == Role.CUSTOMER && !ticket.getCustomer().getId().equals(userId)) {
-            throw new SupportAccessDeniedException("Bạn không có quyền xem yêu cầu hỗ trợ này.");
+            throw new SupportAccessDeniedException("Bạn không có quyền xem yêu cầu hỗ trợ n� y.");
         }
         return hydrateTicket(ticket);
     }
@@ -185,7 +242,7 @@ public class SupportService {
     public List<SupportTicket> getDentistVisibleTickets(Long dentistUserId, String status) {
         User dentist = requireUser(dentistUserId);
         if (dentist.getRole() != Role.DENTIST) {
-            throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem danh sách này.");
+            throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem danh sách n� y.");
         }
 
         String normalizedStatus = normalizeStatusFilter(status);
@@ -207,7 +264,7 @@ public class SupportService {
         }
 
         SupportTicket ticket = supportTicketRepository.findVisibleToDentistById(ticketId, dentistUserId)
-                .orElseThrow(() -> new SupportAccessDeniedException("Bạn không có quyền xem phiếu hỗ trợ này."));
+                .orElseThrow(() -> new SupportAccessDeniedException("Bạn không có quyền xem phiếu hỗ trợ n� y."));
         return hydrateTicket(ticket);
     }
 
@@ -219,7 +276,7 @@ public class SupportService {
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
         if (!ticket.getCustomer().getId().equals(customerUserId)) {
-            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu hỗ trợ này.");
+            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu hỗ trợ n� y.");
         }
         if (isConversationClosed(ticket)) {
             throw new BusinessException("Phiếu hỗ trợ đã đóng, không thể phản hồi thêm.");
@@ -316,7 +373,7 @@ public class SupportService {
     private User requireCustomer(Long userId) {
         User user = requireUser(userId);
         if (user.getRole() != Role.CUSTOMER) {
-            throw new SupportAccessDeniedException("Chỉ khách hàng mới được thực hiện thao tác này.");
+            throw new SupportAccessDeniedException("Chỉ khách h� ng mới được thực hiện thao tác n� y.");
         }
         return user;
     }
@@ -324,7 +381,7 @@ public class SupportService {
     private User requireStaffOrAdmin(Long userId) {
         User user = requireUser(userId);
         if (user.getRole() != Role.STAFF && user.getRole() != Role.ADMIN) {
-            throw new SupportAccessDeniedException("Bạn không có quyền thực hiện thao tác này.");
+            throw new SupportAccessDeniedException("Bạn không có quyền thực hiện thao tác n� y.");
         }
         return user;
     }
@@ -343,12 +400,12 @@ public class SupportService {
         }
 
         if (ticket.getAppointment().getDentist() == null || ticket.getAppointment().getDentist().getUser() == null) {
-            throw new SupportAccessDeniedException("Phiếu này chưa gắn bác sĩ ca khám, bác sĩ không thể phản hồi.");
+            throw new SupportAccessDeniedException("Phiếu n� y chưa gắn bác sĩ ca khám, bác sĩ không thể phản hồi.");
         }
 
         Long assignedDentistUserId = ticket.getAppointment().getDentist().getUser().getId();
         if (!assignedDentistUserId.equals(dentistUserId)) {
-            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu liên quan ca khám này.");
+            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu liên quan ca khám n� y.");
         }
     }
 
@@ -366,7 +423,7 @@ public class SupportService {
 
     private void validateAppointmentSupportEligibility(Appointment appointment) {
         if (!isEligibleSupportAppointment(appointment)) {
-            throw new BusinessException("Chỉ có thể gửi hỗ trợ cho ca khám đã hoàn thành, có bác sĩ phụ trách và còn trong thời hạn 14 ngày.");
+            throw new BusinessException("Chỉ có thể gửi hỗ trợ cho ca khám đã ho� n th� nh, có bác sĩ phụ trách v�  còn trong thời hạn 14 ng� y.");
         }
     }
 
@@ -410,7 +467,7 @@ public class SupportService {
         }
         String safeTitle = title.trim();
         if (safeTitle.length() > MAX_TITLE_LENGTH) {
-            throw new BusinessException("Tiêu đề quá dài.");
+            throw new BusinessException("Tiêu đề quá d� i.");
         }
         return safeTitle;
     }
@@ -494,7 +551,7 @@ public class SupportService {
         if (rawQuestion != null && !rawQuestion.isBlank()) {
             entries.add(new TranscriptEntry(
                     SENDER_CUSTOMER,
-                    ticket.getCustomer() != null ? resolveCustomerLabel(ticket.getCustomer()) : "Khách hàng",
+                    ticket.getCustomer() != null ? resolveCustomerLabel(ticket.getCustomer()) : "Khách h� ng",
                     rawQuestion,
                     ticket.getCreatedAt()
             ));
@@ -541,12 +598,12 @@ public class SupportService {
 
     private String resolveCustomerLabel(User customer) {
         if (customer == null) {
-            return "Khách hàng";
+            return "Khách h� ng";
         }
         return customerProfileRepository.findByUser_Id(customer.getId())
                 .map(CustomerProfile::getFullName)
                 .filter(name -> name != null && !name.isBlank())
-                .orElseGet(() -> customer.getEmail() != null ? customer.getEmail() : "Khách hàng");
+                .orElseGet(() -> customer.getEmail() != null ? customer.getEmail() : "Khách h� ng");
     }
 
     private String resolveResponderLabel(User responder) {
@@ -600,6 +657,32 @@ public class SupportService {
         return value != null && !value.isBlank() ? value : fallback;
     }
 
+    private boolean matchesTicketKeyword(SupportTicket ticket, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+
+        String normalizedKeyword = normalizeKeyword(keyword);
+        if (normalizedKeyword.isEmpty()) {
+            return true;
+        }
+
+        return containsKeyword(ticket.getTitle(), normalizedKeyword)
+                || containsKeyword(ticket.getLatestCustomerMessage(), normalizedKeyword)
+                || containsKeyword(ticket.getLatestStaffReply(), normalizedKeyword)
+                || containsKeyword(ticket.getResponderDisplayName(), normalizedKeyword)
+                || containsKeyword(ticket.getDisplayStatus(), normalizedKeyword)
+                || containsKeyword(ticket.getAppointment() != null ? String.valueOf(ticket.getAppointment().getId()) : "Hỗ trợ khác", normalizedKeyword);
+    }
+
+    private boolean containsKeyword(String value, String normalizedKeyword) {
+        return value != null && normalizeKeyword(value).contains(normalizedKeyword);
+    }
+
+    private String normalizeKeyword(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
     private static final class TranscriptEntry {
         private final String senderType;
         private final String senderLabel;
@@ -614,3 +697,4 @@ public class SupportService {
         }
     }
 }
+

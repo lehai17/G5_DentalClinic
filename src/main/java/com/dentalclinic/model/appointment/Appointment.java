@@ -98,13 +98,13 @@ public class Appointment {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // Tự động gán thời gian lúc insert vào DB
+    // Tá»± Ä‘á»™ng gÃ¡n thá»i gian lÃºc insert vÃ o DB
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Thêm Getter và Setter (Quan trọng để Spring JPA đọc được)
+    // ThÃªm Getter vÃ  Setter (Quan trá»ng Ä‘á»ƒ Spring JPA Ä‘á»c Ä‘Æ°á»£c)
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }

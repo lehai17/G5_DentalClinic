@@ -48,7 +48,7 @@ public class DentistAppointmentController {
 
 
         Appointment appt = appointmentRepository.findById(id).orElseThrow();
-        // 🔥 Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED
+        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED
         if (appt.getStatus() != AppointmentStatus.DONE
                 && appt.getStatus() != AppointmentStatus.COMPLETED
                 && appt.getStatus() != AppointmentStatus.EXAMINING) {
@@ -92,7 +92,7 @@ public class DentistAppointmentController {
             @PathVariable Long id,
             @RequestParam Long customerUserId,
             @ModelAttribute MedicalRecord medicalRecord,
-            @RequestParam(required = false) String weekStart, // ✅ THÊM
+            @RequestParam(required = false) String weekStart, // âœ… THÊM
             RedirectAttributes redirect
     ) {
         dentistSessionService.saveExam(
@@ -154,3 +154,4 @@ public class DentistAppointmentController {
         return "redirect:/dentist/work-schedule?weekStart=" + weekStart;
     }
 }
+

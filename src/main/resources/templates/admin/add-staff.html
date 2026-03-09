@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -26,7 +26,7 @@
         .input-wrapper { background: #F4F7FE; border-radius: 12px; padding: 12px 15px; display: flex; align-items: center; gap: 10px; }
         .input-wrapper input, .input-wrapper select, .input-wrapper textarea { border: none; background: transparent; outline: none; width: 100%; color: #2B3674; font-size: 14px; }
 
-        /* Day Label Style - Giữ lại để xử lý hiệu ứng đổi màu khi chọn */
+        /* Day Label Style - Giữ lại để xử lý hiệu á»©ng đổi m� u khi chọn */
         .day-label { transition: 0.3s; }
         input[type="checkbox"]:checked + .day-label { background: #0095FF !important; color: white !important; }
 
@@ -72,13 +72,13 @@
     <div th:if="${error}" class="alert alert-danger"
          style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
         <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
-        <span th:text="${error}">Thông báo lỗi ở đây</span>
+        <span th:text="${error}">Thông báo lỗi á»Ÿ đây</span>
     </div>
 
     <div th:if="${success}" class="alert alert-success"
          style="color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
         <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
-        <span th:text="${success}">Thành công!</span>
+        <span th:text="${success}">Th� nh công!</span>
     </div>
     <form th:action="@{/admin/staff/save}" th:object="${staffDTO}" method="POST">
         <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger"
@@ -203,4 +203,5 @@
 
 </body>
 </html>
+
 

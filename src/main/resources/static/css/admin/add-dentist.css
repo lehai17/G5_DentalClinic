@@ -1,4 +1,4 @@
-/*!* 1. Khung chính 2 cột - Bố cục Dashboard *!*/
+﻿/*!* 1. Khung chính 2 cột - Bố cục Dashboard *!*/
 /*.content-wrapper {*/
 /*    display: grid;*/
 /*    grid-template-columns: 2fr 1fr;*/
@@ -95,13 +95,13 @@
 /*    margin-top: 15px;*/
 /*}*/
 
-/*!* Ẩn checkbox gốc nhưng vẫn giữ tính năng *!*/
+/*!* áº¨n checkbox gốc nhưng vẫn giữ tính năng *!*/
 /*.day-checkbox {*/
 /*    position: absolute;*/
 /*    opacity: 0;*/
 /*    width: 0;*/
 /*    height: 0;*/
-/*    pointer-events: none; !* Vẫn tồn tại nhưng không cản trở click vào label *!*/
+/*    pointer-events: none; !* Vẫn tồn tại nhưng không cản trở click v� o label *!*/
 /*}*/
 
 /*!* Định dạng nút bấm khi CHƯA chọn *!*/
@@ -120,7 +120,7 @@
 /*    border: 1px solid transparent;*/
 /*}*/
 
-/*!* HIỆU ỨNG KHI CLICK: Đổi sang màu Navy Blue *!*/
+/*!* HIỆU á»¨NG KHI CLICK: Đổi sang m� u Navy Blue *!*/
 /*.day-checkbox:checked + .day-label {*/
 /*    background-color: #1A237E !important;*/
 /*    color: #FFFFFF !important;*/

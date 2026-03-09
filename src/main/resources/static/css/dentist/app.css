@@ -1,4 +1,4 @@
-:root{
+﻿:root{
     --bg:#f4f6fb;
     --card:#ffffff;
     --text:#0f172a;
@@ -144,7 +144,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     grid-template-columns:90px repeat(7,1fr);
     grid-auto-rows:48px; /* 30 phút / slot */
     background:#fff;
-    position:relative; /* 🔥 thêm dòng này */
+    position:relative; /* ðŸ”¥ thêm dòng n� y */
 }
 
 /* Cột giờ bên trái */
@@ -157,7 +157,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     border-bottom:1px solid var(--line);
 }
 
-/* Ô trống */
+/* Ã” trống */
 .cell{
     border-left:1px solid var(--line);
     border-bottom:1px solid var(--line);
@@ -187,7 +187,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 
     box-sizing:border-box;
 
-    /* 🔥 QUAN TRỌNG */
+    /* ðŸ”¥ QUAN TRỌNG */
     overflow:hidden;
 }
 
@@ -227,7 +227,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     position:fixed;
     inset:0;
     background:rgba(15,23,42,.45);
-    backdrop-filter:blur(3px); /* 🔥 làm mờ nền */
+    backdrop-filter:blur(3px); /* ðŸ”¥ l� m mờ nền */
     display:flex;
     align-items:center;
     justify-content:center;
@@ -246,7 +246,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     border:1px solid rgba(0,0,0,.08);
     box-shadow:0 30px 90px rgba(0,0,0,.18);
     padding:32px;
-    max-width:650px;   /* 🔥 TO HƠN */
+    max-width:650px;   /* ðŸ”¥ TO H� N */
     width:100%;
     animation:scaleIn .18s ease;
 }
@@ -288,7 +288,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     align-items:center;
     gap:16px;
     margin-top:26px;
-    flex-wrap:wrap;           /* tránh tràn modal */
+    flex-wrap:wrap;           /* tránh tr� n modal */
 }
 
 /* Nút trong modal */
@@ -319,7 +319,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     from{transform:scale(.96);opacity:0}
     to{transform:scale(1);opacity:1}
 }
-/* 🔵 EXAMINING – đang khám */
+/* ðŸ”µ EXAMINING â€“ Ä‘ang khám */
 .appt-examining{
     background:#e0f2fe;
     border:2px solid #0284c7;
@@ -331,7 +331,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     color:#0369a1;
 }
 
-/* ⚫ DONE – đã chốt */
+/* âš« DONE â€“ đã chốt */
 .appt-done{
     background:#f1f5f9;
     border:2px solid #334155;
@@ -343,7 +343,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     color:#475569;
 }
 
-/* 🟢 COMPLETED – hoàn tất thanh toán */
+/* ðŸŸ¢ COMPLETED â€“ ho� n tất thanh toán */
 .appt-completed{
     background:#dcfce7;
     border:2px solid #16a34a;
@@ -355,7 +355,7 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     color:#15803d;
 }
 
-/* 🟡 CONFIRMED – đã xác nhận */
+/* ðŸŸ¡ CONFIRMED â€“ đã xác nhận */
 .appt-confirmed{
     background:#fef9c3;
     border:2px solid #ca8a04;

@@ -10,7 +10,7 @@
 
         @Override
         public void addViewControllers(ViewControllerRegistry registry) {
-            // Cho phép vào "/" là ra login
+            // Cho phép v� o "/" l�  ra login
             registry.addViewController("/").setViewName("redirect:/login");
         }
 
@@ -20,3 +20,4 @@
                     .addResourceLocations("file:uploads/");
         }
     }
+

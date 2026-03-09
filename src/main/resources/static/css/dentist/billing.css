@@ -1,4 +1,4 @@
-/* ===============================
+﻿/* ===============================
    BILLING PAGE LAYOUT
 ================================ */
 
@@ -351,7 +351,7 @@ textarea:focus {
     align-items: center;
     justify-content: center;
 
-    width: fit-content;          /* 🔥 ép rộng theo nội dung */
+    width: fit-content;          /* ðŸ”¥ Ã©p rộng theo nội dung */
     height: auto;
 
     margin-top: 18px;
@@ -367,7 +367,7 @@ textarea:focus {
 
     font-weight: 600;
     font-size: 14px;
-    line-height: 1;              /* 🔥 tránh cao bất thường */
+    line-height: 1;              /* ðŸ”¥ tránh cao bất thường */
 
     white-space: nowrap;
     cursor: pointer;
@@ -390,3 +390,4 @@ textarea:focus {
     background-image: none;
     background-color: #f3f4f6;
 }
+

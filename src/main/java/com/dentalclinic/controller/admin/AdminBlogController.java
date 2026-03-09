@@ -89,7 +89,7 @@ public class AdminBlogController {
         blog.setTitle(title);
         blog.setSummary(summary);
         blog.setContent(content);
-        // KHÔNG set imageUrl => giữ nguyên ảnh
+        // KHÔNG set imageUrl => giữ nguyên áº£nh
 
         blogRepository.save(blog);
 
@@ -146,13 +146,13 @@ public class AdminBlogController {
                     .getFilenameExtension(imageFile.getOriginalFilename());
             String fileName = java.util.UUID.randomUUID() + (ext != null ? "." + ext : "");
 
-            // ✅ Lưu vào thư mục ngoài: uploads/blog (tính theo thư mục chạy project)
+            // âœ… Lưu v� o thư mục ngo� i: uploads/blog (tính theo thư mục chạy project)
             java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads", "blog");
-            java.nio.file.Files.createDirectories(uploadDir); // ✅ đảm bảo folder tồn tại
+            java.nio.file.Files.createDirectories(uploadDir); // âœ… đảm bảo folder tồn tại
 
             java.nio.file.Path filePath = uploadDir.resolve(fileName);
 
-            // ✅ dùng NIO copy (ổn hơn transferTo ở một số môi trường)
+            // âœ… dùng NIO copy (ổn hơn transferTo á»Ÿ một số môi trường)
             try (java.io.InputStream in = imageFile.getInputStream()) {
                 java.nio.file.Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
@@ -175,3 +175,4 @@ public class AdminBlogController {
 
 
 }
+

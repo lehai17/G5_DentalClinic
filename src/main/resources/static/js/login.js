@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
     const form = document.getElementById("loginForm");
     const btn = document.getElementById("loginBtn");
 
@@ -10,3 +10,4 @@
         btn.disabled = true;
     });
 })();
+

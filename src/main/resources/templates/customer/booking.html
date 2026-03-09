@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -35,19 +35,19 @@
           <div class="step-progress">
             <div class="step-item" data-step="1">
               <div class="step-circle active" id="step-1-circle">1</div>
-              <div class="step-label active" id="step-1-label">Chọn ngày</div>
+              <div class="step-label active" id="step-1-label">Chọn dịch vụ và ngày</div>
             </div>
             <div class="step-item" data-step="2">
               <div class="step-circle" id="step-2-circle">2</div>
-              <div class="step-label" id="step-2-label">Chọn dịch vụ</div>
+              <div class="step-label" id="step-2-label">Chọn giờ khám</div>
             </div>
             <div class="step-item" data-step="3">
               <div class="step-circle" id="step-3-circle">3</div>
-              <div class="step-label" id="step-3-label">Thông tin</div>
+              <div class="step-label" id="step-3-label">Thông tin liên hệ</div>
             </div>
             <div class="step-item" data-step="4">
               <div class="step-circle" id="step-4-circle">4</div>
-              <div class="step-label" id="step-4-label">Xác nhận</div>
+              <div class="step-label" id="step-4-label">Hoàn tất</div>
             </div>
           </div>
 
@@ -79,7 +79,7 @@
                           <span class="booking-service-name" th:text="${s.name}">Dịch vụ</span>
                           <span class="booking-service-meta">
                             <span th:text="${s.durationMinutes} + ' phút'">30 phút</span>
-                            <span>•</span>
+                            <span>&bull;</span>
                             <span th:text="${#numbers.formatDecimal(s.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">500.000 VNĐ</span>
                           </span>
                         </span>
@@ -415,3 +415,6 @@
     <script th:src="@{/js/customer-booking.js}"></script>
   </body>
 </html>
+
+
+

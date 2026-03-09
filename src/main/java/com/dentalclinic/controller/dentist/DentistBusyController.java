@@ -33,14 +33,14 @@ public class DentistBusyController {
     @GetMapping
     public String showBusyForm(Model model, Principal principal) {
         try {
-            // 1. Lấy email của bác sĩ đang đăng nhập từ hệ thống
+            // 1. Lấy email của bác sĩ Ä‘ang đăng nhập từ hệ thống
             String email = principal.getName();
 
             // 2. Tìm hồ sơ bác sĩ. Dùng Optional để tránh lỗi "Incompatible types"
             DentistProfile dentist = (DentistProfile) dentistProfileRepository.findByUserEmail(email)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bác sĩ"));
 
-            // 3. Lấy danh sách các yêu cầu nghỉ phép của riêng bác sĩ này để hiển thị ở bảng "My Absence History"
+            // 3. Lấy danh sách các yêu cầu nghỉ phép của riêng bác sĩ n� y để hiển thị á»Ÿ bảng "My Absence History"
             List<BusySchedule> myRequests = dentistBusyScheduleRepository.findByDentistIdOrderByCreatedAtDesc(dentist.getId());
 
             model.addAttribute("myRequests", myRequests);
@@ -61,7 +61,7 @@ public class DentistBusyController {
             RedirectAttributes redirectAttributes) {
 
         try {
-            // 1. Chuyển đổi dữ liệu ngày tháng
+            // 1. Chuyển đổi dữ liệu ng� y tháng
             LocalDate start = LocalDate.parse(startDate);
             LocalDate end = LocalDate.parse(endDate);
 
@@ -72,14 +72,14 @@ public class DentistBusyController {
 
             Long dentistId = dentist.getId();
 
-            // 3. Gọi service để kiểm tra hạn mức (tối đa 2 buổi/tháng) và lưu đơn
+            // 3. Gọi service để kiểm tra hạn mức (tối Ä‘a 2 buổi/tháng) v�  lưu đơn
             adminBusyScheduleService.submitBusyRequest(dentistId, start, end, reason);
 
-            redirectAttributes.addFlashAttribute("message", "Đã gửi báo cáo nghỉ thành công!");
+            redirectAttributes.addFlashAttribute("message", "Đã gửi báo cáo nghỉ th� nh công!");
             return "redirect:/dentist/busy-schedule";
 
         } catch (Exception e) {
-            // Bắt các lỗi như: Hết hạn mức nghỉ, sai định dạng ngày, không tìm thấy bác sĩ...
+            // Bắt các lỗi như: Hết hạn mức nghỉ, sai định dạng ng� y, không tìm thấy bác sĩ...
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
             return "redirect:/dentist/busy-schedule";
         }

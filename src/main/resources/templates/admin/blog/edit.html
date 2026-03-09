@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8"/>
@@ -34,14 +34,14 @@
 
     <div class="card" style="margin-bottom:14px;">
         <h2 style="margin:0; color:var(--text);">Edit Blog</h2>
-        <div class="muted">Admin chỉ được sửa khi blog ở trạng thái <b>PENDING</b> hoặc <b>APPROVED</b>. Ảnh được giữ nguyên.</div>
+        <div class="muted">Admin chỉ được sửa khi blog á»Ÿ trạng thái <b>PENDING</b> hoặc <b>APPROVED</b>. áº¢nh được giữ nguyên.</div>
     </div>
 
     <!-- Chặn UI nếu không hợp lệ (phòng trường hợp ai đó gõ URL) -->
     <div class="warn" th:if="${blog.status.name() != 'PENDING' and blog.status.name() != 'APPROVED'}">
-        Blog đang ở trạng thái <b th:text="${blog.status}">REJECTED</b> nên không thể chỉnh sửa.
+        Blog Ä‘ang á»Ÿ trạng thái <b th:text="${blog.status}">REJECTED</b> nên không thể chỉnh sửa.
         <div style="margin-top:10px;">
-            <a class="btn btn-light" th:href="@{/admin/blogs(status=${blog.status})}">← Back</a>
+            <a class="btn btn-light" th:href="@{/admin/blogs(status=${blog.status})}">â† Back</a>
             <a class="btn btn-primary" th:href="@{'/admin/blogs/' + ${blog.id}}">View Detail</a>
         </div>
     </div>
@@ -78,3 +78,4 @@
 </div>
 </body>
 </html>
+

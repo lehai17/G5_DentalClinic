@@ -173,7 +173,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public User getCurrentUserByEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new AccessDeniedException("Không xác định được tài khoản hiện tại.");
+            throw new AccessDeniedException("Không xác định được t� i khoản hiện tại.");
         }
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng."));
@@ -207,7 +207,7 @@ public class ChatService {
     private ChatThread getThreadForCustomer(Long customerId, Long threadId) {
         ChatThread thread = getThread(threadId);
         if (!thread.getCustomer().getId().equals(customerId)) {
-            throw new AccessDeniedException("Bạn không có quyền truy cập cuộc hội thoại này.");
+            throw new AccessDeniedException("Bạn không có quyền truy cập cuộc hội thoại n� y.");
         }
         return thread;
     }
@@ -231,7 +231,7 @@ public class ChatService {
 
     private void ensureThreadWritable(ChatThread thread) {
         if (thread.getStatus() == ChatThreadStatus.CLOSED) {
-            throw new IllegalStateException("Cuộc trò chuyện này đã đóng.");
+            throw new IllegalStateException("Cuộc trò chuyện n� y đã đóng.");
         }
     }
 
@@ -323,3 +323,4 @@ public class ChatService {
         STAFF
     }
 }
+

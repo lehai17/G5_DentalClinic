@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Staff Appointments</title>
@@ -109,7 +109,7 @@
             <div class="pagination" th:if="${totalPages > 1}">
                 <a th:if="${currentPage > 0}"
                    th:href="@{/staff/appointments(page=${currentPage - 1}, keyword=${keyword}, serviceKeyword=${serviceKeyword},sort=${sort})}">
-                    ◀ Previous
+                    â—€ Previous
                 </a>
 
                 <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
@@ -121,7 +121,7 @@
 
                 <a th:if="${currentPage < totalPages - 1}"
                    th:href="@{/staff/appointments(page=${currentPage + 1}, keyword=${keyword},serviceKeyword=${serviceKeyword}, sort=${sort})}">
-                    After ▶
+                    After â–¶
                 </a>
             </div>
 
@@ -130,3 +130,4 @@
 </div>
 </body>
 </html>
+
