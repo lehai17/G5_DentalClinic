@@ -516,14 +516,16 @@ public class CustomerAppointmentService {
     @Transactional
     private void releaseSlots(List<Slot> slots) {
         for (Slot slot : slots) {
-            Slot locked = slotRepository.findBySlotTimeAndActiveTrueForUpdate(slot.getSlotTime())
+            Slot locked = slotRepository.findBySlotTimeForUpdateRegardlessActive(slot.getSlotTime())
                     .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
 
-            if (locked.getBookedCount() <= 0) {
-                throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dữ liệu slot không hợp lệ.");
+            if (locked.getBookedCount() > 0) {
+                locked.setBookedCount(locked.getBookedCount() - 1);
             }
 
-            locked.setBookedCount(locked.getBookedCount() - 1);
+            if (!locked.isActive()) {
+                locked.setActive(true);
+            }
             slotRepository.save(locked);
         }
     }
