@@ -21,7 +21,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/dentist/support")
-@PreAuthorize("hasRole('DENTIST')") // Chỉ cho phép người dùng có quyền DENTIST truy cập
+@PreAuthorize("hasRole('DENTIST')")
 public class DentistSupportController {
 
     private final SupportService supportService;
@@ -30,46 +30,34 @@ public class DentistSupportController {
         this.supportService = supportService;
     }
 
-    // ================== DANH SÁCH PHIẾU HỖ TRỢ ==================
     @GetMapping
     public String list(@RequestParam(required = false) String status,
                        @AuthenticationPrincipal UserDetails principal,
                        Model model) {
-
         User currentUser = supportService.getCurrentUser(principal);
         Long dentistUserId = currentUser.getId();
-
         List<SupportTicket> tickets = supportService.getDentistVisibleTickets(dentistUserId, status);
 
         model.addAttribute("tickets", tickets);
         model.addAttribute("selectedStatus", status == null ? "" : status.trim().toUpperCase());
-
         return "Dentist/support-list";
     }
 
-    // ================== CHI TIẾT PHIẾU HỖ TRỢ ==================
     @GetMapping("/{id}")
     public String detail(@PathVariable Long id,
                          @AuthenticationPrincipal UserDetails principal,
                          Model model) {
-
         User currentUser = supportService.getCurrentUser(principal);
-
-        // Service chịu trách nhiệm check quyền/visibility
         SupportTicket ticket = supportService.getDentistTicketDetail(currentUser.getId(), id);
-
         model.addAttribute("ticket", ticket);
         return "Dentist/support-detail";
     }
 
-    // ================== TRẢ LỜI PHIẾU HỖ TRỢ ==================
     @PostMapping("/{id}/answer")
     public String answer(@PathVariable Long id,
                          @RequestParam(name = "answer", required = false) String answer,
                          @AuthenticationPrincipal UserDetails principal,
                          RedirectAttributes redirectAttributes) {
-
-        // Validate: câu trả lời không được trống
         if (answer == null || answer.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Nội dung phản hồi không được để trống.");
             return "redirect:/dentist/support/" + id;
@@ -77,11 +65,8 @@ public class DentistSupportController {
 
         try {
             User currentUser = supportService.getCurrentUser(principal);
-
-            // Lưu câu trả lời
             supportService.answerTicket(currentUser.getId(), id, answer.trim());
-
-            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi phản hồi thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã gửi phản hồi th� nh công.");
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -89,10 +74,10 @@ public class DentistSupportController {
         return "redirect:/dentist/support/" + id;
     }
 
-    // ================== XỬ LÝ LỖI TẬP TRUNG ==================
     @ExceptionHandler({BusinessException.class, IllegalArgumentException.class, IllegalStateException.class})
     public String handleBusinessError(RuntimeException ex, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         return "redirect:/dentist/support";
     }
 }
+

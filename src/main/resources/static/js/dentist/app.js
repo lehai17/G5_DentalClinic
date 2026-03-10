@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+﻿document.addEventListener('DOMContentLoaded', function () {
 
     const backdrop   = document.getElementById('apptModalBackdrop');
     const btnClose   = document.getElementById('btnCloseModal');
@@ -19,16 +19,35 @@ document.addEventListener('DOMContentLoaded', function () {
     backdrop.addEventListener('click', e => {
         if (e.target === backdrop) closeModal();
     });
+    /* ===== DISABLE FUTURE APPOINTMENTS ===== */
 
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    document.querySelectorAll('.appt').forEach(el => {
+
+        const dateStr = el.dataset.date;
+        if(!dateStr) return;
+
+        const apptDate = new Date(dateStr);
+        apptDate.setHours(0,0,0,0);
+
+        if(apptDate > today){
+            el.classList.add('appt-future');
+        }
+
+    });
     /* ===== CLICK APPOINTMENT ===== */
     document.querySelectorAll('.appt').forEach(el => {
         el.addEventListener('click', () => {
-
+            if(el.classList.contains('appt-future')){
+                return;
+            }
             const appointmentId = el.dataset.appointmentId;
             const customerUserId = el.dataset.customerUserId;
             const status = el.dataset.status;
 
-            // ✅ lấy weekStart từ hidden input (server truyền xuống)
+            // âœ… lấy weekStart từ hidden input (server truyền xuống)
             const weekStart =
                 document.getElementById('weekStartHidden')?.value || '';
 
@@ -69,3 +88,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+

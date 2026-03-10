@@ -1,44 +1,40 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Re-examination Appointment</title>
+  <title>Lịch tái khám</title>
   <link rel="stylesheet" href="/css/dentist/reexam.css"/>
 </head>
 <body class="reexam-page">
 <div class="reexam-container">
-  <!-- ALERTS -->
   <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
   <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
-  
-  <!-- READ-ONLY NOTICE -->
+
   <div th:if="${isReadOnly}" class="read-only-notice">
-    ℹ️ This appointment is in a read-only state. You can view details but cannot make changes.
+    Lịch hẹn này đang ở chế độ chỉ đọc. Bạn chỉ có thể xem chi tiết và không thể chỉnh sửa.
   </div>
-  
-  <!-- HEADER -->
+
   <div class="reexam-header">
-    <div class="reexam-title">Re-examination Appointment</div>
+    <div class="reexam-title">Lịch tái khám</div>
     <div class="reexam-sub">
-      <span th:if="${isUpdate}">Update existing re-examination</span>
-      <span th:if="!${isUpdate}">Create new re-examination</span>
+      <span th:if="${isUpdate}">Cập nhật lịch tái khám hiện có</span>
+      <span th:if="${!isUpdate}">Tạo lịch tái khám mới</span>
     </div>
   </div>
-  
-  <!-- ORIGINAL APPOINTMENT INFO -->
+
   <div class="info-box">
-    <div>Original Appointment</div>
+    <div>Lịch hẹn gốc</div>
     <div class="info-row">
-      <span class="info-label">Patient:</span>
+      <span class="info-label">Bệnh nhân:</span>
       <span class="info-value" th:text="${originalAppointment.customer.fullName}"></span>
     </div>
     <div class="info-row">
-      <span class="info-label">Original Date:</span>
+      <span class="info-label">Ngày gốc:</span>
       <span class="info-value" th:text="${#temporals.format(originalAppointment.date, 'dd/MM/yyyy')}"></span>
     </div>
     <div class="info-row">
-      <span class="info-label">Time:</span>
+      <span class="info-label">Giờ:</span>
       <span class="info-value">
         <span th:text="${#temporals.format(originalAppointment.startTime, 'HH:mm')}"></span>
         -
@@ -46,65 +42,56 @@
       </span>
     </div>
     <div class="info-row">
-      <span class="info-label">Service:</span>
+      <span class="info-label">Dịch vụ:</span>
       <span class="info-value" th:text="${originalAppointment.service.name}"></span>
     </div>
     <div class="info-row">
-      <span class="info-label">Dentist:</span>
+      <span class="info-label">Bác sĩ:</span>
       <span class="info-value" th:text="${originalAppointment.dentist.fullName}"></span>
     </div>
     <div class="info-row">
-      <span class="info-label">Status:</span>
+      <span class="info-label">Trạng thái:</span>
       <span class="info-value" th:text="${originalAppointmentStatus}"></span>
     </div>
   </div>
-  
-  <!-- REEXAM FORM -->
+
   <form id="reexamForm" method="post" th:action="@{/dentist/reexam/save/{appointmentId}(appointmentId=${originalAppointmentId})}">
     <input type="hidden" name="weekStart" th:value="${weekStart}"/>
-    
-    <!-- SERVICE & NOTE SECTION (Read-only) -->
+
     <div class="form-group">
-      <label class="form-label">Service (inherited from original)</label>
-      <input type="text" class="form-control" 
-             th:value="${originalAppointment.service.name}" 
-             disabled/>
+      <label class="form-label">Dịch vụ (kế thừa từ lịch gốc)</label>
+      <input type="text" class="form-control" th:value="${originalAppointment.service.name}" disabled/>
     </div>
-    
+
     <div class="form-group">
-      <label class="form-label">Notes</label>
-      <textarea class="form-control" 
-                name="notes" 
-                rows="3" 
-                placeholder="Enter any additional notes for this re-examination"
+      <label class="form-label">Ghi chú</label>
+      <textarea class="form-control"
+                name="notes"
+                rows="3"
+                placeholder="Nhập ghi chú thêm cho lịch tái khám này"
                 th:disabled="${isReadOnly}"
                 th:text="${reexam.notes}"></textarea>
-      <small>Optional notes will be displayed below service details</small>
+      <small>Ghi chú tùy chọn sẽ hiển thị bên dưới thông tin dịch vụ.</small>
     </div>
-    
-    <!-- DATE & TIME SECTION (Editable) -->
+
     <div class="form-group">
-      <label class="form-label">Appointment Date *</label>
-      <input type="date" 
-             class="form-control" 
-             name="date" 
+      <label class="form-label">Ngày hẹn *</label>
+      <input type="date"
+             class="form-control"
+             name="date"
              th:value="${#temporals.format(reexam.date, 'yyyy-MM-dd')}"
              id="appointmentDate"
              data-original-date="${#temporals.format(originalAppointment.date, 'yyyy-MM-dd')}"
              th:disabled="${isReadOnly}"
              required/>
-      <small>Must be today or in the future</small>
+      <small>Phải là hôm nay hoặc ngày trong tương lai.</small>
     </div>
-    
+
     <div class="two-col">
       <div class="form-group">
-        <label class="form-label">Start Time *</label>
-        <select class="form-control" 
-                name="startTime" 
-                id="startTime"
-                th:disabled="${isReadOnly}"
-                required>
-          <option value="">-- Select start time --</option>
+        <label class="form-label">Giờ bắt đầu *</label>
+        <select class="form-control" name="startTime" id="startTime" th:disabled="${isReadOnly}" required>
+          <option value="">-- Chọn giờ bắt đầu --</option>
           <option value="08:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '08:00'}">08:00</option>
           <option value="08:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '08:30'}">08:30</option>
           <option value="09:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '09:00'}">09:00</option>
@@ -125,15 +112,11 @@
           <option value="16:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '16:30'}">16:30</option>
         </select>
       </div>
-      
+
       <div class="form-group">
-        <label class="form-label">End Time *</label>
-        <select class="form-control" 
-                name="endTime" 
-                id="endTime"
-                th:disabled="${isReadOnly}"
-                required>
-          <option value="">-- Select end time --</option>
+        <label class="form-label">Giờ kết thúc *</label>
+        <select class="form-control" name="endTime" id="endTime" th:disabled="${isReadOnly}" required>
+          <option value="">-- Chọn giờ kết thúc --</option>
           <option value="08:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '08:30'}">08:30</option>
           <option value="09:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '09:00'}">09:00</option>
           <option value="09:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '09:30'}">09:30</option>
@@ -155,110 +138,40 @@
         </select>
       </div>
     </div>
-    
-    <!-- BUTTONS -->
+
     <div class="btn-group">
-      <a href="/dentist/work-schedule" th:if="${weekStart}" th:href="@{/dentist/work-schedule(weekStart=${weekStart})}" 
+      <a th:if="${weekStart != null}"
+         th:href="@{/dentist/work-schedule(weekStart=${weekStart})}"
          class="btn btn-secondary">
-        Back to Schedule
+        Quay lại lịch làm việc
       </a>
-      <a href="/dentist/work-schedule" th:if="!${weekStart}" 
+
+      <a th:if="${weekStart == null}"
+         href="/dentist/work-schedule"
          class="btn btn-secondary">
-        Back to Schedule
+        Quay lại lịch làm việc
       </a>
-      
-      <button type="submit" 
-              class="btn btn-primary" 
-              th:disabled="${isReadOnly}"
-              id="submitBtn">
-        <span th:if="${isUpdate}">Update Re-examination</span>
-        <span th:if="!${isUpdate}">Create Re-examination</span>
+
+      <button type="submit" class="btn btn-primary" th:disabled="${isReadOnly}" id="submitBtn">
+        <span th:if="${isUpdate}">Cập nhật lịch tái khám</span>
+        <span th:if="${!isUpdate}">Tạo lịch tái khám</span>
       </button>
-      
-      <button type="button" 
-              class="btn btn-danger" 
-              th:disabled="${isReadOnly}"
-              id="deleteBtn"
-              th:if="${isUpdate}">
-        Delete Re-examination
+
+      <button type="button" class="btn btn-danger" th:disabled="${isReadOnly}" id="deleteBtn" th:if="${isUpdate}">
+        Xóa lịch tái khám
       </button>
     </div>
   </form>
-  
-  <!-- DELETE FORM (hidden) -->
-  <form id="deleteForm" method="post" th:action="@{/dentist/reexam/delete/{reexamId}(reexamId=${reexam.id})}" style="display: none;">
+
+  <form id="deleteForm"
+        method="post"
+        th:if="${isUpdate}"
+        th:action="@{/dentist/reexam/delete/{reexamId}(reexamId=${reexam.id})}"
+        style="display: none;">
     <input type="hidden" name="weekStart" th:value="${weekStart}"/>
   </form>
 </div>
 
-<!-- VALIDATION SCRIPT -->
 <script src="/js/dentist/reexam.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('reexamForm');
-  const dateInput = document.getElementById('appointmentDate');
-  const startTimeSelect = document.getElementById('startTime');
-  const endTimeSelect = document.getElementById('endTime');
-  const deleteBtn = document.getElementById('deleteBtn');
-  const deleteForm = document.getElementById('deleteForm');
-  
-  // Validate date is not in past
-  function validateDate(input) {
-    if (!input.value) return;
-    const selected = new Date(input.value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (selected < today) {
-      alert('Cannot schedule appointment in the past');
-      input.value = '';
-    }
-  }
-  
-  // Validate start < end time
-  function validateTimes() {
-    if (!startTimeSelect.value || !endTimeSelect.value) return;
-    if (startTimeSelect.value >= endTimeSelect.value) {
-      alert('End time must be after start time');
-      endTimeSelect.value = '';
-    }
-  }
-  
-  // Event listeners
-  dateInput.addEventListener('blur', validateDate);
-  startTimeSelect.addEventListener('change', validateTimes);
-  endTimeSelect.addEventListener('change', validateTimes);
-  
-  // Delete button handler
-  if (deleteBtn) {
-    deleteBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (deleteBtn.disabled) return; // Don't allow if disabled (read-only mode)
-      if (confirm('⚠️ Are you sure you want to delete this re-examination appointment?\n\nThis action cannot be undone and will free up the scheduled slot.')) {
-        deleteForm.submit();
-      }
-    });
-  }
-  
-  // Form submission validation
-  form.addEventListener('submit', function(e) {
-    if (!startTimeSelect.value) {
-      e.preventDefault();
-      alert('Please select a start time');
-      return false;
-    }
-    if (!endTimeSelect.value) {
-      e.preventDefault();
-      alert('Please select an end time');
-      return false;
-    }
-    if (startTimeSelect.value >= endTimeSelect.value) {
-      e.preventDefault();
-      alert('End time must be after start time');
-      return false;
-    }
-    return true;
-  });
-});
-</script>
 </body>
 </html>

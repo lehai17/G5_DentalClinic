@@ -6,7 +6,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+import java.time.LocalDate;
+import java.time.Period;
 @Controller
 @RequestMapping("/dentist/profile")
 public class DentistProfileController {
@@ -45,10 +48,28 @@ public class DentistProfileController {
     // ================= SAVE =================
     @PostMapping("/edit")
     public String saveProfile(Authentication authentication,
-                              @ModelAttribute DentistProfileEditDTO dto) {
+                              @Valid @ModelAttribute("editDTO") DentistProfileEditDTO dto,
+                              BindingResult result,
+                              Model model) {
+
+        if (dto.getDateOfBirth() != null) {
+
+            int age = Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears();
+
+            if (age < 25) {
+                result.rejectValue(
+                        "dateOfBirth",
+                        "error.dob",
+                        "Dentist must be at least 25 years old"
+                );
+            }
+        }
+
+        if (result.hasErrors()) {
+            return "dentist/profile-edit";
+        }
 
         String email = authentication.getName();
-
         profileService.updateProfile(email, dto);
 
         return "redirect:/dentist/profile";

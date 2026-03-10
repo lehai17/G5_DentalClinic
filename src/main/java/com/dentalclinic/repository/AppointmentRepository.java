@@ -4,6 +4,7 @@ import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -113,7 +114,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         LEFT JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+          AND a.status IN(
+              com.dentalclinic.model.appointment.AppointmentStatus.EXAMINING,
+                  com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
+                      com.dentalclinic.model.appointment.AppointmentStatus.CHECKED_IN,
+                          com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
+                              com.dentalclinic.model.appointment.AppointmentStatus.DONE
+                  
+              ) 
     """)
     List<Appointment> findScheduleForWeek(@Param("dentistProfileId") Long dentistProfileId,
                                           @Param("start") LocalDate start,
@@ -159,11 +167,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     """)
     long countTotalByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
 
+    /**
+     * Dashboard statistic: treat any appointment that is "done" or "completed"
+     * as finished for the purposes of the "completed today" counter.
+     */
     @Query("""
         SELECT COUNT(a) FROM Appointment a
         WHERE a.dentist.id = :dentistId
           AND a.date = :date
-          AND a.status = com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+          AND a.status IN (
+              com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
+              com.dentalclinic.model.appointment.AppointmentStatus.DONE
+          )
     """)
     long countCompletedByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
 
@@ -184,11 +199,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findAllByStatusAndCreatedAtBefore(AppointmentStatus status, LocalDateTime createdAt);
 
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     Optional<Appointment> findByIdAndCustomer_User_Id(Long appointmentId, Long customerUserId);
+
+    @EntityGraph(attributePaths = {"appointmentDetails", "appointmentDetails.service"})
+    List<Appointment> findByCustomer_IdAndDateAndStatusOrderByCreatedAtDesc(Long customerId,
+                                                                            LocalDate date,
+                                                                            AppointmentStatus status);
 
     List<Appointment> findByCustomer_User_IdAndStatus(Long customerUserId, AppointmentStatus status);
 
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     List<Appointment> findByCustomer_User_IdOrderByDateDesc(Long customerUserId);
+
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
+    List<Appointment> findByCustomer_User_IdAndDateAndStatusNotOrderByStartTimeAsc(Long customerUserId,
+                                                                                    LocalDate date,
+                                                                                    AppointmentStatus excludedStatus);
 
     Page<Appointment> findByCustomer_User_Id(Long userId, Pageable pageable);
 

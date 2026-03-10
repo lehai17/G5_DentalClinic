@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Clinical Examination</title>
+  <title>Khám lâm sàng</title>
   <link rel="stylesheet" href="/css/dentist/app.css"/>
   <link rel="stylesheet" href="/css/dentist/examination.css"/>
   <style>
@@ -21,35 +21,34 @@
 </head>
 <body class="exam-page">
 <div class="exam-container">
-  <h2>Clinical Examination</h2>
-  <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}">Saved successfully.</div>
+  <h2>Khám lâm sàng</h2>
+  <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}">Lưu thành công.</div>
 
   <div class="exam-header">
-
     <div class="exam-left">
-      <div class="exam-title">Clinical Examination</div>
+      <div class="exam-title">Khám lâm sàng</div>
       <div class="exam-sub">
-        Appointment ID: <span th:text="${appointmentId}"></span>
+        Mã lịch hẹn: <span th:text="${appointmentId}"></span>
         <br>
-        Service: <span th:text="${requestedServiceName}"></span>
+        Dịch vụ: <span th:text="${requestedServiceName}"></span>
         <div th:if="${appointmentNote != null and !#strings.isEmpty(appointmentNote)}"
              style="margin-top:4px;color:#64748b;font-size:13px;">
-          Note: <span th:text="${appointmentNote}"></span>
+          Ghi chú: <span th:text="${appointmentNote}"></span>
         </div>
       </div>
     </div>
 
     <div class="exam-info">
       <div>
-        <div class="info-label">Patient</div>
+        <div class="info-label">Bệnh nhân</div>
         <div class="info-value" th:text="${patientName}"></div>
       </div>
       <div>
-        <div class="info-label">Date</div>
+        <div class="info-label">Ngày</div>
         <div class="info-value" th:text="${apptDate}"></div>
       </div>
       <div>
-        <div class="info-label">Time</div>
+        <div class="info-label">Giờ</div>
         <div class="info-value">
           <span th:text="${#temporals.format(startTime,'HH:mm')}"></span>
           -
@@ -57,41 +56,27 @@
         </div>
       </div>
     </div>
-
   </div>
-  <!-- ================= VISIT HISTORY ================= -->
+
   <div class="visit-history">
-
-    <div class="visit-item"
-         th:each="r : ${historyRecords}">
-
+    <div class="visit-item" th:each="r : ${historyRecords}">
       <div class="visit-header">
-        <div class="visit-date"
-             th:text="${#temporals.format(r.appointment.date,'MMM dd, yyyy')}">
-        </div>
-
-        <div class="visit-diagnosis"
-             th:text="${r.diagnosis}">
-        </div>
-
+        <div class="visit-date" th:text="${#temporals.format(r.appointment.date,'dd/MM/yyyy')}"></div>
+        <div class="visit-diagnosis" th:text="${r.diagnosis}"></div>
         <div class="visit-toggle">
-          <span class="toggle-text">View Detail</span>
+          <span class="toggle-text">Xem chi tiết</span>
           <span class="toggle-icon">⌄</span>
         </div>
       </div>
 
       <div class="visit-body">
         <div class="visit-body-content">
-          <div><strong>Diagnosis:</strong> <span th:text="${r.diagnosis}"></span></div>
-          <div><strong>Notes:</strong> <span th:text="${r.clinicalNotes}"></span></div>
+          <div><strong>Chẩn đoán:</strong> <span th:text="${r.diagnosis}"></span></div>
+          <div><strong>Ghi chú:</strong> <span th:text="${r.clinicalNotes}"></span></div>
         </div>
       </div>
-
     </div>
-
   </div>
-
-  <!-- hidden raw payload from DB -->
 
   <form id="examForm" method="post" th:object="${medicalRecord}"
         th:action="@{/dentist/appointments/{id}/examination(id=${appointmentId})}">
@@ -99,65 +84,61 @@
     <input type="hidden" name="weekStart" th:value="${weekStart}"/>
     <input type="hidden" id="appointmentStatus" th:value="${appointmentStatus}">
 
-    <!-- ✅ primary diagnosis -->
     <div class="section">
-      <div style="font-weight:900;">A) Diagnosis</div>
-      <div class="mini">Primary diagnosis saved to MedicalRecord.diagnosis</div>
-      <textarea th:field="*{diagnosis}" rows="3" placeholder="Primary diagnosis..."></textarea>
+      <div style="font-weight:900;">A) Chẩn đoán</div>
+      <div class="mini">Chẩn đoán chính sẽ được lưu vào hồ sơ khám.</div>
+      <textarea th:field="*{diagnosis}" rows="3" placeholder="Nhập chẩn đoán chính..."></textarea>
     </div>
 
-    <!-- ✅ patient complaint -->
     <div class="section">
-      <div style="font-weight:900;">B) Complaint</div>
+      <div style="font-weight:900;">B) Triệu chứng</div>
       <div class="field" style="width:100%;">
-        <label>Complaint note</label>
-        <textarea th:field="*{complaintNote}" rows="3" placeholder="Optional note..." style="width:100%;"></textarea>
+        <label>Ghi chú triệu chứng</label>
+        <textarea th:field="*{complaintNote}" rows="3" placeholder="Ghi chú thêm nếu cần..." style="width:100%;"></textarea>
       </div>
     </div>
 
-    <!-- ✅ findings -->
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:end;">
         <div>
-          <div style="font-weight:900;">C) Clinical Findings by Tooth</div>
-          <div class="mini">Tooth number, condition, severity (and note).</div>
+          <div style="font-weight:900;">C) Ghi nhận theo răng</div>
+          <div class="mini">Nhập số răng, tình trạng, mức độ và ghi chú nếu có.</div>
         </div>
-        <button type="button" class="icon-mini" id="btnAddFinding">+ Add</button>
+        <button type="button" class="icon-mini" id="btnAddFinding">+ Thêm</button>
       </div>
 
       <table class="tbl" id="findingTable">
         <thead>
         <tr>
-          <th style="width:110px;">Tooth</th>
-          <th>Condition</th>
-          <th style="width:120px;">Severity</th>
-          <th>Note</th>
+          <th style="width:110px;">Răng</th>
+          <th>Tình trạng</th>
+          <th style="width:120px;">Mức độ</th>
+          <th>Ghi chú</th>
           <th style="width:60px;"></th>
         </tr>
         </thead>
         <tbody>
           <tr th:each="f,stat : *{findings}">
             <td><input th:field="*{findings[__${stat.index}__].toothNo}" placeholder="36"/></td>
-            <td><input th:field="*{findings[__${stat.index}__].condition}" placeholder="Caries ..."/></td>
+            <td><input th:field="*{findings[__${stat.index}__].condition}" placeholder="Ví dụ: sâu răng"/></td>
             <td>
               <select th:field="*{findings[__${stat.index}__].severity}">
                 <option value=""></option>
-                <option value="Mild">Mild</option>
-                <option value="Moderate">Moderate</option>
-                <option value="Severe">Severe</option>
+                <option value="Mild">Nhẹ</option>
+                <option value="Moderate">Trung bình</option>
+                <option value="Severe">Nặng</option>
               </select>
             </td>
-            <td><input th:field="*{findings[__${stat.index}__].note}" placeholder="Note"/></td>
-            <td><button type="button" class="icon-mini del">✕</button></td>
+            <td><input th:field="*{findings[__${stat.index}__].note}" placeholder="Ghi chú"/></td>
+            <td><button type="button" class="icon-mini del">×</button></td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- ✅ proposed services (checkboxes with indexed hidden inputs) -->
     <div class="section">
-      <div style="font-weight:900;">D) Propose Additional Services</div>
-      <div class="mini">Tick services discovered during exam.</div>
+      <div style="font-weight:900;">D) Đề xuất thêm dịch vụ</div>
+      <div class="mini">Chọn các dịch vụ cần đề xuất thêm sau khi thăm khám.</div>
 
       <div class="chipbox" id="proposeBox">
         <label class="svc-chip" th:each="s : ${services}">
@@ -165,33 +146,33 @@
                  class="prop-check"
                  th:attr="data-service-id=${s.id}"
                  th:checked="${selectedServiceIds.contains(s.id)}">
-          <span th:text="${s.name}">Scaling</span>
+          <span th:text="${s.name}">Cạo vôi răng</span>
         </label>
       </div>
-      <!-- container for generated hidden inputs -->
       <div id="proposedInputs"></div>
     </div>
 
-    <!-- ✅ clinical notes -->
     <div class="section">
-      <div style="font-weight:900;">E) Clinical Notes</div>
-      <textarea th:field="*{clinicalNotes}" rows="5" placeholder="Detailed notes..."></textarea>
+      <div style="font-weight:900;">E) Ghi chú lâm sàng</div>
+      <textarea th:field="*{clinicalNotes}" rows="5" placeholder="Nhập ghi chú lâm sàng chi tiết..."></textarea>
     </div>
 
-    <!-- ✅ images (URL metadata) -->
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:end;">
         <div>
-          <div style="font-weight:900;">F) Dental Images</div>
-          <div class="mini">Add image URL + type + note (metadata). File upload can be added later.</div>
+          <div style="font-weight:900;">F) Hình ảnh nha khoa</div>
+          <div class="mini">Thêm đường dẫn ảnh, loại ảnh và ghi chú. Có thể nâng cấp upload file sau.</div>
         </div>
-        <button type="button" class="icon-mini" id="btnAddImg">+ Add</button>
+        <button type="button" class="icon-mini" id="btnAddImg">+ Thêm</button>
       </div>
 
       <table class="tbl" id="imgTable">
         <thead>
         <tr>
-          <th>URL</th><th style="width:140px;">Type</th><th>Note</th><th style="width:60px;"></th>
+          <th>Đường dẫn ảnh</th>
+          <th style="width:140px;">Loại ảnh</th>
+          <th>Ghi chú</th>
+          <th style="width:60px;"></th>
         </tr>
         </thead>
         <tbody>
@@ -200,55 +181,52 @@
             <td>
               <select th:field="*{images[__${stat.index}__].type}">
                 <option value=""></option>
-                <option value="INTRAORAL">Intraoral</option>
-                <option value="X_RAY">X-ray</option>
-                <option value="BEFORE_AFTER">Before/After</option>
+                <option value="INTRAORAL">Trong miệng</option>
+                <option value="X_RAY">X-quang</option>
+                <option value="BEFORE_AFTER">Trước / sau</option>
               </select>
             </td>
-            <td><input th:field="*{images[__${stat.index}__].note}" /></td>
-            <td><button type="button" class="icon-mini del">✕</button></td>
+            <td><input th:field="*{images[__${stat.index}__].note}" placeholder="Ghi chú"/></td>
+            <td><button type="button" class="icon-mini del">×</button></td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:14px;">
-      <button class="btn primary" type="submit">SAVE</button>
-      <a class="btn" th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">Back</a>
+      <button class="btn primary" type="submit">Lưu</button>
+      <a class="btn" th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">Quay lại</a>
     </div>
   </form>
 </div>
 
 <script>
-  // Utility to get next index for dynamic rows
   function getNextIndex(tableId) {
     return document.querySelectorAll(tableId + ' tbody tr').length;
   }
 
-  // Add finding row
   document.getElementById('btnAddFinding').addEventListener('click', () => {
     const tbody = document.querySelector('#findingTable tbody');
     const idx = getNextIndex('#findingTable');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input name="findings[${idx}].toothNo" placeholder="36"/></td>
-      <td><input name="findings[${idx}].condition" placeholder="Caries ..."/></td>
+      <td><input name="findings[${idx}].condition" placeholder="Ví dụ: sâu răng"/></td>
       <td>
         <select name="findings[${idx}].severity">
           <option value=""></option>
-          <option value="Mild">Mild</option>
-          <option value="Moderate">Moderate</option>
-          <option value="Severe">Severe</option>
+          <option value="Mild">Nhẹ</option>
+          <option value="Moderate">Trung bình</option>
+          <option value="Severe">Nặng</option>
         </select>
       </td>
-      <td><input name="findings[${idx}].note" placeholder="Note"/></td>
-      <td><button type="button" class="icon-mini del">✕</button></td>
+      <td><input name="findings[${idx}].note" placeholder="Ghi chú"/></td>
+      <td><button type="button" class="icon-mini del">×</button></td>
     `;
     tr.querySelector('.del').addEventListener('click', () => tr.remove());
     tbody.appendChild(tr);
   });
 
-  // Add image row
   document.getElementById('btnAddImg').addEventListener('click', () => {
     const tbody = document.querySelector('#imgTable tbody');
     const idx = getNextIndex('#imgTable');
@@ -258,20 +236,19 @@
       <td>
         <select name="images[${idx}].type">
           <option value=""></option>
-          <option value="INTRAORAL">Intraoral</option>
-          <option value="X_RAY">X-ray</option>
-          <option value="BEFORE_AFTER">Before/After</option>
+          <option value="INTRAORAL">Trong miệng</option>
+          <option value="X_RAY">X-quang</option>
+          <option value="BEFORE_AFTER">Trước / sau</option>
         </select>
       </td>
-      <td><input name="images[${idx}].note" placeholder="Note"/></td>
-      <td><button type="button" class="icon-mini del">✕</button></td>
+      <td><input name="images[${idx}].note" placeholder="Ghi chú"/></td>
+      <td><button type="button" class="icon-mini del">×</button></td>
     `;
     tr.querySelector('.del').addEventListener('click', () => tr.remove());
     tbody.appendChild(tr);
   });
 
-  // Handle proposed services
-  document.getElementById('examForm').addEventListener('submit', (e) => {
+  document.getElementById('examForm').addEventListener('submit', () => {
     const container = document.getElementById('proposedInputs');
     if (!container) return;
     container.innerHTML = '';
@@ -286,7 +263,6 @@
     });
   });
 
-  // Delete button handlers for existing rows
   document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
     tr.querySelector('.del')?.addEventListener('click', () => tr.remove());
   });

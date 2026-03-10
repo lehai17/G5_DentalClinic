@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   const listEl = document.getElementById("chat-thread-list");
   const messagesEl = document.getElementById("staff-chat-messages");
   const inputEl = document.getElementById("staff-chat-input");
@@ -29,7 +29,7 @@
       hour: "2-digit",
       minute: "2-digit",
       day: "2-digit",
-      month: "2-digit",
+      month: "2-digit"
     });
   }
 
@@ -48,10 +48,11 @@
       .map((thread) => {
         const isActive = currentThreadId === thread.id;
         const unread = Number(thread.unreadCount || 0);
+        const customerLabel = thread.customerName || thread.customerEmail || "Khách hàng";
         return `
           <button class="thread-item ${isActive ? "active" : ""}" data-thread-id="${thread.id}" type="button">
             <span class="thread-top">
-              <span class="thread-email">${escapeHtml(thread.customerEmail || "Khách hàng")}</span>
+              <span class="thread-email">${escapeHtml(customerLabel)}</span>
               <span class="thread-time">${formatDateTime(thread.lastMessageAt)}</span>
             </span>
             <span class="thread-last">${escapeHtml(thread.lastMessage || "(Chưa có tin nhắn)")}</span>
@@ -77,13 +78,15 @@
     }
 
     messagesEl.innerHTML = messages
-      .map((m) => {
-        const staffSide = m.senderRole === "STAFF" || m.senderRole === "ADMIN";
+      .map((message) => {
+        const staffSide = message.senderRole === "STAFF" || message.senderRole === "ADMIN" || message.senderRole === "DENTIST";
+        const senderLabel = message.senderName || (staffSide ? "Lễ tân" : "Khách hàng");
         return `
           <div class="message-row ${staffSide ? "staff" : "customer"}">
             <div class="message-bubble">
-              ${escapeHtml(m.content)}
-              <span class="message-meta">${formatDateTime(m.createdAt)}</span>
+              <div class="message-author">${escapeHtml(senderLabel)}</div>
+              ${escapeHtml(message.content)}
+              <span class="message-meta">${formatDateTime(message.createdAt)}</span>
             </div>
           </div>
         `;
@@ -99,7 +102,7 @@
     const data = await response.json();
     threads = Array.isArray(data) ? data : [];
 
-    if (currentThreadId && !threads.some((t) => t.id === currentThreadId)) {
+    if (currentThreadId && !threads.some((thread) => thread.id === currentThreadId)) {
       currentThreadId = null;
     }
     if (!currentThreadId && threads.length) {
@@ -124,10 +127,9 @@
 
   async function selectThread(threadId) {
     currentThreadId = threadId;
-    const thread = threads.find((t) => t.id === threadId);
-    titleEl.textContent = thread
-      ? `Đang chat với: ${thread.customerEmail || "Khách hàng"}`
-      : "Đang chat với khách hàng";
+    const thread = threads.find((item) => item.id === threadId);
+    const customerLabel = thread?.customerName || thread?.customerEmail || "Khách hàng";
+    titleEl.textContent = `Đang chat với: ${customerLabel}`;
     setConversationEnabled(true);
     renderThreadList();
     await loadMessages();
@@ -142,7 +144,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content })
       });
       if (!response.ok) return;
       inputEl.value = "";
@@ -194,3 +196,4 @@
     }
   })();
 })();
+

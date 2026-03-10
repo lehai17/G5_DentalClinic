@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog Detail - Admin</title>
+    <title>Chi tiết bài viết - Quản trị</title>
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -117,7 +117,7 @@
 <div th:replace="~{admin/sidebar :: sidebar}"></div>
 
 <div class="main-content">
-    <h2 class="page-title">Blog Detail</h2>
+    <h2 class="page-title">Chi tiết bài viết</h2>
 
     <div class="card" th:if="${blog != null}">
         <div class="meta-grid">
@@ -126,7 +126,7 @@
                 <div class="meta-value" th:text="${blog.id}">1</div>
             </div>
             <div class="meta-item">
-                <div class="meta-label">Status</div>
+                <div class="meta-label">Trạng thái</div>
                 <div class="meta-value">
                     <span class="status-pill"
                           th:classappend="${
@@ -138,11 +138,11 @@
                 </div>
             </div>
             <div class="meta-item">
-                <div class="meta-label">Created At</div>
+                <div class="meta-label">Tạo lúc</div>
                 <div class="meta-value" th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy HH:mm')}">-</div>
             </div>
             <div class="meta-item">
-                <div class="meta-label">Updated At</div>
+                <div class="meta-label">Cập nhật lúc</div>
                 <div class="meta-value" th:text="${#temporals.format(blog.updatedAt, 'dd/MM/yyyy HH:mm')}">-</div>
             </div>
         </div>
@@ -151,32 +151,32 @@
         <p class="summary" th:text="${blog.summary}">Tóm tắt blog...</p>
 
         <div class="thumb-wrap" th:if="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}">
-            <img class="thumb" th:src="${blog.imageUrl}" alt="Blog image">
+            <img class="thumb" th:src="${blog.imageUrl}" alt="Ảnh bài viết">
         </div>
 
         <div class="content" th:text="${blog.content}">Nội dung blog...</div>
 
         <div class="actions">
-            <a th:href="@{/admin/blogs(status=${blog.status})}" class="btn btn-secondary">← Back</a>
+            <a th:href="@{/admin/blogs(status=${blog.status})}" class="btn btn-secondary">← Quay lại</a>
 
             <!-- EDIT: CHỈ PENDING/APPROVED -->
             <a class="btn btn-edit"
                th:if="${blog.status.name() == 'PENDING' or blog.status.name() == 'APPROVED'}"
                th:href="@{'/admin/blogs/' + ${blog.id} + '/edit'}">
-                Edit
+                Chỉnh sửa
             </a>
 
             <!-- APPROVE: CHỈ PENDING -->
             <form th:if="${blog.status.name() == 'PENDING'}"
                   th:action="@{'/admin/blogs/' + ${blog.id} + '/approve'}"
                   method="post">
-                <button type="submit" class="btn btn-success">Approve</button>
+                <button type="submit" class="btn btn-success">Duyệt</button>
             </form>
 
             <!-- REJECT: CHỈ PENDING -->
             <button th:if="${blog.status.name() == 'PENDING'}"
                     type="button" class="btn btn-danger"
-                    onclick="toggleReject()">Reject</button>
+                    onclick="toggleReject()">Từ chối</button>
         </div>
 
         <form id="rejectForm"
@@ -184,13 +184,13 @@
               th:if="${blog.status.name() == 'PENDING'}"
               th:action="@{'/admin/blogs/' + ${blog.id} + '/reject'}"
               method="post">
-            <input type="text" name="rejectionReason" required placeholder="Nhập lý do reject...">
-            <button type="submit" class="btn btn-danger">Confirm Reject</button>
+            <input type="text" name="rejectionReason" required placeholder="Nhập lý do từ chối...">
+            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
         </form>
 
         <div th:if="${blog.rejectionReason != null and !#strings.isEmpty(blog.rejectionReason)}"
              style="margin-top:14px; color:#991b1b; font-weight:600;">
-            Rejection reason:
+            Lý do từ chối:
             <span th:text="${blog.rejectionReason}"></span>
         </div>
     </div>
@@ -204,3 +204,4 @@
 </script>
 </body>
 </html>
+

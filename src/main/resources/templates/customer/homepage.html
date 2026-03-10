@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -203,7 +203,7 @@
 
                               <span style="background: var(--medical-50); color: var(--medical-600); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600">
                     <span th:if="${service?.price != null}"
-                          th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + ' ₫'"></span>
+                          th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + ' â‚«'"></span>
                     <span th:unless="${service?.price != null}">Liên hệ</span>
                 </span>
                           </div>
@@ -224,7 +224,7 @@
         >
           <div class="section-container">
             <div class="section-header">
-              <span class="section-badge">ĐỘI NGŨ CHUYÊN NGHIỆP</span>
+              <span class="section-badge">ĐỘI NGÅ¨ CHUYÊN NGHIỆP</span>
               <h2 class="section-title">Gặp Gỡ Các Bác Sĩ Giàu Kinh Nghiệm</h2>
               <p class="section-subtitle">
                 Các bác sĩ nha khoa có chứng chỉ và tâm huyết với công việc chăm
@@ -432,7 +432,7 @@
                       font-weight: 600;
                     "
                   >
-                    ← Trước
+                    â† Trước
                   </a>
 
                   <div style="display: flex; gap: 0.5rem; align-items: center">
@@ -472,7 +472,7 @@
                       font-weight: 600;
                     "
                   >
-                    Sau →
+                    Sau â†’
                   </a>
                 </div>
               </div>
@@ -488,3 +488,7 @@
     <script th:src="@{/js/home.js}"></script>
   </body>
 </html>
+
+
+
+

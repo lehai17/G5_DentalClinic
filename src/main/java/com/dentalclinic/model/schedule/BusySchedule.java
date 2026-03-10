@@ -29,7 +29,7 @@ public class BusySchedule {
     public BusySchedule() {
     }
 
-    // --- CÁC PHƯƠNG THỨC ĐÃ THÊM ĐỂ SỬA LỖI TRONG SERVICE ---
+    // --- Cï¿½C PHÆ¯Æ NG THá»¨C ï¿½ï¿½ THÃŠM Äá»‚ Sá»¬A Lá»–I TRONG SERVICE ---
 
     public Long getId() {
         return id;

@@ -48,9 +48,9 @@ public class NotificationService {
                                           NotificationReferenceType referenceType,
                                           Long referenceId) {
         User recipient = userRepository.findById(recipientId)
-                .orElseThrow(() -> new IllegalArgumentException("Recipient not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người nhận thông báo."));
         if (recipient.getRole() != Role.CUSTOMER) {
-            throw new IllegalArgumentException("Notification recipient must be CUSTOMER");
+            throw new IllegalArgumentException("Người nhận thông báo phải l�  khách h� ng.");
         }
 
         Notification notification = new Notification();
@@ -83,7 +83,9 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public List<Notification> getTopCustomerNotifications(Long recipientId, int limit) {
         List<Notification> top = notificationRepository.findTop5ByUser_IdOrderByCreatedAtDesc(recipientId);
-        if (limit >= top.size()) return top;
+        if (limit >= top.size()) {
+            return top;
+        }
         return top.subList(0, limit);
     }
 
@@ -96,7 +98,7 @@ public class NotificationService {
     public void markRead(Long notificationId, Long recipientId) {
         int updated = notificationRepository.markAsRead(notificationId, recipientId);
         if (updated == 0) {
-            throw new IllegalArgumentException("Notification not found or access denied");
+            throw new IllegalArgumentException("Không tìm thấy thông báo hoặc bạn không có quyền truy cập.");
         }
     }
 
@@ -108,9 +110,9 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public Notification getOwnedNotification(Long notificationId, Long recipientId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông báo."));
         if (!notification.getUser().getId().equals(recipientId)) {
-            throw new IllegalArgumentException("Access denied");
+            throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo n� y.");
         }
         return notification;
     }
@@ -127,8 +129,8 @@ public class NotificationService {
         if (existed) {
             return;
         }
-        String title = "Đặt lịch thành công";
-        String message = "Bạn đã tạo lịch hẹn #" + appointment.getId() + " thành công.";
+        String title = "Đặt lịch th� nh công";
+        String message = "Bạn đã tạo lịch hẹn #" + appointment.getId() + " th� nh công.";
         String url = "/customer/my-appointments#highlight=" + appointment.getId();
         createForCustomer(recipientId, NotificationType.BOOKING_CREATED, title, message, url,
                 NotificationReferenceType.APPOINTMENT, appointment.getId());
@@ -200,10 +202,10 @@ public class NotificationService {
         createForCustomer(
                 customer.getUser().getId(),
                 NotificationType.BOOKING_CANCELLED,
-                "Hoàn tiền đặt cọc",
-                "Bạn nhận được hoàn tiền " + amountStr + " VND từ lịch hẹn đã hủy. Số dư ví hiện tại có thể dùng cho lần đặt tiếp theo.",
+                "Ho� n tiền đặt cọc",
+                "Bạn nhận được ho� n tiền " + amountStr + " VND từ lịch hẹn đã hủy. Số dư ví hiện tại có thể dùng cho lần đặt tiếp theo.",
                 "/customer/wallet",
-                NotificationReferenceType.WALLET,
+                null,
                 null
         );
     }
@@ -220,10 +222,14 @@ public class NotificationService {
         );
 
         for (Appointment appointment : appointments) {
-            if (appointment.getCustomer() == null || appointment.getCustomer().getUser() == null) continue;
+            if (appointment.getCustomer() == null || appointment.getCustomer().getUser() == null) {
+                continue;
+            }
             LocalDateTime start = LocalDateTime.of(appointment.getDate(), appointment.getStartTime());
             long minutesDiff = java.time.Duration.between(now, start).toMinutes();
-            if (minutesDiff < 23 * 60 || minutesDiff > 25 * 60) continue;
+            if (minutesDiff < 23 * 60 || minutesDiff > 25 * 60) {
+                continue;
+            }
 
             Long recipientId = appointment.getCustomer().getUser().getId();
             boolean sent = notificationRepository.existsByUser_IdAndTypeAndReferenceTypeAndReferenceId(
@@ -232,10 +238,12 @@ public class NotificationService {
                     NotificationReferenceType.APPOINTMENT,
                     appointment.getId()
             );
-            if (sent) continue;
+            if (sent) {
+                continue;
+            }
 
             String title = "Nhắc lịch hẹn";
-            String message = "Bạn có lịch hẹn #" + appointment.getId() + " vào ngày "
+            String message = "Bạn có lịch hẹn #" + appointment.getId() + " v� o ng� y "
                     + appointment.getDate() + " lúc " + appointment.getStartTime() + ".";
             String url = "/customer/my-appointments#highlight=" + appointment.getId();
             createForCustomer(recipientId, NotificationType.APPOINTMENT_REMINDER, title, message, url,
@@ -243,3 +251,4 @@ public class NotificationService {
         }
     }
 }
+

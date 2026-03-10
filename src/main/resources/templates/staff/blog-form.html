@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${blog.id == null} ? 'Create Health Blog' : 'Edit Health Blog'">Create/Edit Blog</title>
+    <title th:text="${blog.id == null} ? 'Tạo bài viết sức khỏe' : 'Chỉnh sửa bài viết sức khỏe'">Tạo/Chỉnh sửa bài viết</title>
     <link rel="stylesheet" th:href="@{/css/staff/staff.css}">
     <style>
         .content {
@@ -132,7 +132,7 @@
         <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
 
         <div class="content">
-            <h2 class="page-title" th:text="${blog.id == null} ? 'Create Health Blog' : 'Edit Health Blog'"></h2>
+            <h2 class="page-title" th:text="${blog.id == null} ? 'Tạo bài viết sức khỏe' : 'Chỉnh sửa bài viết sức khỏe'"></h2>
 
             <div class="blog-form-card">
                 <!-- Form chính: mặc định lưu nháp -->
@@ -145,22 +145,22 @@
 
                     <div class="form-grid">
                         <div class="form-group full">
-                            <label for="title">Title <span style="color:#dc2626">*</span></label>
+                            <label for="title">Tiêu đề <span style="color:#dc2626">*</span></label>
                             <input id="title" type="text" name="title" th:value="${blog.title}" required maxlength="255">
                         </div>
 
                         <div class="form-group full">
-                            <label for="summary">Summary <span style="color:#dc2626">*</span></label>
+                            <label for="summary">Tóm tắt <span style="color:#dc2626">*</span></label>
                             <textarea id="summary" name="summary" rows="4" required maxlength="1000"
                                       th:text="${blog.summary}"></textarea>
                         </div>
 
                         <div class="form-group full">
-                            <label for="imageFile">Blog Image</label>
+                            <label for="imageFile">Ảnh bài viết</label>
 
                             <input id="imageFile" type="file" name="imageFile" accept="image/*">
 
-                            <!-- giữ ảnh cũ nếu không upload ảnh mới -->
+                            <!-- giữ ảnh cũ nếu không tải ảnh mới -->
                             <input type="hidden" name="existingImageUrl" th:value="${blog.imageUrl}"/>
 
                             <img id="preview"
@@ -187,7 +187,7 @@
 
 
                         <div class="form-group full">
-                            <label for="content">Content <span style="color:#dc2626">*</span></label>
+                            <label for="content">Nội dung <span style="color:#dc2626">*</span></label>
                             <textarea id="content" name="content" rows="12" required
                                       th:text="${blog.content}"></textarea>
                         </div>
@@ -195,20 +195,20 @@
 
                     <div class="actions">
                         <!-- Lưu nháp -->
-                        <button type="submit" class="btn btn-draft">Save Draft</button>
+                        <button type="submit" class="btn btn-draft">Lưu bản nháp</button>
 
                         <!-- Gửi duyệt -->
                         <button type="submit"
                                 class="btn btn-submit"
                                 th:formaction="@{/staff/blogs/submit-review}">
-                            Submit for Review
+                            Gửi duyệt
                         </button>
 
-                        <a th:href="@{/staff/blogs}" class="btn-back">Back to My Blogs</a>
+                        <a th:href="@{/staff/blogs}" class="btn-back">Quay lại bài viết của tôi</a>
                     </div>
 
                     <p class="hint">
-                        * Submit for Review sẽ chuyển bài sang trạng thái <strong>PENDING</strong> để Admin duyệt.
+                        * Gửi duyệt sẽ chuyển bài sang trạng thái <strong>PENDING</strong> để quản trị viên duyệt.
                     </p>
                 </form>
             </div>
@@ -217,3 +217,4 @@
 </div>
 </body>
 </html>
+

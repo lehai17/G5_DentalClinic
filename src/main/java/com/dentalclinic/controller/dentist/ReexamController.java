@@ -20,7 +20,6 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/dentist/reexam")
 public class ReexamController {
-    
     private final ReexamService reexamService;
     private final AppointmentRepository appointmentRepository;
     
@@ -57,10 +56,7 @@ public class ReexamController {
             reexam.setCustomer(original.getCustomer());
             reexam.setDentist(original.getDentist());
             reexam.setService(original.getService());
-            // Set default date to today or next available
-            reexam.setDate(LocalDate.now());
-            reexam.setStartTime(LocalTime.of(9, 0));
-            reexam.setEndTime(LocalTime.of(10, 0));
+
         }
         
         // Set model attributes

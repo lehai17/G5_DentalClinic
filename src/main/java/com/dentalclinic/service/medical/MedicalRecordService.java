@@ -23,12 +23,12 @@ public class MedicalRecordService {
         this.appointmentRepository = appointmentRepository;
     }
 
-    // ✅ DÙNG CHO GET
+    // âœ… DÙNG CHO GET
     public Optional<MedicalRecord> findByAppointmentId(Long appointmentId) {
         return medicalRecordRepository.findByAppointment_Id(appointmentId);
     }
 
-    // ✅ UPSERT – KHÔNG TẠO RECORD MỚI
+    // âœ… UPSERT â€“ KHÔNG T� O RECORD MỚI
     @Transactional
     public MedicalRecord saveOrUpdate(
             Long appointmentId,
@@ -76,3 +76,4 @@ public class MedicalRecordService {
         return medicalRecordRepository.save(record);
     }
 }
+

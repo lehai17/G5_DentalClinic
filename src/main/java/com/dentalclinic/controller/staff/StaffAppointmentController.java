@@ -3,7 +3,6 @@ package com.dentalclinic.controller.staff;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
-import com.dentalclinic.service.staff.StaffAppointmentResultService;
 import com.dentalclinic.service.staff.StaffAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,9 +26,6 @@ public class StaffAppointmentController {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private StaffAppointmentResultService staffAppointmentResultService;
-
 
     @GetMapping("/dashboard")
     public String dashboard(@RequestParam(required = false, defaultValue = "today") String view,
@@ -41,7 +37,7 @@ public class StaffAppointmentController {
         LocalDate startDate = today;
         LocalDate endDate = today;
 
-        // Xác định khoảng thời gian
+        // Xï¿½c định khoảng thời gian
         switch (view) {
             case "week" -> {
                 startDate = today.with(DayOfWeek.MONDAY);
@@ -111,7 +107,6 @@ public class StaffAppointmentController {
 
         model.addAttribute("appointments", appointmentPage.getContent());
 
-
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", appointmentPage.getTotalPages());
 
@@ -143,11 +138,11 @@ public class StaffAppointmentController {
     }
 
 
-//    @PostMapping("/appointments/complete")
-//    @ResponseBody
-//    public void complete(@RequestParam Long id) {
-//        staffAppointmentService.completeAppointment(id);
-//    }
+    @PostMapping("/appointments/complete")
+    @ResponseBody
+    public void complete(@RequestParam Long id) {
+        staffAppointmentService.completeAppointment(id);
+    }
 
 
     @PostMapping("/appointments/cancel")
@@ -157,37 +152,29 @@ public class StaffAppointmentController {
             @RequestParam String reason) {
         staffAppointmentService.cancelAppointment(id, reason);
     }
-    @PostMapping("/appointments/{id}/check-in")
-    public ResponseEntity<?> checkIn(@PathVariable Long id) {
-        staffAppointmentService.checkIn(id);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/appointments/{id}/complete")
+    @PostMapping("/appointments/checkin")
     @ResponseBody
-    public ResponseEntity<?> complete(@PathVariable Long id) {
-        staffAppointmentService.completeAppointment(id);
-        return ResponseEntity.ok().build();
+    public void checkin(@RequestParam Long id) {
+        staffAppointmentService.checkInAppointment(id);
     }
 
-    @GetMapping("/appointments/available-dentists") // Thêm /appointments vào đây
+    @GetMapping("/appointments/available-dentists") // Thêm /appointments v� o dï¿½y
     @ResponseBody
     public ResponseEntity<List<DentistProfile>> getAvailableDentists(@RequestParam Long appointmentId) {
         List<DentistProfile> availableDentists = staffAppointmentService.getAvailableDentistsForAppointment(appointmentId);
         return ResponseEntity.ok(availableDentists);
     }
 
-
-
-    @GetMapping("/appointments/{id}/result")
-    public String viewResult(@PathVariable Long id, Model model) {
-        var data = staffAppointmentResultService.load(id);
-
-        model.addAttribute("pageTitle", "Appointment Result");
-        model.addAttribute("staffName", "Staff");
-        model.addAttribute("appointment", data.appointment());
-        model.addAttribute("medicalRecord", data.medicalRecord());
-
-        return "staff/appointment-result";
+    @PostMapping("/appointments/process-payment")
+    @ResponseBody
+    public ResponseEntity<?> processPayment(@RequestParam Long id) {
+        try {
+            staffAppointmentService.processPayment(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
+
+

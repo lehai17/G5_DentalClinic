@@ -26,19 +26,19 @@ public class EmailService {
         String toEmail = appointment.getCustomer().getUser().getEmail();
         message.setTo(toEmail);
 
-        message.setSubject("Xác nhận lịch khám - GENZ CLINIC");
+        message.setSubject("Xï¿½c nhận lịch khï¿½m - GENZ CLINIC");
 
         message.setText("""
-            Xin chào %s,
+            Xin ch� o %s,
 
-            Lịch khám của bạn đã được xác nhận thành công.
+            Lịch khï¿½m của bạn dï¿½ được xï¿½c nhận th� nh công.
 
-            🦷 Dịch vụ: %s
-            👨‍⚕️ Bác sĩ: %s
-            📅 Ngày khám: %s
-            ⏰ Thời gian: %s - %s
+            ðŸ¦· Dịch vụ: %s
+            👨‍⚕️ Bï¿½c sĩ: %s
+            ðŸ“… Ng� y khï¿½m: %s
+            â° Thời gian: %s - %s
 
-            Trân trọng,
+            Trï¿½n trọng,
             GENZ CLINIC
             """.formatted(
                 appointment.getCustomer().getFullName(),
@@ -52,3 +52,5 @@ public class EmailService {
         supportMailSender.send(message);
     }
 }
+
+

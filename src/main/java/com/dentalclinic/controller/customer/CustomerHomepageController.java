@@ -61,7 +61,7 @@ public class CustomerHomepageController {
             CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
             if (profile == null) {
                 profile = new CustomerProfile();
-                profile.setFullName("Khách hàng");
+                profile.setFullName("Khách h� ng");
                 model.addAttribute("appointments", new ArrayList<>());
             } else {
                 model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
@@ -121,3 +121,4 @@ public class CustomerHomepageController {
                 .orElse(null);
     }
 }
+

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.math.BigDecimal;
 
 @Controller
 @RequestMapping("/customer/payment")
@@ -41,7 +42,17 @@ public class CustomerPaymentController {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen ID: " + id));
 
-        long amount = (long) (appointment.getService().getPrice() * 0.5 * 100);
+        BigDecimal depositAmount = appointment.getDepositAmount();
+        if (depositAmount == null && appointment.getTotalAmount() != null) {
+            depositAmount = appointment.getTotalAmount().multiply(BigDecimal.valueOf(0.5d));
+        }
+        if (depositAmount == null && appointment.getService() != null) {
+            depositAmount = BigDecimal.valueOf(appointment.getService().getPrice()).multiply(BigDecimal.valueOf(0.5d));
+        }
+        if (depositAmount == null || depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("So tien dat coc khong hop le cho lich hen ID: " + id);
+        }
+        long amount = depositAmount.multiply(BigDecimal.valueOf(100L)).longValue();
         String txnRef = String.valueOf(System.currentTimeMillis());
 
         Map<String, String> vnp_Params = new HashMap<>();
@@ -94,7 +105,7 @@ public class CustomerPaymentController {
         // 2. Tạo Secure Hash
         String vnp_SecureHash = vnPayConfig.hmacSHA512(vnPayConfig.hashSecret, hashData.toString());
 
-        // 3. Tạo URL cuối cùng (Lưu ý: dùng query.toString())
+        // 3. Tạo URL cuối cùng (Lưu Ã½: dùng query.toString())
         String paymentUrl = vnPayConfig.payUrl + "?" + query.toString() + "&vnp_SecureHash=" + vnp_SecureHash;
 
         return "redirect:" + paymentUrl;
@@ -139,7 +150,7 @@ public class CustomerPaymentController {
             if (appointmentId != null) {
                 customerAppointmentService.cancelUnpaidAppointment(
                         appointmentId,
-                        "Khách hàng đã hủy hoặc không hoàn tất thanh toán VNPay."
+                        "Khách h� ng đã hủy hoặc không ho� n tất thanh toán VNPay."
                 );
                 // Truyền thêm id để giao diện xử lý thông báo
                 return "redirect:/customer/book?status=fail&id=" + appointmentId;
@@ -166,8 +177,9 @@ public class CustomerPaymentController {
     @PostMapping("/appointments/cancel-back/{id}")
     @ResponseBody
     public ResponseEntity<?> cancelOnBack(@PathVariable Long id) {
-        // Gọi service để hủy/xóa đơn hàng và giải phóng Slot ngay lập tức
-        customerAppointmentService.cancelUnpaidAppointment(id, "Khách hàng quay lại từ trang thanh toán");
+        // Gọi service để hủy/xóa đơn h� ng v�  giải phóng Slot ngay lập tức
+        customerAppointmentService.cancelUnpaidAppointment(id, "Khách h� ng quay lại từ trang thanh toán");
         return ResponseEntity.ok().build();
     }
 }
+

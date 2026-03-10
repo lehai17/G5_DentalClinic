@@ -130,6 +130,13 @@
   line-height: 1.4;
 }
 
+.message-author {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  opacity: 0.9;
+}
+
 .message-row.customer .message-bubble {
   background: #e5e7eb;
   color: #111827;

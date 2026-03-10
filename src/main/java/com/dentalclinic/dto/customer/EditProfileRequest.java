@@ -9,16 +9,16 @@ import lombok.Setter;
 @Setter
 public class EditProfileRequest {
 
-    @NotBlank(message = "Họ tên không được để trống")
+    @NotBlank(message = "Há» tÃªn khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     @Pattern(
-            regexp = "^[A-Za-zÀ-ỹ\\s]+$",
-            message = "Họ tên chỉ được chứa chữ cái"
+            regexp = "^[A-Za-zÃ€-á»¹\\s]+$",
+            message = "Há» tÃªn chá»‰ Ä‘Æ°á»£c chá»©a chá»¯ cÃ¡i"
     )
     private String fullName;
 
     @Pattern(
             regexp = "^0\\d{8,9}$",
-            message = "Số điện thoại phải bắt đầu bằng 0 và có 9–10 chữ số"
+            message = "Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i báº¯t Ä‘áº§u báº±ng 0 vÃ  cÃ³ 9â€“10 chá»¯ sá»‘"
     )
     private String phone;
 

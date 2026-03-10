@@ -1,4 +1,4 @@
-<aside
+﻿<aside
   th:fragment="sidebar"
   id="sidebar"
   class="patient-sidebar d-flex flex-column"
@@ -47,15 +47,6 @@
     </a>
 
     <a
-      th:href="@{/patient/prescriptions}"
-      th:classappend="${active == 'prescriptions'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-capsule"></i>
-      <span>Đơn thuốc</span>
-    </a>
-
-    <a
       th:href="@{/patient/recheck}"
       th:classappend="${active == 'recheck'} ? ' active'"
       class="menu-item"
@@ -90,3 +81,5 @@
     </a>
   </div>
 </aside>
+
+

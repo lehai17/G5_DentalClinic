@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Seed khung giờ bác sĩ (dentist_schedule) để bước 2 "Chọn giờ" có dữ liệu.
- * Chỉ chạy khi chưa có lịch nào trong 7 ngày tới.
+ * Chỉ chạy khi chưa có lịch n� o trong 7 ng� y tới.
  */
 @Configuration
 public class DentistScheduleSeeder {
@@ -47,3 +47,4 @@ public class DentistScheduleSeeder {
         };
     }
 }
+

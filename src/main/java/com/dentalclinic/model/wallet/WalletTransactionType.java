@@ -1,8 +1,8 @@
 package com.dentalclinic.model.wallet;
 
 public enum WalletTransactionType {
-    DEPOSIT,      // Nạp tiền từ thanh toán cọc
-    REFUND,       // Hoàn tiền khi hủy lịch
-    PAYMENT,      // Thanh toán dịch vụ từ ví
-    ADJUSTMENT    // Điều chỉnh số dư (admin)
+    DEPOSIT,      // Náº¡p tiá»n tá»« thanh toÃ¡n cá»c
+    REFUND,       // HoÃ n tiá»n khi há»§y lá»‹ch
+    PAYMENT,      // Thanh toÃ¡n dá»‹ch vá»¥ tá»« vÃ­
+    ADJUSTMENT    // Äiá»u chá»‰nh sá»‘ dÆ° (admin)
 }
