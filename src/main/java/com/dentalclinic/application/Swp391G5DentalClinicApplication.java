@@ -24,7 +24,7 @@ public class Swp391G5DentalClinicApplication {
     CommandLineRunner run() {
         return args -> {
             System.out.println("======================================");
-            System.out.println("  SWP391 G5 â€“ DENTAL CLINIC STARTED!");
+            System.out.println("  SWP391 G5 DENTAL CLINIC STARTED!");
             System.out.println("  Server running at: http://localhost:8080");
             System.out.println("======================================");
         };
