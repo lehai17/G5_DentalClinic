@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title>Chỉnh sửa hồ sơ</title>
+    <title>Edit Profile</title>
 
     <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
     <link rel="stylesheet" th:href="@{/css/dentist/profile.css}"/>
@@ -10,6 +10,7 @@
 
 <body>
 <div class="app-shell">
+
     <aside class="sidebar" style="display:flex;flex-direction:column;height:100vh;">
         <div class="sidebar-top">
             <div class="brand-mini">
@@ -19,82 +20,135 @@
         </div>
 
         <nav class="nav">
-            <a class="nav-item" href="/dentist/dashboard">Tổng quan</a>
-            <a class="nav-item" href="/dentist/work-schedule">Lịch làm việc</a>
-            <a class="nav-item" href="/dentist/busy-schedule">Lịch bận</a>
-            <a class="nav-item" href="/dentist/support">Phiếu hỗ trợ</a>
-            <a class="nav-item active" href="/dentist/profile">Hồ sơ</a>
+            <a class="nav-item" href="/dentist/dashboard">Dashboard</a>
+            <a class="nav-item" href="/dentist/work-schedule">Work Schedule</a>
+            <a class="nav-item" href="/dentist/busy-schedule">Busy Schedule</a>
+            <a class="nav-item" href="/dentist/support">Support Ticket</a>
+            <a class="nav-item active" href="/dentist/profile">Profile</a>
         </nav>
 
         <div style="margin-top:auto;">
-            <a class="nav-item danger" href="/logout">Đăng xuất</a>
+            <a class="nav-item danger" href="/logout">Sign Out</a>
         </div>
     </aside>
 
     <div class="main">
+
         <div class="topbar">
-            <div style="color:var(--muted);font-size:12px;">Chuyên mục › Hồ sơ › Chỉnh sửa</div>
+            <div style="color:var(--muted);font-size:12px;">
+            Modules › Profile › Edit
+        </div>
         </div>
 
         <div class="content">
+
             <div class="profile-header">
-                <h1>Chỉnh sửa hồ sơ</h1>
+                <h1>Edit Profile</h1>
             </div>
 
-            <form th:action="@{/dentist/profile/edit}" th:object="${editDTO}" method="post">
+            <form th:action="@{/dentist/profile/edit}"
+                  th:object="${editDTO}"
+                  method="post">
+
                 <div class="card large">
-                    <h3>Thông tin tài khoản</h3>
+                    <h3>Account Information</h3>
+
                     <div class="grid-2">
                         <div>
-                            <label>Giới tính</label>
+                            <label>Gender</label>
                             <select name="gender">
-                                <option value="MALE" th:selected="${editDTO.gender.name() == 'MALE'}">Nam</option>
-                                <option value="FEMALE" th:selected="${editDTO.gender.name() == 'FEMALE'}">Nữ</option>
+                                <option value="MALE"
+                                        th:selected="${editDTO.gender.name() == 'MALE'}">
+                                    Male
+                                </option>
+                                <option value="FEMALE"
+                                        th:selected="${editDTO.gender.name() == 'FEMALE'}">
+                                    Female
+                                </option>
                             </select>
                         </div>
 
                         <div>
-                            <label>Ngày sinh</label>
-                            <input type="date" name="dateOfBirth" th:value="${#temporals.format(editDTO.dateOfBirth, 'yyyy-MM-dd')}" />
+                            <label>Date of Birth</label>
+                            <input type="date"
+                                   name="dateOfBirth"
+                                   th:value="${#temporals.format(editDTO.dateOfBirth, 'yyyy-MM-dd')}"
+                                   required />
+                            <div class="form-error"
+                                 th:if="${#fields.hasErrors('dateOfBirth')}"
+                                 th:errors="*{dateOfBirth}">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card large">
-                    <h3>Thông tin chuyên môn</h3>
+                    <h3>Professional Information</h3>
+
                     <div class="grid-2">
                         <div>
-                            <label>Họ và tên</label>
-                            <input type="text" name="fullName" th:value="${editDTO.fullName}" />
+                            <label>Full Name</label>
+                            <input type="text"
+                                   name="fullName"
+                                   th:value="${editDTO.fullName}"
+                                   required
+                                   minlength="2"
+                                   maxlength="50"
+                                   pattern="^[A-Za-zÀ-ỿ ]{2,50}$"
+                                   title="Full name must be 2–50 letters and cannot contain numbers"/>
                         </div>
 
                         <div>
                             <label>Phone</label>
-                            <input type="text" name="phone" th:value="${editDTO.phone}" />
+                            <input type="text"
+                                   name="phone"
+                                   th:value="${editDTO.phone}"
+                                   required
+                                   pattern="^[0-9]{9,11}$"
+                                   title="Phone must contain 9–11 digits"/>
                         </div>
 
                         <div>
-                            <label>Chuyên môn</label>
-                            <input type="text" name="specialization" th:value="${editDTO.specialization}" />
+                            <label>Specialization</label>
+                            <input type="text"
+                                   name="specialization"
+                                   th:value="${editDTO.specialization}"
+                                   required
+                                   minlength="2"
+                                   maxlength="100"/>
                         </div>
 
                         <div>
-                            <label>Kinh nghiệm</label>
-                            <input type="number" name="experienceYears" th:value="${editDTO.experienceYears}" />
+                            <label>Experience</label>
+                            <input type="number"
+                                   name="experienceYears"
+                                   th:value="${editDTO.experienceYears}"
+                                   required
+                                   min="0"
+                                   max="60"/>
                         </div>
                     </div>
 
                     <div class="bio-section">
-                        <label>Tiểu sử</label>
-                        <textarea rows="4" name="bio" th:text="${editDTO.bio}"></textarea>
+                        <label>Biography</label>
+                        <textarea rows="4"
+                                  name="bio"
+                                  maxlength="1000"
+                                  th:text="${editDTO.bio}"></textarea>
                     </div>
                 </div>
 
                 <div class="actions bottom">
-                    <a th:href="@{/dentist/profile}" class="btn-secondary">Hủy</a>
-                    <button type="submit" class="btn-primary">Lưu thay đổi</button>
+                    <a th:href="@{/dentist/profile}" class="btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn-primary">
+                        Save Changes
+                    </button>
                 </div>
+
             </form>
+
         </div>
     </div>
 </div>

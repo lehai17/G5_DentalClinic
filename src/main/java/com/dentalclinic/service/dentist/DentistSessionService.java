@@ -101,7 +101,7 @@ public class DentistSessionService {
                                 (f.getSeverity() == null || f.getSeverity().isBlank()) &&
                                 (f.getNote() == null || f.getNote().isBlank());
 
-                if (isEmpty) continue; // ðŸ”¥ bỏ dòng rỗng
+                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
 
                 f.setMedicalRecord(mr);
                 mr.getFindings().add(f);
@@ -116,7 +116,7 @@ public class DentistSessionService {
                                 (i.getType() == null || i.getType().isBlank()) &&
                                 (i.getNote() == null || i.getNote().isBlank());
 
-                if (isEmpty) continue; // ðŸ”¥ bỏ dòng rỗng
+                if (isEmpty) continue; // 🔥 bỏ dòng rỗng
 
                 i.setMedicalRecord(mr);
                 mr.getImages().add(i);
@@ -198,13 +198,7 @@ public class DentistSessionService {
         if (form.getPerformedServices() != null) {
             for (BillingPerformedService ps : form.getPerformedServices()) {
 
-                boolean isEmpty =
-                        ps.getService() == null &&
-                                (ps.getToothNo() == null || ps.getToothNo().isBlank());
-
-                if (isEmpty) continue; // ðŸ”¥ bỏ dòng trống
-
-                if (ps.getQty() <= 0) ps.setQty(1); // đảm bảo >=1
+                if (ps.getQty() <= 0) ps.setQty(1);
 
                 ps.setBillingNote(bn);
                 bn.getPerformedServices().add(ps);
@@ -220,7 +214,7 @@ public class DentistSessionService {
                                 (pi.getDosage() == null || pi.getDosage().isBlank()) &&
                                 (pi.getNote() == null || pi.getNote().isBlank());
 
-                if (isEmpty) continue; // ðŸ”¥ bỏ dòng trống
+                if (isEmpty) continue; // 🔥 bỏ dòng trống
 
                 pi.setBillingNote(bn);
                 bn.getPrescriptionItems().add(pi);
@@ -228,7 +222,6 @@ public class DentistSessionService {
         }
 
         billingNoteRepository.save(bn);
-
         appt.setStatus(AppointmentStatus.DONE);
         appointmentRepository.save(appt);
         appointmentRepository.flush();  // Force flush to DB

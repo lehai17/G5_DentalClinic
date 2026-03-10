@@ -1,20 +1,29 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.getElementById('billingForm').addEventListener('submit', () => {
 
-    // Highlight service when checked
-    document.querySelectorAll('.service-item input[type="checkbox"]')
-        .forEach(cb => {
-            cb.addEventListener('change',function () {
-                const row = this.closest('.service-item');
-                if (this.checked) {
-                    row.style.background = '#ffffff';
-                    row.style.boxShadow = '0 10px 25px rgba(37,99,235,0.15)';
-                    row.style.borderColor = '#3b82f6';
-                } else {
-                    row.style.background = '#f8fafc';
-                    row.style.boxShadow = 'none';
-                    row.style.borderColor = '#e2e8f0';
-                }
-            });
-        });
+    const rows = document.querySelectorAll('#performedTable tbody tr');
+
+    rows.forEach((tr, i) => {
+
+        const service = tr.querySelector('select');
+        const qty = tr.querySelector('.svc-qty');
+        const tooth = tr.querySelector('.svc-tooth');
+
+        if(service) service.name = `performedServices[${i}].service.id`;
+        if(qty) qty.name = `performedServices[${i}].qty`;
+        if(tooth) tooth.name = `performedServices[${i}].toothNo`;
+
+    });
+
+    document.querySelectorAll('#rxTable tbody tr').forEach(tr => {
+
+        const med = tr.querySelector('[name$=".medicineName"]')?.value;
+        const dose = tr.querySelector('[name$=".dosage"]')?.value;
+        const note = tr.querySelector('[name$=".note"]')?.value;
+
+        if(!med && !dose && !note){
+            tr.remove();
+        }
+
+    });
 
 });

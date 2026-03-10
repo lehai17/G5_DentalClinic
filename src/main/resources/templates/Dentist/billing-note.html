@@ -1,35 +1,35 @@
 <!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Chuyển dịch vụ sang thanh toán</title>
+  <title>Service & Billing Transfer</title>
   <link rel="stylesheet" href="/css/dentist/app.css"/>
   <link rel="stylesheet" href="/css/dentist/billing.css"/>
 </head>
 <body class="billing-page">
 <div class="billing-container">
   <div class="billing-header">
-    <div class="billing-title">Chuyển dịch vụ sang thanh toán</div>
+    <div class="billing-title">Service & Billing Transfer</div>
 
     <div class="billing-meta">
       <div>
-        <div class="meta-label">Lịch hẹn</div>
+        <div class="meta-label">Appointment</div>
         <div class="meta-value" th:text="${appointmentId}">68</div>
       </div>
 
       <div>
-        <div class="meta-label">Bệnh nhân</div>
+        <div class="meta-label">Patient</div>
         <div class="meta-value" th:text="${patientName}">Nguyễn Văn A</div>
       </div>
 
       <div>
-        <div class="meta-label">Ngày</div>
+        <div class="meta-label">Date</div>
         <div class="meta-value" th:text="${apptDate}">2026-02-26</div>
       </div>
 
       <div>
-        <div class="meta-label">Giờ</div>
+        <div class="meta-label">Time</div>
         <div class="meta-value">
           <span th:text="${#temporals.format(startTime,'HH:mm')}"></span>
           -
@@ -43,20 +43,23 @@
         th:action="@{/dentist/appointments/{id}/billing-transfer(id=${appointmentId})}">
     <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
     <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
-    <input type="hidden" id="appointmentStatus" th:value="${appointmentStatus}">
+    <input type="hidden" id="appointmentStatus"
+           th:value="${appointmentStatus}">
     <input type="hidden" name="weekStart" th:value="${weekStart}">
 
     <div class="billing-section">
       <div style="display:flex;justify-content:space-between;align-items:end;">
         <div>
-          <div class="billing-section-title">A) Dịch vụ đã thực hiện</div>
-          <div class="mini">Chọn các dịch vụ đã thực hiện thực tế. Có thể nhập số lượng và răng liên quan nếu cần.</div>
+          <div class="billing-section-title">
+            A) Performed Services
+          </div>
+          <div class="mini">Tick the services actually performed (qty, tooth optional).</div>
         </div>
       </div>
 
       <table class="tbl" id="performedTable">
         <thead>
-        <tr><th>Dịch vụ</th><th>Số lượng</th><th>Răng</th><th></th></tr>
+        <tr><th>Service</th><th>Qty</th><th>Tooth</th><th></th></tr>
         </thead>
         <tbody>
           <tr th:each="ps,stat : *{performedServices}">
@@ -76,23 +79,23 @@
             </td>
             <td>
               <input th:field="*{performedServices[__${stat.index}__].toothNo}"
-                     placeholder="Răng"
+                     placeholder="Tooth"
                      class="svc-tooth"/>
             </td>
-            <td><button type="button" class="icon-mini del">×</button></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
           </tr>
         </tbody>
       </table>
-      <button type="button" class="icon-mini" id="btnAddService">+ Thêm dịch vụ</button>
+      <button type="button" class="icon-mini" id="btnAddService">+ Add service</button>
     </div>
 
     <div class="billing-section">
-      <div style="font-weight:900;">B) Đơn thuốc điện tử</div>
-      <div class="mini">Nhập thuốc, liều dùng và ghi chú hướng dẫn.</div>
+      <div style="font-weight:900;">B) Digital Prescription</div>
+      <div class="mini">Enter medications, dosage, duration, instruction.</div>
       <table class="tbl" id="rxTable">
         <thead>
         <tr>
-          <th>Tên thuốc</th><th>Liều dùng</th><th>Thời gian / ghi chú</th><th></th>
+          <th>Medication</th><th>Dosage</th><th>Duration/Note</th><th></th>
         </tr>
         </thead>
         <tbody>
@@ -100,24 +103,25 @@
             <td><input th:field="*{prescriptionItems[__${stat.index}__].medicineName}"/></td>
             <td><input th:field="*{prescriptionItems[__${stat.index}__].dosage}"/></td>
             <td><input th:field="*{prescriptionItems[__${stat.index}__].note}"/></td>
-            <td><button type="button" class="icon-mini del">×</button></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
           </tr>
         </tbody>
       </table>
-      <button type="button" class="icon-mini" id="btnAddRx">+ Thêm thuốc</button>
+      <button type="button" class="icon-mini" id="btnAddRx">+ Add medicine</button>
     </div>
 
     <div class="billing-section">
-      <div style="font-weight:900;">C) Ghi chú cho nhân viên (tùy chọn)</div>
-      <textarea th:field="*{note}" rows="4" placeholder="Nhập ghi chú cho bộ phận thanh toán / phát thuốc..."></textarea>
+      <div style="font-weight:900;">C) Note to Staff (optional)</div>
+      <textarea th:field="*{note}" rows="4" placeholder="Any note for billing/dispensing..."></textarea>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:14px;">
-      <button class="btn-primary" type="submit">Lưu</button>
+      <button class="btn-primary" type="submit">SAVE</button>
       <a class="btn-secondary"
          th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">
-        Quay lại
+        Back
       </a>
+
     </div>
   </form>
 </div>
@@ -127,6 +131,9 @@
     return document.querySelectorAll(tableId + ' tbody tr').length;
   }
 
+  /* =========================
+     ADD SERVICE
+  ========================= */
   document.getElementById('btnAddService').addEventListener('click', () => {
     const tbody = document.querySelector('#performedTable tbody');
     const idx = getNextIndex('#performedTable');
@@ -153,10 +160,10 @@
     <td>
       <input name="performedServices[${idx}].toothNo"
              class="svc-tooth"
-             placeholder="Răng"/>
+             placeholder="Tooth"/>
     </td>
     <td>
-      <button type="button" class="icon-mini del">×</button>
+      <button type="button" class="icon-mini del">✕</button>
     </td>
   `;
 
@@ -172,6 +179,9 @@
     tbody.appendChild(tr);
   });
 
+  /* =========================
+     ADD PRESCRIPTION
+  ========================= */
   document.getElementById('btnAddRx').addEventListener('click', () => {
     const tbody = document.querySelector('#rxTable tbody');
     const idx = getNextIndex('#rxTable');
@@ -181,18 +191,24 @@
     <td><input name="prescriptionItems[${idx}].medicineName"/></td>
     <td><input name="prescriptionItems[${idx}].dosage"/></td>
     <td><input name="prescriptionItems[${idx}].note"/></td>
-    <td><button type="button" class="icon-mini del">×</button></td>
+    <td><button type="button" class="icon-mini del">✕</button></td>
   `;
 
     tr.querySelector('.del').addEventListener('click', () => tr.remove());
     tbody.appendChild(tr);
   });
 
+  /* =========================
+     DELETE EXISTING ROWS
+  ========================= */
   document.querySelectorAll('#performedTable tbody .del, #rxTable tbody .del')
           .forEach(btn => {
             btn.addEventListener('click', () => btn.closest('tr').remove());
           });
 
+  /* =========================
+     LOCK WHEN DONE
+  ========================= */
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
     if (status === 'DONE' || status === 'COMPLETED') {
@@ -205,10 +221,29 @@
     }
   });
   document.addEventListener('DOMContentLoaded', function () {
+
     const firstRowSelect = document.querySelector('#performedTable tbody tr:first-child select');
+
     if (firstRowSelect) {
-      firstRowSelect.disabled = true;
+      firstRowSelect.style.pointerEvents = "none";
     }
+    document.getElementById('billingForm').addEventListener('submit', () => {
+
+      const rows = document.querySelectorAll('#performedTable tbody tr');
+
+      rows.forEach((tr, i) => {
+
+        const service = tr.querySelector('select');
+        const qty = tr.querySelector('.svc-qty');
+        const tooth = tr.querySelector('.svc-tooth');
+
+        if(service) service.name = `performedServices[${i}].service.id`;
+        if(qty) qty.name = `performedServices[${i}].qty`;
+        if(tooth) tooth.name = `performedServices[${i}].toothNo`;
+
+      });
+
+    });
   });
 </script>
 </body>
