@@ -393,7 +393,7 @@ public class DentistService {
         DentistProfile profile = dentistProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nha sĩ!"));
 
-        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.WAITING_PAYMENT);
+        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.DONE, AppointmentStatus.COMPLETED, AppointmentStatus.WAITING_PAYMENT);
         int upcomingCount = appointmentRepository.countUpcomingAppointments(id, LocalDate.now(), excludedStatuses);
 
         if (upcomingCount > 0) {

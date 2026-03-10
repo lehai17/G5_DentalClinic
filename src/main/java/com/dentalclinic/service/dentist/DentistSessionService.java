@@ -71,11 +71,7 @@ public class DentistSessionService {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
-        if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED
-                || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
-            throw new IllegalStateException("Appointment already finalized");
-        }
+        validateAppointmentNotFinalized(appt);
 
         MedicalRecord mr = medicalRecordRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -177,11 +173,7 @@ public class DentistSessionService {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
-        if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED
-                || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
-            throw new IllegalStateException("Appointment already finalized");
-        }
+        validateAppointmentNotFinalized(appt);
 
         BillingNote bn = billingNoteRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -275,6 +267,17 @@ public class DentistSessionService {
             throw new IllegalArgumentException("Appointment does not belong to this customer");
         }
         return appt;
+    }
+
+    /**
+     * Validate that appointment is not in finalized state (DONE, COMPLETED, WAITING_PAYMENT)
+     */
+    private void validateAppointmentNotFinalized(Appointment appt) {
+        if (appt.getStatus() == AppointmentStatus.DONE
+                || appt.getStatus() == AppointmentStatus.COMPLETED
+                || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
+            throw new IllegalStateException("Appointment already finalized");
+        }
     }
 
     // no more JSON helpers; all handling is via relational entities
