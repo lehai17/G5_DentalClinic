@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Add New Dentist - GENZ CLINIC</title>
+    <title>Thêm nhân viên mới - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin/add-dentist.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -50,12 +50,12 @@
         <span style="font-weight: 800; font-size: 18px;">GENZ CLINIC</span>
     </div>
     <nav>
-        <a th:href="@{/admin/dashboard}" class="nav-item"><i class="fas fa-th-large"></i> Dashboard</a>
-        <div style="font-size: 10px; padding: 20px 20px 10px; opacity: 0.5;">USER MANAGEMENT</div>
+        <a th:href="@{/admin/dashboard}" class="nav-item"><i class="fas fa-th-large"></i> Tổng quan</a>
+        <div style="font-size: 10px; padding: 20px 20px 10px; opacity: 0.5;">QUẢN LÝ NGƯỜI DÙNG</div>
         <a th:href="@{/admin/staff}"
            class="nav-item"
            th:classappend="${activePage == 'staff' ? 'active' : ''}">
-            <i class="fas fa-users"></i> Staff
+            <i class="fas fa-users"></i> Nhân viên
         </a>
     </nav>
 </div>
@@ -64,21 +64,21 @@
     <div class="page-header">
         <div>
             <a th:href="@{/admin/staff}" style="text-decoration: none; color: #707EAE; font-size: 14px;">
-                <i class="fas fa-arrow-left"></i> Back to Staff List
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách nhân viên
             </a>
-            <h2 style="color: #2B3674; margin-top: 10px;">Add New Staff</h2>
+            <h2 style="color: #2B3674; margin-top: 10px;">Thêm nhân viên mới</h2>
         </div>
     </div>
     <div th:if="${error}" class="alert alert-danger"
          style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
         <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
-        <span th:text="${error}">Thông báo lỗi á»Ÿ đây</span>
+        <span th:text="${error}">Thông báo lỗi ở đây</span>
     </div>
 
     <div th:if="${success}" class="alert alert-success"
          style="color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
         <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
-        <span th:text="${success}">Th� nh công!</span>
+        <span th:text="${success}">Thành công!</span>
     </div>
     <form th:action="@{/admin/staff/save}" th:object="${staffDTO}" method="POST">
         <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger"
@@ -96,14 +96,14 @@
                     <div class="card-title">
                         <div class="icon-box"><i class="fas fa-id-card"></i></div>
                         <div>
-                            <h4 style="margin:0; color: #2B3674;">Staff Information</h4>
-                            <small style="color: #A3AED0;">Basic details and contact info</small>
+                            <h4 style="margin:0; color: #2B3674;">Thông tin nhân viên</h4>
+                            <small style="color: #A3AED0;">Thông tin cơ bản và liên hệ</small>
                         </div>
                     </div>
 
                     <div class="form-grid">
                         <div class="input-group">
-                            <label>Full Name</label>
+                            <label>Họ và tên</label>
                             <div class="input-wrapper">
                                 <i class="far fa-user"></i>
                                 <input type="text" th:field="*{fullName}" placeholder="e.g. Nguyen Van A" required>
@@ -111,21 +111,21 @@
                         </div>
 
                         <div class="input-group">
-                            <label>Position (Vị trí)</label>
+                            <label>Vị trí</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-briefcase"></i>
                                 <select th:field="*{position}" required>
-                                    <option value="">-- Select Position --</option>
-                                    <option value="Receptionist">Receptionist (Lễ tân)</option>
-                                    <option value="Accountant">Accountant (Kế toán)</option>
-                                    <option value="Nurse">Nurse (Y tá)</option>
-                                    <option value="Technician">Technician (Kỹ thuật viên)</option>
+                                    <option value="">-- Chọn vị trí --</option>
+                                    <option value="Receptionist">Lễ tân</option>
+                                    <option value="Accountant">Kế toán</option>
+                                    <option value="Nurse">Y tá</option>
+                                    <option value="Technician">Kỹ thuật viên</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="input-group">
-                            <label>Email Address</label>
+                            <label>Địa chỉ email</label>
                             <div class="input-wrapper">
                                 <i class="far fa-envelope"></i>
                                 <input type="email" th:field="*{email}" placeholder="staff@genzclinic.vn" required>
@@ -133,7 +133,7 @@
                         </div>
 
                         <div class="input-group">
-                            <label>Phone Number</label>
+                            <label>Số điện thoại</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-phone-alt"></i>
                                 <input type="text" th:field="*{phone}" placeholder="+84 000 000 000">

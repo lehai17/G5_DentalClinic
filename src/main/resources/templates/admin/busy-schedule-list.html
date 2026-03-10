@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absence Requests - GENZ CLINIC</title>
+    <title>Đơn xin nghỉ - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -104,16 +104,16 @@
         <button type="submit" class="status-badge status-approved" style="border: none; cursor: pointer;">Lọc</button>
     </form>
     <div style="margin-bottom: 25px;">
-        <h2 style="color: #2B3674; margin: 0; font-weight: 800;">Dentist Busy Schedules</h2>
-        <p style="color: #A3AED0; font-size: 14px; margin-top: 5px;">Manage and approve dentist leave applications.</p>
+        <h2 style="color: #2B3674; margin: 0; font-weight: 800;">Danh sách lịch bận bác sĩ</h2>
+        <p style="color: #A3AED0; font-size: 14px; margin-top: 5px;">Quản lý và phê duyệt đơn xin nghỉ của bác sĩ.</p>
     </div>
 
     <div class="form-card">
         <table class="request-table">
             <thead>
             <tr>
-                <th>Dentist Name</th>
-                <th>Absence Period</th>
+                <th>Tên bác sĩ</th>
+                <th>Thời gian nghỉ</th>
                 <th>Reason</th>
                 <th style="text-align: center;">Status</th>
                 <th style="text-align: center;">Actions</th>
@@ -129,7 +129,7 @@
                 </td>
                 <td style="color: #707EAE; font-weight: 600;">
                     <i class="far fa-calendar-alt"></i>
-                    <span th:text="${req.startDate} + ' â†’ ' + ${req.endDate}"></span>
+                    <span th:text="${req.startDate} + ' → ' + ${req.endDate}"></span>
                 </td>
                 <td style="color: #707EAE; font-size: 14px;" th:text="${req.reason}"></td>
                 <td style="text-align: center;">

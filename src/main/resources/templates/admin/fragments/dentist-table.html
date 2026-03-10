@@ -7,11 +7,11 @@
             <tr th:each="dentist : ${dentists}">
                 <thead>
                     <tr>
-                        <th>Dentist</th>
+                        <th>Bác sĩ</th>
                         <th>Email</th>
-                        <th>Specialty</th>
+                        <th>Chuyên khoa</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,9 +37,9 @@
 
                         <td class="p-3">
                             <span class="text-muted fw-medium" style="font-size: 14px;"
-                                th:text="${dentist.email ?: 'N/A'}">leomessi@gmail.com</span>
+                                th:text="${dentist.email ?: 'Chưa có'}">leomessi@gmail.com</span>
                         </td>
-                        <td th:text="${dentist.specialization}">Specialty</td>
+                        <td th:text="${dentist.specialization}">Chuyên khoa</td>
 
                         <td>
                             <span class="status-badge"
@@ -57,7 +57,7 @@
                                     style="display:inline;">
                                     <button type="submit" class="action-btn"
                                         style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Mở khóa t� i khoản bác sĩ n� y?')">
+                                        onclick="return confirm('Mở khóa tài khoản bác sĩ này?')">
                                         <i class="fas fa-user-check"></i>
                                     </button>
                                 </form>
@@ -67,7 +67,7 @@
                                     style="display:inline;">
                                     <button type="submit" class="action-btn"
                                         style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Bạn có chắc chắn muốn khóa t� i khoản bác sĩ n� y?')">
+                                        onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
                                         <i class="fas fa-user-lock"></i>
                                     </button>
                                 </form>
@@ -79,7 +79,7 @@
 
         <div th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 40px; color: #A3AED0;">
             <i class="fas fa-search mb-3" style="font-size: 40px; opacity: 0.3;"></i>
-            <p>Không tìm thấy bác sĩ n� o khớp với từ khóa của bạn.</p>
+            <p>Không tìm thấy bác sĩ nào khớp với từ khóa của bạn.</p>
         </div>
     </div>
 </body>

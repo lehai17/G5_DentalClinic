@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Payment</title>
+    <title>Thanh toán</title>
     <link rel="stylesheet" th:href="@{/css/staff/payment.css}">
 </head>
 <body>
@@ -16,28 +16,28 @@
 
         <div class="payment-wrapper">
 
-            <h2>Payment</h2>
+            <h2>Thanh toán</h2>
 
             <p>
-                <strong>Customer:</strong>
+                <strong>Khách hàng:</strong>
                 <span th:text="${appointment.customer.fullName}"></span>
             </p>
 
             <p>
-                <strong>Date:</strong>
+                <strong>Ngày:</strong>
                 <span th:text="${appointment.date}"></span>
                 |
-                <strong>Time:</strong>
+                <strong>Giờ:</strong>
                 <span th:text="${appointment.startTime}"></span>
             </p>
 
             <table>
                 <thead>
                 <tr>
-                    <th>Service</th>
-                    <th>Unit Price</th>
-                    <th>Qty</th>
-                    <th>Amount</th>
+                    <th>Dịch vụ</th>
+                    <th>Đơn giá</th>
+                    <th>Số lượng</th>
+                    <th>Thành tiền</th>
                 </tr>
                 </thead>
 
@@ -52,20 +52,20 @@
             </table>
 
             <div class="total-box">
-                Total:
+                Tổng cộng:
                 <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
             </div>
 
             <div class="action-buttons">
                 <a th:href="@{/staff/appointments}" class="btn btn-back">
-                    Back
+                    Quay lại
                 </a>
 
                 <form th:action="@{/staff/payments/confirm/{id}(id=${appointment.id})}"
                       method="post"
                       style="display:inline;">
                     <button type="submit" class="btn btn-confirm">
-                        Confirm Payment
+                        Xác nhận thanh toán
                     </button>
                 </form>
             </div>

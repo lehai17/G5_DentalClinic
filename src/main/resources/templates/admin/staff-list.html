@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -381,10 +381,10 @@
         <div class="nav-group">
             <a th:href="@{/admin/dashboard}" class="nav-item"
                 th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                <i class="fas fa-th-large"></i> Dashboard
+                <i class="fas fa-th-large"></i> Tổng quan
             </a>
 
-            <div class="nav-label">User Management</div>
+            <div class="nav-label">Quản lý người dùng</div>
             <a th:href="@{/admin/dentists}" class="nav-item"
                 th:classappend="${activePage == 'dentists' ? 'active' : ''}">
                 <i class="fas fa-stethoscope"></i> Dentists
@@ -398,9 +398,9 @@
                 <i class="fas fa-user-friends"></i> Customer
             </a>
 
-            <div class="nav-label">Operations</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
+            <div class="nav-label">Vận hành</div>
+            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dịch vụ</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giờ</a>
         </div>
     </div>
 
@@ -442,7 +442,7 @@
                     <span class="filter-label">POSITION:</span>
                     <select name="position" onchange="this.form.submit()">
                         <option value="">All Positions</option>
-                        <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Receptionist
+                        <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Lễ tân
                         </option>
                         <option value="Other" th:selected="${selectedPos == 'Other'}">Other</option>
                     </select>
@@ -465,9 +465,9 @@
             <table th:if="${not #lists.isEmpty(staffs)}">
                 <thead>
                     <tr>
-                        <th>Staff Member</th>
+                        <th>Nhân viên</th>
                         <th>Position</th>
-                        <th>Phone Number</th>
+                        <th>Số điện thoại</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -553,7 +553,7 @@
             <div class="modal-body" style="text-align: center;">
                 <p style="color: #1B2559; font-size: 15px; margin-bottom: 20px;">
                     Bạn có chắc chắn muốn xóa nhân viên <strong id="deleteStaffName"></strong> không? <br>
-                    <span style="color: #F44336; font-size: 13px;">H� nh động n� y không thể ho� n tác.</span>
+                    <span style="color: #F44336; font-size: 13px;">Hành động này không thể hoàn tác.</span>
                 </p>
                 <div style="display: flex; justify-content: center; gap: 15px;">
                     <button type="button" onclick="closeDeleteModal()"
@@ -571,7 +571,7 @@
         <div class="modal-content" style="width: 700px;">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-user-edit me-2"
-                        style="color: #1A237E; margin-right: 10px;"></i>Edit Staff Profile</h5>
+                        style="color: #1A237E; margin-right: 10px;"></i>Chỉnh sửa hồ sơ nhân viên</h5>
                 <span class="close-btn" onclick="closeEditModal()">&times;</span>
             </div>
             <div class="modal-body">
@@ -580,16 +580,16 @@
 
                     <div class="info-grid">
                         <div class="input-group">
-                            <label>Full Name</label>
+                            <label>Họ và tên</label>
                             <div class="input-wrapper"><input type="text" id="editFullName" name="fullName" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Email Address</label>
+                            <label>Địa chỉ email</label>
                             <div class="input-wrapper"><input type="email" id="editEmail" name="email" required></div>
                         </div>
                         <div class="input-group">
-                            <label>Phone Number</label>
+                            <label>Số điện thoại</label>
                             <div class="input-wrapper"><input type="text" id="editPhone" name="phone" required
                                     pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
                         </div>
@@ -597,7 +597,7 @@
                             <label>Position</label>
                             <div class="input-wrapper">
                                 <select id="editPosition" name="position" required>
-                                    <option value="Receptionist">Receptionist</option>
+                                    <option value="Receptionist">Lễ tân</option>
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
@@ -630,7 +630,7 @@
 
                     <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
                         <button type="button" onclick="closeEditModal()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Cancel</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Hủy</button>
                         <button type="submit"
                             style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Save
                             Changes</button>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Edit Blog - Admin</title>
+    <title>Chỉnh sửa bài viết - Quản trị</title>
 
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -33,31 +33,31 @@
 <div class="main-content">
 
     <div class="card" style="margin-bottom:14px;">
-        <h2 style="margin:0; color:var(--text);">Edit Blog</h2>
-        <div class="muted">Admin chỉ được sửa khi blog á»Ÿ trạng thái <b>PENDING</b> hoặc <b>APPROVED</b>. áº¢nh được giữ nguyên.</div>
+        <h2 style="margin:0; color:var(--text);">Chỉnh sửa bài viết</h2>
+        <div class="muted">Quản trị chỉ được sửa khi bài viết ở trạng thái <b>PENDING</b> hoặc <b>APPROVED</b>. Ảnh được giữ nguyên.</div>
     </div>
 
     <!-- Chặn UI nếu không hợp lệ (phòng trường hợp ai đó gõ URL) -->
     <div class="warn" th:if="${blog.status.name() != 'PENDING' and blog.status.name() != 'APPROVED'}">
-        Blog Ä‘ang á»Ÿ trạng thái <b th:text="${blog.status}">REJECTED</b> nên không thể chỉnh sửa.
+        Bài viết đang ở trạng thái <b th:text="${blog.status}">REJECTED</b> nên không thể chỉnh sửa.
         <div style="margin-top:10px;">
-            <a class="btn btn-light" th:href="@{/admin/blogs(status=${blog.status})}">â† Back</a>
-            <a class="btn btn-primary" th:href="@{'/admin/blogs/' + ${blog.id}}">View Detail</a>
+            <a class="btn btn-light" th:href="@{/admin/blogs(status=${blog.status})}">← Quay lại</a>
+            <a class="btn btn-primary" th:href="@{'/admin/blogs/' + ${blog.id}}">Xem chi tiết</a>
         </div>
     </div>
 
     <div class="grid" th:if="${blog.status.name() == 'PENDING' or blog.status.name() == 'APPROVED'}">
         <div class="card preview">
-            <div class="label">Image preview (read-only)</div>
-            <img th:src="${blog.imageUrl}" alt="Blog image"
+            <div class="label">Xem trước ảnh (chỉ đọc)</div>
+            <img th:src="${blog.imageUrl}" alt="Ảnh bài viết"
                  onerror="this.style.display='none'">
-            <div class="label">Image URL (read-only)</div>
+            <div class="label">URL ảnh (chỉ đọc)</div>
             <input class="input" th:value="${blog.imageUrl}" readonly>
         </div>
 
         <div class="card">
             <form th:action="@{'/admin/blogs/' + ${blog.id} + '/update'}" method="post">
-                <div class="label">Title</div>
+                <div class="label">Tiêu đề</div>
                 <input class="input" type="text" name="title" th:value="${blog.title}" required>
 
                 <div class="label">Summary</div>
@@ -67,7 +67,7 @@
                 <textarea class="input" name="content" rows="10" required th:text="${blog.content}"></textarea>
 
                 <div class="btn-row">
-                    <a class="btn btn-light" th:href="@{'/admin/blogs/' + ${blog.id}}">Cancel</a>
+                    <a class="btn btn-light" th:href="@{'/admin/blogs/' + ${blog.id}}">Hủy</a>
                     <button class="btn btn-primary" type="submit">
                         <i class="fa-solid fa-floppy-disk"></i> Save Changes
                     </button>

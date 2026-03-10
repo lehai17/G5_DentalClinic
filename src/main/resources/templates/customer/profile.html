@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Profile</title>
+    <title>Hồ sơ cá nhân</title>
     <link rel="stylesheet" th:href="@{/css/home.css}">
 
     <!-- CSS riêng cho trang profile (giữ nguyên logic, chỉ làm đẹp) -->
@@ -174,12 +174,12 @@
                 </div>
 
                 <div class="info-box">
-                    <div class="info-label">Role</div>
+                    <div class="info-label">Vai trò</div>
                     <div class="info-value" th:text="${user.role}">CUSTOMER</div>
                 </div>
 
                 <div class="info-box">
-                    <div class="info-label">Status</div>
+                    <div class="info-label">Trạng thái</div>
                     <div class="info-value" th:text="${user.status}">ACTIVE</div>
                 </div>
 

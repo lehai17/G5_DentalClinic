@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Customer Management - GENZ CLINIC</title>
+    <title>Quáº£n lÃ½ khÃ¡ch hÃ ng - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -294,10 +294,10 @@
 
         <div class="nav-group" style="flex-grow: 1;">
             <a th:href="@{/admin/dashboard}" class="nav-item">
-                <i class="fas fa-th-large"></i> Dashboard
+                <i class="fas fa-th-large"></i> Tá»•ng quan
             </a>
 
-            <div class="nav-label">User Management</div>
+            <div class="nav-label">Quáº£n lÃ½ ngÆ°á»i dÃ¹ng</div>
             <a th:href="@{/admin/dentists}" class="nav-item">
                 <i class="fas fa-stethoscope"></i> Dentists
             </a>
@@ -310,15 +310,15 @@
                 <i class="fas fa-user-friends"></i> Customer
             </a>
 
-            <div class="nav-label">Operations</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
+            <div class="nav-label">Váº­n hÃ nh</div>
+            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dá»‹ch vá»¥</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giá»</a>
         </div>
 
         <div class="nav-group"
             style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-bottom: 20px;">
             <a th:href="@{/login}" class="nav-item logout-item" style="color: #FFB7B7;">
-                <i class="fas fa-sign-out-alt"></i> Logout
+                <i class="fas fa-sign-out-alt"></i> ÄÄƒng xuáº¥t
             </a>
         </div>
     </div>
@@ -326,7 +326,7 @@
     <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div>
-                <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Customer Management</h2>
+                <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Quáº£n lÃ½ khÃ¡ch hÃ ng</h2>
                 <p style="color: #A3AED0; margin: 5px 0 0 0; font-size: 14px;">Manage patient profiles and appointment
                     history</p>
             </div>
@@ -335,26 +335,26 @@
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="icon-box"><i class="fas fa-users"></i></div> Total Customers
+                    <div class="icon-box"><i class="fas fa-users"></i></div> Tổng khách hàng
                 </div>
                 <div class="stat-value" id="stat-total" th:text="${stats.totalCustomers}">0</div>
-                <div class="stat-subtext">All registered patients</div>
+                <div class="stat-subtext">Tất cả khách hàng đã đăng ký</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="icon-box" style="background: #E8F5E9; color: #4CAF50;"><i class="fas fa-user-plus"></i>
-                    </div> New This Month
+                    </div> Mới trong tháng
                 </div>
                 <div class="stat-value" id="stat-new" th:text="${stats.newCustomersThisMonth}">0</div>
-                <div class="stat-subtext">Patients joined recently</div>
+                <div class="stat-subtext">Khách hàng mới đăng ký gần đây</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="icon-box" style="background: #FFF3E0; color: #FF9800;"><i
-                            class="fas fa-calendar-check"></i></div> Current Appointments
+                            class="fas fa-calendar-check"></i></div> Lịch hẹn hiện tại
                 </div>
                 <div class="stat-value" id="stat-appt" th:text="${stats.customersWithAppointments}">0</div>
-                <div class="stat-subtext">Patients with upcoming slots</div>
+                <div class="stat-subtext">Khách hàng có lịch hẹn sắp tới</div>
             </div>
         </div>
 
@@ -363,29 +363,29 @@
                 <div class="filter-item">
                     <i class="fas fa-search" style="color: #A3AED0; position: absolute; margin-left: 15px;"></i>
                     <input type="text" id="searchInput" class="search-input" style="padding-left: 40px;"
-                        placeholder="Search name, email, phone..." th:value="${selectedKeyword}">
+                        placeholder="Tìm theo tên, email, số điện thoại..." th:value="${selectedKeyword}">
                 </div>
                 <div class="filter-item">
-                    <span class="filter-label">STATUS:</span>
+                    <span class="filter-label">TRẠNG THÁI:</span>
                     <select id="statusFilter">
-                        <option value="">All Status</option>
-                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
-                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Hoạt động</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Đã khóa</option>
                     </select>
                 </div>
                 <div class="filter-item">
-                    <span class="filter-label">SERVICE HISTORY:</span>
+                    <span class="filter-label">LỊCH SỬ DỊCH VỤ:</span>
                     <select id="serviceFilter" style="max-width: 250px;">
-                        <option value="">Any Service</option>
+                        <option value="">Tất cả dịch vụ</option>
                         <option th:each="srv : ${services}" th:value="${srv.id}" th:text="${srv.name}"
-                            th:selected="${selectedServiceId == srv.id}">Service Name</option>
+                            th:selected="${selectedServiceId == srv.id}">Tên dịch vụ</option>
                     </select>
                 </div>
             </div>
             <div style="display: flex; align-items: center;">
                 <div class="loader" id="searchLoader"></div>
                 <div style="color: #A3AED0; font-size: 13px; font-weight: 700; margin-left: 15px;" id="resultCount">
-                    Showing <span th:text="${#lists.size(customers)}">0</span> customers
+                    Hiển thị <span th:text="${#lists.size(customers)}">0</span> khách hàng
                 </div>
             </div>
         </div>

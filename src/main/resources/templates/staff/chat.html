@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat kh�ch hàng</title>
+    <title>Chat khách hàng</title>
     <link rel="stylesheet" href="/css/staff/staff.css">
     <link rel="stylesheet" href="/css/staff/chat.css">
     <script src="/js/staff/chat.js" defer></script>
@@ -16,10 +16,10 @@
         <div th:replace="staff/fragments/header :: header"></div>
 
         <div class="content">
-            <h2>Chat với kh�ch hàng</h2>
+            <h2>Chat với khách hàng</h2>
             <div class="chat-page">
                 <section class="chat-panel">
-                    <div class="chat-panel-header">Danh s�ch hội thoại</div>
+                    <div class="chat-panel-header">Danh sách hội thoại</div>
                     <div id="chat-thread-list" class="thread-list">
                         <button class="thread-item"
                                 type="button"
@@ -27,7 +27,7 @@
                                 th:attr="data-thread-id=${thread.id}">
                             <span class="thread-top">
                                 <span class="thread-email"
-                                      th:text="${thread.customerName != null ? thread.customerName : (thread.customerEmail != null ? thread.customerEmail : 'Kh�ch hàng')}">Kh�ch hàng</span>
+                                      th:text="${thread.customerName != null ? thread.customerName : (thread.customerEmail != null ? thread.customerEmail : 'Khách hàng')}">Khách hàng</span>
                                 <span class="thread-time"
                                       th:text="${thread.lastMessageAt != null ? #temporals.format(thread.lastMessageAt, 'dd/MM HH:mm') : '--'}">--</span>
                             </span>
@@ -58,4 +58,3 @@
 </div>
 </body>
 </html>
-

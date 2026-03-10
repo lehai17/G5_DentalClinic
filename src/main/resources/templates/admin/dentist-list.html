@@ -1,16 +1,16 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <title>Dentists Management - GENZ CLINIC</title>
+    <title>Quáº£n lÃ½ bÃ¡c sÄ© - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* CSS nội bộ để định hình khung Dashboard theo mẫu của bạn */
+        /* CSS ná»™i bá»™ Ä‘á»ƒ Ä‘á»‹nh hÃ¬nh khung Dashboard theo máº«u cá»§a báº¡n */
         :root {
             --sidebar-color: #1A237E;
-            /* M� u Navy Blue từ mẫu GENZ CLINIC */
+            /* Mï¿½Â u Navy Blue tá»« máº«u GENZ CLINIC */
             --bg-light: #F4F7FE;
             --navy-dark: #1B2559;
         }
@@ -23,7 +23,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA B� N */
+        /* Sidebar Navigation - GIá»® NGUYÃŠN THEO CODE Cá»¦A Bï¿½Â N */
         .sidebar {
             width: 250px;
             background: var(--sidebar-color);
@@ -71,7 +71,7 @@
             border-left: 4px solid #fff;
         }
 
-        /* Main Content & Header - CẬP NHẬT KHOẢNG TRỐNG */
+        /* Main Content & Header - Cáº¬P NHáº¬T KHOáº¢NG TRá»NG */
         .main-content {
             flex: 1;
             padding: 30px;
@@ -407,13 +407,13 @@
         <div class="nav-group">
             <a th:href="@{/admin/dashboard}" class="nav-item"
                 th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                <i class="fas fa-th-large"></i> Dashboard
+                <i class="fas fa-th-large"></i> Tá»•ng quan
             </a>
 
-            <div class="nav-label">User Management</div>
+            <div class="nav-label">Quáº£n lÃ½ ngÆ°á»i dÃ¹ng</div>
             <a th:href="@{/admin/dentists}" class="nav-item"
                 th:classappend="${activePage == 'dentists' ? 'active' : ''}">
-                <i class="fas fa-stethoscope"></i> Dentists
+                <i class="fas fa-stethoscope"></i> B?c s?
             </a>
 
             <a th:href="@{/admin/staff}" class="nav-item" th:classappend="${activePage == 'staff' ? 'active' : ''}">
@@ -424,9 +424,9 @@
                 <i class="fas fa-user-friends"></i> Customer
             </a>
 
-            <div class="nav-label">Operations</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Services</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Slots</a>
+            <div class="nav-label">Váº­n hÃ nh</div>
+            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dá»‹ch vá»¥</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giá»</a>
         </div>
     </div>
 
@@ -434,7 +434,7 @@
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 20px;">
 
-            <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">Dentist</h2>
+            <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">B?c s?</h2>
 
             <div class="search-wrapper" style="flex-grow: 1; max-width: 500px;">
                 <form th:action="@{/admin/dentists}" method="GET">
@@ -442,7 +442,7 @@
                         style="background: #F4F7FE; border-radius: 12px; padding: 2px 15px; display: flex; align-items: center; border: 1px solid #E0E5F2;">
                         <i class="fas fa-search" style="color: #A3AED0; margin-right: 12px;"></i>
                         <input type="text" name="keyword" th:value="${keyword}"
-                            placeholder="Search by name or specialty..."
+                            placeholder="T?m theo t?n ho?c chuy?n khoa..."
                             style="border: none; background: transparent; outline: none; width: 100%; padding: 10px 0; color: #1B2559; font-weight: 500; font-size: 14px;">
                     </div>
 
@@ -451,22 +451,22 @@
 
             <a th:href="@{/admin/dentists/add}"
                 style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2); min-width: fit-content;">
-                <i class="fas fa-plus"></i> Add Dentist
+                <i class="fas fa-plus"></i> Th?m b?c s?
             </a>
         </div>
 
         <div class="stats-container">
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TOTAL DENTISTS
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">T?NG B?C S?
                 </div>
                 <div class="stat-value" th:text="${totalDentists}">0</div>
             </div>
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">ON DUTY TODAY</div>
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TR?C H?M NAY</div>
                 <div class="stat-value" th:text="${onDutyCount}">0</div>
             </div>
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">AVG. PATIENT RATING
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">??NH GI? TRUNG B?NH
                 </div>
                 <div class="stat-value">4.8/5.0</div>
             </div>
@@ -475,30 +475,30 @@
         <div class="filter-bar">
             <form th:action="@{/admin/dentists}" method="GET" class="filter-group">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="filter-label">SPECIALTY:</span>
+                    <span class="filter-label">CHUY?N KHOA:</span>
                     <select name="specialty" onchange="this.form.submit()">
-                        <option value="">All Specialties</option>
+                        <option value="">T?t c? chuy?n khoa</option>
                         <option value="Orthodontics" th:selected="${selectedSpecialty == 'Orthodontics'}">
-                            Orthodontics(Niềng răng)</option>
-                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">Endodontics(Nội
+                            Ch?nh nha (Ni?ng r?ng)</option>
+                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">N?i nha</option>
                             nha)</option>
-                        <option value="Periodontics" th:selected="${selectedSpecialty == 'Periodontics'}">
+                            Chu nha</option>
                             Periodontics(Chu nha)</option>
-                        <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">
-                            Prosthodontics(Phục hình)</option>
+                            Ph?c h?nh</option>
+                            Prosthodontics(Phá»¥c hÃ¬nh)</option>
                     </select>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="filter-label">STATUS:</span>
+                    <span class="filter-label">TR?NG TH?I:</span>
                     <select name="status" onchange="this.form.submit()">
-                        <option value="">All Status</option>
-                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
-                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
+                        <option value="">T?t c? tr?ng th?i</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Ho?t ??ng</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">?? kh?a</option>
                     </select>
                 </div>
             </form>
             <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
-                Showing <span th:text="${#lists.size(dentists)}">0</span> dentists
+                Hi?n th? <span th:text="${#lists.size(dentists)}">0</span> b?c s?
             </div>
         </div>
 
@@ -506,11 +506,11 @@
             <table th:if="${not #lists.isEmpty(dentists)}">
                 <thead>
                     <tr>
-                        <th>Dentist</th>
+                        <th>B?c s?</th>
                         <th>Email</th>
-                        <th>Specialty</th>
+                        <th>Chuy?n khoa</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th>Thao t?c</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -529,7 +529,7 @@
                                         style="color: #1B2559; font-size: 14px; transition: color 0.2s;"
                                         onmouseover="this.style.color='#1A237E'"
                                         onmouseout="this.style.color='#1B2559'">
-                                        <span th:text="${dentist.fullName}">Tên Bác Sĩ</span>
+                                        <span th:text="${dentist.fullName}">T?n b?c s?</span>
                                     </a>
                                     <div class="small text-muted mt-1">ID: #<span th:text="${dentist.id}"></span></div>
                                 </div>
@@ -538,9 +538,9 @@
 
                         <td class="p-3">
                             <span class="text-muted fw-medium" style="font-size: 14px;"
-                                th:text="${dentist.user.email ?: 'N/A'}">leomessi@gmail.com</span>
+                                th:text="${dentist.user.email ?: 'Ch?a c?'}">leomessi@gmail.com</span>
                         </td>
-                        <td th:text="${dentist.specialization}">Specialty</td>
+                        <td th:text="${dentist.specialization}">Chuy?n khoa</td>
 
                         <!--                <td>-->
                         <!--                    <div th:if="${dentist.schedules != null and not #lists.isEmpty(dentist.schedules)}">-->
@@ -590,7 +590,7 @@
                                     style="display:inline;">
                                     <button type="submit" class="action-btn"
                                         style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Mở khóa t� i khoản bác sĩ n� y?')">
+                                        onclick="return confirm('M? kh?a t?i kho?n b?c s? n?y?')">
                                         <i class="fas fa-user-check"></i>
                                     </button>
                                 </form>
@@ -600,7 +600,7 @@
                                     style="display:inline;">
                                     <button type="submit" class="action-btn"
                                         style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Bạn có chắc chắn muốn khóa t� i khoản bác sĩ n� y?')">
+                                        onclick="return confirm('B?n c? ch?c ch?n mu?n kh?a t?i kho?n b?c s? n?y?')">
                                         <i class="fas fa-user-lock"></i>
                                     </button>
                                 </form>
@@ -612,7 +612,7 @@
 
             <div class="empty-state" th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 50px;">
                 <i class="fas fa-user-slash" style="font-size: 40px; color: #A3AED0; margin-bottom: 15px;"></i>
-                <h3 style="color: #A3AED0;">No dentists found</h3>
+                <h3 style="color: #A3AED0;">Kh?ng t?m th?y b?c s? n?o</h3>
             </div>
         </div>
     </div>
@@ -620,7 +620,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content" style="border-radius: 15px; border: none;">
                 <div class="modal-header" style="background: #1A237E; color: white;">
-                    <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi Tiết Hồ Sơ Bác Sĩ</h5>
+                    <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi ti?t h? s? b?c s?</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -635,31 +635,31 @@
                         <div class="col-md-8">
                             <div class="row g-3">
                                 <div class="col-6">
-                                    <label class="text-muted small">Email Address</label>
+                                    <label class="text-muted small">??a ch? email</label>
                                     <p id="viewEmail" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Phone Number</label>
+                                    <label class="text-muted small">S? ?i?n tho?i</label>
                                     <p id="viewPhone" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Date of Birth</label>
+                                    <label class="text-muted small">Ng?y sinh</label>
                                     <p id="viewDob" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Gender</label>
+                                    <label class="text-muted small">Gi?i t?nh</label>
                                     <p id="viewGender" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Years of Experience</label>
+                                    <label class="text-muted small">S? n?m kinh nghi?m</label>
                                     <p id="viewExp" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-12">
-                                    <label class="text-muted small">Qualifications & Certifications</label>
+                                    <label class="text-muted small">B?ng c?p v? ch?ng ch?</label>
                                     <p id="viewQuals" class="p-2 bg-light rounded" style="font-size: 0.9rem;">--</p>
                                 </div>
                                 <div class="col-12">
-                                    <label class="text-muted small">Work Schedule</label>
+                                    <label class="text-muted small">L?ch l?m vi?c</label>
                                     <div id="viewSchedule" class="mt-1">
                                     </div>
                                 </div>
@@ -681,21 +681,21 @@
         <div class="modal-content" style="width: 450px;">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #F44336; font-size: 18px;">
-                    <i class="fas fa-exclamation-triangle me-2" style="margin-right: 10px;"></i>Xác nhận xóa
+                    <i class="fas fa-exclamation-triangle me-2" style="margin-right: 10px;"></i>X?c nh?n x?a
                 </h5>
                 <span class="close-btn" onclick="closeDeleteModal()">&times;</span>
             </div>
             <div class="modal-body" style="text-align: center;">
                 <p style="color: #1B2559; font-size: 15px; margin-bottom: 20px;">
-                    Bạn có chắc chắn muốn xóa nha sĩ <strong id="deleteDentistName"></strong> không? <br>
-                    <span style="color: #F44336; font-size: 13px;">H� nh động n� y không thể ho� n tác.</span>
+                    B?n c? ch?c ch?n mu?n x?a b?c s? <strong id="deleteDentistName"></strong> kh?ng? <br>
+                    <span style="color: #F44336; font-size: 13px;">H?nh ??ng n?y kh?ng th? ho?n t?c.</span>
                 </p>
                 <div style="display: flex; justify-content: center; gap: 15px;">
                     <button type="button" onclick="closeDeleteModal()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Hủy</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Há»§y</button>
                     <button type="button" onclick="confirmDeleteDentist()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa
-                        Nha Sĩ</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">X?a b?c s?
+                        Nha SÄ©</button>
                 </div>
             </div>
         </div>
@@ -706,14 +706,14 @@
         <div class="modal-content" style="width: 800px;">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-user-md me-2"
-                        style="color: #1A237E; margin-right: 10px;"></i>Edit Dentist Profile</h5>
+                        style="color: #1A237E; margin-right: 10px;"></i>Ch?nh s?a h? s? b?c s?</h5>
                 <span class="close-btn" onclick="closeEditModal()">&times;</span>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <form id="editDentistForm" method="POST" enctype="multipart/form-data">
                     <input type="hidden" id="editDentistId" name="id">
 
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Personal Information</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Th?ng tin c? nh?n</h6>
                     <div class="info-grid">
                         <div style="grid-row: span 3; text-align: center;">
                             <div class="avatar-circle"
@@ -730,7 +730,7 @@
                             </div>
                             <input type="file" id="editAvatarInput" name="avatarFile" accept="image/*"
                                 style="display: none;" onchange="previewEditAvatar(this)">
-                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">CHANGE PHOTO</small>
+                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">??I ?NH</small>
                         </div>
                         <script>
                             function previewEditAvatar(input) {
@@ -747,110 +747,110 @@
                         </script>
 
                         <div class="input-group">
-                            <label>Full Name</label>
+                            <label>H? v? t?n</label>
                             <div class="input-wrapper"><input type="text" id="editFullName" name="fullName" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Email Address</label>
+                            <label>??a ch? email</label>
                             <div class="input-wrapper"><input type="email" id="editEmail" name="email" required></div>
                         </div>
                         <div class="input-group">
-                            <label>Phone Number</label>
+                            <label>S? ?i?n tho?i</label>
                             <div class="input-wrapper"><input type="text" id="editPhone" name="phone" required
-                                    pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
+                                    pattern="^(0|\+84)[0-9]{9}$" title="S? ?i?n tho?i kh?ng h?p l?"></div>
                         </div>
                         <div class="input-group">
-                            <label>Date of Birth</label>
+                            <label>Ng?y sinh</label>
                             <div class="input-wrapper"><input type="date" id="editDob" name="dateOfBirth" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Gender</label>
+                            <label>Gi?i t?nh</label>
                             <div class="input-wrapper">
                                 <select id="editGender" name="gender" required>
-                                    <option value="MALE">Male</option>
-                                    <option value="FEMALE">Female</option>
-                                    <option value="OTHER">Other</option>
+                                    <option value="MALE">Nam</option>
+                                    <option value="FEMALE">N?</option>
+                                    <option value="OTHER">Kh?c</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Status</label>
+                            <label>Tr?ng th?i</label>
                             <div class="input-wrapper">
                                 <select id="editStatus" name="status" required>
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="LOCKED">Locked</option>
+                                    <option value="ACTIVE">Ho?t ??ng</option>
+                                    <option value="LOCKED">?? kh?a</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Professional Information</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Th?ng tin chuy?n m?n</h6>
                     <div class="info-grid">
                         <div class="input-group">
-                            <label>Specialty</label>
+                            <label>Chuy?n khoa</label>
                             <div class="input-wrapper">
                                 <select id="editSpecialty" name="specialization" required>
-                                    <option value="Orthodontics">Orthodontics (Niềng răng)</option>
-                                    <option value="Endodontics">Endodontics (Nội nha)</option>
-                                    <option value="Periodontics">Periodontics (Chu nha)</option>
-                                    <option value="Prosthodontics">Prosthodontics (Phục hình)</option>
-                                    <option value="Oral Surgery">Oral Surgery (Phẫu thuật miệng)</option>
-                                    <option value="General Dentistry">General Dentistry (Nha khoa tổng quát)</option>
-                                    <option value="Pediatric Dentistry">Pediatric Dentistry (Nha khoa trẻ em)</option>
+                                    <option value="Orthodontics">Ch?nh nha (Ni?ng r?ng)</option>
+                                    <option value="Endodontics">N?i nha</option>
+                                    <option value="Periodontics">Chu nha</option>
+                                    <option value="Prosthodontics">Ph?c h?nh</option>
+                                    <option value="Oral Surgery">Ph?u thu?t mi?ng</option>
+                                    <option value="General Dentistry">Nha khoa t?ng qu?t</option>
+                                    <option value="Pediatric Dentistry">Nha khoa tr? em</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Experience Years</label>
+                            <label>S? n?m kinh nghi?m</label>
                             <div class="input-wrapper"><input type="number" id="editExperienceYears"
                                     name="experienceYears" min="0" required></div>
                         </div>
                         <div class="input-group" style="grid-column: span 2;">
-                            <label>Biography</label>
+                            <label>Ti?u s?</label>
                             <div class="input-wrapper"><textarea id="editBio" name="bio" rows="3"
                                     style="resize: vertical;"></textarea></div>
                         </div>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Work Schedule</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">L?ch l?m vi?c</h6>
                     <div class="info-grid">
                         <div class="input-group" style="grid-column: span 2;">
-                            <label>Available Days</label>
+                            <label>Ng?y l?m vi?c</label>
                             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="MONDAY"> Monday</label>
+                                        type="checkbox" name="availableDays" value="MONDAY"> Th? Hai</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="TUESDAY"> Tuesday</label>
+                                        type="checkbox" name="availableDays" value="TUESDAY"> Th? Ba</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="WEDNESDAY"> Wednesday</label>
+                                        type="checkbox" name="availableDays" value="WEDNESDAY"> Th? T?</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="THURSDAY"> Thursday</label>
+                                        type="checkbox" name="availableDays" value="THURSDAY"> Th? N?m</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="FRIDAY"> Friday</label>
+                                        type="checkbox" name="availableDays" value="FRIDAY"> Th? S?u</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="SATURDAY"> Saturday</label>
+                                        type="checkbox" name="availableDays" value="SATURDAY"> Th? B?y</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="SUNDAY"> Sunday</label>
+                                        type="checkbox" name="availableDays" value="SUNDAY"> Ch? nh?t</label>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Shift Start Time</label>
+                            <label>Gi? b?t ??u ca</label>
                             <div class="input-wrapper"><input type="time" id="editShiftStartTime" name="shiftStartTime">
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Shift End Time</label>
+                            <label>Gi? k?t th?c ca</label>
                             <div class="input-wrapper"><input type="time" id="editShiftEndTime" name="shiftEndTime">
                             </div>
                         </div>
@@ -858,10 +858,10 @@
 
                     <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
                         <button type="button" onclick="closeEditModal()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Cancel</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">H?y</button>
                         <button type="submit"
                             style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Save
-                            Changes</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">L?u thay ??i</button>
                     </div>
                 </form>
             </div>
@@ -873,7 +873,7 @@
         var successMsg = /*[[${success}]]*/ null;
         var errorMsg = /*[[${error}]]*/ null;
 
-        // Xử lý Delete Logic
+        // Xá»­ lÃ½ Delete Logic
         let dentistToDelete = null;
 
         function openDeleteModal(id, name) {
@@ -898,7 +898,7 @@
                     closeDeleteModal();
                     if (data.success) {
                         showToast(data.message, 'success');
-                        // Xóa dòng tương á»©ng khỏi DOM
+                        // XÃ³a dÃ²ng tÆ°Æ¡ng Ã¡Â»Â©ng khá»i DOM
                         const row = document.getElementById('dentist-row-' + dentistToDelete);
                         if (row) {
                             row.remove();
@@ -909,7 +909,7 @@
                 })
                 .catch(error => {
                     closeDeleteModal();
-                    showToast("Lỗi kết nối máy chủ", "error");
+                    showToast("Lá»—i káº¿t ná»‘i mÃ¡y chá»§", "error");
                 });
         }
 
@@ -973,7 +973,7 @@
             document.getElementById('editDentistModal').style.display = 'none';
         }
 
-        // Đóng Edit Modal khi click bên ngo� i
+        // ÄÃ³ng Edit Modal khi click bÃªn ngoï¿½Â i
         window.addEventListener('click', function (event) {
             let editModal = document.getElementById('editDentistModal');
             if (event.target == editModal) {
