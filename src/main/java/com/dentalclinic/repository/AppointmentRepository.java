@@ -114,7 +114,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         LEFT JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
-          AND a.status <> com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
+          AND a.status IN(
+              com.dentalclinic.model.appointment.AppointmentStatus.EXAMINING,
+                  com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
+                      com.dentalclinic.model.appointment.AppointmentStatus.CHECKED_IN,
+                          com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
+                              com.dentalclinic.model.appointment.AppointmentStatus.DONE
+                  
+              ) 
     """)
     List<Appointment> findScheduleForWeek(@Param("dentistProfileId") Long dentistProfileId,
                                           @Param("start") LocalDate start,
@@ -160,11 +167,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     """)
     long countTotalByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
 
+    /**
+     * Dashboard statistic: treat any appointment that is "done" or "completed"
+     * as finished for the purposes of the "completed today" counter.
+     */
     @Query("""
         SELECT COUNT(a) FROM Appointment a
         WHERE a.dentist.id = :dentistId
           AND a.date = :date
-          AND a.status = com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED
+          AND a.status IN (
+              com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
+              com.dentalclinic.model.appointment.AppointmentStatus.DONE
+          )
     """)
     long countCompletedByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
 

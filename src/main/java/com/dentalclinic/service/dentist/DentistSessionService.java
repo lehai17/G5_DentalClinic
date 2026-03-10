@@ -222,7 +222,6 @@ public class DentistSessionService {
         }
 
         billingNoteRepository.save(bn);
-
         appt.setStatus(AppointmentStatus.DONE);
         appointmentRepository.save(appt);
         appointmentRepository.flush();  // Force flush to DB

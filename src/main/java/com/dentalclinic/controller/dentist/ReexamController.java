@@ -20,7 +20,6 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/dentist/reexam")
 public class ReexamController {
-    
     private final ReexamService reexamService;
     private final AppointmentRepository appointmentRepository;
     

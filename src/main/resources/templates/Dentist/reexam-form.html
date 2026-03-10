@@ -140,10 +140,15 @@
     </div>
 
     <div class="btn-group">
-      <a href="/dentist/work-schedule" th:if="${weekStart}" th:href="@{/dentist/work-schedule(weekStart=${weekStart})}" class="btn btn-secondary">
+      <a th:if="${weekStart != null}"
+         th:href="@{/dentist/work-schedule(weekStart=${weekStart})}"
+         class="btn btn-secondary">
         Quay lại lịch làm việc
       </a>
-      <a href="/dentist/work-schedule" th:if="${!weekStart}" class="btn btn-secondary">
+
+      <a th:if="${weekStart == null}"
+         href="/dentist/work-schedule"
+         class="btn btn-secondary">
         Quay lại lịch làm việc
       </a>
 
@@ -158,7 +163,11 @@
     </div>
   </form>
 
-  <form id="deleteForm" method="post" th:action="@{/dentist/reexam/delete/{reexamId}(reexamId=${reexam.id})}" style="display: none;">
+  <form id="deleteForm"
+        method="post"
+        th:if="${isUpdate}"
+        th:action="@{/dentist/reexam/delete/{reexamId}(reexamId=${reexam.id})}"
+        style="display: none;">
     <input type="hidden" name="weekStart" th:value="${weekStart}"/>
   </form>
 </div>
