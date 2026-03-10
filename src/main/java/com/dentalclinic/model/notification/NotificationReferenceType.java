@@ -5,5 +5,6 @@ public enum NotificationReferenceType {
     TICKET,
     RECORD,
     PRESCRIPTION,
-    FOLLOWUP
+    FOLLOWUP,
+    WALLET
 }

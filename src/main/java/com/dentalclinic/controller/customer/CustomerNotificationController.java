@@ -120,6 +120,7 @@ public class CustomerNotificationController {
             case TICKET -> "/support/" + referenceId;
             case RECORD -> "/patient/medical-records";
             case PRESCRIPTION -> "/patient/prescriptions";
+            case WALLET -> "/customer/wallet";
         };
     }
 

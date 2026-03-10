@@ -1,87 +1,426 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<body>
-<nav th:fragment="header" class="navbar">
-    <div class="navbar-container">
+﻿<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <body>
+    <nav th:fragment="header" class="navbar" id="navbar">
+      <div class="navbar-container">
         <div class="navbar-logo">
-            <a th:href="@{/homepage}"><span>GENZ CLINIC</span></a>
+          <a th:href="@{/homepage}">
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+              <div
+                style="
+                  width: 2.5rem;
+                  height: 2.5rem;
+                  background: var(--medical-600);
+                  border-radius: 0.75rem;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: white;
+                  font-weight: bold;
+                  font-size: 1.25rem;
+                  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+                "
+              >
+                G
+              </div>
+              <div style="line-height: 1">
+                <h1 style="font-weight: bold; font-size: 1.25rem; margin: 0">
+                  GENZ CLINIC
+                </h1>
+              </div>
+            </div>
+          </a>
         </div>
 
         <ul class="navbar-menu">
-            <li><a onclick="scrollToSection('services')">Dịch vụ</a></li>
-            <li><a onclick="scrollToSection('dentists')">Bác sĩ</a></li>
-            <li><a th:href="@{/blogs}">Blog</a></li>
-            <li><a href="#contact">Liên hệ</a></li>
+          <li>
+            <a onclick="scrollToSection('services')" style="cursor: pointer"
+              >Dịch vụ</a
+            >
+          </li>
+          <li>
+            <a onclick="scrollToSection('dentists')" style="cursor: pointer"
+              >Bác sĩ</a
+            >
+          </li>
+          <li><a th:href="@{/blogs}">Blog</a></li>
+          <li><a href="#contact" style="cursor: pointer">Liên hệ</a></li>
         </ul>
 
-        <div class="navbar-actions" style="display:flex; align-items:center; gap:10px;">
-            <div sec:authorize="isAnonymous()" style="display:flex; gap:10px;">
-                <a th:href="@{/login}" class="navbar-cta" style="text-decoration:none;">Đăng nhập</a>
-                <a th:href="@{/register}" class="navbar-cta" style="text-decoration:none;">Đăng ký</a>
-            </div>
+        <div class="navbar-actions">
+          <div sec:authorize="isAnonymous()" style="display: flex; gap: 0.5rem">
+            <a
+              th:href="@{/login}"
+              class="navbar-cta"
+              style="text-decoration: none; padding: 0.5rem 1rem"
+              >Đăng nhập</a
+            >
+            <a
+              th:href="@{/register}"
+              class="navbar-cta"
+              style="text-decoration: none; padding: 0.5rem 1rem"
+              >Đăng ký</a
+            >
+          </div>
 
-            <div sec:authorize="isAuthenticated()" class="user-menu-wrap" style="display:flex; gap:10px; align-items:center;">
+          <div
+            sec:authorize="isAuthenticated()"
+            style="display: flex; gap: 0.5rem; align-items: center"
+          >
+            <div sec:authorize="hasRole('CUSTOMER')" class="notification-menu">
+              <button
+                type="button"
+                class="avatar-btn notification-btn"
+                onclick="toggleNotificationMenu(event)"
+                style="
+                  position: relative;
+                  padding: 0.5rem;
+                  border: none;
+                  background: none;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <i class="bi bi-bell" style="font-size: 1.25rem"></i>
+                <span
+                  class="notification-badge"
+                  th:if="${customerUnreadNotificationCount > 0}"
+                  th:text="${customerUnreadNotificationCount > 99 ? '99+' : customerUnreadNotificationCount}"
+                  style="
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    background: var(--medical-600);
+                    color: white;
+                    border-radius: 50%;
+                    width: 1.25rem;
+                    height: 1.25rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.625rem;
+                    font-weight: bold;
+                  "
+                  >0</span
+                >
+              </button>
 
-                <div sec:authorize="hasRole('CUSTOMER')" class="notification-menu">
-                    <button type="button" class="avatar-btn notification-btn" onclick="toggleNotificationMenu(event)">
-                        <i class="bi bi-bell"></i>
-                        <span class="notification-badge"
-                              th:if="${customerUnreadNotificationCount > 0}"
-                              th:text="${customerUnreadNotificationCount > 99 ? '99+' : customerUnreadNotificationCount}">0</span>
-                    </button>
-
-                    <div id="notificationDropdown" class="dropdown hidden notification-dropdown">
-                        <div class="dropdown-title">Thông báo</div>
-
-                        <div th:if="${#lists.isEmpty(customerNotificationPreview)}" class="dropdown-empty">
-                            Bạn chưa có thông báo nào.
-                        </div>
-
-                        <div th:if="${!#lists.isEmpty(customerNotificationPreview)}" class="notification-list">
-                            <a class="dropdown-item notification-item"
-                               th:each="n : ${customerNotificationPreview}"
-                               th:href="@{/customer/notifications/{id}/open(id=${n.id})}"
-                               th:classappend="${!n.read} ? ' unread'">
-                                <div class="notification-item-title" th:text="${n.title != null ? n.title : 'Thông báo'}">Tiêu đề</div>
-                                <div class="notification-item-content" th:text="${n.content != null ? n.content : 'Bạn có thông báo mới.'}">Nội dung</div>
-                                <div class="notification-item-time"
-                                     th:text="${n.createdAt != null ? #temporals.format(n.createdAt, 'dd/MM HH:mm') : '--/-- --:--'}">01/01 08:00</div>
-                            </a>
-                        </div>
-
-                        <div class="dropdown-divider"></div>
-                        <div class="notification-actions">
-                            <form th:action="@{/customer/notifications/read-all}" method="post" style="margin:0;">
-                                <input type="hidden" name="returnTo" value="/homepage">
-                                <button type="submit" class="dropdown-item notification-mark-read">Đánh dấu tất cả đã đọc</button>
-                            </form>
-                            <a class="dropdown-item notification-view-all" th:href="@{/customer/notifications}">Xem tất cả</a>
-                        </div>
-                    </div>
+              <div
+                id="notificationDropdown"
+                class="dropdown hidden notification-dropdown"
+                style="
+                  position: absolute;
+                  top: 100%;
+                  right: 0;
+                  background: white;
+                  border-radius: 1rem;
+                  border: 1px solid var(--slate-200);
+                  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+                  min-width: 300px;
+                  z-index: 50;
+                "
+              >
+                <div
+                  style="
+                    padding: 1rem;
+                    font-weight: 600;
+                    border-bottom: 1px solid var(--slate-100);
+                  "
+                >
+                  Thông báo
                 </div>
 
-                <div class="user-menu">
-                    <button type="button" class="avatar-btn" onclick="toggleUserMenu(event)">
-                        <span th:text="${avatarLetter}">U</span>
-                    </button>
-
-                    <div id="userDropdown" class="dropdown hidden">
-                        <a class="dropdown-item" th:href="@{/profile}">Profile</a>
-                        <a class="dropdown-item" th:href="@{/change-password}">Change Password</a>
-                        <div class="dropdown-divider"></div>
-                        <form th:action="@{/logout}" method="post" style="margin:0;">
-                            <button type="submit" class="dropdown-item danger">Logout</button>
-                        </form>
-                    </div>
+                <div
+                  th:if="${#lists.isEmpty(customerNotificationPreview)}"
+                  style="
+                    padding: 1.5rem;
+                    text-align: center;
+                    color: var(--slate-500);
+                    font-size: 0.875rem;
+                  "
+                >
+                  Bạn chưa có thông báo nào.
                 </div>
+
+                <div
+                  th:if="${!#lists.isEmpty(customerNotificationPreview)}"
+                  style="max-height: 300px; overflow-y: auto"
+                >
+                  <a
+                    class="dropdown-item notification-item"
+                    th:each="n : ${customerNotificationPreview}"
+                    th:href="@{/customer/notifications/{id}/open(id=${n.id})}"
+                    th:classappend="${!n.read} ? ' unread'"
+                    style="
+                      display: block;
+                      padding: 0.75rem 1rem;
+                      border-bottom: 1px solid var(--slate-100);
+                      text-decoration: none;
+                      color: var(--slate-900);
+                      transition: background 0.3s;
+                    "
+                  >
+                    <div
+                      style="font-weight: 600; font-size: 0.875rem"
+                      th:text="${n.title != null ? n.title : 'Thông báo'}"
+                    >
+                      Tiêu đề
+                    </div>
+                    <div
+                      style="
+                        color: var(--slate-600);
+                        font-size: 0.8125rem;
+                        margin-top: 0.25rem;
+                      "
+                      th:text="${n.content != null ? n.content : 'Bạn có thông báo mới.'}"
+                    >
+                      Nội dung
+                    </div>
+                    <div
+                      style="
+                        color: var(--slate-400);
+                        font-size: 0.75rem;
+                        margin-top: 0.25rem;
+                      "
+                      th:text="${n.createdAt != null ? #temporals.format(n.createdAt, 'dd/MM HH:mm') : '--/-- --:--'}"
+                    >
+                      01/01 08:00
+                    </div>
+                  </a>
+                </div>
+
+                <div style="border-top: 1px solid var(--slate-100)"></div>
+                <div style="padding: 0.75rem; display: flex; gap: 0.5rem">
+                  <form
+                    th:action="@{/customer/notifications/read-all}"
+                    method="post"
+                    style="margin: 0; flex: 1"
+                  >
+                    <input type="hidden" name="returnTo" value="/homepage" />
+                    <button
+                      type="submit"
+                      style="
+                        width: 100%;
+                        padding: 0.5rem;
+                        background: none;
+                        border: none;
+                        color: var(--slate-600);
+                        cursor: pointer;
+                        font-size: 0.875rem;
+                        text-align: left;
+                      "
+                    >
+                      Đánh dấu tất cả đã đọc
+                    </button>
+                  </form>
+                  <a
+                    class="dropdown-item notification-view-all"
+                    th:href="@{/customer/notifications}"
+                    style="
+                      flex: 1;
+                      padding: 0.5rem;
+                      color: var(--medical-600);
+                      text-decoration: none;
+                      font-size: 0.875rem;
+                      text-align: right;
+                    "
+                    >Xem tất cả</a
+                  >
+                </div>
+              </div>
             </div>
 
-            <a th:href="@{/customer/book}" class="navbar-cta" style="text-decoration:none;">
-                Đặt Lịch Ngay
-            </a>
+            <div class="user-menu">
+              <button
+                type="button"
+                class="avatar-btn"
+                onclick="toggleUserMenu(event)"
+                style="
+                  width: 2rem;
+                  height: 2rem;
+                  border-radius: 50%;
+                  background: var(--medical-100);
+                  color: var(--medical-700);
+                  border: none;
+                  font-weight: bold;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+                th:text="${avatarLetter}"
+              >
+                U
+              </button>
+
+              <div
+                id="userDropdown"
+                class="dropdown hidden"
+                style="
+                  position: absolute;
+                  top: 100%;
+                  right: 0;
+                  background: white;
+                  border-radius: 1rem;
+                  border: 1px solid var(--slate-200);
+                  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+                  min-width: 200px;
+                  z-index: 50;
+                "
+              >
+                <a
+                  class="dropdown-item"
+                  th:href="@{/profile}"
+                  style="
+                    display: block;
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid var(--slate-100);
+                    text-decoration: none;
+                    color: var(--slate-900);
+                    transition: background 0.3s;
+                  "
+                  >Thông tin cá nhân</a
+                >
+                <a
+                  class="dropdown-item"
+                  th:href="@{/customer/wallet}"
+                  style="
+                    display: block;
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid var(--slate-100);
+                    text-decoration: none;
+                    color: var(--slate-900);
+                    transition: background 0.3s;
+                  "
+                  >Ví của tôi</a
+                >
+                <a
+                  class="dropdown-item"
+                  th:href="@{/change-password}"
+                  style="
+                    display: block;
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid var(--slate-100);
+                    text-decoration: none;
+                    color: var(--slate-900);
+                    transition: background 0.3s;
+                  "
+                  >Đổi mật khẩu</a
+                >
+                <div style="border-top: 1px solid var(--slate-100)"></div>
+                <form th:action="@{/logout}" method="post" style="margin: 0">
+                  <button
+                    type="submit"
+                    style="
+                      width: 100%;
+                      padding: 0.75rem 1rem;
+                      background: none;
+                      border: none;
+                      color: var(--medical-600);
+                      cursor: pointer;
+                      text-align: left;
+                      font-size: 0.875rem;
+                    "
+                  >
+                    Đăng xuất
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <a
+            th:href="@{/customer/book}"
+            class="navbar-cta"
+            style="text-decoration: none"
+          >
+            Đặt lịch
+          </a>
         </div>
-    </div>
-    <script th:src="@{/js/user-dropdown.js}" defer></script>
-</nav>
-</body>
+      </div>
+      <script th:src="@{/js/user-dropdown.js}" defer></script>
+      <th:block sec:authorize="hasRole('CUSTOMER')">
+        <link rel="stylesheet" th:href="@{/css/chat-widget.css}" />
+        <div id="chat-widget" class="chat-widget">
+          <button id="chat-toggle" class="chat-toggle" type="button" aria-label="Mở chat với lễ tân">
+            <span>&#128172; Chat với lễ tân</span>
+            <span id="chat-badge" class="chat-badge hidden">0</span>
+          </button>
+
+          <div id="chat-window" class="chat-window hidden" aria-live="polite">
+            <div class="chat-header">
+              <span>Chat với lễ tân</span>
+              <button id="chat-close" class="chat-close" type="button" aria-label="Đóng chat">&times;</button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input">
+              <input id="chat-text" type="text" maxlength="1000" placeholder="Nhập tin nhắn..." />
+              <button id="chat-send" type="button">Gửi</button>
+            </div>
+          </div>
+        </div>
+        <script th:src="@{/js/chat-widget.js}" defer></script>
+      </th:block>
+    </nav>
+
+    <script>
+      window.addEventListener("scroll", function () {
+        const navbar = document.getElementById("navbar");
+        if (window.scrollY > 50) {
+          navbar.classList.remove("not-scrolled");
+          navbar.classList.add("scrolled");
+        } else {
+          navbar.classList.remove("scrolled");
+          navbar.classList.add("not-scrolled");
+        }
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const navbar = document.getElementById("navbar");
+        if (window.scrollY > 50) {
+          navbar.classList.add("scrolled");
+        } else {
+          navbar.classList.add("not-scrolled");
+        }
+      });
+
+      function toggleNotificationMenu(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById("notificationDropdown");
+        dropdown.classList.toggle("hidden");
+      }
+
+      function toggleUserMenu(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById("userDropdown");
+        dropdown.classList.toggle("hidden");
+      }
+
+      function scrollToSection(id) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+
+      document.addEventListener("click", function (e) {
+        const notifDropdown = document.getElementById("notificationDropdown");
+        const userDropdown = document.getElementById("userDropdown");
+        const notifBtn = document.querySelector(".notification-btn");
+        const avatarBtn = document.querySelector(".user-menu .avatar-btn");
+
+        if (!notifBtn?.contains(e.target) && !notifDropdown?.contains(e.target)) {
+          notifDropdown?.classList.add("hidden");
+        }
+        if (!avatarBtn?.contains(e.target) && !userDropdown?.contains(e.target)) {
+          userDropdown?.classList.add("hidden");
+        }
+      });
+    </script>
+  </body>
 </html>
