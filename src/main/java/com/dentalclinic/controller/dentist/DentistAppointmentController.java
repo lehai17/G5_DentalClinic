@@ -48,9 +48,10 @@ public class DentistAppointmentController {
 
 
         Appointment appt = appointmentRepository.findById(id).orElseThrow();
-        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED
+        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT 
         if (appt.getStatus() != AppointmentStatus.DONE
                 && appt.getStatus() != AppointmentStatus.COMPLETED
+                && appt.getStatus() != AppointmentStatus.WAITING_PAYMENT
                 && appt.getStatus() != AppointmentStatus.EXAMINING) {
 
             appt.setStatus(AppointmentStatus.EXAMINING);

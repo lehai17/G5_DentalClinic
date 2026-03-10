@@ -72,7 +72,8 @@ public class DentistSessionService {
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
         if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED) {
+                || appt.getStatus() == AppointmentStatus.COMPLETED
+                || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             throw new IllegalStateException("Appointment already finalized");
         }
 
@@ -177,7 +178,8 @@ public class DentistSessionService {
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
         if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED) {
+                || appt.getStatus() == AppointmentStatus.COMPLETED
+                || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             throw new IllegalStateException("Appointment already finalized");
         }
 

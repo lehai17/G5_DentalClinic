@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Work Schedule</title>
+  <title>Lịch làm việc</title>
   <link rel="stylesheet" href="/css/dentist/app.css"/>
 </head>
 
@@ -30,7 +30,7 @@
     </nav>
 
     <div style="margin-top:auto;">
-      <a class="nav-item danger" href="/logout">Sign Out</a>
+      <a class="nav-item danger" href="/logout">Đăng xuất</a>
     </div>
   </aside>
 
@@ -38,36 +38,40 @@
   <div class="main">
 
     <div class="topbar">
-      <div style="color:var(--muted);font-size:12px;">Modules › Work Schedule</div>
+      <div style="color:var(--muted);font-size:12px;">Chuyên mục › Lịch làm việc</div>
     </div>
 
     <div class="content">
 
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <h2 style="margin:0;">Weekly Schedule</h2>
+        <h2 style="margin:0;">Lịch hàng tuần</h2>
 
         <!-- STATUS LEGEND -->
         <div class="schedule-legend">
           <div class="legend-item">
             <span class="legend-box confirmed"></span>
-            <span>Confirmed</span>
+            <span>Đã xác nhận</span>
           </div>
           <div class="legend-item">
             <span class="legend-box checkin"></span>
-            <span>Check-in</span>
+            <span>Đã check-in</span>
           </div>
           <div class="legend-item">
             <span class="legend-box examining"></span>
-            <span>Examining</span>
+            <span>Đang khám</span>
           </div>
           <div class="legend-item">
             <span class="legend-box done"></span>
-            <span>Done</span>
+            <span>Hoàn thành khám</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-box waiting-payment"></span>
+            <span>Chờ thanh toán</span>
           </div>
           <div class="legend-item">
             <span class="legend-box completed"></span>
-            <span>Completed</span>
+            <span>Đã hoàn tất</span>
           </div>
         </div>
       </div>
@@ -81,7 +85,7 @@
       <!-- WEEK SELECT -->
       <div class="filter">
         <div class="field">
-          <label>Week range</label>
+          <label>Tuần</label>
           <select id="weekSelect">
             <option th:each="w : ${weekOptions}"
                     th:value="${w.value}"
@@ -128,8 +132,9 @@
                      th:classappend="
   ${ev.status == 'EXAMINING'} ? ' appt-examining' :
   (${ev.status == 'DONE'} ? ' appt-done' :
+  (${ev.status == 'WAITING_PAYMENT'} ? ' appt-waiting-payment' :
   (${ev.status == 'COMPLETED'} ? ' appt-completed' :
-  (${ev.status == 'CONFIRMED'} ? ' appt-confirmed' : '')))
+  (${ev.status == 'CONFIRMED'} ? ' appt-confirmed' : ''))))
 "
                      th:attr="
                 data-appointment-id=${ev.appointmentId},
@@ -167,8 +172,8 @@
 
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div id="apptModalTitle" class="modal-title">Appointment</div>
-        <div id="apptModalSub" class="modal-sub">Choose action</div>
+        <div id="apptModalTitle" class="modal-title">Lịch hẹn</div>
+        <div id="apptModalSub" class="modal-sub">Chọn hành động</div>
       </div>
       <button id="btnCloseModal" class="icon-btn">✕</button>
     </div>

@@ -355,7 +355,19 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     color:#15803d;
 }
 
-/* 🟡 CONFIRMED – đã xác nhận */
+/* � WAITING_PAYMENT – chờ thanh toán */
+.appt-waiting-payment{
+    background:#fed7aa;
+    border:2px solid #ea580c;
+}
+.appt-waiting-payment .appt-name{
+    color:#92220e;
+}
+.appt-waiting-payment .appt-sub{
+    color:#b55000;
+}
+
+/* �🟡 CONFIRMED – đã xác nhận */
 .appt-confirmed{
     background:#fef9c3;
     border:2px solid #ca8a04;
@@ -439,6 +451,10 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .legend-box.completed{
     background:#dcfce7;
     border-color:#16a34a;
+}
+.legend-box.waiting-payment{
+    background:#fed7aa;
+    border-color:#ea580c;
 }
 .legend-box.checkin{
     background:#eef5ff;

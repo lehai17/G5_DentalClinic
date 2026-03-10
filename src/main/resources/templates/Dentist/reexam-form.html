@@ -59,8 +59,16 @@
     <input type="hidden" name="weekStart" th:value="${weekStart}"/>
 
     <div class="form-group">
-      <label class="form-label">Dịch vụ (kế thừa từ lịch gốc)</label>
-      <input type="text" class="form-control" th:value="${originalAppointment.service.name}" disabled/>
+      <label class="form-label">Dịch vụ *</label>
+      <select class="form-control" name="serviceId" id="serviceId" th:disabled="${isReadOnly}" required>
+        <option value="">-- Chọn dịch vụ --</option>
+        <option th:each="s : ${services}" 
+                th:value="${s.id}" 
+                th:text="${s.name}"
+                th:selected="${s.id == (isUpdate ? reexam.service.id : originalAppointment.service.id)}">
+        </option>
+      </select>
+      <small>Có thể chọn dịch vụ khác nếu cần.</small>
     </div>
 
     <div class="form-group">

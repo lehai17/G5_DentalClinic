@@ -154,6 +154,7 @@
 
     <div class="section">
       <div style="font-weight:900;">E) Ghi chú lâm sàng</div>
+      <div class="mini">Nhập thêm ghi chú chi tiết về tình trạng lâm sàng và các quan sát khác.</div>
       <textarea th:field="*{clinicalNotes}" rows="5" placeholder="Nhập ghi chú lâm sàng chi tiết..."></textarea>
     </div>
 
@@ -274,7 +275,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
 
-    if (status === 'DONE' || status === 'COMPLETED') {
+    if (status === 'DONE' || status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
       document.querySelectorAll('input, textarea, select, button')
               .forEach(el => el.disabled = true);
       const saveBtn = document.querySelector('button[type="submit"]');

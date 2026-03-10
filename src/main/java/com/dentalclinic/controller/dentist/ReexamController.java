@@ -4,6 +4,7 @@ import com.dentalclinic.exception.BookingException;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.ServicesRepository;
 import com.dentalclinic.service.dentist.ReexamService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,10 +23,12 @@ import java.util.Optional;
 public class ReexamController {
     private final ReexamService reexamService;
     private final AppointmentRepository appointmentRepository;
+    private final ServicesRepository servicesRepository;
     
-    public ReexamController(ReexamService reexamService, AppointmentRepository appointmentRepository) {
+    public ReexamController(ReexamService reexamService, AppointmentRepository appointmentRepository, ServicesRepository servicesRepository) {
         this.reexamService = reexamService;
         this.appointmentRepository = appointmentRepository;
+        this.servicesRepository = servicesRepository;
     }
     
     /**
@@ -67,6 +70,7 @@ public class ReexamController {
         model.addAttribute("isReadOnly", isReadOnly);
         model.addAttribute("originalAppointment", original);
         model.addAttribute("weekStart", weekStart);
+        model.addAttribute("services", servicesRepository.findAll());
         
         return "Dentist/reexam-form";
     }
@@ -81,6 +85,7 @@ public class ReexamController {
             @RequestParam LocalTime startTime,
             @RequestParam LocalTime endTime,
             @RequestParam(required = false) String notes,
+            @RequestParam(required = false) Long serviceId,
             @RequestParam(required = false) String weekStart,
             RedirectAttributes redirect
     ) {
@@ -90,7 +95,8 @@ public class ReexamController {
                     date,
                     startTime,
                     endTime,
-                    notes
+                    notes,
+                    serviceId
             );
             
             String msg = reexamService.getExistingReexam(appointmentId).isPresent() 

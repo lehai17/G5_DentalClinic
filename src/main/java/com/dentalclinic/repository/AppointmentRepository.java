@@ -119,8 +119,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                   com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
                       com.dentalclinic.model.appointment.AppointmentStatus.CHECKED_IN,
                           com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
-                              com.dentalclinic.model.appointment.AppointmentStatus.DONE
-                  
+                              com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+                  com.dentalclinic.model.appointment.AppointmentStatus.WAITING_PAYMENT
               ) 
     """)
     List<Appointment> findScheduleForWeek(@Param("dentistProfileId") Long dentistProfileId,
@@ -177,7 +177,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
           AND a.date = :date
           AND a.status IN (
               com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
-              com.dentalclinic.model.appointment.AppointmentStatus.DONE
+              com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+              com.dentalclinic.model.appointment.AppointmentStatus.WAITING_PAYMENT
           )
     """)
     long countCompletedByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
