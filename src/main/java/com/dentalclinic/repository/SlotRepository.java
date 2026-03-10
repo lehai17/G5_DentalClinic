@@ -49,6 +49,10 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
     Optional<Slot> findBySlotTimeAndActiveTrueForUpdate(@Param("slotTime") LocalDateTime slotTime);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Slot s WHERE s.slotTime = :slotTime")
+    Optional<Slot> findBySlotTimeForUpdateRegardlessActive(@Param("slotTime") LocalDateTime slotTime);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM Slot s WHERE s.slotTime >= :fromTime AND s.slotTime < :toTime AND s.active = true ORDER BY s.slotTime ASC")
     List<Slot> findActiveSlotsForUpdate(@Param("fromTime") LocalDateTime fromTime,
                                         @Param("toTime") LocalDateTime toTime);
