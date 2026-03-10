@@ -222,7 +222,7 @@ public class StaffAppointmentService {
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        // 2. Gọi Repository để lấy bác sĩ không nghỉ phép v� o ng� y appt.getDate()
+        // 2. Lấy bác sĩ ACTIVE và không nghỉ được duyệt trong ngày hẹn
         return dentistProfileRepository.findAvailableDentistsForDate(appt.getDate());
     }
 

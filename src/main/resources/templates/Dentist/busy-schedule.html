@@ -130,61 +130,77 @@
         const errorDiv = document.getElementById('clientError');
         const errorText = document.getElementById('errorText');
 
+        // 1. KHÓA NGÀY QUÁ KHỨ NGAY KHI LOAD TRANG
         // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
 
-        // Chặn ngày quá khứ cho cả 2 input
-        startDateInput.setAttribute('min', today);
-        endDateInput.setAttribute('min', today);
+        startDateInput.setAttribute('min', todayStr);
+        endDateInput.setAttribute('min', todayStr);
 
-        // Khi chọn ngày bắt đầu, ngày kết thúc không được nhỏ hơn ngày bắt đầu
-        startDateInput.addEventListener('change', function() {
-            endDateInput.setAttribute('min', startDateInput.value);
-        });
+        // 2. LẤY DỮ LIỆU ĐÃ ĐĂNG KÝ TỪ BẢNG (Để check trùng)
+        function getBookedRanges() {
+            const historyRows = document.querySelectorAll('.history-row');
+            return Array.from(historyRows)
+                .filter(row => row.dataset.status !== 'REJECTED')
+                .map(row => ({
+                    start: new Date(row.dataset.start).setHours(0, 0, 0, 0),
+                    end: new Date(row.dataset.end).setHours(0, 0, 0, 0)
+                }));
+        }
 
-        const historyRows = document.querySelectorAll('.history-row');
-        const existingRanges = Array.from(historyRows)
-            .filter(row => row.dataset.status !== 'REJECTED')
-            .map(row => ({
-                start: new Date(row.dataset.start).getTime(),
-                end: new Date(row.dataset.end).getTime()
-            }));
+        function showError(msg) {
+            errorText.innerText = msg;
+            errorDiv.style.display = 'block';
+        }
 
         function validate() {
             const startStr = startDateInput.value;
             const endStr = endDateInput.value;
 
-            if (!startStr || !endStr) return true;
-
-            const startVal = new Date(startStr).getTime();
-            const endVal = new Date(endStr).getTime();
-
             errorDiv.style.display = 'none';
             startDateInput.classList.remove('input-error');
             endDateInput.classList.remove('input-error');
 
-            // 1. Ng� y kết thúc trước ng� y bắt đầu
+            if (!startStr || !endStr) return true;
+
+            const startVal = new Date(startStr).setHours(0, 0, 0, 0);
+            const endVal = new Date(endStr).setHours(0, 0, 0, 0);
+            const todayVal = new Date().setHours(0, 0, 0, 0);
+
+            // Kiểm tra 1: Ngày quá khứ
+            if (startVal < todayVal) {
+                showError("Không được chọn ngày trong quá khứ.");
+                startDateInput.classList.add('input-error');
+                return false;
+            }
+
+            // Kiểm tra 2: Thứ tự ngày
             if (endVal < startVal) {
-                showError("Ng� y kết thúc phải sau hoặc bằng ng� y bắt đầu.");
+                showError("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
                 endDateInput.classList.add('input-error');
                 return false;
             }
 
-            // 2. Không được cách nhau quá 1 ng� y (Ví dụ T2 đến T3 l�  ok, T2 đến T4 l�  lỗi)
+            // Kiểm tra 3: Tối đa 2 ngày (dayDiff > 1)
             const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
             if (dayDiff > 1) {
-                showError("Thời gian nghỉ mỗi đơn không được quá 1 ng� y.");
+                showError("Thời gian nghỉ mỗi đơn không được quá 2 ngày liên tiếp.");
                 endDateInput.classList.add('input-error');
                 return false;
             }
 
-            // 3. Kiểm tra trùng lặp (Overlap Check)
-            const isOverlapping = existingRanges.some(range => {
+            // Kiểm tra 4: TRÙNG LỊCH
+            const bookedRanges = getBookedRanges();
+            const isOverlapping = bookedRanges.some(range => {
                 return (startVal <= range.end) && (endVal >= range.start);
             });
 
             if (isOverlapping) {
-                showError("Thời gian n� y trùng với một yêu cầu nghỉ khác đã đăng ký.");
+                showError("Thời gian này trùng với một yêu cầu nghỉ khác đã đăng ký.");
                 startDateInput.classList.add('input-error');
                 endDateInput.classList.add('input-error');
                 return false;
@@ -193,31 +209,26 @@
             return true;
         }
 
-        const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
-        if (dayDiff > 1) {
-            showError('Thời gian nghỉ mỗi đơn không được quá 1 ngày.');
-            endDateInput.classList.add('input-error');
-            return false;
-        }
+        // Sự kiện thay đổi ngày
+        startDateInput.addEventListener('change', function() {
+            if (startDateInput.value) {
+                // Khóa các ngày trước ngày bắt đầu ở ô kết thúc
+                endDateInput.setAttribute('min', startDateInput.value);
+                if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                    endDateInput.value = startDateInput.value;
+                }
+            }
+            validate();
+        });
 
-        const isOverlapping = existingRanges.some(range => (startVal <= range.end) && (endVal >= range.start));
-        if (isOverlapping) {
-            showError('Thời gian này trùng với một yêu cầu nghỉ khác đã đăng ký.');
-            startDateInput.classList.add('input-error');
-            endDateInput.classList.add('input-error');
-            return false;
-        }
+        endDateInput.addEventListener('change', validate);
 
-        return true;
-    }
-
-    form.addEventListener('submit', function(e) {
-        if (!validate()) e.preventDefault();
+        form.addEventListener('submit', function(e) {
+            if (!validate()) {
+                e.preventDefault();
+            }
+        });
     });
-
-    startDateInput.addEventListener('change', validate);
-    endDateInput.addEventListener('change', validate);
-});
 </script>
 </body>
 </html>

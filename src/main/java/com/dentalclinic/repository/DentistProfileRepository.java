@@ -53,13 +53,15 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
 //    List<DentistProfile> findByKeyword(@Param("keyword") String keyword);
 
     @Query("""
-    SELECT d FROM DentistProfile d
-    JOIN d.schedules s 
-    WHERE d.user.status = 'ACTIVE' 
+    SELECT DISTINCT d FROM DentistProfile d
+    JOIN d.schedules s
+    WHERE d.user.status = com.dentalclinic.model.user.UserStatus.ACTIVE
     AND s.dayOfWeek = :dayOfWeek
-    AND d.id NOT IN (
-        SELECT b.dentist.id FROM BusySchedule b 
-        WHERE b.status = 'APPROVED' 
+    AND s.available = true
+    AND NOT EXISTS (
+        SELECT 1 FROM BusySchedule b
+        WHERE b.dentist = d
+        AND UPPER(COALESCE(b.status, '')) = 'APPROVED'
         AND :targetDate BETWEEN b.startDate AND b.endDate
     )
 """)
@@ -67,11 +69,14 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
             @Param("targetDate") LocalDate targetDate,
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek
     );
+
     @Query("""
-    SELECT d FROM DentistProfile d 
-    WHERE d.id NOT IN (
-        SELECT b.dentist.id FROM BusySchedule b 
-        WHERE b.status = 'APPROVED' 
+    SELECT DISTINCT d FROM DentistProfile d
+    WHERE d.user.status = com.dentalclinic.model.user.UserStatus.ACTIVE
+    AND NOT EXISTS (
+        SELECT 1 FROM BusySchedule b
+        WHERE b.dentist = d
+        AND UPPER(COALESCE(b.status, '')) = 'APPROVED'
         AND :targetDate BETWEEN b.startDate AND b.endDate
     )
 """)
