@@ -1,4 +1,4 @@
-:root{
+﻿:root{
     --primary:#0b74c9;
     --primary-600:#0965ad;
 
@@ -26,7 +26,7 @@ body{
 .auth{
     min-height: 100vh;
     display: grid;
-    grid-template-columns: 1.05fr 0.95fr; /* ảnh rộng hơn chút */
+    grid-template-columns: 1.05fr 0.95fr; /* áº£nh rộng hơn chút */
 }
 
 /* LEFT: image */
@@ -295,3 +295,4 @@ body{
     border-color: #dc2626;
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
+

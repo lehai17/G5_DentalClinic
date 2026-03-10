@@ -1,0 +1,370 @@
+﻿<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ví Của Tôi - GENZ CLINIC</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" th:href="@{/css/homepage/home.css}" />
+    <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}" />
+    <link rel="stylesheet" th:href="@{/css/customer-tools.css}" />
+    <link rel="stylesheet" th:href="@{/css/customer-appointments-page.css}" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .wallet-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .wallet-balance {
+        font-size: 0.875rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+      }
+
+      .wallet-amount {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+      }
+
+      .wallet-action {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .wallet-action:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
+      }
+
+      .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s;
+      }
+
+      .transaction-item:hover {
+        background: #f8fafc;
+      }
+
+      .transaction-item:last-child {
+        border-bottom: none;
+      }
+
+      .transaction-type {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .transaction-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+      }
+
+      .transaction-icon.refund {
+        background: #f0fff4;
+        color: #22c55e;
+      }
+
+      .transaction-icon.deposit {
+        background: #fef2f2;
+        color: #ef4444;
+      }
+
+      .transaction-icon.payment {
+        background: #f0f4ff;
+        color: #667eea;
+      }
+
+      .transaction-details h4 {
+        margin: 0;
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 0.875rem;
+      }
+
+      .transaction-details p {
+        margin: 0.25rem 0 0 0;
+        color: #64748b;
+        font-size: 0.75rem;
+      }
+
+      .transaction-amount {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .transaction-amount.refund {
+        color: #22c55e;
+      }
+
+      .transaction-amount.deposit {
+        color: #ef4444;
+      }
+
+      .transaction-amount.payment {
+        color: #667eea;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+      }
+
+      .empty-state-icon {
+        font-size: 3rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+      }
+
+      .empty-state-text {
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+      <main class="main-content">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <section class="customer-page-section" style="padding: 2rem">
+          <!-- Header -->
+          <div style="margin-bottom: 2rem">
+            <h1
+              style="
+                font-size: 1.875rem;
+                font-weight: bold;
+                color: #0f172a;
+                margin: 0;
+              "
+            >
+              Ví Của Tôi
+            </h1>
+            <p style="color: #64748b; margin: 0.5rem 0 0 0">
+              Quản lý số dư và lịch sử giao dịch ví
+            </p>
+          </div>
+
+          <!-- Wallet Card -->
+          <div class="wallet-card">
+            <div class="wallet-balance">Số dư hiện tại</div>
+            <div class="wallet-amount" id="wallet-balance">0 VND</div>
+            <a
+              href="#"
+              class="wallet-action"
+              onclick="
+                alert('Tính năng sẽ được cập nhật');
+                return false;
+              "
+            >
+              <i class="bi bi-plus-circle"></i> Nạp tiền
+            </a>
+          </div>
+
+          <!-- Transactions List -->
+          <div
+            style="
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+              padding: 1.5rem;
+            "
+          >
+            <h2
+              style="
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #0f172a;
+                margin: 0 0 1.5rem 0;
+              "
+            >
+              <i class="bi bi-clock-history"></i> Lịch sử giao dịch
+            </h2>
+
+            <div id="transactions-list"></div>
+
+            <div id="empty-state" class="empty-state" style="display: none">
+              <div class="empty-state-icon">
+                <i class="bi bi-inbox"></i>
+              </div>
+              <p class="empty-state-text">Chưa có giao dịch nào</p>
+            </div>
+
+            <div id="loading" style="text-align: center; padding: 2rem">
+              <i
+                class="bi bi-hourglass-split"
+                style="font-size: 1.5rem; color: #667eea"
+              ></i>
+              <p style="color: #64748b; margin-top: 0.5rem">
+                Äang tải dữ liệu...
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+      </main>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        loadWalletData();
+      });
+
+      function loadWalletData() {
+        const loading = document.getElementById("loading");
+        const list = document.getElementById("transactions-list");
+        const empty = document.getElementById("empty-state");
+
+        if (loading) loading.style.display = "";
+        if (list) list.innerHTML = "";
+
+        fetch("/customer/wallet/api", { credentials: "same-origin" })
+          .then((r) => {
+            if (r.status === 401) {
+              alert("Bạn cần đăng nhập.");
+              window.location.href = "/login";
+              return null;
+            }
+            return r.json();
+          })
+          .then((data) => {
+            if (!data) return;
+
+            // Update balance
+            const balanceEl = document.getElementById("wallet-balance");
+            if (balanceEl) {
+              balanceEl.textContent = formatCurrency(data.balance);
+            }
+
+            if (loading) loading.style.display = "none";
+
+            // Render transactions
+            if (data.transactions && data.transactions.length > 0) {
+              if (empty) empty.style.display = "none";
+              if (list)
+                list.innerHTML = data.transactions
+                  .map((t) => createTransactionHTML(t))
+                  .join("");
+            } else {
+              if (empty) empty.style.display = "";
+              if (list) list.innerHTML = "";
+            }
+          })
+          .catch((err) => {
+            if (loading) loading.style.display = "none";
+            console.error("Load wallet error:", err);
+            alert("Không thể tải dữ liệu ví. Vui lòng thử lại sau.");
+          });
+      }
+
+      function createTransactionHTML(transaction) {
+        const typeInfo = getTypeInfo(transaction.type);
+        const date = new Date(transaction.createdAt);
+        const dateStr = formatDate(date);
+
+        return `
+            <div class="transaction-item">
+                <div class="transaction-type">
+                    <div class="transaction-icon ${typeInfo.class}">
+                        <i class="${typeInfo.icon}"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <h4>${typeInfo.name}</h4>
+                        <p>${transaction.description || ""}</p>
+                        <p>${dateStr}</p>
+                    </div>
+                </div>
+                <div class="transaction-amount ${typeInfo.class}">
+                    ${typeInfo.prefix}${formatCurrency(transaction.amount)}
+                </div>
+            </div>
+        `;
+      }
+
+      function getTypeInfo(type) {
+        const types = {
+          REFUND: {
+            name: "Hoàn cọc",
+            icon: "bi bi-arrow-counterclockwise",
+            class: "refund",
+            prefix: "+",
+          },
+          DEPOSIT: {
+            name: "Nạp tiền",
+            icon: "bi bi-arrow-down-left",
+            class: "deposit",
+            prefix: "+",
+          },
+          PAYMENT: {
+            name: "Thanh toán",
+            icon: "bi bi-arrow-up-right",
+            class: "payment",
+            prefix: "-",
+          },
+          ADJUSTMENT: {
+            name: "Điều chỉnh",
+            icon: "bi bi-arrow-left-right",
+            class: "deposit",
+            prefix: "",
+          },
+        };
+        return (
+          types[type] || {
+            name: type,
+            icon: "bi bi-circle",
+            class: "deposit",
+            prefix: "",
+          }
+        );
+      }
+
+      function formatCurrency(amount) {
+        if (!amount) return "0 VND";
+        const num = parseFloat(amount);
+        return num.toLocaleString("vi-VN") + " VND";
+      }
+
+      function formatDate(date) {
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear();
+        const hours = date.getHours().toString().padStart(2, "0");
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+      }
+    </script>
+  </body>
+</html>
+
+

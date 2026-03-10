@@ -69,7 +69,7 @@ public class SupportController {
 
         try {
             supportService.createTicket(currentUser.getId(), form.getAppointmentId(), form.getTitle(), form.getQuestion());
-            redirectAttributes.addFlashAttribute("successMessage", "Gửi phiếu hỗ trợ thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Gửi phiếu hỗ trợ th� nh công.");
             return "redirect:/support/my";
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -79,16 +79,41 @@ public class SupportController {
         }
     }
 
+    @PostMapping("/{id}/reply")
+    public String replyTicket(@PathVariable Long id,
+                              @ModelAttribute("replyForm") TicketReplyForm replyForm,
+                              BindingResult bindingResult,
+                              @AuthenticationPrincipal UserDetails principal,
+                              RedirectAttributes redirectAttributes) {
+        if (replyForm == null || replyForm.getMessage() == null || replyForm.getMessage().trim().isEmpty()) {
+            bindingResult.rejectValue("message", "message.blank", "Vui lòng nhập nội dung phản hồi.");
+        }
+
+        User currentUser = supportService.getCurrentUser(principal);
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Nội dung phản hồi không được để trống.");
+            return "redirect:/support/" + id;
+        }
+
+        supportService.replyTicket(currentUser.getId(), id, replyForm.getMessage());
+        redirectAttributes.addFlashAttribute("successMessage", "Đã gửi phản hồi của bạn.");
+        return "redirect:/support/" + id;
+    }
+
     @GetMapping("/my")
     public String myTickets(@AuthenticationPrincipal UserDetails principal,
                             @RequestParam(defaultValue = "0") int page,
+                            @RequestParam(required = false) String keyword,
+                            @RequestParam(required = false, defaultValue = "newest") String sort,
                             Model model) {
         User currentUser = supportService.getCurrentUser(principal);
         int pageSize = 5;
-        var ticketsPage = supportService.getMyTicketsPage(currentUser.getId(), page, pageSize);
+        var ticketsPage = supportService.getMyTicketsPage(currentUser.getId(), page, pageSize, keyword, sort);
         model.addAttribute("tickets", ticketsPage.getContent());
         model.addAttribute("currentPage", ticketsPage.getNumber());
         model.addAttribute("totalPages", ticketsPage.getTotalPages());
+        model.addAttribute("keyword", keyword == null ? "" : keyword.trim());
+        model.addAttribute("selectedSort", sort == null ? "newest" : sort.trim());
         model.addAttribute("active", "support");
         return "customer/support-my";
     }
@@ -100,6 +125,9 @@ public class SupportController {
         User currentUser = supportService.getCurrentUser(principal);
         SupportTicket ticket = supportService.getTicketDetail(currentUser.getId(), id);
         model.addAttribute("ticket", ticket);
+        if (!model.containsAttribute("replyForm")) {
+            model.addAttribute("replyForm", new TicketReplyForm());
+        }
         model.addAttribute("active", "support");
         return "customer/support-detail";
     }
@@ -143,4 +171,18 @@ public class SupportController {
             this.question = question;
         }
     }
+
+    public static class TicketReplyForm {
+        @NotBlank
+        private String message;
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
 }
+

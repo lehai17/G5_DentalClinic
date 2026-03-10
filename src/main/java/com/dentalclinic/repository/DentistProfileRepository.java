@@ -7,28 +7,29 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface DentistProfileRepository extends JpaRepository<DentistProfile, Long> {
 
-    // 1. Tìm kiếm theo chuyên khoa
+    // 1. TÃ¬m kiáº¿m theo chuyÃªn khoa
     List<DentistProfile> findBySpecialization(String specialization);
 
-    // 2. Tìm kiếm theo số năm kinh nghiệm
+    // 2. TÃ¬m kiáº¿m theo sá»‘ nÄƒm kinh nghiá»‡m
     List<DentistProfile> findByExperienceYearsGreaterThanEqual(int years);
 
-    // 3. Kiểm tra hồ sơ tồn tại
-    // dùng trong toàn bộ flow hiện tại
+    // 3. Kiá»ƒm tra há»“ sÆ¡ tá»“n táº¡i
+    // dÃ¹ng trong toÃ n bá»™ flow hiá»‡n táº¡i
     Optional<DentistProfile> findByUser_Id(Long userId);
 
     boolean existsByUser_Id(Long userId);
 
     /**
-     * CẬP NHẬT QUAN TRỌNG: Sử dụng JOIN FETCH để sửa lỗi khoảng trắng dữ liệu
-     * JOIN FETCH d.user: Lấy thông tin tài khoản (Email, Status)
-     * LEFT JOIN FETCH d.schedules: Lấy toàn bộ lịch làm việc của bác sĩ
+     * Cáº¬P NHáº¬T QUAN TRá»ŒNG: Sá»­ dá»¥ng JOIN FETCH Ä‘á»ƒ sá»­a lá»—i khoáº£ng tráº¯ng dá»¯ liá»‡u
+     * JOIN FETCH d.user: Láº¥y thÃ´ng tin tÃ i khoáº£n (Email, Status)
+     * LEFT JOIN FETCH d.schedules: Láº¥y toÃ n bá»™ lá»‹ch lÃ m viá»‡c cá»§a bÃ¡c sÄ©
      */
     @Query("SELECT DISTINCT d FROM DentistProfile d " +
             "JOIN FETCH d.user u " +
@@ -38,14 +39,46 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
     List<DentistProfile> filterDentists(@Param("specialty") String specialty,
                                         @Param("status") UserStatus status);
 
-    // 4. Đếm số lượng bác sĩ theo trạng thái để hiển thị Stat Cards
+    // 4. Äáº¿m sá»‘ lÆ°á»£ng bÃ¡c sÄ© theo tráº¡ng thÃ¡i Ä‘á»ƒ hiá»ƒn thá»‹ Stat Cards
     @Query("SELECT COUNT(d) FROM DentistProfile d WHERE d.user.status = :status")
     long countByUserStatus(@Param("status") UserStatus status);
     @Query("SELECT p FROM DentistProfile p JOIN p.user u ORDER BY u.createdAt DESC")
     List<DentistProfile> findAllOrderByNewest();
-    // Tìm kiếm theo tên hoặc chuyên khoa, sắp xếp người mới nhất lên đầu
+
+    Optional<Object> findByUserEmail(String email);
+    // TÃ¬m kiáº¿m theo tÃªn hoáº·c chuyÃªn khoa, sáº¯p xáº¿p ngÆ°á»i má»›i nháº¥t lÃªn Ä‘áº§u
 //    @Query("SELECT p FROM DentistProfile p JOIN p.user u " +
 //            "WHERE p.fullName LIKE %:keyword% OR p.specialization LIKE %:keyword% " +
 //            "ORDER BY u.createdAt DESC")
 //    List<DentistProfile> findByKeyword(@Param("keyword") String keyword);
+
+    @Query("""
+    SELECT DISTINCT d FROM DentistProfile d
+    JOIN d.schedules s
+    WHERE d.user.status = com.dentalclinic.model.user.UserStatus.ACTIVE
+    AND s.dayOfWeek = :dayOfWeek
+    AND s.available = true
+    AND NOT EXISTS (
+        SELECT 1 FROM BusySchedule b
+        WHERE b.dentist = d
+        AND UPPER(COALESCE(b.status, '')) = 'APPROVED'
+        AND :targetDate BETWEEN b.startDate AND b.endDate
+    )
+""")
+    List<DentistProfile> findAvailableDentistsWithSchedule(
+            @Param("targetDate") LocalDate targetDate,
+            @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek
+    );
+
+    @Query("""
+    SELECT DISTINCT d FROM DentistProfile d
+    WHERE d.user.status = com.dentalclinic.model.user.UserStatus.ACTIVE
+    AND NOT EXISTS (
+        SELECT 1 FROM BusySchedule b
+        WHERE b.dentist = d
+        AND UPPER(COALESCE(b.status, '')) = 'APPROVED'
+        AND :targetDate BETWEEN b.startDate AND b.endDate
+    )
+""")
+    List<DentistProfile> findAvailableDentistsForDate(@Param("targetDate") LocalDate targetDate);
 }

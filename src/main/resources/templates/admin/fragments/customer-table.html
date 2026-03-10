@@ -2,11 +2,11 @@
     <table th:if="${not #lists.isEmpty(customers)}">
         <thead>
             <tr>
-                <th>Customer Name</th>
-                <th>Contact Info</th>
-                <th>Joined Date</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th>Tên khách hàng</th>
+                <th>Thông tin liên hệ</th>
+                <th>Ngày tham gia</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
             </tr>
         </thead>
         <tbody>
@@ -19,7 +19,7 @@
                             <i class="fas fa-user"></i>
                         </div>
                         <div>
-                            <div th:text="${customer.fullName}" style="font-weight: 700; color: #1B2559;">Name</div>
+                            <div th:text="${customer.fullName}" style="font-weight: 700; color: #1B2559;">Tên</div>
                             <div style="font-size: 11px; color: #A3AED0; margin-top: 4px;">ID: #<span
                                     th:text="${customer.id}">ID</span></div>
                         </div>
@@ -33,7 +33,7 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; color: #707EAE; font-size: 13px;">
                             <i class="fas fa-phone-alt" style="width: 15px;"></i>
-                            <span th:text="${customer.phone ?: 'N/A'}">0123456789</span>
+                            <span th:text="${customer.phone ?: 'Chưa có'}">0123456789</span>
                         </div>
                     </div>
                 </td>
@@ -50,7 +50,7 @@
                 <td>
                     <a th:href="@{/admin/customers/detail/{id}(id=${customer.id})}" class="action-btn"
                         onclick="event.stopPropagation()">
-                        View Profile <i class="fas fa-arrow-right"></i>
+                        Xem hồ sơ <i class="fas fa-arrow-right"></i>
                     </a>
                 </td>
             </tr>
@@ -60,7 +60,7 @@
     <div class="empty-state-row" th:if="${#lists.isEmpty(customers)}"
         style="text-align: center; padding: 60px 0; color: #A3AED0;">
         <i class="fas fa-search" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i>
-        <h3 style="margin: 0; font-size: 18px; color: #1B2559;">No customers found</h3>
-        <p style="margin-top: 8px; font-size: 14px;">Try changing your search keywords or filters</p>
+        <h3 style="margin: 0; font-size: 18px; color: #1B2559;">Không tìm thấy khách hàng</h3>
+        <p style="margin-top: 8px; font-size: 14px;">Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc</p>
     </div>
 </div>

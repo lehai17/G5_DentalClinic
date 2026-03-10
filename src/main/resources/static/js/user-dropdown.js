@@ -1,4 +1,7 @@
-(function () {
+﻿(function () {
+    if (window.__userDropdownInitialized) return;
+    window.__userDropdownInitialized = true;
+
     function getDropdown() {
         return document.getElementById("userDropdown");
     }
@@ -28,7 +31,7 @@
         if (dd) dd.classList.add("hidden");
     };
 
-    // click ngoài user-menu thì đóng
+    // click ngo� i user-menu thì đóng
     document.addEventListener("click", function (e) {
         const dd = getDropdown();
         const nd = getNotificationDropdown();
@@ -51,3 +54,4 @@
         }
     });
 })();
+

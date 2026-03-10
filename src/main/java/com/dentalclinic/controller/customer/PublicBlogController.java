@@ -35,3 +35,4 @@ public class PublicBlogController {
         return "public/blog-detail"; // template bên dưới
     }
 }
+

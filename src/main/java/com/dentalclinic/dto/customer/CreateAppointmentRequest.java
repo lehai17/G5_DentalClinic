@@ -1,14 +1,18 @@
 package com.dentalclinic.dto.customer;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.validation.constraints.NotBlank;
 
 public class CreateAppointmentRequest {
 
-    @NotNull(message = "serviceId is required")
+    // Backward compatibility with legacy client payload
     private Long serviceId;
+
+    // New payload for multi-service booking
+    private List<Long> serviceIds;
 
     // New format: selectedDate + selectedTime
     private LocalDate selectedDate;
@@ -33,6 +37,8 @@ public class CreateAppointmentRequest {
 
     public Long getServiceId() { return serviceId; }
     public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
+    public List<Long> getServiceIds() { return serviceIds; }
+    public void setServiceIds(List<Long> serviceIds) { this.serviceIds = serviceIds; }
     public LocalDate getSelectedDate() { return selectedDate; }
     public void setSelectedDate(LocalDate selectedDate) { this.selectedDate = selectedDate; }
     public LocalTime getSelectedTime() { return selectedTime; }
@@ -49,6 +55,17 @@ public class CreateAppointmentRequest {
     public void setDepositAmount(Double depositAmount) { this.depositAmount = depositAmount; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public List<Long> getResolvedServiceIds() {
+        List<Long> raw = new ArrayList<>();
+        if (serviceIds != null) {
+            raw.addAll(serviceIds);
+        }
+        if (serviceId != null && raw.isEmpty()) {
+            raw.add(serviceId);
+        }
+        return raw;
+    }
 
     // Helper methods
     public boolean isNewFormat() {

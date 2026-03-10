@@ -9,59 +9,66 @@
            class="nav-item"
            th:classappend="${activePage == 'dashboard' ? ' active' : ''}">
             <i class="fas fa-th-large"></i>
-            <span>Dashboard</span>
+            <span>Tổng quan</span>
         </a>
 
-        <div class="nav-label">User Management</div>
+        <div class="nav-label">Quản lý người dùng</div>
 
         <a th:href="@{/admin/dentists}"
            class="nav-item"
            th:classappend="${activePage == 'dentists' ? ' active' : ''}">
             <i class="fas fa-stethoscope"></i>
-            <span>Dentists</span>
+            <span>Bác sĩ</span>
         </a>
 
         <a th:href="@{/admin/staff}"
            class="nav-item"
            th:classappend="${activePage == 'staff' ? ' active' : ''}">
             <i class="fas fa-users-cog"></i>
-            <span>Staff</span>
+            <span>Nhân viên</span>
         </a>
 
         <a th:href="@{/admin/customers}"
            class="nav-item"
            th:classappend="${activePage == 'customers' ? ' active' : ''}">
             <i class="fas fa-user-friends"></i>
-            <span>Customer</span>
+            <span>Khách hàng</span>
         </a>
 
-        <div class="nav-label">Operations</div>
+        <div class="nav-label">Vận hành</div>
 
         <a th:href="@{/admin/services}"
            class="nav-item"
            th:classappend="${activePage == 'services' ? ' active' : ''}">
             <i class="fas fa-briefcase-medical"></i>
-            <span>Services</span>
+            <span>Dịch vụ</span>
         </a>
 
         <a th:href="@{/admin/slots}"
            class="nav-item"
            th:classappend="${activePage == 'slots' ? ' active' : ''}">
             <i class="fas fa-calendar-alt"></i>
-            <span>Slots</span>
+            <span>Khung giờ</span>
+        </a>
+
+        <a th:href="@{/admin/busy-schedule}"
+           class="nav-item"
+           th:classappend="${activePage == 'busy-schedule' ? ' active' : ''}">
+            <i class="fas fa-user-clock"></i>
+            <span>Lịch bận</span>
         </a>
 
         <a th:href="@{/admin/blogs}"
            class="nav-item"
            th:classappend="${activePage == 'blogs' ? ' active' : ''}">
             <i class="fas fa-notes-medical"></i>
-            <span>Health Blogs</span>
+            <span>Bài viết sức khỏe</span>
         </a>
     </div>
     <div class="nav-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding: 15px 0; margin-bottom: 20px;">
         <a th:href="@{/logout}" class="nav-item logout-link" style="color: #FFB7B7;">
             <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
+            <span>Đăng xuất</span>
         </a>
     </div>
 </div>

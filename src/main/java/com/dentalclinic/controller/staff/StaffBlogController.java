@@ -70,7 +70,7 @@ public class StaffBlogController {
     }
 
     /**
-     * Save Draft: dùng cho cả create mới và update bản draft/rejected
+     * Save Draft: dùng cho cả create mới v�  update bản draft/rejected
      */
     @PostMapping("/save-draft")
     public String saveDraft(@ModelAttribute Blog form,
@@ -84,7 +84,7 @@ public class StaffBlogController {
         if (imageFile != null && !imageFile.isEmpty()) {
             form.setImageUrl(storeBlogImage(imageFile));
         } else {
-            form.setImageUrl(existingImageUrl); // giữ ảnh cũ nếu không upload mới
+            form.setImageUrl(existingImageUrl); // giữ áº£nh cÅ© nếu không upload mới
         }
 
         if (form.getId() == null) {
@@ -103,7 +103,7 @@ public class StaffBlogController {
 
 
     /**
-     * Submit Review: dùng cho cả create mới và edit rồi submit
+     * Submit Review: dùng cho cả create mới v�  edit rồi submit
      */
     @PostMapping("/submit-review")
     public String submitReview(@ModelAttribute Blog form,
@@ -175,3 +175,4 @@ public class StaffBlogController {
     }
 
 }
+

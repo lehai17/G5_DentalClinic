@@ -1,7 +1,7 @@
 // Các hàm tiện ích
 function scrollToSection(id) {
     const el = document.getElementById(id);
-    if(el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
 function handleServiceClick(element) {
@@ -21,7 +21,6 @@ window.loadBlogPage = function(page) {
 
     blogSection.style.opacity = '0.5';
 
-    // Sử dụng URL tương đối
     fetch('/homepage?page=' + page)
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
@@ -45,7 +44,6 @@ window.loadBlogPage = function(page) {
         });
 };
 
-// Xử lý đóng modal bằng Event Listener (Tránh đè lên sự kiện khác)
 window.addEventListener('click', function(event) {
     if (event.target.classList.contains('modal')) {
         event.target.classList.remove('active');
@@ -53,11 +51,9 @@ window.addEventListener('click', function(event) {
 });
 
 window.toggleSidebar = function () {
-    const sidebar = document.getElementById("sidebar");
-    const mainContent = document.querySelector(".main-content");
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.querySelector('.main-content');
 
-    sidebar.classList.toggle("collapsed");
-    mainContent.classList.toggle("sidebar-collapsed");
+    sidebar.classList.toggle('collapsed');
+    mainContent.classList.toggle('sidebar-collapsed');
 };
-
-

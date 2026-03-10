@@ -32,6 +32,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/staff/support/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/staff/chat/**").hasAnyRole("STAFF", "ADMIN")
                         .requestMatchers("/staff/**").hasRole("STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/dentist/**").hasRole("DENTIST")
@@ -48,7 +49,7 @@ public class SecurityConfig {
                         .permitAll()
                 )
 
-                // ✅ BẬT GOOGLE LOGIN Ở ĐÂY
+                // âœ… BẬT GOOGLE LOGIN á»ž ï¿½ï¿½Y
                 .oauth2Login(oauth -> oauth
                         .loginPage("/login")
                         .successHandler(googleOAuth2SuccessHandler) //
@@ -84,3 +85,5 @@ public class SecurityConfig {
         };
     }
 }
+
+

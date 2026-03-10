@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+﻿document.addEventListener('DOMContentLoaded', function () {
 
     const backdrop   = document.getElementById('apptModalBackdrop');
     const btnClose   = document.getElementById('btnCloseModal');
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const customerUserId = el.dataset.customerUserId;
             const status = el.dataset.status;
 
-            // ✅ lấy weekStart từ hidden input (server truyền xuống)
+            // âœ… lấy weekStart từ hidden input (server truyền xuống)
             const weekStart =
                 document.getElementById('weekStartHidden')?.value || '';
 
@@ -88,3 +88,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+

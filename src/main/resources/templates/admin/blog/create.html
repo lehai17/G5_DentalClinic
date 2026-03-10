@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Create Blog - Admin</title>
+    <title>Tạo bài viết - Quản trị</title>
 
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -20,7 +20,6 @@
         .btn { border:none; border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:700; text-decoration:none; display:inline-block; }
         .btn-primary { background:#1A237E; color:#fff; }
         .btn-light { background:#EEF2FF; color:#1A237E; }
-        .muted { color:var(--muted); font-size: 13px; }
     </style>
 </head>
 <body>
@@ -29,18 +28,18 @@
 
 <div class="main-content">
     <div class="card" style="margin-bottom:14px;">
-        <h2 style="margin:0; color:var(--text);">Create Blog</h2>
+        <h2 style="margin:0; color:var(--text);">Tạo bài viết</h2>
     </div>
 
     <div class="card">
         <form th:action="@{/admin/blogs/create}" method="post" enctype="multipart/form-data">
-        <div class="label">Title</div>
+            <div class="label">Tiêu đề</div>
             <input class="input" type="text" name="title" required>
 
-            <div class="label">Summary</div>
+            <div class="label">Tóm tắt</div>
             <textarea class="input" name="summary" rows="4" required></textarea>
 
-            <div class="label">Blog Image</div>
+            <div class="label">Ảnh bài viết</div>
             <input class="input" type="file" name="imageFile" accept="image/*" id="imageFile">
 
             <img id="preview" style="margin-top:10px; max-width:320px; display:none; border-radius:12px; border:1px solid #E6ECF5;">
@@ -57,14 +56,13 @@
                 }
             </script>
 
-
-            <div class="label">Content</div>
+            <div class="label">Nội dung</div>
             <textarea class="input" name="content" rows="10" required></textarea>
 
             <div class="btn-row">
-                <a class="btn btn-light" th:href="@{/admin/blogs(status='APPROVED')}">Cancel</a>
+                <a class="btn btn-light" th:href="@{/admin/blogs(status='APPROVED')}">Hủy</a>
                 <button class="btn btn-primary" type="submit">
-                    <i class="fa-solid fa-floppy-disk"></i> Create
+                    <i class="fa-solid fa-floppy-disk"></i> Tạo bài viết
                 </button>
             </div>
         </form>

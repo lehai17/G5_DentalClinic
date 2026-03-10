@@ -120,6 +120,7 @@ public class CustomerNotificationController {
             case TICKET -> "/support/" + referenceId;
             case RECORD -> "/patient/medical-records";
             case PRESCRIPTION -> "/patient/prescriptions";
+            case WALLET -> "/customer/wallet";
         };
     }
 
@@ -175,13 +176,14 @@ public class CustomerNotificationController {
 
     private Long getCurrentCustomerId(UserDetails principal) {
         if (principal == null || principal.getUsername() == null || principal.getUsername().isBlank()) {
-            throw new IllegalArgumentException("Không xác định được tài khoản hiện tại.");
+            throw new IllegalArgumentException("Không xác định được t� i khoản hiện tại.");
         }
         User user = userRepository.findByEmail(principal.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản hiện tại."));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy t� i khoản hiện tại."));
         if (user.getRole() != Role.CUSTOMER) {
-            throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo khách hàng.");
+            throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo khách h� ng.");
         }
         return user.getId();
     }
 }
+
