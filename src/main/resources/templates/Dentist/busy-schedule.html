@@ -123,42 +123,74 @@
 </div>
 
 <script th:inline="javascript">
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('absenceForm');
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
-    const errorDiv = document.getElementById('clientError');
-    const errorText = document.getElementById('errorText');
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('absenceForm');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const errorDiv = document.getElementById('clientError');
+        const errorText = document.getElementById('errorText');
 
-    const historyRows = document.querySelectorAll('.history-row');
-    const existingRanges = Array.from(historyRows)
-        .filter(row => row.dataset.status !== 'REJECTED')
-        .map(row => ({
-            start: new Date(row.dataset.start).getTime(),
-            end: new Date(row.dataset.end).getTime()
-        }));
+        // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+        const today = new Date().toISOString().split('T')[0];
 
-    function showError(msg) {
-        errorText.innerText = msg;
-        errorDiv.style.display = 'block';
-    }
+        // Chặn ngày quá khứ cho cả 2 input
+        startDateInput.setAttribute('min', today);
+        endDateInput.setAttribute('min', today);
 
-    function validate() {
-        const startStr = startDateInput.value;
-        const endStr = endDateInput.value;
-        if (!startStr || !endStr) return true;
+        // Khi chọn ngày bắt đầu, ngày kết thúc không được nhỏ hơn ngày bắt đầu
+        startDateInput.addEventListener('change', function() {
+            endDateInput.setAttribute('min', startDateInput.value);
+        });
 
-        const startVal = new Date(startStr).getTime();
-        const endVal = new Date(endStr).getTime();
+        const historyRows = document.querySelectorAll('.history-row');
+        const existingRanges = Array.from(historyRows)
+            .filter(row => row.dataset.status !== 'REJECTED')
+            .map(row => ({
+                start: new Date(row.dataset.start).getTime(),
+                end: new Date(row.dataset.end).getTime()
+            }));
 
-        errorDiv.style.display = 'none';
-        startDateInput.classList.remove('input-error');
-        endDateInput.classList.remove('input-error');
+        function validate() {
+            const startStr = startDateInput.value;
+            const endStr = endDateInput.value;
 
-        if (endVal < startVal) {
-            showError('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.');
-            endDateInput.classList.add('input-error');
-            return false;
+            if (!startStr || !endStr) return true;
+
+            const startVal = new Date(startStr).getTime();
+            const endVal = new Date(endStr).getTime();
+
+            errorDiv.style.display = 'none';
+            startDateInput.classList.remove('input-error');
+            endDateInput.classList.remove('input-error');
+
+            // 1. Ng� y kết thúc trước ng� y bắt đầu
+            if (endVal < startVal) {
+                showError("Ng� y kết thúc phải sau hoặc bằng ng� y bắt đầu.");
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
+            // 2. Không được cách nhau quá 1 ng� y (Ví dụ T2 đến T3 l�  ok, T2 đến T4 l�  lỗi)
+            const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
+            if (dayDiff > 1) {
+                showError("Thời gian nghỉ mỗi đơn không được quá 1 ng� y.");
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
+            // 3. Kiểm tra trùng lặp (Overlap Check)
+            const isOverlapping = existingRanges.some(range => {
+                return (startVal <= range.end) && (endVal >= range.start);
+            });
+
+            if (isOverlapping) {
+                showError("Thời gian n� y trùng với một yêu cầu nghỉ khác đã đăng ký.");
+                startDateInput.classList.add('input-error');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
+            return true;
         }
 
         const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);

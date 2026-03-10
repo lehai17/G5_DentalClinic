@@ -225,5 +225,18 @@ public class StaffAppointmentService {
         // 2. Gọi Repository để lấy bác sĩ không nghỉ phép v� o ng� y appt.getDate()
         return dentistProfileRepository.findAvailableDentistsForDate(appt.getDate());
     }
+
+    @Transactional
+    public void processPayment(Long id) {
+        Appointment a = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (a.getStatus() != AppointmentStatus.DONE) {
+            throw new RuntimeException("Chỉ lịch hẹn có trạng thái DONE mới có thể tiến hành thanh toán.");
+        }
+
+        a.setStatus(AppointmentStatus.WAITING_PAYMENT);
+        appointmentRepository.save(a);
+    }
 }
 

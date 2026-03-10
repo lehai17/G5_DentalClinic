@@ -64,6 +64,17 @@ public class DentistBusyController {
             // 1. Chuyển đổi dữ liệu ng� y tháng
             LocalDate start = LocalDate.parse(startDate);
             LocalDate end = LocalDate.parse(endDate);
+            LocalDate today = LocalDate.now();
+
+            if (start.isBefore(today)) {
+                redirectAttributes.addFlashAttribute("error", "Lỗi: Không thể đăng ký nghỉ cho ngày đã qua hoặc ngày hôm nay (nếu lịch đã bắt đầu).");
+                return "redirect:/dentist/busy-schedule";
+            }
+
+            if (end.isBefore(start)) {
+                redirectAttributes.addFlashAttribute("error", "Lỗi: Ngày kết thúc không được trước ngày bắt đầu.");
+                return "redirect:/dentist/busy-schedule";
+            }
 
             // 2. Lấy ID bác sĩ từ Principal để định danh người gửi đơn
             String email = principal.getName();

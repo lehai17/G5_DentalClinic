@@ -100,5 +100,20 @@ function cancelAppointment(id) {
 }
 
 function goToPayment(id) {
-    window.location.href = '/staff/payments/' + id;
+    if (confirm("Xác nhận chuyển sang trạng thái Chờ thanh toán (Waiting Payment)?")) {
+        fetch('/staff/appointments/process-payment?id=' + id, {
+            method: 'POST'
+        }).then(res => {
+            if (res.ok) {
+                // Sau khi chuyển trạng thái thành công, có thể load lại trang hoặc
+                // chuyển hướng đến trang quản lý hóa đơn (nếu có)
+                location.reload();
+            } else {
+                res.text().then(text => alert("Lỗi: " + text));
+            }
+        });
+    }
 }
+
+
+
