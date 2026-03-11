@@ -13,6 +13,7 @@
     <link rel="stylesheet" th:href="@{/css/tailwind-animations.css}" />
     <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}" />
     <link rel="stylesheet" th:href="@{/css/customer-tools.css}" />
+    <link rel="stylesheet" th:href="@{/css/customer-feedback.css}" />
     <link rel="stylesheet" th:href="@{/css/customer-booking-page.css}" />
   </head>
   <body style="padding-top: 100px">
@@ -412,6 +413,57 @@
 
     <input type="hidden" id="customer-booking-slot-id" value="" />
 
+    <div class="booking-payment-modal" id="booking-payment-modal" hidden>
+      <div class="booking-payment-modal__backdrop" data-close-payment-modal></div>
+      <div class="booking-payment-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="booking-payment-title">
+        <button
+          type="button"
+          class="booking-payment-modal__close"
+          id="booking-payment-close"
+          aria-label="Đóng"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="booking-payment-modal__eyebrow">Thanh toán đặt cọc</div>
+        <h3 id="booking-payment-title" class="booking-payment-modal__title">Chọn phương thức thanh toán</h3>
+        <p class="booking-payment-modal__subtitle">
+          Hoàn tất tiền cọc để giữ chỗ cho lịch hẹn của bạn.
+        </p>
+
+        <div class="booking-payment-modal__amount">
+          <span>Tiền cọc cần thanh toán</span>
+          <strong id="booking-payment-deposit-amount">0 VNĐ</strong>
+        </div>
+
+        <div class="booking-payment-modal__methods">
+          <button type="button" class="booking-payment-method" id="booking-payment-vnpay">
+            <span class="booking-payment-method__icon booking-payment-method__icon--vnpay">
+              <i class="bi bi-credit-card-2-front"></i>
+            </span>
+            <span class="booking-payment-method__content">
+              <strong>Thanh toán qua VNPay</strong>
+              <small>Chuyển sang cổng thanh toán để hoàn tất giao dịch</small>
+            </span>
+          </button>
+
+          <button type="button" class="booking-payment-method" id="booking-payment-wallet">
+            <span class="booking-payment-method__icon booking-payment-method__icon--wallet">
+              <i class="bi bi-wallet2"></i>
+            </span>
+            <span class="booking-payment-method__content">
+              <strong>Dùng số dư ví</strong>
+              <small>Trừ trực tiếp tiền trong ví của bạn ngay lập tức</small>
+            </span>
+          </button>
+        </div>
+
+        <button type="button" class="booking-payment-modal__cancel" id="booking-payment-cancel">
+          Hủy giao dịch tạm
+        </button>
+      </div>
+    </div>
+
+    <script th:src="@{/js/customer-feedback.js}"></script>
     <script th:src="@{/js/customer-booking.js}"></script>
   </body>
 </html>

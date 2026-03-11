@@ -28,7 +28,7 @@ public class AppointmentCleanupTask {
 
         // Bạn cần viết thêm query findAllByStatusAndCreatedAtBefore trong Repository
         List<Appointment> expiredApps = appointmentRepository.findAllByStatusAndCreatedAtBefore(
-                AppointmentStatus.PENDING, threshold);
+                AppointmentStatus.PENDING_DEPOSIT, threshold);
 
         for (Appointment app : expiredApps) {
             // Hủy đơn v�  nhả slot
