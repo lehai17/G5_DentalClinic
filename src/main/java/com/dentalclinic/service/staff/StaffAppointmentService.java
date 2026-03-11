@@ -2,8 +2,14 @@ package com.dentalclinic.service.staff;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
+import com.dentalclinic.model.payment.BillingNote;
+import com.dentalclinic.model.payment.BillingPerformedService;
+import com.dentalclinic.model.payment.Invoice;
+import com.dentalclinic.model.payment.PaymentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.BillingNoteRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
+import com.dentalclinic.repository.InvoiceRepository;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.dentist.ReexamService;
@@ -19,6 +25,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -43,6 +51,12 @@ public class StaffAppointmentService {
 
     @Autowired
     private ReexamService reexamService;
+
+    @Autowired
+    private BillingNoteRepository billingNoteRepository;
+
+    @Autowired
+    private InvoiceRepository invoiceRepository;
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
@@ -235,8 +249,52 @@ public class StaffAppointmentService {
             throw new RuntimeException("Chỉ lịch hẹn có trạng thái DONE mới có thể tiến hành thanh toán.");
         }
 
+        BillingNote billingNote = billingNoteRepository.findByAppointment_Id(id)
+                .orElseThrow(() -> new RuntimeException("Chua co billing cho lich hen nay."));
+
+        BigDecimal billingTotal = calculateBillingTotal(a, billingNote);
+        BigDecimal depositAmount = a.getDepositAmount() != null
+                ? a.getDepositAmount().setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal remainingAmount = billingTotal.subtract(depositAmount).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+
+        Invoice invoice = invoiceRepository.findByAppointment_Id(id).orElseGet(Invoice::new);
+        invoice.setAppointment(a);
+        invoice.setTotalAmount(remainingAmount);
+
+        if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            invoice.setStatus(PaymentStatus.PAID);
+            invoiceRepository.save(invoice);
+            a.setStatus(AppointmentStatus.COMPLETED);
+            appointmentRepository.save(a);
+            notificationService.notifyBookingUpdated(a, "Da hoan tat thanh toan");
+            return;
+        }
+
+        invoice.setStatus(PaymentStatus.UNPAID);
+        invoiceRepository.save(invoice);
         a.setStatus(AppointmentStatus.WAITING_PAYMENT);
         appointmentRepository.save(a);
+        notificationService.notifyBookingUpdated(a, "Da tao hoa don thanh toan con lai");
+    }
+
+    private BigDecimal calculateBillingTotal(Appointment appointment, BillingNote billingNote) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        if (billingNote.getPerformedServices() != null && !billingNote.getPerformedServices().isEmpty()) {
+            for (BillingPerformedService item : billingNote.getPerformedServices()) {
+                if (item.getService() == null) {
+                    continue;
+                }
+                BigDecimal price = BigDecimal.valueOf(item.getService().getPrice()).setScale(2, RoundingMode.HALF_UP);
+                int qty = Math.max(1, item.getQty());
+                total = total.add(price.multiply(BigDecimal.valueOf(qty)));
+            }
+        } else if (appointment.getTotalAmount() != null) {
+            total = appointment.getTotalAmount().setScale(2, RoundingMode.HALF_UP);
+        }
+
+        return total.setScale(2, RoundingMode.HALF_UP);
     }
 }
 

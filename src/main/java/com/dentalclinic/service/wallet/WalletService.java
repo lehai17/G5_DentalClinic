@@ -92,6 +92,31 @@ public class WalletService {
         }
     }
 
+    @Transactional
+    public void pay(CustomerProfile customer, BigDecimal amount, String description, Long appointmentId) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("So tien thanh toan phai lon hon 0");
+        }
+
+        Wallet wallet = getOrCreateWallet(customer);
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new IllegalArgumentException("So du vi khong du de thanh toan");
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        walletRepository.save(wallet);
+
+        WalletTransaction transaction = WalletTransaction.builder()
+                .wallet(wallet)
+                .type(WalletTransactionType.PAYMENT)
+                .amount(amount)
+                .status(WalletTransactionStatus.COMPLETED)
+                .description(description)
+                .appointmentId(appointmentId)
+                .build();
+        walletTransactionRepository.save(transaction);
+    }
+
     public BigDecimal getBalance(CustomerProfile customer) {
         return getOrCreateWallet(customer).getBalance();
     }

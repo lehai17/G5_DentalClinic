@@ -8,6 +8,22 @@
     selectedSlot: null,
     currentStep: 1
   };
+  var paymentSelection = null;
+
+  function showToast(message, type, title) {
+    if (window.CustomerFeedback) {
+      window.CustomerFeedback.toast({ message: message, type: type || 'info', title: title || '' });
+      return;
+    }
+  }
+
+  function showAlert(message, type, title) {
+    if (window.CustomerFeedback) {
+      return window.CustomerFeedback.alert({ message: message, type: type || 'info', title: title || 'Thông báo' });
+    }
+    alert(message);
+    return Promise.resolve();
+  }
 
   function init() {
     var calendarBody = document.getElementById('customer-calendar-body');
@@ -40,8 +56,10 @@
       .then(function (response) {
         sessionStorage.removeItem('pendingAppointmentId');
         if (response.ok) {
-          alert('Giao dịch thanh toán đã bị gián đoạn. Vui lòng đặt lịch lại.');
-          window.location.reload();
+          showAlert('Giao dịch thanh toán đã bị gián đoạn. Vui lòng đặt lịch lại.', 'warning', 'Thanh toán bị gián đoạn')
+            .then(function () {
+              window.location.reload();
+            });
         }
       })
       .catch(function () {
@@ -84,7 +102,7 @@
           .then(function (data) { updateSuccessSummary(data); });
       }
     } else if (status === 'fail') {
-      alert('Thanh toán không thành công hoặc bạn đã hủy giao dịch.');
+      showAlert('Thanh toán không thành công hoặc bạn đã hủy giao dịch.', 'error', 'Thanh toán thất bại');
       setStep(1);
     }
   }
@@ -129,6 +147,7 @@
     var nextStepBtn = document.getElementById('btn-next');
     var backStepBtn = document.getElementById('btn-back');
     var serviceCheckboxes = document.querySelectorAll('.customer-service-checkbox');
+    bindPaymentModalEvents();
 
     if (prevBtn) {
       prevBtn.addEventListener('click', function () {
@@ -162,11 +181,11 @@
       nextStepBtn.addEventListener('click', function () {
         if (state.currentStep === 1) {
           if (getSelectedServices().length === 0) {
-            alert('Vui lòng chọn ít nhất một dịch vụ.');
+            showAlert('Vui lòng chọn ít nhất một dịch vụ.', 'warning', 'Thiếu thông tin');
             return;
           }
           if (!state.selectedDate) {
-            alert('Vui lòng chọn ngày khám.');
+            showAlert('Vui lòng chọn ngày khám.', 'warning', 'Thiếu thông tin');
             return;
           }
           setStep(2);
@@ -175,7 +194,7 @@
         }
         if (state.currentStep === 2) {
           if (!state.selectedSlot) {
-            alert('Vui lòng chọn khung giờ khám.');
+            showAlert('Vui lòng chọn khung giờ khám.', 'warning', 'Thiếu thông tin');
             return;
           }
           setStep(3);
@@ -242,7 +261,7 @@
         } else {
           td.addEventListener('click', function () {
             if (getSelectedServices().length === 0) {
-              alert('Vui lòng chọn ít nhất một dịch vụ trước.');
+              showAlert('Vui lòng chọn ít nhất một dịch vụ trước.', 'warning', 'Thiếu thông tin');
               return;
             }
             state.selectedDate = this.dataset.date;
@@ -296,7 +315,7 @@
     fetch('/customer/slots?' + params.toString(), { credentials: 'same-origin' })
       .then(function (res) {
         if (res.status === 401) {
-          alert('Bạn cần đăng nhập để đặt lịch.');
+          showAlert('Bạn cần đăng nhập để đặt lịch.', 'warning', 'Chưa đăng nhập');
           setStep(1);
           return null;
         }
@@ -358,11 +377,11 @@
 
           btn.addEventListener('click', function () {
             if (isDisabled) {
-              alert('Bạn đã có lịch hẹn trùng thời điểm này.');
+              showToast('Bạn đã có lịch hẹn trùng thời điểm này.', 'warning', 'Không thể chọn');
               return;
             }
             if (!isAvailable) {
-              alert('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.');
+              showToast('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.', 'warning', 'Khung giờ đã đầy');
               return;
             }
             state.selectedSlot = slot;
@@ -381,7 +400,7 @@
         if (loading) loading.style.display = 'none';
         if (empty) empty.style.display = '';
         if (grid) grid.style.display = 'none';
-        alert(err && err.message ? err.message : 'Không thể tải danh sách khung giờ.');
+        showAlert(err && err.message ? err.message : 'Không thể tải danh sách khung giờ.', 'error', 'Tải khung giờ thất bại');
       });
   }
 
@@ -486,13 +505,13 @@
     var note = (document.getElementById('customer-booking-note') || {}).value;
 
     if (!slotId || serviceIds.length === 0 || !contactChannel || !contactValue) {
-      alert('Vui lòng điền đầy đủ thông tin và chọn ít nhất một dịch vụ.');
+      showAlert('Vui lòng điền đầy đủ thông tin và chọn ít nhất một dịch vụ.', 'warning', 'Thiếu thông tin');
       return;
     }
 
     nextStepBtn.disabled = true;
     var originalText = nextStepBtn.innerHTML;
-    nextStepBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang kết nối VNPay...';
+    nextStepBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang tạo lịch hẹn...';
 
     fetch('/customer/appointments', {
       method: 'POST',
@@ -519,8 +538,7 @@
       })
       .then(function (data) {
         if (data && data.id) {
-          sessionStorage.setItem('pendingAppointmentId', data.id);
-          window.location.href = '/customer/payment/create-deposit/' + data.id;
+          chooseDepositMethod(data, nextStepBtn, originalText);
         } else {
           throw new Error('Dữ liệu trả về không hợp lệ.');
         }
@@ -528,8 +546,168 @@
       .catch(function (err) {
         nextStepBtn.disabled = false;
         nextStepBtn.innerHTML = originalText;
-        alert(err.message || 'Đặt lịch thất bại. Vui lòng thử lại.');
+        showAlert(err.message || 'Đặt lịch thất bại. Vui lòng thử lại.', 'error', 'Đặt lịch thất bại');
       });
+  }
+
+  function chooseDepositMethod(appointment, nextStepBtn, originalText) {
+    paymentSelection = {
+      appointmentId: appointment.id,
+      depositAmount: appointment && appointment.depositAmount ? appointment.depositAmount : 0,
+      nextStepBtn: nextStepBtn,
+      originalText: originalText
+    };
+
+    var amountEl = document.getElementById('booking-payment-deposit-amount');
+    var modal = document.getElementById('booking-payment-modal');
+    if (amountEl) amountEl.textContent = formatVnd(paymentSelection.depositAmount);
+    if (modal) modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function payDepositWithWallet(appointmentId, nextStepBtn, originalText) {
+    nextStepBtn.innerHTML = '<i class="bi bi-wallet2"></i> Đang thanh toán bằng ví...';
+
+    fetch('/customer/payment/deposit/' + appointmentId + '/wallet', {
+      method: 'POST',
+      credentials: 'same-origin'
+    })
+      .then(function (response) {
+        return response.json().catch(function () {
+          return {};
+        }).then(function (data) {
+          if (!response.ok) {
+            throw new Error(data.message || 'Không thể thanh toán bằng ví.');
+          }
+          return data;
+        });
+      })
+      .then(function () {
+        sessionStorage.removeItem('pendingAppointmentId');
+        paymentSelection = null;
+        window.location.href = '/customer/book?status=success&id=' + appointmentId;
+      })
+      .catch(function (err) {
+        showAlert(err.message || 'Thanh toán bằng ví thất bại.', 'error', 'Thanh toán ví thất bại');
+        if (nextStepBtn) {
+          nextStepBtn.disabled = false;
+          nextStepBtn.innerHTML = originalText;
+        }
+        if (paymentSelection) {
+          chooseDepositMethod(
+            {
+              id: paymentSelection.appointmentId,
+              depositAmount: paymentSelection.depositAmount
+            },
+            nextStepBtn,
+            originalText
+          );
+        }
+      });
+  }
+
+  function cancelPendingAppointment(appointmentId) {
+    return fetch('/customer/payment/appointments/cancel-back/' + appointmentId, {
+      method: 'POST',
+      credentials: 'same-origin'
+    })
+      .then(function () {
+        sessionStorage.removeItem('pendingAppointmentId');
+        showToast('Đã hủy lịch chờ thanh toán.', 'info', 'Đã hủy');
+      })
+      .catch(function () {
+        sessionStorage.removeItem('pendingAppointmentId');
+      });
+  }
+
+  function closePaymentModal() {
+    var modal = document.getElementById('booking-payment-modal');
+    if (modal) modal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function bindPaymentModalEvents() {
+    var closeBtn = document.getElementById('booking-payment-close');
+    var cancelBtn = document.getElementById('booking-payment-cancel');
+    var vnpayBtn = document.getElementById('booking-payment-vnpay');
+    var walletBtn = document.getElementById('booking-payment-wallet');
+
+    document.querySelectorAll('[data-close-payment-modal]').forEach(function (node) {
+      node.addEventListener('click', function () {
+        if (!paymentSelection) {
+          closePaymentModal();
+          return;
+        }
+
+        cancelPendingAppointment(paymentSelection.appointmentId)
+          .finally(function () {
+            if (paymentSelection.nextStepBtn) {
+              paymentSelection.nextStepBtn.disabled = false;
+              paymentSelection.nextStepBtn.innerHTML = paymentSelection.originalText;
+            }
+            paymentSelection = null;
+            closePaymentModal();
+          });
+      });
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        if (cancelBtn) cancelBtn.click();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function () {
+        if (!paymentSelection) {
+          closePaymentModal();
+          return;
+        }
+
+        cancelPendingAppointment(paymentSelection.appointmentId)
+          .finally(function () {
+            if (paymentSelection.nextStepBtn) {
+              paymentSelection.nextStepBtn.disabled = false;
+              paymentSelection.nextStepBtn.innerHTML = paymentSelection.originalText;
+            }
+            paymentSelection = null;
+            closePaymentModal();
+          });
+      });
+    }
+
+    if (vnpayBtn) {
+      vnpayBtn.addEventListener('click', function () {
+        if (!paymentSelection) return;
+        sessionStorage.setItem('pendingAppointmentId', paymentSelection.appointmentId);
+        closePaymentModal();
+        window.location.href = '/customer/payment/create-deposit/' + paymentSelection.appointmentId;
+      });
+    }
+
+    if (walletBtn) {
+      walletBtn.addEventListener('click', function () {
+        if (!paymentSelection) return;
+        closePaymentModal();
+        if (paymentSelection.nextStepBtn) {
+          paymentSelection.nextStepBtn.disabled = true;
+        }
+        payDepositWithWallet(
+          paymentSelection.appointmentId,
+          paymentSelection.nextStepBtn,
+          paymentSelection.originalText
+        );
+      });
+    }
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        var modal = document.getElementById('booking-payment-modal');
+        if (modal && !modal.hidden && cancelBtn) {
+          cancelBtn.click();
+        }
+      }
+    });
   }
 
   function formatDateDisplay(dateStr) {
