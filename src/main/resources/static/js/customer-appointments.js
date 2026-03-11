@@ -78,6 +78,18 @@
     return s.length >= 5 ? s.substring(0, 5) : s;
   }
 
+  function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return "";
+    var d = new Date(dateTimeStr);
+    if (isNaN(d.getTime())) return String(dateTimeStr);
+    var dd = String(d.getDate()).padStart(2, "0");
+    var mm = String(d.getMonth() + 1).padStart(2, "0");
+    var yyyy = d.getFullYear();
+    var hh = String(d.getHours()).padStart(2, "0");
+    var min = String(d.getMinutes()).padStart(2, "0");
+    return dd + "/" + mm + "/" + yyyy + " " + hh + ":" + min;
+  }
+
   function escapeHtml(s) {
     if (s == null) return "";
     return String(s)
@@ -122,6 +134,25 @@
     if (payload.message) return payload.message;
     if (payload.error) return payload.error;
     return fallbackMessage;
+  }
+
+  function toNumber(value) {
+    var num = Number(value);
+    return isNaN(num) ? 0 : num;
+  }
+
+  function isCompletedStatus(status) {
+    var key = String(status || "").toUpperCase();
+    return key === "COMPLETED" || key === "DONE";
+  }
+
+  function isSettledInvoice(data) {
+    var invoicePaid = String(data && data.invoiceStatus || "").toUpperCase() === "PAID";
+    return invoicePaid || isCompletedStatus(data && data.status);
+  }
+
+  function shouldShowRemaining(data) {
+    return !isSettledInvoice(data) && toNumber(data && data.remainingAmount) > 0;
   }
 
   function closeCurrentDetail() {
@@ -190,15 +221,99 @@
     if (!data || !data.invoiceId) return "";
 
     var items = Array.isArray(data.invoiceItems) ? data.invoiceItems : [];
+    var hasRemaining = shouldShowRemaining(data);
+    var settled = isSettledInvoice(data);
+    var billedTotal = toNumber(data.billedTotal);
+    var depositAmount = toNumber(data.depositAmount);
+    var remainingAmount = toNumber(data.remainingAmount);
+    var paidAmount = settled
+      ? billedTotal
+      : Math.max(billedTotal - remainingAmount, 0);
+    var statusLabel = settled
+      ? "Đã thanh toán"
+      : formatInvoiceStatus(data.invoiceStatus);
+    var appointmentDate = formatDate(data.date);
+    var appointmentTime =
+      [formatTime(data.startTime), formatTime(data.endTime)]
+        .filter(function (value) {
+          return value;
+        })
+        .join(" - ");
+    var billingNoteText = data.billingNoteNote ? String(data.billingNoteNote).trim() : "";
+    var prescriptionItems = Array.isArray(data.prescriptionItems)
+      ? data.prescriptionItems
+      : [];
+    var overviewHtml =
+      '<div class="cap-invoice-overview">' +
+      '<div class="cap-invoice-overview__item"><span>Mã hóa đơn</span><strong>#' +
+      escapeHtml(data.invoiceId) +
+      "</strong></div>" +
+      '<div class="cap-invoice-overview__item"><span>Trạng thái</span><strong>' +
+      escapeHtml(statusLabel) +
+      "</strong></div>" +
+      '<div class="cap-invoice-overview__item"><span>Dịch vụ</span><strong>' +
+      escapeHtml(data.serviceName || "Chưa cập nhật") +
+      "</strong></div>" +
+      '<div class="cap-invoice-overview__item"><span>Bác sĩ</span><strong>' +
+      escapeHtml(data.dentistName || "Chưa phân công") +
+      "</strong></div>" +
+      '<div class="cap-invoice-overview__item"><span>Ngày khám</span><strong>' +
+      escapeHtml(appointmentDate || "Chưa cập nhật") +
+      "</strong></div>" +
+      '<div class="cap-invoice-overview__item"><span>Khung giờ</span><strong>' +
+      escapeHtml(appointmentTime || "Chưa cập nhật") +
+      "</strong></div>" +
+      "</div>";
+    var prescriptionHtml = prescriptionItems.length
+      ? '<div class="cap-invoice-section">' +
+        '<div class="cap-invoice-section__title">Thuốc kê đơn</div>' +
+        '<div class="cap-invoice-prescription-list">' +
+        prescriptionItems
+          .map(function (item) {
+            return (
+              '<div class="cap-invoice-prescription-item">' +
+              '<div class="cap-invoice-prescription-item__head">' +
+              '<strong>' + escapeHtml(item.medicineName || "Thuốc") + "</strong>" +
+              (item.dosage
+                ? '<span class="cap-invoice-prescription-item__dosage">' +
+                  escapeHtml(item.dosage) +
+                  "</span>"
+                : "") +
+              "</div>" +
+              (item.note
+                ? '<div class="cap-invoice-prescription-item__note">' +
+                  escapeHtml(item.note) +
+                  "</div>"
+                : "") +
+              "</div>"
+            );
+          })
+          .join("") +
+        "</div>" +
+        "</div>"
+      : "";
+    var billNoteHtml = billingNoteText
+      ? '<div class="cap-invoice-section">' +
+        '<div class="cap-invoice-section__title">Ghi chú từ bác sĩ</div>' +
+        '<div class="cap-invoice-note">' + escapeHtml(billingNoteText) + "</div>" +
+        (data.billingNoteUpdatedAt
+          ? '<div class="cap-invoice-note-time">Cập nhật: ' +
+            escapeHtml(formatDateTime(data.billingNoteUpdatedAt)) +
+            "</div>"
+          : "") +
+        "</div>"
+      : "";
     var itemsHtml = items.length
-      ? '<div class="cap-invoice-list">' +
+      ? '<div class="cap-invoice-section">' +
+        '<div class="cap-invoice-section__title">Chi tiết dịch vụ</div>' +
+        '<div class="cap-invoice-list">' +
         items
           .map(function (item) {
             var meta = [];
-            if (item.qty != null) meta.push("SL: " + escapeHtml(item.qty));
+            if (item.qty != null) meta.push("SL: " + item.qty);
             if (item.unitPrice != null)
-              meta.push("Đơn giá: " + escapeHtml(formatMoney(item.unitPrice)));
-            if (item.toothNo) meta.push("Răng: " + escapeHtml(item.toothNo));
+              meta.push("Đơn giá: " + formatMoney(item.unitPrice));
+            if (item.toothNo) meta.push("Răng: " + item.toothNo);
             return (
               '<div class="cap-invoice-item">' +
               "<div>" +
@@ -216,29 +331,44 @@
             );
           })
           .join("") +
+        "</div>" +
         "</div>"
-      : '<div class="cap-muted">Chưa có dòng hóa đơn chi tiết.</div>';
+      : '<div class="cap-invoice-section"><div class="cap-invoice-section__title">Chi tiết dịch vụ</div><div class="cap-muted">Chưa có dòng hóa đơn chi tiết.</div></div>';
+
+    var totalsHtml =
+      '<div class="cap-invoice-section">' +
+      '<div class="cap-invoice-section__title">Tổng kết thanh toán</div>' +
+      '<div class="cap-invoice-total">' +
+      '<div class="cap-invoice-total-line"><span>Tổng billing</span><strong>' +
+      escapeHtml(formatMoney(billedTotal)) +
+      "</strong></div>" +
+      '<div class="cap-invoice-total-line"><span>Đặt cọc ban đầu</span><strong>' +
+      escapeHtml(formatMoney(depositAmount)) +
+      "</strong></div>" +
+      '<div class="cap-invoice-total-line"><span>Đã thanh toán</span><strong>' +
+      escapeHtml(formatMoney(paidAmount)) +
+      "</strong></div>" +
+      (hasRemaining
+        ? '<div class="cap-invoice-total-line cap-invoice-total-line--due"><span>Còn lại</span><strong>' +
+          escapeHtml(formatMoney(remainingAmount)) +
+          "</strong></div>"
+        : '<div class="cap-invoice-settled"><i class="bi bi-patch-check-fill"></i><span>Hóa đơn đã được thanh toán xong.</span></div>') +
+      "</div>" +
+      "</div>";
 
     return (
       '<div class="cap-invoice-card">' +
       '<div class="cap-invoice-head">' +
       '<div class="cap-invoice-title"><i class="bi bi-file-earmark-text"></i> Hóa đơn thanh toán</div>' +
       '<div class="cap-invoice-chip">' +
-      escapeHtml(formatInvoiceStatus(data.invoiceStatus)) +
+      escapeHtml(statusLabel) +
       "</div>" +
       "</div>" +
+      overviewHtml +
       itemsHtml +
-      '<div class="cap-invoice-total">' +
-      '<div class="cap-invoice-total-line"><span>Tổng billing</span><strong>' +
-      escapeHtml(formatMoney(data.billedTotal)) +
-      "</strong></div>" +
-      '<div class="cap-invoice-total-line"><span>Đã đặt cọc</span><strong>' +
-      escapeHtml(formatMoney(data.depositAmount)) +
-      "</strong></div>" +
-      '<div class="cap-invoice-total-line cap-invoice-total-line--due"><span>Còn lại</span><strong>' +
-      escapeHtml(formatMoney(data.remainingAmount)) +
-      "</strong></div>" +
-      "</div>" +
+      prescriptionHtml +
+      billNoteHtml +
+      totalsHtml +
       "</div>"
     );
   }
@@ -430,12 +560,19 @@
         (data.invoiceId ? " - Mã hóa đơn #" + escapeHtml(data.invoiceId) : "") +
         "</span></div>"
       : "";
+    var invoicePreviewMeta = ['Tổng billing ' + escapeHtml(formatMoney(data.billedTotal))];
+    if (shouldShowRemaining(data)) {
+      invoicePreviewMeta.push(
+        'Còn lại ' + escapeHtml(formatMoney(data.remainingAmount)),
+      );
+    } else {
+      invoicePreviewMeta.push("Đã thanh toán xong");
+    }
     var invoicePreviewHtml = data.invoiceId
       ? '<div class="cap-invoice-preview">' +
         '<div class="cap-invoice-preview__copy">' +
         '<div class="cap-invoice-preview__title"><i class="bi bi-file-earmark-text"></i> Hóa đơn #' + escapeHtml(data.invoiceId) + '</div>' +
-        '<div class="cap-invoice-preview__meta">Tổng billing ' + escapeHtml(formatMoney(data.billedTotal)) +
-        ' • Còn lại ' + escapeHtml(formatMoney(data.remainingAmount)) + '</div>' +
+        '<div class="cap-invoice-preview__meta">' + invoicePreviewMeta.join(" • ") + '</div>' +
         '</div>' +
         '<button type="button" class="cap-btn cap-btn-neutral" data-action="view-invoice"><i class="bi bi-receipt-cutoff"></i> Xem hóa đơn</button>' +
         "</div>"
@@ -591,7 +728,7 @@
   }
 
   function formatMoney(value) {
-    var num = Number(value || 0);
+    var num = toNumber(value);
     return num.toLocaleString("vi-VN") + " VND";
   }
 

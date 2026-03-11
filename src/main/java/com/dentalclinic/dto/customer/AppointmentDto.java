@@ -2,6 +2,7 @@ package com.dentalclinic.dto.customer;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -30,6 +31,10 @@ public class AppointmentDto {
     private String invoiceStatus;
     private boolean canPayRemaining;
     private List<AppointmentInvoiceItemDto> invoiceItems;
+    private Long billingNoteId;
+    private String billingNoteNote;
+    private LocalDateTime billingNoteUpdatedAt;
+    private List<AppointmentPrescriptionItemDto> prescriptionItems;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -79,4 +84,12 @@ public class AppointmentDto {
     public void setCanPayRemaining(boolean canPayRemaining) { this.canPayRemaining = canPayRemaining; }
     public List<AppointmentInvoiceItemDto> getInvoiceItems() { return invoiceItems; }
     public void setInvoiceItems(List<AppointmentInvoiceItemDto> invoiceItems) { this.invoiceItems = invoiceItems; }
+    public Long getBillingNoteId() { return billingNoteId; }
+    public void setBillingNoteId(Long billingNoteId) { this.billingNoteId = billingNoteId; }
+    public String getBillingNoteNote() { return billingNoteNote; }
+    public void setBillingNoteNote(String billingNoteNote) { this.billingNoteNote = billingNoteNote; }
+    public LocalDateTime getBillingNoteUpdatedAt() { return billingNoteUpdatedAt; }
+    public void setBillingNoteUpdatedAt(LocalDateTime billingNoteUpdatedAt) { this.billingNoteUpdatedAt = billingNoteUpdatedAt; }
+    public List<AppointmentPrescriptionItemDto> getPrescriptionItems() { return prescriptionItems; }
+    public void setPrescriptionItems(List<AppointmentPrescriptionItemDto> prescriptionItems) { this.prescriptionItems = prescriptionItems; }
 }

@@ -2,6 +2,7 @@ package com.dentalclinic.service.customer;
 
 import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.dto.customer.AppointmentInvoiceItemDto;
+import com.dentalclinic.dto.customer.AppointmentPrescriptionItemDto;
 import com.dentalclinic.dto.customer.AppointmentServiceItemDto;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
 import com.dentalclinic.dto.customer.RescheduleAppointmentRequest;
@@ -17,6 +18,7 @@ import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.payment.Invoice;
 import com.dentalclinic.model.payment.BillingNote;
 import com.dentalclinic.model.payment.BillingPerformedService;
+import com.dentalclinic.model.payment.BillingPrescriptionItem;
 import com.dentalclinic.model.payment.PaymentStatus;
 import com.dentalclinic.model.service.Services;
 import com.dentalclinic.model.user.Role;
@@ -1159,7 +1161,12 @@ public class CustomerAppointmentService {
 
         billingNoteRepository.findByAppointment_Id(appointment.getId()).ifPresent(billingNote -> {
             List<AppointmentInvoiceItemDto> invoiceItems = new ArrayList<>();
+            List<AppointmentPrescriptionItemDto> prescriptionItems = new ArrayList<>();
             BigDecimal billedTotal = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+            dto.setBillingNoteId(billingNote.getId());
+            dto.setBillingNoteNote(billingNote.getNote());
+            dto.setBillingNoteUpdatedAt(billingNote.getUpdatedAt());
 
             if (billingNote.getPerformedServices() != null) {
                 for (BillingPerformedService item : billingNote.getPerformedServices()) {
@@ -1171,6 +1178,8 @@ public class CustomerAppointmentService {
                     BigDecimal lineAmount = unitPrice.multiply(BigDecimal.valueOf(qty)).setScale(2, RoundingMode.HALF_UP);
 
                     AppointmentInvoiceItemDto line = new AppointmentInvoiceItemDto();
+                    line.setId(item.getId());
+                    line.setServiceId(item.getService().getId());
                     line.setName(item.getService().getName());
                     line.setQty(qty);
                     line.setUnitPrice(unitPrice);
@@ -1182,7 +1191,22 @@ public class CustomerAppointmentService {
                 }
             }
 
+            if (billingNote.getPrescriptionItems() != null) {
+                for (BillingPrescriptionItem item : billingNote.getPrescriptionItems()) {
+                    if (item == null) {
+                        continue;
+                    }
+                    AppointmentPrescriptionItemDto line = new AppointmentPrescriptionItemDto();
+                    line.setId(item.getId());
+                    line.setMedicineName(item.getMedicineName());
+                    line.setDosage(item.getDosage());
+                    line.setNote(item.getNote());
+                    prescriptionItems.add(line);
+                }
+            }
+
             dto.setInvoiceItems(invoiceItems);
+            dto.setPrescriptionItems(prescriptionItems);
             dto.setBilledTotal(billedTotal);
         });
 
