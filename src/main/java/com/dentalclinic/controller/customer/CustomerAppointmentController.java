@@ -200,6 +200,10 @@ public class CustomerAppointmentController {
             data.put("invoiceStatus", dto.getInvoiceStatus());
             data.put("canPayRemaining", dto.isCanPayRemaining());
             data.put("invoiceItems", dto.getInvoiceItems());
+            data.put("billingNoteId", dto.getBillingNoteId());
+            data.put("billingNoteNote", dto.getBillingNoteNote());
+            data.put("billingNoteUpdatedAt", dto.getBillingNoteUpdatedAt());
+            data.put("prescriptionItems", dto.getPrescriptionItems());
             data.put("date", dto.getDate().toString());
             data.put("startTime", dto.getStartTime());
             data.put("endTime", dto.getEndTime());
