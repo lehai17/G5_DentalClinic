@@ -126,6 +126,10 @@
                                    required
                                    min="0"
                                    max="60"/>
+                            <div class="error"
+                                 th:if="${#fields.hasErrors('experienceYears')}"
+                                 th:errors="*{experienceYears}">
+                            </div>
                         </div>
                     </div>
 
