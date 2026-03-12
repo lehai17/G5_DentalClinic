@@ -2,6 +2,7 @@ package com.dentalclinic.controller.dentist;
 
 import com.dentalclinic.exception.BookingException;
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.appointment.AppointmentDetail;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.ServicesRepository;
@@ -16,7 +17,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/dentist/reexam")
@@ -40,7 +44,7 @@ public class ReexamController {
             @RequestParam(required = false) String weekStart,
             Model model
     ) {
-        Appointment original = appointmentRepository.findById(appointmentId)
+        Appointment original = appointmentRepository.findByIdWithDetails(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
         
         // Check if reexam is available
@@ -62,6 +66,9 @@ public class ReexamController {
 
         }
         
+        String originalServiceLabel = buildServiceLabel(original);
+        boolean preferPlaceholder = shouldPreferPlaceholder(original, isUpdate);
+
         // Set model attributes
         model.addAttribute("originalAppointmentId", appointmentId);
         model.addAttribute("originalAppointmentStatus", original.getStatus().name());
@@ -69,6 +76,8 @@ public class ReexamController {
         model.addAttribute("isUpdate", isUpdate);
         model.addAttribute("isReadOnly", isReadOnly);
         model.addAttribute("originalAppointment", original);
+        model.addAttribute("originalServiceLabel", originalServiceLabel);
+        model.addAttribute("preferServicePlaceholder", preferPlaceholder);
         model.addAttribute("weekStart", weekStart);
         model.addAttribute("services", servicesRepository.findAll());
         
@@ -201,5 +210,54 @@ public class ReexamController {
         public java.util.List<String> getAvailableSlots() {
             return availableSlots;
         }
+    }
+
+    private String buildServiceLabel(Appointment appointment) {
+        if (appointment == null) {
+            return "";
+        }
+
+        List<AppointmentDetail> details = appointment.getAppointmentDetails();
+        if (details != null && !details.isEmpty()) {
+            String joined = details.stream()
+                    .sorted(Comparator.comparing(
+                            AppointmentDetail::getDetailOrder,
+                            Comparator.nullsLast(Integer::compareTo)
+                    ))
+                    .map(detail -> {
+                        String name = detail.getServiceNameSnapshot();
+                        if (name == null || name.isBlank()) {
+                            if (detail.getService() != null) {
+                                name = detail.getService().getName();
+                            }
+                        }
+                        return name;
+                    })
+                    .filter(name -> name != null && !name.isBlank())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+            if (!joined.isBlank()) {
+                return joined;
+            }
+        }
+
+        if (appointment.getService() != null && appointment.getService().getName() != null) {
+            return appointment.getService().getName();
+        }
+
+        return "";
+    }
+
+    private boolean shouldPreferPlaceholder(Appointment original, boolean isUpdate) {
+        if (isUpdate || original == null) {
+            return false;
+        }
+
+        List<AppointmentDetail> details = original.getAppointmentDetails();
+        if (details != null && details.size() > 1) {
+            return true;
+        }
+        return false;
     }
 }

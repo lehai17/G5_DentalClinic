@@ -116,7 +116,8 @@
     </div>
 
     <div style="display:flex;gap:10px;margin-top:14px;">
-      <button class="btn-primary" type="submit">LƯU</button>
+      <button class="btn-primary" type="submit"
+              th:disabled="${appointmentStatus != 'EXAMINING'}">LƯU</button>
       <a class="btn-secondary"
          th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">
         Quay lại
@@ -221,12 +222,6 @@
     }
   });
   document.addEventListener('DOMContentLoaded', function () {
-
-    const firstRowSelect = document.querySelector('#performedTable tbody tr:first-child select');
-
-    if (firstRowSelect) {
-      firstRowSelect.style.pointerEvents = "none";
-    }
     document.getElementById('billingForm').addEventListener('submit', () => {
 
       const rows = document.querySelectorAll('#performedTable tbody tr');

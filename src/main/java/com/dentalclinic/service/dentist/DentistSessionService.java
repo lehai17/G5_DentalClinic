@@ -142,6 +142,9 @@ public class DentistSessionService {
     @Transactional(readOnly = true)
     public BillingForm loadBilling(Long appointmentId, Long customerUserId) {
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+        if (!isBillingViewAllowed(appt.getStatus())) {
+            throw new IllegalStateException("Billing view is not allowed for this status");
+        }
 
         BillingNote bn = billingNoteRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -152,8 +155,20 @@ public class DentistSessionService {
         if (bn == null) {
             bn = new BillingNote();
             bn.setAppointment(appt);
-            // default performed service based on appointment
-            if (appt.getService() != null) {
+            // default performed services based on appointment details
+            if (appt.getAppointmentDetails() != null && !appt.getAppointmentDetails().isEmpty()) {
+                for (var detail : appt.getAppointmentDetails()) {
+                    if (detail.getService() == null) {
+                        continue;
+                    }
+                    BillingPerformedService ps = new BillingPerformedService();
+                    ps.setBillingNote(bn);
+                    ps.setService(detail.getService());
+                    ps.setQty(1);
+                    ps.setToothNo("");
+                    bn.getPerformedServices().add(ps);
+                }
+            } else if (appt.getService() != null) {
                 BillingPerformedService ps = new BillingPerformedService();
                 ps.setBillingNote(bn);
                 ps.setService(appt.getService());
@@ -172,6 +187,9 @@ public class DentistSessionService {
                             BillingNote form) {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
+            throw new IllegalStateException("Only allowed when appointment is EXAMINING");
+        }
 
         validateAppointmentNotFinalized(appt);
 
@@ -278,6 +296,16 @@ public class DentistSessionService {
                 || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             throw new IllegalStateException("Appointment already finalized");
         }
+    }
+
+    private boolean isBillingViewAllowed(AppointmentStatus status) {
+        if (status == null) {
+            return false;
+        }
+        return status == AppointmentStatus.EXAMINING
+                || status == AppointmentStatus.DONE
+                || status == AppointmentStatus.WAITING_PAYMENT
+                || status == AppointmentStatus.COMPLETED;
     }
 
     // no more JSON helpers; all handling is via relational entities

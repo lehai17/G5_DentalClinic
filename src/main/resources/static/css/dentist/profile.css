@@ -2,6 +2,10 @@
 
 .profile-header {
     margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 }
 
 .profile-header h1 {
@@ -28,6 +32,8 @@
     margin-bottom: 15px;
     border: 1px solid var(--line);
     box-shadow: 0 14px 45px rgba(2,6,23,.06);
+    max-width: none;
+    width: 100%;
 }
 
 .card.large {
@@ -120,7 +126,7 @@ textarea {
     justify-content: flex-end;
     gap: 16px;
     margin-top: 10px;
-    padding-right: 1120px;
+    padding-right: 12px;
 }
 
 .btn-primary {
@@ -154,8 +160,8 @@ textarea {
 }
 
 .content-inner {
-    max-width: 1050px;
-    margin: 0 auto;
+    max-width: none;
+    width: 100%;
 }
 .form-error{
     color:#d93025;

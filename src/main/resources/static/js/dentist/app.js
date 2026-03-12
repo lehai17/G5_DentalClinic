@@ -26,6 +26,12 @@
 
     document.querySelectorAll('.appt').forEach(el => {
 
+        const status = el.dataset.status;
+        if (status === 'CONFIRMED') {
+            el.classList.add('appt-future');
+            return;
+        }
+
         const dateStr = el.dataset.date;
         if(!dateStr) return;
 
@@ -43,9 +49,12 @@
             if(el.classList.contains('appt-future')){
                 return;
             }
+            const status = el.dataset.status;
+            if (status === 'CONFIRMED') {
+                return;
+            }
             const appointmentId = el.dataset.appointmentId;
             const customerUserId = el.dataset.customerUserId;
-            const status = el.dataset.status;
 
             // âœ… lấy weekStart từ hidden input (server truyền xuống)
             const weekStart =
@@ -74,6 +83,18 @@
                 `/dentist/appointments/${appointmentId}/billing-transfer`
                 + `?customerUserId=${customerUserId}`
                 + `&weekStart=${encodeURIComponent(weekStart)}`;
+
+            if (status === 'CHECKED_IN') {
+                btnBilling.style.pointerEvents = 'none';
+                btnBilling.style.opacity = '0.6';
+                btnBilling.style.filter = 'grayscale(1)';
+                btnBilling.title = 'Chỉ mở khi đang khám';
+            } else {
+                btnBilling.style.pointerEvents = '';
+                btnBilling.style.opacity = '';
+                btnBilling.style.filter = '';
+                btnBilling.title = '';
+            }
 
             backdrop.hidden = false;
         });

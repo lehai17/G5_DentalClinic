@@ -107,10 +107,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // =========================================================
 
     @Query("""
-        SELECT a FROM Appointment a
+        SELECT DISTINCT a FROM Appointment a
         JOIN FETCH a.customer c
         JOIN FETCH c.user cu
         JOIN FETCH a.service s
+        LEFT JOIN FETCH a.appointmentDetails ad
         LEFT JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
@@ -128,10 +129,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                           @Param("end") LocalDate end);
 
     @Query("""
-        SELECT a FROM Appointment a
+        SELECT DISTINCT a FROM Appointment a
         JOIN FETCH a.customer c
         JOIN FETCH c.user cu
         JOIN FETCH a.service s
+        LEFT JOIN FETCH a.appointmentDetails ad
         LEFT JOIN FETCH a.dentist d
         WHERE a.id = :appointmentId
     """)

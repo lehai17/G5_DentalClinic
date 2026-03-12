@@ -1,6 +1,7 @@
 package com.dentalclinic.controller.dentist;
 
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.appointment.AppointmentDetail;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
@@ -15,6 +16,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 public class DentistWebController {
@@ -113,7 +115,7 @@ public class DentistWebController {
                     a.getId(),
                     a.getCustomer().getUser().getId(),
                     a.getCustomer().getFullName(),
-                    a.getService().getName(),
+                    buildServiceLabel(a),
                     a.getDate(),
                     a.getStartTime(),
                     a.getEndTime(),
@@ -174,5 +176,42 @@ public class DentistWebController {
         model.addAttribute("completionRate", completionRate);
 
         return "Dentist/dashboard";
+    }
+
+    private String buildServiceLabel(Appointment appointment) {
+        if (appointment == null) {
+            return "";
+        }
+
+        List<AppointmentDetail> details = appointment.getAppointmentDetails();
+        if (details != null && !details.isEmpty()) {
+            String joined = details.stream()
+                    .sorted(Comparator.comparing(
+                            AppointmentDetail::getDetailOrder,
+                            Comparator.nullsLast(Integer::compareTo)
+                    ))
+                    .map(detail -> {
+                        String name = detail.getServiceNameSnapshot();
+                        if (name == null || name.isBlank()) {
+                            if (detail.getService() != null) {
+                                name = detail.getService().getName();
+                            }
+                        }
+                        return name;
+                    })
+                    .filter(name -> name != null && !name.isBlank())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+            if (!joined.isBlank()) {
+                return joined;
+            }
+        }
+
+        if (appointment.getService() != null && appointment.getService().getName() != null) {
+            return appointment.getService().getName();
+        }
+
+        return "";
     }
 }

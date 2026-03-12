@@ -3,6 +3,7 @@ package com.dentalclinic.service.support;
 import com.dentalclinic.exception.BusinessException;
 import com.dentalclinic.exception.SupportAccessDeniedException;
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.appointment.AppointmentDetail;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.notification.NotificationReferenceType;
 import com.dentalclinic.model.notification.NotificationType;
@@ -34,6 +35,7 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 public class SupportService {
@@ -508,6 +510,7 @@ public class SupportService {
                 .map(entry -> entry.content)
                 .reduce((first, second) -> second)
                 .orElse(ticket.getAnswer()));
+        ticket.setServiceLabel(buildServiceLabel(ticket.getAppointment()));
         ticket.setDisplayStatus(isConversationClosed(ticket) ? "CLOSED" : ticket.getStatus().name());
         return ticket;
     }
@@ -632,6 +635,43 @@ public class SupportService {
                     ticket.getAppointment().getDentist().getUser() != null ? ticket.getAppointment().getDentist().getUser().getEmail() : "Chưa phân công");
         }
         return "Chưa phân công";
+    }
+
+    private String buildServiceLabel(Appointment appointment) {
+        if (appointment == null) {
+            return "-";
+        }
+
+        List<AppointmentDetail> details = appointment.getAppointmentDetails();
+        if (details != null && !details.isEmpty()) {
+            String joined = details.stream()
+                    .sorted(Comparator.comparing(
+                            AppointmentDetail::getDetailOrder,
+                            Comparator.nullsLast(Integer::compareTo)
+                    ))
+                    .map(detail -> {
+                        String name = detail.getServiceNameSnapshot();
+                        if (name == null || name.isBlank()) {
+                            if (detail.getService() != null) {
+                                name = detail.getService().getName();
+                            }
+                        }
+                        return name;
+                    })
+                    .filter(name -> name != null && !name.isBlank())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+            if (!joined.isBlank()) {
+                return joined;
+            }
+        }
+
+        if (appointment.getService() != null && appointment.getService().getName() != null) {
+            return appointment.getService().getName();
+        }
+
+        return "-";
     }
 
     private String resolveUserFullName(User user) {

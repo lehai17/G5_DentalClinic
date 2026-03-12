@@ -43,7 +43,7 @@
     </div>
     <div class="info-row">
       <span class="info-label">Dịch vụ:</span>
-      <span class="info-value" th:text="${originalAppointment.service.name}"></span>
+      <span class="info-value" th:text="${originalServiceLabel}"></span>
     </div>
     <div class="info-row">
       <span class="info-label">Bác sĩ:</span>
@@ -65,7 +65,7 @@
         <option th:each="s : ${services}" 
                 th:value="${s.id}" 
                 th:text="${s.name}"
-                th:selected="${s.id == (isUpdate ? reexam.service.id : originalAppointment.service.id)}">
+                th:selected="${!preferServicePlaceholder && s.id == (isUpdate ? reexam.service.id : originalAppointment.service.id)}">
         </option>
       </select>
       <small>Có thể chọn dịch vụ khác nếu cần.</small>

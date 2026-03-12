@@ -395,15 +395,4 @@ textarea:focus {
     background: #2563eb;
     color: #ffffff;
 }
-#performedTable tbody tr:first-child .del {
-    display: none;
-}
-#performedTable tbody tr:first-child select {
-    pointer-events: none;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: none;
-    background-color: #f3f4f6;
-}
 
