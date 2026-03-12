@@ -157,3 +157,8 @@ textarea {
     max-width: 1050px;
     margin: 0 auto;
 }
+.form-error{
+    color:#d93025;
+    font-size:13px;
+    margin-top:4px;
+}

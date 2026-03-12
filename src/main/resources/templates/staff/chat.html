@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat khách hàng</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+    <link rel="stylesheet" href="/css/staff/chat.css">
+    <script src="/js/staff/chat.js" defer></script>
+</head>
+<body>
+<div class="app-wrapper">
+    <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div th:replace="staff/fragments/header :: header"></div>
+
+        <div class="content">
+            <h2>Chat với khách hàng</h2>
+            <div class="chat-page">
+                <section class="chat-panel">
+                    <div class="chat-panel-header">Danh sách hội thoại</div>
+                    <div id="chat-thread-list" class="thread-list">
+                        <button class="thread-item"
+                                type="button"
+                                th:each="thread : ${threads}"
+                                th:attr="data-thread-id=${thread.id}">
+                            <span class="thread-top">
+                                <span class="thread-email"
+                                      th:text="${thread.customerName != null ? thread.customerName : (thread.customerEmail != null ? thread.customerEmail : 'Khách hàng')}">Khách hàng</span>
+                                <span class="thread-time"
+                                      th:text="${thread.lastMessageAt != null ? #temporals.format(thread.lastMessageAt, 'dd/MM HH:mm') : '--'}">--</span>
+                            </span>
+                            <span class="thread-last"
+                                  th:text="${thread.lastMessage != null && !#strings.isEmpty(thread.lastMessage) ? thread.lastMessage : '(Chưa có tin nhắn)'}">(Chưa có tin nhắn)</span>
+                            <span class="thread-unread"
+                                  th:if="${thread.unreadCount > 0}"
+                                  th:text="${thread.unreadCount > 99 ? '99+' : thread.unreadCount}">1</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="chat-panel">
+                    <div id="staff-chat-title" class="chat-panel-header">Chọn cuộc hội thoại để bắt đầu</div>
+                    <div class="conversation">
+                        <div id="staff-chat-messages" class="conversation-messages">
+                            <div class="conversation-empty">Chọn một hội thoại để xem nội dung chat.</div>
+                        </div>
+                        <div class="conversation-input">
+                            <input id="staff-chat-input" type="text" maxlength="1000" placeholder="Nhập phản hồi...">
+                            <button id="staff-chat-send" type="button">Gửi</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

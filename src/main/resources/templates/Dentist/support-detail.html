@@ -1,19 +1,16 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title>Ticket Detail</title>
+    <title>Chi tiết phiếu hỗ trợ</title>
 
     <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
     <link rel="stylesheet" th:href="@{/css/dentist/support.css}"/>
 </head>
 
 <body>
-
 <div class="app-shell">
-
-    <aside  class="sidebar" id="sidebar"
-            style="display:flex;flex-direction:column;height:100vh;">
+    <aside class="sidebar" id="sidebar" style="display:flex;flex-direction:column;height:100vh;">
         <div class="sidebar-top">
             <div class="brand-mini">
                 <div class="brand-badge">D+</div>
@@ -22,97 +19,86 @@
         </div>
 
         <nav class="nav">
-            <a class="nav-item" href="/dentist/dashboard">Dashboard</a>
-            <a class="nav-item" href="/dentist/work-schedule">Work Schedule</a>
-            <a class="nav-item" href="/dentist/busy-schedule">Busy Schedule</a>
-            <a class="nav-item active" href="/dentist/support">Support Ticket</a>
-            <a class="nav-item" href="/dentist/profile">Profile</a>
+            <a class="nav-item" href="/dentist/dashboard">Tổng quan</a>
+            <a class="nav-item" href="/dentist/work-schedule">Lịch làm việc</a>
+            <a class="nav-item" href="/dentist/busy-schedule">Lịch bận</a>
+            <a class="nav-item active" href="/dentist/support">Phiếu hỗ trợ</a>
+            <a class="nav-item" href="/dentist/profile">Hồ sơ</a>
         </nav>
 
         <div style="margin-top:auto;">
-            <a class="nav-item danger" href="/logout">Sign Out</a>
+            <a class="nav-item danger" href="/logout">Đăng xuất</a>
         </div>
     </aside>
 
     <div class="main">
-
         <div class="topbar">
             <div></div>
             <div class="user-chip">
-                <div class="user-name">Dentist</div>
-                <div class="user-sub">General Dentist</div>
+                <div class="user-name">Bác sĩ</div>
+                <div class="user-sub">Nha sĩ tổng quát</div>
             </div>
         </div>
 
         <div class="content">
-
-            <a href="/dentist/support" style="color:var(--muted);font-size:13px;">
-                ← Back to tickets
-            </a>
+            <a href="/dentist/support" style="color:var(--muted);font-size:13px;">← Quay lại danh sách</a>
 
             <div class="detail-card">
-
                 <div class="detail-header">
                     <div>
-                        <div class="detail-name"
-                             th:text="${ticket.customer.customerProfile.fullName}">
-                        </div>
-                        <div class="detail-meta">
-                            Ticket ID:
-                            <span th:text="${ticket.id}"></span>
-                        </div>
+                        <div class="detail-name" th:text="${ticket.customer.customerProfile.fullName}"></div>
+                        <div class="detail-meta">Mã phiếu: <span th:text="${ticket.id}"></span></div>
                     </div>
 
-                    <span th:class="'badge ' + (${ticket.status} == 'OPEN' ? 'open' : 'closed')"
-                          th:text="${ticket.status}">
-                    </span>
+                    <span th:class="'badge ' + (${ticket.displayStatus} == 'OPEN' ? 'open' : 'closed')"
+                          th:text="${ticket.displayStatus}"></span>
+                </div>
+
+                <div th:if="${successMessage}" style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:#dcfce7;color:#166534;" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:#fee2e2;color:#991b1b;" th:text="${errorMessage}"></div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Tiêu đề</div>
+                    <div class="detail-box" th:text="${ticket.title}"></div>
                 </div>
 
                 <div class="detail-section">
-                    <div class="detail-section-title">Patient Question</div>
-                    <div class="detail-box"
-                         th:text="${ticket.question}">
+                    <div class="detail-section-title">Lịch sử trao đổi</div>
+                    <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
+                        <div th:each="entry : ${ticket.conversationEntries}"
+                             th:style="${entry.customerSide} ? 'margin-left:auto;max-width:80%;padding:14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;' : 'margin-right:auto;max-width:80%;padding:14px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;'">
+                            <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:8px;font-size:12px;color:#64748b;">
+                                <strong style="color:#0f172a;" th:text="${entry.customerSide} ? 'Bệnh nhân' : entry.senderLabel"></strong>
+                                <span th:text="${entry.createdAt != null ? #temporals.format(entry.createdAt, 'dd/MM/yyyy HH:mm') : ''}"></span>
+                            </div>
+                            <div style="white-space:pre-wrap;color:#1e293b;line-height:1.6;" th:text="${entry.content}"></div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="detail-section">
-                    <div class="detail-section-title">Dentist Response</div>
+                    <div class="detail-section-title">Phản hồi của bác sĩ</div>
 
-                    <th:block th:if="${ticket.status.name() == 'OPEN'}">
+                    <div th:if="${ticket.closed}"
+                         style="margin-top:10px;padding:12px 14px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;">
+                        Phiếu hỗ trợ đã đóng. Bạn không thể gửi thêm phản hồi.
+                    </div>
 
-                        <form th:action="@{'/dentist/support/' + ${ticket.id} + '/answer'}"
-                              method="post">
+                    <th:block th:if="${!ticket.closed}">
+                        <form th:action="@{'/dentist/support/' + ${ticket.id} + '/answer'}" method="post">
+                            <textarea name="answer"
+                                      rows="4"
+                                      required
+                                      placeholder="Nhập phản hồi cho bệnh nhân..."
+                                      style="width:100%;margin-top:10px;border-radius:14px;border:1px solid var(--line);padding:12px;"></textarea>
 
-        <textarea name="answer"
-                  rows="4"
-                  required
-                  style="width:100%;margin-top:10px;border-radius:14px;border:1px solid var(--line);padding:12px;"></textarea>
-
-                            <button class="btn primary" type="submit">
-                                Save Response
-                            </button>
-
+                            <button class="btn primary" type="submit">Gửi phản hồi</button>
                         </form>
-
-                    </th:block>
-
-                    <th:block th:if="${ticket.status.name() == 'CLOSED'}">
-
-    <textarea rows="4"
-              readonly
-              style="width:100%;margin-top:10px;border-radius:14px;border:1px solid var(--line);padding:12px;"
-              th:text="${ticket.answer}"></textarea>
-
                     </th:block>
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
-
 </body>
 </html>

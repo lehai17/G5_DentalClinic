@@ -25,6 +25,9 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     Page<SupportTicket> findByCustomer_Id(Long customerId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
+    Optional<SupportTicket> findFirstByCustomer_IdAndAnswerIsNotNullOrderByCreatedAtDesc(Long customerId);
+
+    @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
     List<SupportTicket> findByStatusOrderByCreatedAtDesc(SupportStatus status);
 
     @EntityGraph(attributePaths = {"appointment", "staff", "customer"})
@@ -33,22 +36,26 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     // --- Dentist Methods (Optimized with Fetch Joins) ---
 
     /**
-     * Method này được thêm vào để khớp với SupportTicketService.
-     * Lấy danh sách phiếu hỗ trợ dựa trên ID người dùng của Bác sĩ thông qua Appointment.
+     * Láº¥y danh sÃ¡ch ticket theo Dentist (userId) thÃ´ng qua Appointment.dentist.user.
+     * Giá»¯ tÃªn method Ä‘á»ƒ khá»›p cÃ¡c service/controller Ä‘ang gá»i.
      */
     @Query("""
-        SELECT s FROM SupportTicket s
-        JOIN FETCH s.appointment a
-        JOIN FETCH a.dentist d
-        JOIN FETCH d.user u
+        SELECT s
+        FROM SupportTicket s
+        LEFT JOIN FETCH s.appointment a
+        LEFT JOIN FETCH a.service
+        LEFT JOIN FETCH a.dentist ad
+        LEFT JOIN FETCH ad.user
         LEFT JOIN FETCH s.customer c
-        WHERE u.id = :dentistId
+        LEFT JOIN FETCH c.customerProfile
+        LEFT JOIN FETCH s.staff
+        WHERE a.dentist.user.id = :dentistId
         ORDER BY s.createdAt DESC
     """)
     List<SupportTicket> findByDentistWithAppointment(@Param("dentistId") Long dentistId);
 
     /**
-     * Lấy danh sách phiếu hỗ trợ hiển thị cho Bác sĩ (hàm cũ của bạn).
+     * Láº¥y danh sÃ¡ch phiáº¿u há»— trá»£ hiá»ƒn thá»‹ cho BÃ¡c sÄ©.
      */
     @Query("""
         SELECT s FROM SupportTicket s
@@ -65,7 +72,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     List<SupportTicket> findVisibleToDentist(@Param("dentistUserId") Long dentistUserId);
 
     /**
-     * Lọc danh sách phiếu hỗ trợ theo trạng thái dành cho Bác sĩ.
+     * Lá»c danh sÃ¡ch phiáº¿u há»— trá»£ theo tráº¡ng thÃ¡i dÃ nh cho BÃ¡c sÄ©.
      */
     @Query("""
         SELECT s FROM SupportTicket s
@@ -86,7 +93,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     );
 
     /**
-     * Xem chi tiết một phiếu hỗ trợ dành cho Bác sĩ (Kiểm tra quyền sở hữu).
+     * Xem chi tiáº¿t má»™t phiáº¿u há»— trá»£ dÃ nh cho BÃ¡c sÄ© (Kiá»ƒm tra quyá»n sá»Ÿ há»¯u).
      */
     @Query("""
         SELECT s FROM SupportTicket s

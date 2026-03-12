@@ -18,24 +18,17 @@ public class BillingNote {
     @JoinColumn(name = "appointment_id", nullable = false, unique = true)
     private Appointment appointment;
 
-    // Ghi chú nội bộ (optional)
+    // Ghi chÃº ná»™i bá»™ (optional)
     @Column(name = "note", columnDefinition = "NVARCHAR(MAX)")
     private String note;
 
-    /**
-     * ✅ Performed services (bác sĩ tick) - lưu JSON
-     * Ví dụ:
-     * [
-     *  {"serviceId":1,"qty":1,"toothNo":"Full mouth"},
-     *  {"serviceId":2,"qty":1,"toothNo":"36"}
-     * ]
-     */
-    @Column(name = "performed_services_json", columnDefinition = "NVARCHAR(MAX)")
-    private String performedServicesJson;
+    // performed services replaced by relational list
+    @OneToMany(mappedBy = "billingNote", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<BillingPerformedService> performedServices = new java.util.ArrayList<>();
 
-    // Prescription Q&A (optional)
-    @Column(name = "prescription_note", columnDefinition = "NVARCHAR(MAX)")
-    private String prescriptionNote;
+    // prescription items relational list
+    @OneToMany(mappedBy = "billingNote", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<BillingPrescriptionItem> prescriptionItems = new java.util.ArrayList<>();
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
@@ -56,11 +49,11 @@ public class BillingNote {
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
 
-    public String getPerformedServicesJson() { return performedServicesJson; }
-    public void setPerformedServicesJson(String performedServicesJson) { this.performedServicesJson = performedServicesJson; }
+    public java.util.List<BillingPerformedService> getPerformedServices() { return performedServices; }
+    public void setPerformedServices(java.util.List<BillingPerformedService> performedServices) { this.performedServices = performedServices; }
 
-    public String getPrescriptionNote() { return prescriptionNote; }
-    public void setPrescriptionNote(String prescriptionNote) { this.prescriptionNote = prescriptionNote; }
+    public java.util.List<BillingPrescriptionItem> getPrescriptionItems() { return prescriptionItems; }
+    public void setPrescriptionItems(java.util.List<BillingPrescriptionItem> prescriptionItems) { this.prescriptionItems = prescriptionItems; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

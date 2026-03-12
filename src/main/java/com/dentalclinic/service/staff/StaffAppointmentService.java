@@ -2,11 +2,21 @@ package com.dentalclinic.service.staff;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
+import com.dentalclinic.model.payment.BillingNote;
+import com.dentalclinic.model.payment.BillingPerformedService;
+import com.dentalclinic.model.payment.Invoice;
+import com.dentalclinic.model.payment.PaymentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.BillingNoteRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
+import com.dentalclinic.repository.InvoiceRepository;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
+import com.dentalclinic.service.dentist.ReexamService;
 import com.dentalclinic.service.mail.EmailService;
+import com.dentalclinic.service.notification.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,10 +25,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
 public class StaffAppointmentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(StaffAppointmentService.class);
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -31,6 +45,18 @@ public class StaffAppointmentService {
 
     @Autowired
     private CustomerAppointmentService customerAppointmentService;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private ReexamService reexamService;
+
+    @Autowired
+    private BillingNoteRepository billingNoteRepository;
+
+    @Autowired
+    private InvoiceRepository invoiceRepository;
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
@@ -57,9 +83,13 @@ public class StaffAppointmentService {
 
     @Transactional
     public void assignDentist(Long appointmentId, Long dentistId) {
+        // 1. Tìm lịch hẹn
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+        Long oldDentistId = appt.getDentist() != null ? appt.getDentist().getId() : null;
+
+        // 2. Kiểm tra trùng lịch của bác sĩ mới
         boolean hasOverlap = appointmentRepository.hasOverlappingAppointment(
                 dentistId,
                 appt.getDate(),
@@ -68,22 +98,82 @@ public class StaffAppointmentService {
         );
 
         if (hasOverlap) {
-            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
+            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ n� y");
         }
 
+        // 3. Tìm thông tin bác sĩ
         DentistProfile dentist = dentistProfileRepository.findById(dentistId)
                 .orElseThrow(() -> new RuntimeException("Dentist not found"));
 
+        // 4. Cập nhật bác sĩ phụ trách
         appt.setDentist(dentist);
-        appointmentRepository.save(appt);
+
+        // 5. TỰ ĐỘNG CHUYỂN TR� NG THÁI: Nếu Ä‘ang PENDING thì chuyển sang CONFIRMED
+        if (appt.getStatus() == AppointmentStatus.PENDING) {
+            appt.setStatus(AppointmentStatus.CONFIRMED);
+        }
+
+        // 6. Lưu thay đổi
+        Appointment saved = appointmentRepository.save(appt);
+
+        // 7. Gửi Email xác nhận cho khách h� ng (Tận dụng h� m confirm đã có của bạn)
+        try {
+            emailService.sendAppointmentConfirmed(saved);
+        } catch (Exception e) {
+            // Log lỗi gửi mail nhưng không l� m rollback giao dịch gán bác sĩ
+            System.err.println("Lỗi gửi email xác nhận: " + e.getMessage());
+        }
+
+        // 8. Thông báo hệ thống
+        if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
+            notificationService.notifyBookingUpdated(saved, "Đã gán bác sĩ v�  xác nhận lịch hẹn th� nh công");
+        }
     }
 
     @Transactional
     public void completeAppointment(Long id) {
-        Appointment a = appointmentRepository.findById(id).orElseThrow();
-        if (a.getStatus() == AppointmentStatus.CONFIRMED) {
-            a.setStatus(AppointmentStatus.COMPLETED);
-            appointmentRepository.save(a);
+        Appointment a = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (a.getStatus() != AppointmentStatus.CHECKED_IN) {
+            throw new RuntimeException("Only CHECKED_IN appointment can be completed");
+        }
+
+        a.setStatus(AppointmentStatus.COMPLETED);
+        appointmentRepository.save(a);
+        appointmentRepository.flush();  // Force flush to DB
+        
+        // Auto-confirm any pending reexams for this appointment
+        logger.info("[STAFF] Appointment {} status changed to COMPLETED, attempting to auto-confirm reexam", a.getId());
+        try {
+            // Debug: check database directly
+            var debugData = appointmentRepository.debugFindReexamByOriginalId(a.getId());
+            logger.info("[STAFF] Debug: Found {} reexam records for appointment ID: {}", debugData.size(), a.getId());
+            for (Object[] row : debugData) {
+                logger.info("[STAFF] Debug: id={}, original_appointment_id={}, status={}", row[0], row[1], row[2]);
+            }
+            
+            // Find reexam for this appointment
+            var reexamOpt = appointmentRepository.findReexamByOriginalAppointmentId(a.getId());
+            if (reexamOpt.isPresent()) {
+                Appointment reexam = reexamOpt.get();
+                logger.info("[STAFF] Found reexam ID: {} with status: {}", reexam.getId(), reexam.getStatus());
+                
+                if (reexam.getStatus() == AppointmentStatus.REEXAM) {
+                    logger.info("[STAFF] Updating reexam ID: {} from REEXAM to CONFIRMED", reexam.getId());
+                    reexam.setStatus(AppointmentStatus.CONFIRMED);
+                    appointmentRepository.save(reexam);
+                    appointmentRepository.flush();
+                    logger.info("[STAFF] Reexam ID: {} successfully updated to CONFIRMED", reexam.getId());
+                } else {
+                    logger.info("[STAFF] Reexam ID: {} has status: {}, not updating", reexam.getId(), reexam.getStatus());
+                }
+            } else {
+                logger.info("[STAFF] No reexam found for appointment ID: {}", a.getId());
+            }
+        } catch (Exception e) {
+            logger.error("[STAFF] Error auto-confirming reexam", e);
+            e.printStackTrace();
         }
     }
 
@@ -129,4 +219,82 @@ public class StaffAppointmentService {
 
         return appointmentRepository.findAll(pageable);
     }
+    public void checkInAppointment(Long id) {
+        Appointment a = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (a.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
+        }
+
+        a.setStatus(AppointmentStatus.CHECKED_IN);
+        appointmentRepository.save(a);
+    }
+
+    public List<DentistProfile> getAvailableDentistsForAppointment(Long appointmentId) {
+        // 1. Tìm thông tin cuộc hẹn để biết ng� y khách đặt
+        Appointment appt = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        // 2. Lấy bác sĩ ACTIVE và không nghỉ được duyệt trong ngày hẹn
+        return dentistProfileRepository.findAvailableDentistsForDate(appt.getDate());
+    }
+
+    @Transactional
+    public void processPayment(Long id) {
+        Appointment a = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (a.getStatus() != AppointmentStatus.DONE) {
+            throw new RuntimeException("Chỉ lịch hẹn có trạng thái DONE mới có thể tiến hành thanh toán.");
+        }
+
+        BillingNote billingNote = billingNoteRepository.findByAppointment_Id(id)
+                .orElseThrow(() -> new RuntimeException("Chua co billing cho lich hen nay."));
+
+        BigDecimal billingTotal = calculateBillingTotal(a, billingNote);
+        BigDecimal depositAmount = a.getDepositAmount() != null
+                ? a.getDepositAmount().setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal remainingAmount = billingTotal.subtract(depositAmount).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+
+        Invoice invoice = invoiceRepository.findByAppointment_Id(id).orElseGet(Invoice::new);
+        invoice.setAppointment(a);
+        invoice.setTotalAmount(remainingAmount);
+
+        if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            invoice.setStatus(PaymentStatus.PAID);
+            invoiceRepository.save(invoice);
+            a.setStatus(AppointmentStatus.COMPLETED);
+            appointmentRepository.save(a);
+            notificationService.notifyBookingUpdated(a, "Da hoan tat thanh toan");
+            return;
+        }
+
+        invoice.setStatus(PaymentStatus.UNPAID);
+        invoiceRepository.save(invoice);
+        a.setStatus(AppointmentStatus.WAITING_PAYMENT);
+        appointmentRepository.save(a);
+        notificationService.notifyBookingUpdated(a, "Da tao hoa don thanh toan con lai");
+    }
+
+    private BigDecimal calculateBillingTotal(Appointment appointment, BillingNote billingNote) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        if (billingNote.getPerformedServices() != null && !billingNote.getPerformedServices().isEmpty()) {
+            for (BillingPerformedService item : billingNote.getPerformedServices()) {
+                if (item.getService() == null) {
+                    continue;
+                }
+                BigDecimal price = BigDecimal.valueOf(item.getService().getPrice()).setScale(2, RoundingMode.HALF_UP);
+                int qty = Math.max(1, item.getQty());
+                total = total.add(price.multiply(BigDecimal.valueOf(qty)));
+            }
+        } else if (appointment.getTotalAmount() != null) {
+            total = appointment.getTotalAmount().setScale(2, RoundingMode.HALF_UP);
+        }
+
+        return total.setScale(2, RoundingMode.HALF_UP);
+    }
 }
+

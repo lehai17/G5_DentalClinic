@@ -18,8 +18,22 @@ public class MedicalRecord {
     @Column(name = "diagnosis", columnDefinition = "NVARCHAR(MAX)")
     private String diagnosis;
 
-    @Column(name = "treatment_note", columnDefinition = "NVARCHAR(MAX)")
-    private String treatmentNote;
+
+    @Column(name = "complaint_note", columnDefinition = "NVARCHAR(MAX)")
+    private String complaintNote;
+
+    @Column(name = "clinical_notes", columnDefinition = "NVARCHAR(MAX)")
+    private String clinicalNotes;
+
+    // relational children replacing previous treatmentNote JSON
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<MedicalFinding> findings = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<MedicalImage> images = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<MedicalProposedService> proposedServices = new java.util.ArrayList<>();
 
     @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL)
     private List<Prescription> prescriptions;
@@ -31,8 +45,23 @@ public class MedicalRecord {
     public void setAppointment(Appointment appointment) { this.appointment = appointment; }
     public String getDiagnosis() { return diagnosis; }
     public void setDiagnosis(String diagnosis) { this.diagnosis = diagnosis; }
-    public String getTreatmentNote() { return treatmentNote; }
-    public void setTreatmentNote(String treatmentNote) { this.treatmentNote = treatmentNote; }
+
+    public java.util.List<MedicalFinding> getFindings() { return findings; }
+    public void setFindings(java.util.List<MedicalFinding> findings) { this.findings = findings; }
+
+    public java.util.List<MedicalImage> getImages() { return images; }
+    public void setImages(java.util.List<MedicalImage> images) { this.images = images; }
+
+    public java.util.List<MedicalProposedService> getProposedServices() { return proposedServices; }
+    public void setProposedServices(java.util.List<MedicalProposedService> proposedServices) { this.proposedServices = proposedServices; }
+
+
+    public String getComplaintNote() { return complaintNote; }
+    public void setComplaintNote(String complaintNote) { this.complaintNote = complaintNote; }
+
+    public String getClinicalNotes() { return clinicalNotes; }
+    public void setClinicalNotes(String clinicalNotes) { this.clinicalNotes = clinicalNotes; }
+
     public List<Prescription> getPrescriptions() { return prescriptions; }
     public void setPrescriptions(List<Prescription> prescriptions) { this.prescriptions = prescriptions; }
 }

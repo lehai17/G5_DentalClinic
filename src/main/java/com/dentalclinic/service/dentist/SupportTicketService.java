@@ -28,12 +28,12 @@ public class SupportTicketService {
     public void answerTicket(Long ticketId, String answer) {
         SupportTicket ticket = getById(ticketId);
 
-        if (ticket.getStatus() == SupportStatus.CLOSED) {
+        if (ticket.getStatus() == SupportStatus.ANSWERED) {
             throw new IllegalStateException("Ticket already closed");
         }
 
         ticket.setAnswer(answer);
-        ticket.setStatus(SupportStatus.CLOSED);
+        ticket.setStatus(SupportStatus.ANSWERED);
 
         supportTicketRepository.save(ticket);
     }

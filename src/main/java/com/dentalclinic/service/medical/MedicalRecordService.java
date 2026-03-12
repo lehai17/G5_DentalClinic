@@ -23,17 +23,16 @@ public class MedicalRecordService {
         this.appointmentRepository = appointmentRepository;
     }
 
-    // ✅ DÙNG CHO GET
+    // âœ… DÙNG CHO GET
     public Optional<MedicalRecord> findByAppointmentId(Long appointmentId) {
         return medicalRecordRepository.findByAppointment_Id(appointmentId);
     }
 
-    // ✅ UPSERT – KHÔNG TẠO RECORD MỚI
+    // âœ… UPSERT â€“ KHÔNG T� O RECORD MỚI
     @Transactional
     public MedicalRecord saveOrUpdate(
             Long appointmentId,
-            String diagnosis,
-            String treatmentNote
+            MedicalRecord form
     ) {
         MedicalRecord record =
                 medicalRecordRepository
@@ -49,9 +48,32 @@ public class MedicalRecordService {
             record.setAppointment(appointment);
         }
 
-        record.setDiagnosis(diagnosis);
-        record.setTreatmentNote(treatmentNote);
+        record.setDiagnosis(form.getDiagnosis());
+
+        // copy child lists
+        record.getFindings().clear();
+        if (form.getFindings() != null) {
+            for (com.dentalclinic.model.medical.MedicalFinding f : form.getFindings()) {
+                f.setMedicalRecord(record);
+                record.getFindings().add(f);
+            }
+        }
+        record.getImages().clear();
+        if (form.getImages() != null) {
+            for (com.dentalclinic.model.medical.MedicalImage i : form.getImages()) {
+                i.setMedicalRecord(record);
+                record.getImages().add(i);
+            }
+        }
+        record.getProposedServices().clear();
+        if (form.getProposedServices() != null) {
+            for (com.dentalclinic.model.medical.MedicalProposedService ps : form.getProposedServices()) {
+                ps.setMedicalRecord(record);
+                record.getProposedServices().add(ps);
+            }
+        }
 
         return medicalRecordRepository.save(record);
     }
 }
+

@@ -1,36 +1,39 @@
 package com.dentalclinic.dto.customer;
 
-import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
-@Getter
-@Setter
 public class RegisterRequest {
 
-    @NotBlank(message = "Họ và tên không được để trống")
-    @Pattern(regexp = "^[\\p{L} ]+$", message = "Họ và tên chỉ được chứa chữ cái")
+    @NotBlank(message = "Há» vÃ  tÃªn khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Pattern(
+            regexp = "^[\\p{L} ]+$",
+            message = "Há» vÃ  tÃªn chá»‰ Ä‘Æ°á»£c chá»©a chá»¯ cÃ¡i"
+    )
     private String fullName;
 
-    @NotBlank(message = "Vui lòng nhập email")
-    @Email(message = "Email không đúng định dạng")
+    @NotBlank(message = "Vui lÃ²ng nháº­p email")
+    @Email(message = "Email khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng")
     private String email;
 
-    @NotBlank(message = "Vui lòng nhập mật khẩu")
-    @Size(min = 6, message = "Mật khẩu tối thiểu 6 ký tự")
+    @NotBlank(message = "Vui lÃ²ng nháº­p máº­t kháº©u")
+    @Size(min = 6, message = "Máº­t kháº©u tá»‘i thiá»ƒu 6 kÃ½ tá»±")
     private String password;
 
-    @NotBlank(message = "Vui lòng nhập số điện thoại")
-    @Pattern(regexp = "^[0-9]{10}$", message = "Số điện thoại phải đủ 10 chữ số")
+    @NotBlank(message = "Vui lÃ²ng nháº­p sá»‘ Ä‘iá»‡n thoáº¡i")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i Ä‘á»§ 10 chá»¯ sá»‘")
     private String phone;
 
-    @NotBlank(message = "Vui lòng chọn ngày sinh")
+    @NotBlank(message = "Vui lÃ²ng chá»n ngÃ y sinh")
     private String dateOfBirth;
 
-    @NotBlank(message = "Vui lòng chọn giới tính")
+    @NotBlank(message = "Vui lÃ²ng chá»n giá»›i tÃ­nh")
     private String gender;
 
-    @AssertTrue(message = "Bạn phải đồng ý với Điều khoản")
+    @AssertTrue(message = "Báº¡n pháº£i Ä‘á»“ng Ã½ vá»›i Äiá»u khoáº£n")
     private Boolean agree;
 
     public String getFullName() {

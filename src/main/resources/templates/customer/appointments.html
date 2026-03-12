@@ -1,16 +1,16 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lịch hẹn của tôi - Nha Khoa ABC</title>
+  <title>Lịch hẹn của tôi - Nha khoa ABC</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
   <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
   <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-feedback.css}">
   <link rel="stylesheet" th:href="@{/css/customer-appointments-page.css}">
-
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -21,32 +21,83 @@
     <div th:replace="~{fragments/header :: header}"></div>
 
     <section class="customer-page-section customer-appointments-page">
-      <div class="cap-head">
-        <div>
-          <h1 class="customer-page-title">Lịch hẹn của tôi</h1>
-          <p class="cap-subtitle">Xem, kiểm tra và hủy lịch hẹn của bạn nhanh chóng.</p>
+      <div class="cap-shell">
+        <div class="cap-hero">
+          <div class="cap-hero-copy">
+            <span class="cap-eyebrow">Quản lý lịch hẹn</span>
+            <h1 class="customer-page-title">Lịch hẹn của tôi</h1>
+            <p class="cap-subtitle">
+              Theo dõi lịch đã đặt, xem chi tiết nhanh, check-in online hoặc hủy lịch đúng điều kiện ngay trên một màn hình.
+            </p>
+          </div>
+
+          <div class="cap-hero-actions">
+            <a class="cap-primary-link" th:href="@{/customer/book}">
+              <i class="bi bi-calendar-plus"></i>
+              Đặt lịch mới
+            </a>
+            <button type="button" class="cap-refresh-btn" onclick="window.location.reload()">
+              <i class="bi bi-arrow-clockwise"></i>
+              Tải lại
+            </button>
+          </div>
         </div>
 
-        <button type="button" class="cap-refresh-btn" onclick="window.location.reload()">
-          <i class="bi bi-arrow-clockwise"></i>
-          Tải lại
-        </button>
-      </div>
+        <div class="cap-summary-strip">
+          <div class="cap-summary-chip">
+            <span class="cap-summary-label">Tổng lịch hiển thị</span>
+            <strong id="cap-summary-total">0</strong>
+          </div>
+          <div class="cap-summary-chip">
+            <span class="cap-summary-label">Trang hiện tại</span>
+            <strong id="cap-summary-page">1</strong>
+          </div>
+          <div class="cap-summary-chip">
+            <span class="cap-summary-label">Gợi ý</span>
+            <strong>Nhấn vào từng lịch để mở chi tiết</strong>
+          </div>
+        </div>
 
-      <div class="cap-layout">
-        <!-- LIST -->
-        <aside class="cap-card cap-list-card" style="grid-column: 1 / -1;">
+        <div class="cap-card cap-list-card">
           <div class="cap-card-head">
             <div class="cap-card-title">
-              <i class="bi bi-calendar2-check"></i>
+              <i class="bi bi-calendar2-week"></i>
               Danh sách lịch hẹn
             </div>
-            <div class="cap-card-hint">Nhấn vào 1 lịch để xem chi tiết ngay bên dưới</div>
+            <div class="cap-card-hint">
+              Mỗi trang hiển thị tối đa 5 lịch hẹn. Phần chi tiết sẽ mở ngay bên dưới lịch bạn chọn.
+            </div>
+          </div>
+
+          <div class="cap-toolbar">
+            <label class="cap-search-box" for="customer-appointments-search">
+              <i class="bi bi-search"></i>
+              <input
+                id="customer-appointments-search"
+                type="search"
+                placeholder="Tìm theo mã lịch hẹn, dịch vụ, bác sĩ hoặc trạng thái"
+                autocomplete="off">
+            </label>
+            <button type="button" class="cap-search-clear" id="customer-appointments-clear">
+              Xóa tìm kiếm
+            </button>
+          </div>
+
+          <div class="cap-toolbar cap-toolbar-secondary">
+            <label class="cap-sort-box" for="customer-appointments-sort">
+              <span class="cap-sort-label">Sắp xếp theo</span>
+              <select id="customer-appointments-sort" class="cap-sort-select">
+                <option value="newest">Mới đặt gần đây nhất</option>
+                <option value="oldest">Đặt từ lâu đến mới</option>
+                <option value="visit_desc">Lịch khám xa nhất trước</option>
+                <option value="visit_asc">Lịch khám gần nhất trước</option>
+              </select>
+            </label>
           </div>
 
           <div id="customer-appointments-loading" class="customer-loading cap-loading">
             <span class="cap-spinner" aria-hidden="true"></span>
-            Đang tải danh sách...
+            Đang tải danh sách lịch hẹn...
           </div>
 
           <div id="customer-appointments-list-wrap" class="cap-list-wrap" style="display:none;">
@@ -56,20 +107,79 @@
             <div id="customer-appointments-empty" class="customer-empty cap-empty" style="display:none;">
               <div class="cap-empty-icon"><i class="bi bi-calendar-x"></i></div>
               <div class="cap-empty-title">Bạn chưa có lịch hẹn nào</div>
-              <div class="cap-empty-desc">Hãy đặt lịch khám để chúng tôi hỗ trợ bạn tốt nhất.</div>
+              <div class="cap-empty-desc">Hãy đặt lịch khám để phòng khám có thể sắp xếp thời gian hỗ trợ bạn.</div>
               <a class="cap-primary-link" th:href="@{/customer/book}">
-                <i class="bi bi-calendar-plus"></i> Đặt lịch ngay
+                <i class="bi bi-calendar-plus"></i>
+                Đặt lịch ngay
               </a>
             </div>
           </div>
-        </aside>
-
-        <section id="customer-detail-panel" class="customer-detail-panel cap-card cap-detail-card" style="display:none !important;"></section>
+        </div>
       </div>
     </section>
   </main>
 </div>
 
+<div class="cap-payment-modal" id="cap-payment-modal" hidden>
+  <div class="cap-payment-modal__backdrop" data-payment-close></div>
+  <div class="cap-payment-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="cap-payment-title">
+    <button type="button" class="cap-payment-modal__close" id="cap-payment-close" aria-label="Đóng">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <div class="cap-payment-modal__eyebrow">Thanh toán hóa đơn</div>
+    <h3 id="cap-payment-title" class="cap-payment-modal__title">Chọn phương thức thanh toán</h3>
+    <p class="cap-payment-modal__subtitle">Hoàn tất phần còn lại để lịch hẹn được chuyển sang hoàn thành.</p>
+
+    <div class="cap-payment-modal__summary">
+      <div class="cap-payment-modal__line">
+        <span>Mã lịch hẹn</span>
+        <strong id="cap-payment-appointment-id">#0</strong>
+      </div>
+      <div class="cap-payment-modal__line">
+        <span>Mã hóa đơn</span>
+        <strong id="cap-payment-invoice-id">#0</strong>
+      </div>
+      <div class="cap-payment-modal__amount">
+        <span>Số tiền cần thanh toán</span>
+        <strong id="cap-payment-amount">0 VND</strong>
+      </div>
+    </div>
+
+    <div class="cap-payment-modal__methods">
+      <button type="button" class="cap-payment-method cap-payment-method--wallet" id="cap-payment-wallet">
+        <span class="cap-payment-method__icon"><i class="bi bi-wallet2"></i></span>
+        <span class="cap-payment-method__content">
+          <strong>Thanh toán bằng ví</strong>
+          <small>Trừ trực tiếp số dư ví của bạn</small>
+        </span>
+      </button>
+      <button type="button" class="cap-payment-method cap-payment-method--vnpay" id="cap-payment-vnpay">
+        <span class="cap-payment-method__icon"><i class="bi bi-credit-card-2-front"></i></span>
+        <span class="cap-payment-method__content">
+          <strong>Thanh toán qua VNPay</strong>
+          <small>Chuyển đến cổng VNPay để hoàn tất</small>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="cap-payment-modal" id="cap-invoice-modal" hidden>
+  <div class="cap-payment-modal__backdrop" data-invoice-close></div>
+  <div class="cap-payment-modal__dialog cap-payment-modal__dialog--invoice" role="dialog" aria-modal="true" aria-labelledby="cap-invoice-title">
+    <button type="button" class="cap-payment-modal__close" id="cap-invoice-close" aria-label="Đóng">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <div class="cap-payment-modal__eyebrow">Chi tiết hóa đơn</div>
+    <h3 id="cap-invoice-title" class="cap-payment-modal__title">Hóa đơn thanh toán</h3>
+    <p class="cap-payment-modal__subtitle">Xem trước đầy đủ các hạng mục và số tiền còn lại trước khi thanh toán.</p>
+    <div id="cap-invoice-modal-content"></div>
+  </div>
+</div>
+
+<script th:src="@{/js/customer-feedback.js}"></script>
 <script th:src="@{/js/customer-appointments.js}"></script>
 </body>
 </html>
+
+

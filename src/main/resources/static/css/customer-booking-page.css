@@ -401,6 +401,59 @@
   }
 }
 
+.booking-services-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.booking-service-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid #dbe5f2;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.booking-service-item:hover {
+  border-color: #9dbcf0;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+
+.booking-service-item input[type='checkbox'] {
+  margin-top: 0.15rem;
+}
+
+.booking-service-item:has(input:checked) {
+  border-color: var(--primary);
+  background: #f4f8ff;
+}
+
+.booking-service-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.booking-service-name {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.booking-service-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
 .time-slot-btn {
   padding: 0.875rem;
   border: 2px solid #e5e7eb;
@@ -726,6 +779,175 @@
   font-weight: 700;
 }
 
+.booking-payment-modal[hidden] {
+  display: none;
+}
+
+.booking-payment-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+}
+
+.booking-payment-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.booking-payment-modal__dialog {
+  position: relative;
+  width: min(560px, calc(100vw - 2rem));
+  margin: 7vh auto 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  border: 1px solid #d7e5f5;
+  border-radius: 24px;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+  padding: 1.5rem;
+  animation: fadeInUp 0.25s ease;
+}
+
+.booking-payment-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #eef4fb;
+  color: #32455f;
+  cursor: pointer;
+}
+
+.booking-payment-modal__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: #ebf5ff;
+  color: #155e75;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.booking-payment-modal__title {
+  margin: 1rem 0 0.4rem;
+  font-size: 1.7rem;
+  color: #0f172a;
+}
+
+.booking-payment-modal__subtitle {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.booking-payment-modal__amount {
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.booking-payment-modal__amount span {
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.booking-payment-modal__amount strong {
+  font-size: 1.35rem;
+}
+
+.booking-payment-modal__methods {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.2rem;
+}
+
+.booking-payment-method {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid #dbe7f3;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.booking-payment-method:hover {
+  transform: translateY(-2px);
+  border-color: #7fb3ff;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.14);
+}
+
+.booking-payment-method__icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.booking-payment-method__icon--vnpay {
+  background: linear-gradient(135deg, #fff0d9, #ffe2b8);
+  color: #b45309;
+}
+
+.booking-payment-method__icon--wallet {
+  background: linear-gradient(135deg, #def7ec, #c7f1dd);
+  color: #047857;
+}
+
+.booking-payment-method__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.booking-payment-method__content strong {
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.booking-payment-method__content small {
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.booking-payment-modal__cancel {
+  margin-top: 1rem;
+  width: 100%;
+  border: none;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.booking-payment-modal__cancel:hover {
+  background: #eef2f7;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -842,5 +1064,16 @@
     right: 1rem;
     width: auto;
     z-index: 100;
+  }
+
+  .booking-payment-modal__dialog {
+    margin-top: 4vh;
+    padding: 1.1rem;
+    border-radius: 20px;
+  }
+
+  .booking-payment-modal__amount {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

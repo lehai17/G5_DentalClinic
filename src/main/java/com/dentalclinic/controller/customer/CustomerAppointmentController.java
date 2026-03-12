@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,13 +45,25 @@ public class CustomerAppointmentController {
 
     @GetMapping("/slots")
     public ResponseEntity<?> getSlots(@RequestParam(required = false) Long serviceId,
+                                      @RequestParam(required = false) List<Long> serviceIds,
                                       @RequestParam(required = false) String date,
                                       HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
 
         LocalDate parsedDate = (date != null && !date.isBlank()) ? LocalDate.parse(date) : LocalDate.now();
-        List<SlotDto> slots = customerAppointmentService.getAvailableSlots(userId, serviceId, parsedDate);
+
+        List<Long> resolvedServiceIds = new ArrayList<>();
+        if (serviceIds != null) {
+            resolvedServiceIds.addAll(serviceIds);
+        }
+        if (serviceId != null) {
+            resolvedServiceIds.add(serviceId);
+        }
+
+        List<SlotDto> slots = resolvedServiceIds.isEmpty()
+                ? List.of()
+                : customerAppointmentService.getAvailableSlots(userId, resolvedServiceIds, parsedDate);
         return ResponseEntity.ok(slots);
     }
 
@@ -85,20 +98,23 @@ public class CustomerAppointmentController {
     @GetMapping("/appointments")
     public ResponseEntity<?> getMyAppointments(@RequestParam(required = false) Integer page,
                                                @RequestParam(required = false) Integer size,
+                                               @RequestParam(required = false) String keyword,
+                                               @RequestParam(required = false, defaultValue = "newest") String sort,
                                                HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
 
-        if (page != null || size != null) {
+        if (page != null || size != null || (keyword != null && !keyword.isBlank()) || (sort != null && !sort.isBlank())) {
             int p = page == null ? 0 : page;
             int s = size == null ? 5 : size;
-            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s);
+            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, sort);
             return ResponseEntity.ok(Map.of(
                     "content", resultPage.getContent(),
                     "page", resultPage.getNumber(),
                     "size", resultPage.getSize(),
                     "totalPages", resultPage.getTotalPages(),
-                    "totalElements", resultPage.getTotalElements()
+                    "totalElements", resultPage.getTotalElements(),
+                    "sort", sort
             ));
         }
 
@@ -173,6 +189,21 @@ public class CustomerAppointmentController {
             Map<String, Object> data = new HashMap<>();
             data.put("id", dto.getId());
             data.put("serviceName", dto.getServiceName());
+            data.put("serviceIds", dto.getServiceIds());
+            data.put("services", dto.getServices());
+            data.put("totalDurationMinutes", dto.getTotalDurationMinutes());
+            data.put("totalAmount", dto.getTotalAmount());
+            data.put("depositAmount", dto.getDepositAmount());
+            data.put("billedTotal", dto.getBilledTotal());
+            data.put("remainingAmount", dto.getRemainingAmount());
+            data.put("invoiceId", dto.getInvoiceId());
+            data.put("invoiceStatus", dto.getInvoiceStatus());
+            data.put("canPayRemaining", dto.isCanPayRemaining());
+            data.put("invoiceItems", dto.getInvoiceItems());
+            data.put("billingNoteId", dto.getBillingNoteId());
+            data.put("billingNoteNote", dto.getBillingNoteNote());
+            data.put("billingNoteUpdatedAt", dto.getBillingNoteUpdatedAt());
+            data.put("prescriptionItems", dto.getPrescriptionItems());
             data.put("date", dto.getDate().toString());
             data.put("startTime", dto.getStartTime());
             data.put("endTime", dto.getEndTime());
@@ -182,3 +213,4 @@ public class CustomerAppointmentController {
     }
 
 }
+

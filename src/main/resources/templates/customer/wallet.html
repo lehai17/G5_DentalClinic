@@ -1,0 +1,752 @@
+﻿<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ví Của Tôi - GENZ CLINIC</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" th:href="@{/css/homepage/home.css}" />
+    <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}" />
+    <link rel="stylesheet" th:href="@{/css/customer-tools.css}" />
+    <link rel="stylesheet" th:href="@{/css/customer-feedback.css}" />
+    <link rel="stylesheet" th:href="@{/css/customer-appointments-page.css}" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .wallet-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .wallet-balance {
+        font-size: 0.875rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+      }
+
+      .wallet-amount {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+      }
+
+      .wallet-action {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .wallet-action:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
+      }
+
+      .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s;
+      }
+
+      .transaction-item:hover {
+        background: #f8fafc;
+      }
+
+      .transaction-item:last-child {
+        border-bottom: none;
+      }
+
+      .transaction-type {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .transaction-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+      }
+
+      .transaction-icon.deposit {
+        background: #f0fff4;
+        color: #16a34a;
+      }
+
+      .transaction-icon.refund {
+        background: #eff6ff;
+        color: #2563eb;
+      }
+
+      .transaction-icon.payment {
+        background: #fef2f2;
+        color: #dc2626;
+      }
+
+      .transaction-details h4 {
+        margin: 0;
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 0.875rem;
+      }
+
+      .transaction-details p {
+        margin: 0.25rem 0 0 0;
+        color: #64748b;
+        font-size: 0.75rem;
+      }
+
+      .transaction-amount {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .transaction-amount.deposit {
+        color: #16a34a;
+      }
+
+      .transaction-amount.refund {
+        color: #2563eb;
+      }
+
+      .transaction-amount.payment {
+        color: #dc2626;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+      }
+
+      .empty-state-icon {
+        font-size: 3rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+      }
+
+      .empty-state-text {
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+
+      .wallet-modal[hidden] {
+        display: none;
+      }
+
+      .wallet-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+      }
+
+      .wallet-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.62);
+        backdrop-filter: blur(4px);
+      }
+
+      .wallet-modal-dialog {
+        position: relative;
+        width: min(460px, calc(100vw - 2rem));
+        margin: 10vh auto 0;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border-radius: 24px;
+        border: 1px solid #d8e4f3;
+        box-shadow: 0 28px 60px rgba(15, 23, 42, 0.22);
+        padding: 1.5rem;
+      }
+
+      .wallet-modal-close {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: none;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #334155;
+        cursor: pointer;
+      }
+
+      .wallet-modal-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.5rem;
+        font-weight: 800;
+      }
+
+      .wallet-modal-subtitle {
+        margin: 0.5rem 0 0;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .wallet-input-group {
+        margin-top: 1.25rem;
+      }
+
+      .wallet-input-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 0.5rem;
+      }
+
+      .wallet-amount-input {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 0.95rem 1rem;
+        font-size: 1rem;
+      }
+
+      .wallet-amount-presets {
+        margin-top: 0.85rem;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+      }
+
+      .wallet-preset-btn {
+        border: 1px solid #dbe5f2;
+        background: #fff;
+        color: #0f172a;
+        padding: 0.75rem;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .wallet-preset-btn:hover {
+        border-color: #7c9ef5;
+        background: #f8fbff;
+      }
+
+      .wallet-modal-submit {
+        margin-top: 1rem;
+        width: 100%;
+        border: none;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff;
+        padding: 0.95rem 1rem;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .wallet-helper {
+        margin-top: 0.8rem;
+        font-size: 0.8rem;
+        color: #64748b;
+      }
+
+      .wallet-status-banner {
+        margin: 0 0 1rem;
+        border-radius: 14px;
+        padding: 0.95rem 1rem;
+        font-weight: 700;
+      }
+
+      .wallet-status-banner.success {
+        background: #ecfdf5;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+
+      .wallet-status-banner.fail {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+      <main class="main-content">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <section class="customer-page-section" style="padding: 2rem">
+          <div
+            id="wallet-status-banner"
+            class="wallet-status-banner"
+            style="display: none"
+          ></div>
+
+          <!-- Header -->
+          <div style="margin-bottom: 2rem">
+            <h1
+              style="
+                font-size: 1.875rem;
+                font-weight: bold;
+                color: #0f172a;
+                margin: 0;
+              "
+            >
+              Ví Của Tôi
+            </h1>
+            <p style="color: #64748b; margin: 0.5rem 0 0 0">
+              Quản lý số dư và lịch sử giao dịch ví
+            </p>
+          </div>
+
+          <!-- Wallet Card -->
+          <div class="wallet-card">
+            <div class="wallet-balance">Số dư hiện tại</div>
+            <div class="wallet-amount" id="wallet-balance">0 VND</div>
+            <a href="#" class="wallet-action" id="wallet-open-topup">
+              <i class="bi bi-plus-circle"></i> Nạp tiền
+            </a>
+          </div>
+
+          <!-- Transactions List -->
+          <div
+            style="
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+              padding: 1.5rem;
+            "
+          >
+            <h2
+              style="
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #0f172a;
+                margin: 0 0 1.5rem 0;
+              "
+            >
+              <i class="bi bi-clock-history"></i> Lịch sử giao dịch
+            </h2>
+
+            <div id="transactions-list"></div>
+
+            <div id="empty-state" class="empty-state" style="display: none">
+              <div class="empty-state-icon">
+                <i class="bi bi-inbox"></i>
+              </div>
+              <p class="empty-state-text">Chưa có giao dịch nào</p>
+            </div>
+
+            <div id="loading" style="text-align: center; padding: 2rem">
+              <i
+                class="bi bi-hourglass-split"
+                style="font-size: 1.5rem; color: #667eea"
+              ></i>
+              <p style="color: #64748b; margin-top: 0.5rem">
+                Äang tải dữ liệu...
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+      </main>
+    </div>
+
+    <div class="wallet-modal" id="wallet-topup-modal" hidden>
+      <div class="wallet-modal-backdrop" data-wallet-close></div>
+      <div
+        class="wallet-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wallet-topup-title"
+      >
+        <button
+          type="button"
+          class="wallet-modal-close"
+          id="wallet-topup-close"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <h3 id="wallet-topup-title" class="wallet-modal-title">
+          Nạp tiền vào ví
+        </h3>
+        <p class="wallet-modal-subtitle">
+          Chọn số tiền bạn muốn nạp. Hệ thống sẽ chuyển sang VNPay để hoàn tất
+          giao dịch.
+        </p>
+
+        <div class="wallet-input-group">
+          <label class="wallet-input-label" for="wallet-topup-amount"
+            >Số tiền nạp</label
+          >
+          <input
+            id="wallet-topup-amount"
+            class="wallet-amount-input"
+            type="number"
+            min="10000"
+            step="1000"
+            placeholder="Ví dụ: 100000"
+          />
+          <div class="wallet-amount-presets">
+            <button
+              type="button"
+              class="wallet-preset-btn"
+              data-amount="100000"
+            >
+              100.000
+            </button>
+            <button
+              type="button"
+              class="wallet-preset-btn"
+              data-amount="200000"
+            >
+              200.000
+            </button>
+            <button
+              type="button"
+              class="wallet-preset-btn"
+              data-amount="500000"
+            >
+              500.000
+            </button>
+            <button
+              type="button"
+              class="wallet-preset-btn"
+              data-amount="1000000"
+            >
+              1.000.000
+            </button>
+            <button
+              type="button"
+              class="wallet-preset-btn"
+              data-amount="2000000"
+            >
+              2.000.000
+            </button>
+            <button
+              type="button"
+              class="wallet-preset-btn"
+              data-amount="5000000"
+            >
+              5.000.000
+            </button>
+          </div>
+          <div class="wallet-helper">Số tiền nạp tối thiểu là 10.000 VND.</div>
+        </div>
+
+        <button
+          type="button"
+          class="wallet-modal-submit"
+          id="wallet-topup-submit"
+        >
+          Tiếp tục với VNPay
+        </button>
+      </div>
+    </div>
+
+    <script th:src="@{/js/customer-feedback.js}"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        bindTopupModal();
+        showWalletStatusFromQuery();
+        loadWalletData();
+      });
+
+      function showToast(message, type, title) {
+        if (window.CustomerFeedback) {
+          window.CustomerFeedback.toast({
+            message: message,
+            type: type || "info",
+            title: title || "",
+          });
+          return;
+        }
+      }
+
+      function showAlert(message, type, title) {
+        if (window.CustomerFeedback) {
+          return window.CustomerFeedback.alert({
+            message: message,
+            type: type || "info",
+            title: title || "Thông báo",
+          });
+        }
+        alert(message);
+        return Promise.resolve();
+      }
+
+      function loadWalletData() {
+        const loading = document.getElementById("loading");
+        const list = document.getElementById("transactions-list");
+        const empty = document.getElementById("empty-state");
+
+        if (loading) loading.style.display = "";
+        if (list) list.innerHTML = "";
+
+        fetch("/customer/wallet/api", { credentials: "same-origin" })
+          .then((r) => {
+            if (r.status === 401) {
+              showAlert("Bạn cần đăng nhập.", "warning", "Chưa đăng nhập");
+              window.location.href = "/login";
+              return null;
+            }
+            return r.json();
+          })
+          .then((data) => {
+            if (!data) return;
+
+            // Update balance
+            const balanceEl = document.getElementById("wallet-balance");
+            if (balanceEl) {
+              balanceEl.textContent = formatCurrency(data.balance);
+            }
+
+            if (loading) loading.style.display = "none";
+
+            // Render transactions
+            if (data.transactions && data.transactions.length > 0) {
+              if (empty) empty.style.display = "none";
+              if (list)
+                list.innerHTML = data.transactions
+                  .map((t) => createTransactionHTML(t))
+                  .join("");
+            } else {
+              if (empty) empty.style.display = "";
+              if (list) list.innerHTML = "";
+            }
+          })
+          .catch((err) => {
+            if (loading) loading.style.display = "none";
+            console.error("Load wallet error:", err);
+            showAlert(
+              "Không thể tải dữ liệu ví. Vui lòng thử lại sau.",
+              "error",
+              "Tải ví thất bại",
+            );
+          });
+      }
+
+      function createTransactionHTML(transaction) {
+        const typeInfo = getTypeInfo(transaction.type);
+        const date = new Date(transaction.createdAt);
+        const dateStr = formatDate(date);
+
+        return `
+            <div class="transaction-item">
+                <div class="transaction-type">
+                    <div class="transaction-icon ${typeInfo.class}">
+                        <i class="${typeInfo.icon}"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <h4>${typeInfo.name}</h4>
+                        <p>${transaction.description || ""}</p>
+                        <p>${dateStr}</p>
+                    </div>
+                </div>
+                <div class="transaction-amount ${typeInfo.class}">
+                    ${typeInfo.prefix}${formatCurrency(transaction.amount)}
+                </div>
+            </div>
+        `;
+      }
+
+      function getTypeInfo(type) {
+        const types = {
+          REFUND: {
+            name: "Hoàn cọc",
+            icon: "bi bi-arrow-counterclockwise",
+            class: "refund",
+            prefix: "+",
+          },
+          DEPOSIT: {
+            name: "Nạp tiền",
+            icon: "bi bi-arrow-down-left",
+            class: "deposit",
+            prefix: "+",
+          },
+          PAYMENT: {
+            name: "Thanh toán",
+            icon: "bi bi-arrow-up-right",
+            class: "payment",
+            prefix: "-",
+          },
+          ADJUSTMENT: {
+            name: "Điều chỉnh",
+            icon: "bi bi-arrow-left-right",
+            class: "deposit",
+            prefix: "",
+          },
+        };
+        return (
+          types[type] || {
+            name: type,
+            icon: "bi bi-circle",
+            class: "deposit",
+            prefix: "",
+          }
+        );
+      }
+
+      function formatCurrency(amount) {
+        if (!amount) return "0 VND";
+        const num = parseFloat(amount);
+        return num.toLocaleString("vi-VN") + " VND";
+      }
+
+      function formatDate(date) {
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear();
+        const hours = date.getHours().toString().padStart(2, "0");
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+      }
+
+      function bindTopupModal() {
+        const openBtn = document.getElementById("wallet-open-topup");
+        const modal = document.getElementById("wallet-topup-modal");
+        const closeBtn = document.getElementById("wallet-topup-close");
+        const amountInput = document.getElementById("wallet-topup-amount");
+        const submitBtn = document.getElementById("wallet-topup-submit");
+
+        function openModal() {
+          if (!modal) return;
+          modal.hidden = false;
+          document.body.style.overflow = "hidden";
+          if (amountInput) amountInput.focus();
+        }
+
+        function closeModal() {
+          if (!modal) return;
+          modal.hidden = true;
+          document.body.style.overflow = "";
+        }
+
+        if (openBtn) {
+          openBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            openModal();
+          });
+        }
+
+        if (closeBtn) {
+          closeBtn.addEventListener("click", closeModal);
+        }
+
+        document.querySelectorAll("[data-wallet-close]").forEach((node) => {
+          node.addEventListener("click", closeModal);
+        });
+
+        document.querySelectorAll("[data-amount]").forEach((node) => {
+          node.addEventListener("click", function () {
+            if (amountInput) {
+              amountInput.value = this.getAttribute("data-amount");
+            }
+          });
+        });
+
+        if (submitBtn) {
+          submitBtn.addEventListener("click", function () {
+            const amount = Number(amountInput ? amountInput.value : 0);
+            if (!amount || amount < 10000) {
+              showAlert(
+                "Vui lòng nhập số tiền từ 10.000 VND trở lên.",
+                "warning",
+                "Số tiền không hợp lệ",
+              );
+              return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Đang kết nối VNPay...";
+
+            fetch("/customer/payment/wallet/topup/create", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type":
+                  "application/x-www-form-urlencoded;charset=UTF-8",
+              },
+              body: new URLSearchParams({ amount: String(amount) }).toString(),
+            })
+              .then((response) =>
+                response
+                  .json()
+                  .catch(() => ({}))
+                  .then((data) => {
+                    if (!response.ok) {
+                      throw new Error(
+                        data.message || "Không thể tạo giao dịch nạp tiền.",
+                      );
+                    }
+                    return data;
+                  }),
+              )
+              .then((data) => {
+                if (!data.paymentUrl) {
+                  throw new Error("Không nhận được liên kết thanh toán.");
+                }
+                window.location.href = data.paymentUrl;
+              })
+              .catch((error) => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Tiếp tục với VNPay";
+                showAlert(
+                  error.message || "Không thể tạo giao dịch nạp tiền.",
+                  "error",
+                  "Nạp tiền thất bại",
+                );
+              });
+          });
+        }
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape" && modal && !modal.hidden) {
+            closeModal();
+          }
+        });
+      }
+
+      function showWalletStatusFromQuery() {
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get("topup");
+        const banner = document.getElementById("wallet-status-banner");
+        if (!banner || !status) return;
+
+        if (status === "success") {
+          banner.className = "wallet-status-banner success";
+          banner.textContent = "Nạp tiền vào ví thành công.";
+          banner.style.display = "";
+          showToast("Nạp tiền vào ví thành công.", "success", "Nạp tiền thành công");
+        } else if (status === "fail") {
+          banner.className = "wallet-status-banner fail";
+          banner.textContent =
+            "Giao dịch nạp tiền chưa hoàn tất hoặc đã bị hủy.";
+          banner.style.display = "";
+          showAlert(
+            "Giao dịch nạp tiền chưa hoàn tất hoặc đã bị hủy.",
+            "warning",
+            "Nạp tiền chưa hoàn tất",
+          );
+        }
+      }
+    </script>
+  </body>
+</html>

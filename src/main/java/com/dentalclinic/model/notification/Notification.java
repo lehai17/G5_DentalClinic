@@ -3,6 +3,7 @@ package com.dentalclinic.model.notification;
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,8 +25,19 @@ public class Notification {
     @Column(name = "content")
     private String content;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "type")
-    private String type;
+    private NotificationType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reference_type", length = 50)
+    private NotificationReferenceType referenceType;
+
+    @Column(name = "reference_id")
+    private Long referenceId;
+
+    @Column(name = "url", length = 500)
+    private String url;
 
     // is_read
     @Column(name = "is_read", nullable = false)
@@ -34,6 +46,9 @@ public class Notification {
     // created_at
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "read_at")
+    private LocalDateTime readAt;
 
     // =========================
     // Getter & Setter
@@ -56,7 +71,7 @@ public class Notification {
     }
 
     public String getTitle() {
-        return title;
+        return normalizeDisplayText(title);
     }
 
     public void setTitle(String title) {
@@ -64,19 +79,43 @@ public class Notification {
     }
 
     public String getContent() {
-        return content;
+        return normalizeDisplayText(content);
     }
 
     public void setContent(String content) {
         this.content = content;
     }
 
-    public String getType() {
+    public NotificationType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(NotificationType type) {
         this.type = type;
+    }
+
+    public NotificationReferenceType getReferenceType() {
+        return referenceType;
+    }
+
+    public void setReferenceType(NotificationReferenceType referenceType) {
+        this.referenceType = referenceType;
+    }
+
+    public Long getReferenceId() {
+        return referenceId;
+    }
+
+    public void setReferenceId(Long referenceId) {
+        this.referenceId = referenceId;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public boolean isRead() {
@@ -93,5 +132,33 @@ public class Notification {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getReadAt() {
+        return readAt;
+    }
+
+    public void setReadAt(LocalDateTime readAt) {
+        this.readAt = readAt;
+    }
+
+    private String normalizeDisplayText(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        if (!looksMojibake(value)) {
+            return value;
+        }
+        String repaired = new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        return repaired.isBlank() ? value : repaired;
+    }
+
+    private boolean looksMojibake(String value) {
+        return value.contains("Ãƒ")
+                || value.contains("Ã„")
+                || value.contains("Ã¡Â»")
+                || value.contains("Ã¡Âº")
+                || value.contains("Ã†")
+                || value.contains("Ã‚");
     }
 }

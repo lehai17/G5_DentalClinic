@@ -1,4 +1,4 @@
-:root{
+﻿:root{
     --bg:#f4f6fb;
     --card:#ffffff;
     --text:#0f172a;
@@ -284,8 +284,11 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 /* Buttons row */
 .modal-actions{
     display:flex;
-    gap:12px;
-    margin-top:18px;
+    justify-content:center;   /* căn giữa */
+    align-items:center;
+    gap:16px;
+    margin-top:26px;
+    flex-wrap:wrap;           /* tránh tràn modal */
 }
 
 /* Nút trong modal */
@@ -391,4 +394,70 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     height:52px;
     font-size:15px;
     border-radius:14px;
+}
+
+/* ===== STATUS LEGEND ===== */
+
+.schedule-legend{
+    display:flex;
+    align-items:center;
+    gap:24px;
+    font-size:14px;
+    font-weight:700;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.legend-box{
+    width:18px;
+    height:18px;
+    border-radius:6px;
+    border:2px solid transparent;
+}
+
+/* colors same as appointment */
+
+.legend-box.examining{
+    background:#e0f2fe;
+    border-color:#0284c7;
+}
+
+.legend-box.confirmed{
+    background:#fef9c3;
+    border-color:#ca8a04;
+}
+
+.legend-box.done{
+    background:#f1f5f9;
+    border-color:#334155;
+}
+
+.legend-box.completed{
+    background:#dcfce7;
+    border-color:#16a34a;
+}
+.legend-box.checkin{
+    background:#eef5ff;
+    border-color:#cfe1ff;
+}
+
+/* ===== FUTURE APPOINTMENT BLOCK ===== */
+
+.appt-future{
+    cursor:not-allowed;
+    opacity:.65;
+}
+
+/* icon 🚫 */
+
+.appt-future::after{
+    content:"🚫";
+    position:absolute;
+    top:6px;
+    right:8px;
+    font-size:16px;
 }

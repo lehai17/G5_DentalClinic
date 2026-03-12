@@ -1,4 +1,4 @@
-:root{
+﻿:root{
     --primary: #0b74c9;
     --primary-600: #0965ad;
 
@@ -21,7 +21,7 @@ body{
     color: var(--text);
 }
 
-/* Background image + overlay blur (giống ảnh) */
+/* Background image + overlay blur (giống áº£nh) */
 .login-body{
     background-image: url("/images/login-bg.jpg");
     background-size: cover;
@@ -292,3 +292,4 @@ body{
     opacity: 0;
     transform: translateY(-8px);
 }
+

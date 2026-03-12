@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   'use strict';
 
   function openModal(id) {
@@ -340,7 +340,7 @@
         set('customer-detail-time', formatTime(data.startTime) + ' - ' + formatTime(data.endTime));
         set('customer-detail-status', data.status || '');
         set('customer-detail-contact', (data.contactChannel || '') + ': ' + (data.contactValue || ''));
-        set('customer-detail-notes', data.notes || '—');
+        set('customer-detail-notes', data.notes || 'â€”');
         var checkinWrap = document.getElementById('customer-detail-checkin-wrap');
         var checkinBtn = document.getElementById('customer-detail-checkin-btn');
         if (data.canCheckIn && checkinWrap && checkinBtn) {
@@ -389,3 +389,5 @@
 
   if (document.getElementById('customer-calendar-body')) renderCalendar();
 })();
+
+

@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   'use strict';
 
   var state = {
@@ -8,6 +8,22 @@
     selectedSlot: null,
     currentStep: 1
   };
+  var paymentSelection = null;
+
+  function showToast(message, type, title) {
+    if (window.CustomerFeedback) {
+      window.CustomerFeedback.toast({ message: message, type: type || 'info', title: title || '' });
+      return;
+    }
+  }
+
+  function showAlert(message, type, title) {
+    if (window.CustomerFeedback) {
+      return window.CustomerFeedback.alert({ message: message, type: type || 'info', title: title || 'Thông báo' });
+    }
+    alert(message);
+    return Promise.resolve();
+  }
 
   function init() {
     var calendarBody = document.getElementById('customer-calendar-body');
@@ -18,71 +34,111 @@
     setStep(1);
     updateSummary();
 
-    // Kiểm tra xem có phải vừa thanh toán từ VNPay về không
-    checkReturnStatus();
+    var urlParams = new URLSearchParams(window.location.search);
+    var status = urlParams.get('status');
+    var pendingId = sessionStorage.getItem('pendingAppointmentId');
+
+    if (status === 'success') {
+      sessionStorage.removeItem('pendingAppointmentId');
+      checkReturnStatus();
+    } else if (pendingId) {
+      handleCancellationOnBack(pendingId);
+    } else {
+      checkReturnStatus();
+    }
   }
 
-  // MỚI: Kiểm tra tham số URL để hiển thị trang thành công sau khi thanh toán
-  function checkReturnStatus() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const status = urlParams.get('status');
-        const appointmentId = urlParams.get('id');
-
-        if (status === 'success') {
-          // 1. Chuyển trạng thái sang Step 4
-          setStep(4);
-
-          // 2. Ẩn cột tóm tắt bên phải và các nút điều hướng
-          var summaryCol = document.getElementById('booking-summary');
-          var actions = document.getElementById('step-actions');
-          if (summaryCol) summaryCol.style.display = 'none';
-          if (actions) actions.style.display = 'none';
-
-          // 3. Căn giữa nội dung Step 4
-          var bookingCard = document.querySelector('.booking-card');
-          var leftCol = document.querySelector('.booking-left');
-          if (bookingCard) bookingCard.style.display = 'block';
-          if (leftCol) {
-              leftCol.style.width = '100%';
-              leftCol.style.textAlign = 'center';
-          }
-
-          // 4. Hiển thị ID lịch hẹn ngay lập tức
-          var summaryEl = document.getElementById('success-summary');
-          if (summaryEl && appointmentId) {
-              summaryEl.innerHTML = `
-                  <div style="background: #f0fff4; border: 1px solid #c6f6d5; padding: 20px; border-radius: 12px; margin: 20px 0;">
-                      <p style="color: #2f855a; margin-bottom: 5px;">Mã số lịch hẹn của bạn</p>
-                      <h2 style="color: #22543d; margin: 0;">#${appointmentId}</h2>
-                  </div>
-              `;
-          }
-
-          // 5. Gọi API lấy chi tiết nếu cần (giữ nguyên logic fetch của bạn)
-          if (appointmentId) {
-            fetch('/customer/appointments/detail/' + appointmentId)
-              .then(res => res.json())
-              .then(data => updateSuccessSummary(data))
-              .catch(() => console.log("Thanh toán thành công!"));
-          }
+  function handleCancellationOnBack(appointmentId) {
+    fetch('/customer/payment/appointments/cancel-back/' + appointmentId, {
+      method: 'POST',
+      credentials: 'same-origin'
+    })
+      .then(function (response) {
+        sessionStorage.removeItem('pendingAppointmentId');
+        if (response.ok) {
+          showAlert('Giao dịch thanh toán đã bị gián đoạn. Vui lòng đặt lịch lại.', 'warning', 'Thanh toán bị gián đoạn')
+            .then(function () {
+              window.location.reload();
+            });
         }
+      })
+      .catch(function () {
+        sessionStorage.removeItem('pendingAppointmentId');
+      });
   }
 
-  // MỚI: Cập nhật nội dung tóm tắt ở bước 4
+  function checkReturnStatus() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var status = urlParams.get('status');
+    var appointmentId = urlParams.get('id');
+
+    if (status === 'success') {
+      setStep(4);
+      var summaryCol = document.getElementById('booking-summary');
+      var actions = document.getElementById('step-actions');
+      if (summaryCol) summaryCol.style.display = 'none';
+      if (actions) actions.style.display = 'none';
+
+      var bookingCard = document.querySelector('.booking-card');
+      var leftCol = document.querySelector('.booking-left');
+      if (bookingCard) bookingCard.style.display = 'block';
+      if (leftCol) {
+        leftCol.style.width = '100%';
+        leftCol.style.textAlign = 'center';
+      }
+
+      var summaryEl = document.getElementById('success-summary');
+      if (summaryEl && appointmentId) {
+        summaryEl.innerHTML =
+          '<div style="background:#f0fff4;border:1px solid #c6f6d5;padding:20px;border-radius:12px;margin:20px 0;">' +
+          '<p style="color:#2f855a;margin-bottom:5px;">Mã số lịch hẹn của bạn</p>' +
+          '<h2 style="color:#22543d;margin:0;">#' + appointmentId + '</h2>' +
+          '</div>';
+      }
+
+      if (appointmentId) {
+        fetch('/customer/appointments/detail/' + appointmentId)
+          .then(function (res) { return res.json(); })
+          .then(function (data) { updateSuccessSummary(data); });
+      }
+    } else if (status === 'fail') {
+      showAlert('Thanh toán không thành công hoặc bạn đã hủy giao dịch.', 'error', 'Thanh toán thất bại');
+      setStep(1);
+    }
+  }
+
   function updateSuccessSummary(data) {
     var summaryEl = document.getElementById('success-summary');
-    if (summaryEl) {
-      var dateText = data.date ? formatDateDisplay(data.date) : '';
-      var timeText = data.startTime && data.endTime
-        ? formatTime(data.startTime) + ' - ' + formatTime(data.endTime)
-        : '';
-      summaryEl.innerHTML =
-        '<p><strong>Mã lịch hẹn:</strong> #' + (data.id || '') + '</p>' +
-        '<p><strong>Dịch vụ:</strong> ' + (data.serviceName || 'N/A') + '</p>' +
-        '<p><strong>Ngày:</strong> ' + dateText + '</p>' +
-        '<p><strong>Giờ:</strong> ' + timeText + '</p>' +
-        '<p><span class="badge bg-success" style="color: green; font-weight: bold;">✓ Đã thanh toán tiền cọc 50%</span></p>';
-    }
+    if (!summaryEl) return;
+
+    var dateText = data.date ? formatDateDisplay(data.date) : '';
+    var timeText = data.startTime && data.endTime
+      ? formatTime(data.startTime) + ' - ' + formatTime(data.endTime)
+      : '';
+
+    summaryEl.innerHTML =
+      '<p><strong>Mã lịch hẹn:</strong> #' + (data.id || '') + '</p>' +
+      '<p><strong>Dịch vụ:</strong> ' + (data.serviceName || 'N/A') + '</p>' +
+      '<p><strong>Ngày:</strong> ' + dateText + '</p>' +
+      '<p><strong>Giờ:</strong> ' + timeText + '</p>' +
+      '<p><span style="color:green;font-weight:bold;">✓ Đã thanh toán tiền cọc</span></p>';
+  }
+
+  function getSelectedServices() {
+    return Array.from(document.querySelectorAll('.customer-service-checkbox:checked'))
+      .map(function (cb) {
+        return {
+          id: parseInt(cb.value, 10),
+          name: cb.getAttribute('data-name') || '',
+          duration: parseInt(cb.getAttribute('data-duration') || '0', 10),
+          price: parseFloat(cb.getAttribute('data-price') || '0')
+        };
+      })
+      .filter(function (s) { return !Number.isNaN(s.id); });
+  }
+
+  function formatVnd(amount) {
+    return Number(amount || 0).toLocaleString('vi-VN') + ' VNĐ';
   }
 
   function bindStaticEvents() {
@@ -90,7 +146,8 @@
     var nextBtn = document.getElementById('customer-calendar-next');
     var nextStepBtn = document.getElementById('btn-next');
     var backStepBtn = document.getElementById('btn-back');
-    var serviceSelect = document.getElementById('customer-booking-service');
+    var serviceCheckboxes = document.querySelectorAll('.customer-service-checkbox');
+    bindPaymentModalEvents();
 
     if (prevBtn) {
       prevBtn.addEventListener('click', function () {
@@ -123,33 +180,42 @@
     if (nextStepBtn) {
       nextStepBtn.addEventListener('click', function () {
         if (state.currentStep === 1) {
+          if (getSelectedServices().length === 0) {
+            showAlert('Vui lòng chọn ít nhất một dịch vụ.', 'warning', 'Thiếu thông tin');
+            return;
+          }
           if (!state.selectedDate) {
-            alert('Vui lòng chọn ngày khám.');
+            showAlert('Vui lòng chọn ngày khám.', 'warning', 'Thiếu thông tin');
             return;
           }
           setStep(2);
+          loadSlotsForDate(state.selectedDate);
           return;
         }
         if (state.currentStep === 2) {
           if (!state.selectedSlot) {
-            alert('Vui lòng chọn khung giờ khám.');
+            showAlert('Vui lòng chọn khung giờ khám.', 'warning', 'Thiếu thông tin');
             return;
           }
           setStep(3);
           return;
         }
         if (state.currentStep === 3) {
-          submitBooking(nextStepBtn); // Sẽ gọi VNPay ở đây
+          submitBooking(nextStepBtn);
         }
       });
     }
 
-    if (serviceSelect) {
-      serviceSelect.addEventListener('change', function () {
-        state.selectedSlot = null;
-        document.getElementById('customer-booking-slot-id').value = '';
-        updateSummary();
-        if (state.selectedDate) loadSlotsForDate(state.selectedDate);
+    if (serviceCheckboxes.length > 0) {
+      serviceCheckboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+          state.selectedSlot = null;
+          document.getElementById('customer-booking-slot-id').value = '';
+          updateSummary();
+          if (state.currentStep === 2 && state.selectedDate) {
+            loadSlotsForDate(state.selectedDate);
+          }
+        });
       });
     }
   }
@@ -194,18 +260,18 @@
           td.classList.add('selected');
         } else {
           td.addEventListener('click', function () {
-            var picked = this.dataset.date;
-            var serviceEl = document.getElementById('customer-booking-service');
-            if (!serviceEl || !serviceEl.value) {
-              alert('Vui lòng chọn dịch vụ trước.');
+            if (getSelectedServices().length === 0) {
+              showAlert('Vui lòng chọn ít nhất một dịch vụ trước.', 'warning', 'Thiếu thông tin');
               return;
             }
-            state.selectedDate = picked;
+            state.selectedDate = this.dataset.date;
             state.selectedSlot = null;
             document.getElementById('customer-booking-slot-id').value = '';
             updateSummary();
             renderCalendar();
-            loadSlotsForDate(picked);
+            if (state.currentStep === 2) {
+              loadSlotsForDate(state.selectedDate);
+            }
           });
         }
 
@@ -217,13 +283,21 @@
   }
 
   function loadSlotsForDate(dateStr) {
-    var serviceId = (document.getElementById('customer-booking-service') || {}).value;
-    if (!serviceId || !dateStr) return;
-
+    var selectedServices = getSelectedServices();
     var loading = document.getElementById('time-slots-loading');
     var grid = document.getElementById('time-slots-grid');
     var empty = document.getElementById('time-slots-empty');
     var selectedDateDisplay = document.getElementById('selected-date-display');
+
+    if (selectedServices.length === 0 || !dateStr) {
+      if (grid) {
+        grid.innerHTML = '';
+        grid.style.display = 'none';
+      }
+      if (loading) loading.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
 
     if (selectedDateDisplay) selectedDateDisplay.textContent = '(' + formatDateDisplay(dateStr) + ')';
     if (loading) loading.style.display = '';
@@ -233,13 +307,26 @@
     }
     if (empty) empty.style.display = 'none';
 
-    var params = new URLSearchParams({ date: dateStr, serviceId: serviceId });
+    var params = new URLSearchParams({ date: dateStr });
+    selectedServices.forEach(function (service) {
+      params.append('serviceIds', String(service.id));
+    });
+
     fetch('/customer/slots?' + params.toString(), { credentials: 'same-origin' })
       .then(function (res) {
         if (res.status === 401) {
-          alert('Bạn cần đăng nhập để đặt lịch.');
+          showAlert('Bạn cần đăng nhập để đặt lịch.', 'warning', 'Chưa đăng nhập');
           setStep(1);
           return null;
+        }
+        if (!res.ok) {
+          return res.json()
+            .then(function (err) {
+              throw new Error(err.message || 'Không thể tải danh sách khung giờ.');
+            })
+            .catch(function () {
+              throw new Error('Không thể tải danh sách khung giờ.');
+            });
         }
         return res.json();
       })
@@ -259,7 +346,6 @@
 
         if (futureSlots.length === 0) {
           if (empty) empty.style.display = '';
-          setStep(2);
           return;
         }
 
@@ -274,21 +360,16 @@
           var isDisabled = slot.disabled === true;
           var isFull = hasSpotsValue ? availableSpots <= 0 : slot.available === false;
           var isAvailable = !isDisabled && !isFull;
+
           var statusText = 'Hết chỗ';
-          if (isDisabled) {
-            statusText = 'Đã có lịch';
-          } else if (isAvailable) {
-            statusText = hasSpotsValue ? ('Còn ' + availableSpots + ' chỗ') : 'Còn chỗ';
-          }
+          if (isDisabled) statusText = 'Đã có lịch';
+          if (!isDisabled && isAvailable) statusText = hasSpotsValue ? ('Còn ' + availableSpots + ' chỗ') : 'Còn chỗ';
 
           btn.innerHTML = formatTime(slot.startTime) + ' - ' + formatTime(slot.endTime) +
             '<span class="time-slot-status">' + statusText + '</span>';
 
-          if (!isAvailable) {
-            btn.classList.add('disabled');
-          } else if (hasSpotsValue && availableSpots === 1) {
-            btn.classList.add('almost-full');
-          }
+          if (!isAvailable) btn.classList.add('disabled');
+          else if (hasSpotsValue && availableSpots === 1) btn.classList.add('almost-full');
 
           if (state.selectedSlot && String(state.selectedSlot.id) === String(slot.id)) {
             btn.classList.add('selected');
@@ -296,33 +377,30 @@
 
           btn.addEventListener('click', function () {
             if (isDisabled) {
-              alert('Bạn đã có lịch hẹn trùng thời điểm này.');
+              showToast('Bạn đã có lịch hẹn trùng thời điểm này.', 'warning', 'Không thể chọn');
               return;
             }
             if (!isAvailable) {
-              alert('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.');
+              showToast('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.', 'warning', 'Khung giờ đã đầy');
               return;
             }
             state.selectedSlot = slot;
             document.getElementById('customer-booking-slot-id').value = slot.id;
             updateSummary();
-
-            grid.querySelectorAll('.time-slot-btn').forEach(function (el) {
-              el.classList.remove('selected');
-            });
+            grid.querySelectorAll('.time-slot-btn').forEach(function (el) { el.classList.remove('selected'); });
             btn.classList.add('selected');
-            setStep(3);
           });
 
           grid.appendChild(btn);
         });
 
         grid.style.display = '';
-        setStep(2);
       })
-      .catch(function () {
+      .catch(function (err) {
         if (loading) loading.style.display = 'none';
         if (empty) empty.style.display = '';
+        if (grid) grid.style.display = 'none';
+        showAlert(err && err.message ? err.message : 'Không thể tải danh sách khung giờ.', 'error', 'Tải khung giờ thất bại');
       });
   }
 
@@ -346,18 +424,44 @@
     if (actions) actions.style.display = step >= 4 ? 'none' : 'flex';
     if (backBtn) backBtn.style.display = step > 1 && step < 4 ? '' : 'none';
     if (nextBtn) {
-      // Đổi chữ nút ở Step 3 để khách hàng biết là sẽ đi thanh toán
-      nextBtn.textContent = step === 3 ? 'Thanh toán cọc 50%' : 'Tiếp tục';
-      nextBtn.disabled = step === 1 && !state.selectedDate;
+      nextBtn.textContent = step === 3 ? 'Đặt cọc' : 'Tiếp tục';
+      updateNextButtonState();
     }
   }
 
+  function updateNextButtonState() {
+    var nextBtn = document.getElementById('btn-next');
+    if (!nextBtn) return;
+
+    var selectedServices = getSelectedServices();
+    var isStep1Ready = !!state.selectedDate && selectedServices.length > 0;
+    var isStep2Ready = !!state.selectedSlot;
+
+    if (state.currentStep === 1) {
+      nextBtn.disabled = !isStep1Ready;
+      return;
+    }
+
+    if (state.currentStep === 2) {
+      nextBtn.disabled = !isStep2Ready;
+      return;
+    }
+
+    nextBtn.disabled = false;
+  }
+
   function updateSummary() {
-    var selectedService = document.getElementById('customer-booking-service');
+    var selectedServices = getSelectedServices();
+    var totalServices = selectedServices.length;
+    var totalDuration = selectedServices.reduce(function (sum, item) { return sum + (item.duration || 0); }, 0);
+    var totalAmount = selectedServices.reduce(function (sum, item) { return sum + (item.price || 0); }, 0);
+    var depositAmount = totalAmount * 0.5;
+
     var dateEl = document.getElementById('summary-date');
     var timeEl = document.getElementById('summary-time');
     var serviceEl = document.getElementById('summary-service');
     var durationEl = document.getElementById('summary-duration');
+    var totalEl = document.getElementById('summary-total');
     var depositEl = document.getElementById('summary-deposit');
     var incomplete = document.getElementById('summary-incomplete');
 
@@ -369,92 +473,241 @@
         timeEl.innerHTML = '<span class="empty">Chưa chọn</span>';
       }
     }
+
     if (serviceEl) {
-      var serviceName = selectedService && selectedService.selectedIndex > 0
-        ? selectedService.options[selectedService.selectedIndex].text
-        : '';
-      serviceEl.innerHTML = serviceName ? serviceName : '<span class="empty">Chưa chọn</span>';
-    }
-
-    if (durationEl) {
-      var durationMinutes = 0;
-      if (selectedService && selectedService.selectedIndex > 0) {
-        var selectedOption = selectedService.options[selectedService.selectedIndex];
-        durationMinutes = parseInt(selectedOption.getAttribute('data-duration') || '0', 10);
+      if (totalServices > 0) {
+        serviceEl.innerHTML = '<strong>' + totalServices + ' dịch vụ</strong>: ' + selectedServices.map(function (s) { return s.name; }).join(', ');
+      } else {
+        serviceEl.innerHTML = '<span class="empty">Chưa chọn</span>';
       }
-      durationEl.innerHTML = durationMinutes > 0 ? (durationMinutes + ' phút') : '<span class="empty">--</span>';
     }
 
-    // Cập nhật dòng phí đặt cọc ở Summary
-    if (depositEl) {
-       if (selectedService && selectedService.value) {
-         depositEl.innerHTML = '<span style="color: #e67e22; font-weight: bold;">50% giá dịch vụ</span>';
-       } else {
-         depositEl.innerHTML = '<span class="empty">--</span>';
-       }
-    }
+    if (durationEl) durationEl.innerHTML = totalDuration > 0 ? (totalDuration + ' phút') : '<span class="empty">--</span>';
+    if (totalEl) totalEl.innerHTML = totalAmount > 0 ? formatVnd(totalAmount) : '<span class="empty">--</span>';
+    if (depositEl) depositEl.innerHTML = totalAmount > 0
+      ? '<span style="color:#e67e22;font-weight:bold;">' + formatVnd(depositAmount) + '</span>'
+      : '<span class="empty">--</span>';
 
     if (incomplete) {
-      var ok = !!state.selectedDate && !!state.selectedSlot && !!(selectedService && selectedService.value);
+      var ok = !!state.selectedDate && !!state.selectedSlot && totalServices > 0;
       incomplete.style.display = ok ? 'none' : '';
     }
+
+    updateNextButtonState();
   }
 
-  // SỬA ĐỔI CHÍNH: Thay vì hiện Step 4, hàm này sẽ chuyển hướng sang VNPay
   function submitBooking(nextStepBtn) {
     var slotId = (document.getElementById('customer-booking-slot-id') || {}).value;
-    var serviceId = (document.getElementById('customer-booking-service') || {}).value;
+    var selectedServices = getSelectedServices();
+    var serviceIds = selectedServices.map(function (s) { return s.id; });
     var contactChannel = (document.getElementById('customer-booking-contact-channel') || {}).value;
     var contactValue = (document.getElementById('customer-booking-contact-value') || {}).value.trim();
     var note = (document.getElementById('customer-booking-note') || {}).value;
 
-    if (!slotId || !serviceId || !contactChannel || !contactValue) {
-      alert('Vui lòng điền đầy đủ thông tin liên hệ.');
+    if (!slotId || serviceIds.length === 0 || !contactChannel || !contactValue) {
+      showAlert('Vui lòng điền đầy đủ thông tin và chọn ít nhất một dịch vụ.', 'warning', 'Thiếu thông tin');
       return;
     }
 
     nextStepBtn.disabled = true;
-    nextStepBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
+    var originalText = nextStepBtn.innerHTML;
+    nextStepBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang tạo lịch hẹn...';
 
-    // 1. Lưu lịch hẹn tạm thời (Status mặc định ở Backend nên là WAITING_PAYMENT)
     fetch('/customer/appointments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
       body: JSON.stringify({
         slotId: parseInt(slotId, 10),
-        serviceId: parseInt(serviceId, 10),
+        serviceIds: serviceIds,
         patientNote: note || null,
         contactChannel: contactChannel,
         contactValue: contactValue
       })
     })
-      .then(function (r) {
-        if (r.status === 401) {
-          alert('Bạn cần đăng nhập.');
-          nextStepBtn.disabled = false;
-          nextStepBtn.textContent = 'Thanh toán cọc 50%';
-          return null;
+      .then(function (response) {
+        if (response.status === 401) {
+          throw new Error('Bạn cần đăng nhập để tiếp tục.');
         }
-        if (!r.ok) {
-          return r.json().then(function (e) {
-            throw new Error(e.message || e.error || 'Đặt lịch thất bại.');
+        if (!response.ok) {
+          return response.json().then(function (err) {
+            throw new Error(err.message || 'Không thể tạo lịch hẹn.');
           });
         }
-        return r.json();
+        return response.json();
       })
       .then(function (data) {
-        if (!data || !data.id) return;
-
-        // 2. CHUYỂN HƯỚNG SANG VNPAY
-        // Client-side chuyển hướng sang controller thanh toán với ID vừa nhận
-        window.location.href = '/customer/payment/create-deposit/' + data.id;
+        if (data && data.id) {
+          chooseDepositMethod(data, nextStepBtn, originalText);
+        } else {
+          throw new Error('Dữ liệu trả về không hợp lệ.');
+        }
       })
       .catch(function (err) {
         nextStepBtn.disabled = false;
-        nextStepBtn.textContent = 'Thanh toán cọc 50%';
-        alert(err.message || 'Đặt lịch thất bại.');
+        nextStepBtn.innerHTML = originalText;
+        showAlert(err.message || 'Đặt lịch thất bại. Vui lòng thử lại.', 'error', 'Đặt lịch thất bại');
       });
+  }
+
+  function chooseDepositMethod(appointment, nextStepBtn, originalText) {
+    paymentSelection = {
+      appointmentId: appointment.id,
+      depositAmount: appointment && appointment.depositAmount ? appointment.depositAmount : 0,
+      nextStepBtn: nextStepBtn,
+      originalText: originalText
+    };
+
+    var amountEl = document.getElementById('booking-payment-deposit-amount');
+    var modal = document.getElementById('booking-payment-modal');
+    if (amountEl) amountEl.textContent = formatVnd(paymentSelection.depositAmount);
+    if (modal) modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function payDepositWithWallet(appointmentId, nextStepBtn, originalText) {
+    nextStepBtn.innerHTML = '<i class="bi bi-wallet2"></i> Đang thanh toán bằng ví...';
+
+    fetch('/customer/payment/deposit/' + appointmentId + '/wallet', {
+      method: 'POST',
+      credentials: 'same-origin'
+    })
+      .then(function (response) {
+        return response.json().catch(function () {
+          return {};
+        }).then(function (data) {
+          if (!response.ok) {
+            throw new Error(data.message || 'Không thể thanh toán bằng ví.');
+          }
+          return data;
+        });
+      })
+      .then(function () {
+        sessionStorage.removeItem('pendingAppointmentId');
+        paymentSelection = null;
+        window.location.href = '/customer/book?status=success&id=' + appointmentId;
+      })
+      .catch(function (err) {
+        showAlert(err.message || 'Thanh toán bằng ví thất bại.', 'error', 'Thanh toán ví thất bại');
+        if (nextStepBtn) {
+          nextStepBtn.disabled = false;
+          nextStepBtn.innerHTML = originalText;
+        }
+        if (paymentSelection) {
+          chooseDepositMethod(
+            {
+              id: paymentSelection.appointmentId,
+              depositAmount: paymentSelection.depositAmount
+            },
+            nextStepBtn,
+            originalText
+          );
+        }
+      });
+  }
+
+  function cancelPendingAppointment(appointmentId) {
+    return fetch('/customer/payment/appointments/cancel-back/' + appointmentId, {
+      method: 'POST',
+      credentials: 'same-origin'
+    })
+      .then(function () {
+        sessionStorage.removeItem('pendingAppointmentId');
+        showToast('Đã hủy lịch chờ thanh toán.', 'info', 'Đã hủy');
+      })
+      .catch(function () {
+        sessionStorage.removeItem('pendingAppointmentId');
+      });
+  }
+
+  function closePaymentModal() {
+    var modal = document.getElementById('booking-payment-modal');
+    if (modal) modal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function bindPaymentModalEvents() {
+    var closeBtn = document.getElementById('booking-payment-close');
+    var cancelBtn = document.getElementById('booking-payment-cancel');
+    var vnpayBtn = document.getElementById('booking-payment-vnpay');
+    var walletBtn = document.getElementById('booking-payment-wallet');
+
+    document.querySelectorAll('[data-close-payment-modal]').forEach(function (node) {
+      node.addEventListener('click', function () {
+        if (!paymentSelection) {
+          closePaymentModal();
+          return;
+        }
+
+        cancelPendingAppointment(paymentSelection.appointmentId)
+          .finally(function () {
+            if (paymentSelection.nextStepBtn) {
+              paymentSelection.nextStepBtn.disabled = false;
+              paymentSelection.nextStepBtn.innerHTML = paymentSelection.originalText;
+            }
+            paymentSelection = null;
+            closePaymentModal();
+          });
+      });
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        if (cancelBtn) cancelBtn.click();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function () {
+        if (!paymentSelection) {
+          closePaymentModal();
+          return;
+        }
+
+        cancelPendingAppointment(paymentSelection.appointmentId)
+          .finally(function () {
+            if (paymentSelection.nextStepBtn) {
+              paymentSelection.nextStepBtn.disabled = false;
+              paymentSelection.nextStepBtn.innerHTML = paymentSelection.originalText;
+            }
+            paymentSelection = null;
+            closePaymentModal();
+          });
+      });
+    }
+
+    if (vnpayBtn) {
+      vnpayBtn.addEventListener('click', function () {
+        if (!paymentSelection) return;
+        sessionStorage.setItem('pendingAppointmentId', paymentSelection.appointmentId);
+        closePaymentModal();
+        window.location.href = '/customer/payment/create-deposit/' + paymentSelection.appointmentId;
+      });
+    }
+
+    if (walletBtn) {
+      walletBtn.addEventListener('click', function () {
+        if (!paymentSelection) return;
+        closePaymentModal();
+        if (paymentSelection.nextStepBtn) {
+          paymentSelection.nextStepBtn.disabled = true;
+        }
+        payDepositWithWallet(
+          paymentSelection.appointmentId,
+          paymentSelection.nextStepBtn,
+          paymentSelection.originalText
+        );
+      });
+    }
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        var modal = document.getElementById('booking-payment-modal');
+        if (modal && !modal.hidden && cancelBtn) {
+          cancelBtn.click();
+        }
+      }
+    });
   }
 
   function formatDateDisplay(dateStr) {
@@ -476,3 +729,5 @@
     init();
   }
 })();
+
+

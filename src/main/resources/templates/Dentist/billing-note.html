@@ -39,15 +39,12 @@
     </div>
   </div>
 
-  <form id="billingForm" method="post" th:action="@{/dentist/appointments/{id}/billing-transfer(id=${appointmentId})}">
+  <form id="billingForm" method="post" th:object="${billingNote}"
+        th:action="@{/dentist/appointments/{id}/billing-transfer(id=${appointmentId})}">
     <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
     <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
     <input type="hidden" id="appointmentStatus"
            th:value="${appointmentStatus}">
-
-    <!-- hidden payloads -->
-    <input type="hidden" id="performedServicesJson" name="performedServicesJson" th:value="${performedServicesJson}">
-    <input type="hidden" id="prescriptionNote" name="prescriptionNote" th:value="${prescriptionNote}">
     <input type="hidden" name="weekStart" th:value="${weekStart}">
 
     <div class="billing-section">
@@ -60,44 +57,62 @@
         </div>
       </div>
 
-      <div id="servicesBox">
-        <div class="service-item"
-             th:each="s : ${services}"
-             th:attr="data-service-id=${s.id}">
-
-          <div class="service-left">
-            <input type="checkbox" class="svc-check">
-            <span th:text="${s.name}">Scaling</span>
-          </div>
-
-          <div class="service-right">
-            <input class="svc-qty" type="number" min="1" value="1">
-            <input class="svc-tooth" type="text" placeholder="Tooth (e.g. 36)">
-          </div>
-
-        </div>
-      </div>
+      <table class="tbl" id="performedTable">
+        <thead>
+        <tr><th>Service</th><th>Qty</th><th>Tooth</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="ps,stat : *{performedServices}">
+            <td>
+              <select th:field="*{performedServices[__${stat.index}__].service.id}">
+                <option th:each="s: ${services}" th:value="${s.id}" th:text="${s.name}"></option>
+              </select>
+            </td>
+            <td>
+              <input type="number"
+                     th:field="*{performedServices[__${stat.index}__].qty}"
+                     min="1"
+                     step="1"
+                     value="1"
+                     onkeydown="return false"
+                     class="svc-qty"/>
+            </td>
+            <td>
+              <input th:field="*{performedServices[__${stat.index}__].toothNo}"
+                     placeholder="Tooth"
+                     class="svc-tooth"/>
+            </td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" class="icon-mini" id="btnAddService">+ Add service</button>
     </div>
 
     <div class="billing-section">
       <div style="font-weight:900;">B) Digital Prescription</div>
-      <div class="mini">Enter medications, dosage, duration, instruction (saved as JSON for staff).</div>
-
+      <div class="mini">Enter medications, dosage, duration, instruction.</div>
       <table class="tbl" id="rxTable">
         <thead>
         <tr>
-          <th>Medication</th><th>Dosage</th><th>Duration</th><th>Instruction</th><th></th>
+          <th>Medication</th><th>Dosage</th><th>Duration/Note</th><th></th>
         </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+          <tr th:each="pi,stat : *{prescriptionItems}">
+            <td><input th:field="*{prescriptionItems[__${stat.index}__].medicineName}"/></td>
+            <td><input th:field="*{prescriptionItems[__${stat.index}__].dosage}"/></td>
+            <td><input th:field="*{prescriptionItems[__${stat.index}__].note}"/></td>
+            <td><button type="button" class="icon-mini del">✕</button></td>
+          </tr>
+        </tbody>
       </table>
-
       <button type="button" class="icon-mini" id="btnAddRx">+ Add medicine</button>
     </div>
 
     <div class="billing-section">
       <div style="font-weight:900;">C) Note to Staff (optional)</div>
-      <textarea name="note" rows="4" th:text="${note}" placeholder="Any note for billing/dispensing..."></textarea>
+      <textarea th:field="*{note}" rows="4" placeholder="Any note for billing/dispensing..."></textarea>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:14px;">
@@ -112,131 +127,124 @@
 </div>
 
 <script>
-  // -------- helpers --------
-  function safeJsonParse(s){
-    try { return JSON.parse(s); } catch(e){ return null; }
+  function getNextIndex(tableId) {
+    return document.querySelectorAll(tableId + ' tbody tr').length;
   }
 
-  // -------- prefill performed services --------
-  (function prefillServices(){
-    const raw = document.getElementById('performedServicesJson')?.value || '';
-    const arr = safeJsonParse(raw);
-    if(!Array.isArray(arr)) return;
+  /* =========================
+     ADD SERVICE
+  ========================= */
+  document.getElementById('btnAddService').addEventListener('click', () => {
+    const tbody = document.querySelector('#performedTable tbody');
+    const idx = getNextIndex('#performedTable');
 
-    const rows = document.querySelectorAll('#servicesBox .service-item');
-    rows.forEach(r => {
-      const serviceId = Number(r.dataset.serviceId);
-      const hit = arr.find(x => Number(x.serviceId) === serviceId);
-      if(hit){
-        r.querySelector('.svc-check').checked = true;
-        r.querySelector('.svc-qty').value = hit.qty ?? 1;
-        r.querySelector('.svc-tooth').value = hit.toothNo ?? '';
-      }
-    });
-  })();
+    const firstSelect = document.querySelector('#performedTable select');
+    const optionsHtml = firstSelect ? firstSelect.innerHTML : '';
 
-  // -------- RX dynamic table --------
-  const rxTbody = document.querySelector('#rxTable tbody');
-  function addRxRow(item){
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input class="rx-name" placeholder="Name"></td>
-      <td><input class="rx-dosage" placeholder="e.g. 500mg"></td>
-      <td><input class="rx-duration" placeholder="e.g. 5 days"></td>
-      <td><input class="rx-inst" placeholder="e.g. after meals"></td>
-      <td><button type="button" class="icon-mini rx-del">✕</button></td>
-    `;
-    tr.querySelector('.rx-del').addEventListener('click', ()=> tr.remove());
-    if(item){
-      tr.querySelector('.rx-name').value = item.name || '';
-      tr.querySelector('.rx-dosage').value = item.dosage || '';
-      tr.querySelector('.rx-duration').value = item.duration || '';
-      tr.querySelector('.rx-inst').value = item.instruction || '';
-    }
-    rxTbody.appendChild(tr);
-  }
+    <td>
+      <select name="performedServices[${idx}].service.id">
+        ${optionsHtml}
+      </select>
+    </td>
+    <td>
+      <input type="number"
+             name="performedServices[${idx}].qty"
+             min="1"
+             step="1"
+             value="1"
+             onkeydown="return false"
+             class="svc-qty"/>
+    </td>
+    <td>
+      <input name="performedServices[${idx}].toothNo"
+             class="svc-tooth"
+             placeholder="Tooth"/>
+    </td>
+    <td>
+      <button type="button" class="icon-mini del">✕</button>
+    </td>
+  `;
 
-  document.getElementById('btnAddRx').addEventListener('click', ()=> addRxRow());
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
 
-  // prefill prescription JSON
-  (function prefillRx(){
-    const raw = document.getElementById('prescriptionNote')?.value || '';
-    const arr = safeJsonParse(raw);
-    if(Array.isArray(arr) && arr.length){
-      arr.forEach(addRxRow);
-    } else {
-      addRxRow(); // add 1 row by default
-    }
-  })();
-
-  // -------- build payload on submit --------
-  document.getElementById('billingForm').addEventListener('submit', (e) => {
-    // performed services
-    const out = [];
-    document.querySelectorAll('#servicesBox .service-item').forEach(r => {
-      const checked = r.querySelector('.svc-check').checked;
-      if(!checked) return;
-      out.push({
-        serviceId: Number(r.dataset.serviceId),
-        qty: Number(r.querySelector('.svc-qty').value || 1),
-        toothNo: (r.querySelector('.svc-tooth').value || '').trim()
-      });
-    });
-    document.getElementById('performedServicesJson').value = JSON.stringify(out);
-
-    // rx
-    const rx = [];
-    document.querySelectorAll('#rxTable tbody tr').forEach(tr => {
-      const name = tr.querySelector('.rx-name').value.trim();
-      const dosage = tr.querySelector('.rx-dosage').value.trim();
-      const duration = tr.querySelector('.rx-duration').value.trim();
-      const instruction = tr.querySelector('.rx-inst').value.trim();
-      if(name || dosage || duration || instruction){
-        rx.push({ name, dosage, duration, instruction });
+    const qtyInput = tr.querySelector('.svc-qty');
+    qtyInput.addEventListener('change', () => {
+      if (!qtyInput.value || qtyInput.value < 1) {
+        qtyInput.value = 1;
       }
     });
-    document.getElementById('prescriptionNote').value = JSON.stringify(rx);
+
+    tbody.appendChild(tr);
   });
-</script>
-<script>
+
+  /* =========================
+     ADD PRESCRIPTION
+  ========================= */
+  document.getElementById('btnAddRx').addEventListener('click', () => {
+    const tbody = document.querySelector('#rxTable tbody');
+    const idx = getNextIndex('#rxTable');
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+    <td><input name="prescriptionItems[${idx}].medicineName"/></td>
+    <td><input name="prescriptionItems[${idx}].dosage"/></td>
+    <td><input name="prescriptionItems[${idx}].note"/></td>
+    <td><button type="button" class="icon-mini del">✕</button></td>
+  `;
+
+    tr.querySelector('.del').addEventListener('click', () => tr.remove());
+    tbody.appendChild(tr);
+  });
+
+  /* =========================
+     DELETE EXISTING ROWS
+  ========================= */
+  document.querySelectorAll('#performedTable tbody .del, #rxTable tbody .del')
+          .forEach(btn => {
+            btn.addEventListener('click', () => btn.closest('tr').remove());
+          });
+
+  /* =========================
+     LOCK WHEN DONE
+  ========================= */
+  document.addEventListener('DOMContentLoaded', function () {
+    const status = document.getElementById('appointmentStatus')?.value;
+    if (status === 'DONE' || status === 'COMPLETED') {
+      document.querySelectorAll('input, textarea, select, button')
+              .forEach(el => el.disabled = true);
+
+      document.querySelector('button[type="submit"]')?.remove();
+      document.querySelector('#btnAddService')?.remove();
+      document.querySelector('#btnAddRx')?.remove();
+    }
+  });
   document.addEventListener('DOMContentLoaded', function () {
 
-    const status = document.getElementById('appointmentStatus')?.value;
-    const locked = (status === 'DONE' || status === 'COMPLETED');
+    const firstRowSelect = document.querySelector('#performedTable tbody tr:first-child select');
 
-    if (status === 'DONE' || status === 'COMPLETED') {
-
-      // 🔒 Disable form fields
-      document.querySelectorAll('input, textarea, select, button')
-              .forEach(el => {
-                el.disabled = true;
-              });
-
-      // 🔥 Remove submit button completely
-      const saveBtn = document.querySelector('button[type="submit"]');
-      if (saveBtn) saveBtn.remove();
-
-      // 🔥 Remove all add buttons
-      document.querySelectorAll('#btnAddRx')
-              .forEach(btn => btn.remove());
-
+    if (firstRowSelect) {
+      firstRowSelect.style.pointerEvents = "none";
     }
-    document.querySelectorAll('.service-item').forEach(row => {
-      const check = row.querySelector('.svc-check');
-      const qty = row.querySelector('.svc-qty');
-      const tooth = row.querySelector('.svc-tooth');
+    document.getElementById('billingForm').addEventListener('submit', () => {
 
-      function toggle() {
-        const enabled = check.checked;
-        qty.disabled = !enabled;
-        tooth.disabled = !enabled;
-      }
+      const rows = document.querySelectorAll('#performedTable tbody tr');
 
-      check.addEventListener('change', toggle);
-      toggle();
-  });
+      rows.forEach((tr, i) => {
+
+        const service = tr.querySelector('select');
+        const qty = tr.querySelector('.svc-qty');
+        const tooth = tr.querySelector('.svc-tooth');
+
+        if(service) service.name = `performedServices[${i}].service.id`;
+        if(qty) qty.name = `performedServices[${i}].qty`;
+        if(tooth) tooth.name = `performedServices[${i}].toothNo`;
+
+      });
+
+    });
   });
 </script>
-
 </body>
 </html>

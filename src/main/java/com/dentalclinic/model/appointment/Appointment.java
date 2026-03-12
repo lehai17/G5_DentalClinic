@@ -6,7 +6,9 @@ import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.service.Services;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,10 @@ public class Appointment {
     @JoinColumn(name = "service_id")
     private Services service;
 
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("detailOrder ASC")
+    private List<AppointmentDetail> appointmentDetails = new ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name = "slot_id")
     @JsonIgnore
@@ -59,8 +65,18 @@ public class Appointment {
     @Column(name = "end_time")
     private LocalTime endTime;
 
+    @Column(name = "total_duration_minutes")
+    private Integer totalDurationMinutes;
+
+    @Column(name = "total_amount", precision = 18, scale = 2)
+    private BigDecimal totalAmount;
+
+    @Column(name = "deposit_amount", precision = 18, scale = 2)
+    private BigDecimal depositAmount;
+
     @Enumerated(EnumType.STRING)
-    private AppointmentStatus status = AppointmentStatus.PENDING;
+    @Column(name="status")
+    private AppointmentStatus status;
 
     @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")
     private String notes;
@@ -75,6 +91,28 @@ public class Appointment {
     @OrderBy("slotOrder ASC")
     private List<AppointmentSlot> appointmentSlots = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "original_appointment_id")
+    @JsonIgnore
+    private Appointment originalAppointment;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    // Tá»± Ä‘á»™ng gÃ¡n thá»i gian lÃºc insert vÃ o DB
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    // ThÃªm Getter vÃ  Setter (Quan trá»ng Ä‘á»ƒ Spring JPA Ä‘á»c Ä‘Æ°á»£c)
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public CustomerProfile getCustomer() { return customer; }
@@ -83,12 +121,20 @@ public class Appointment {
     public void setDentist(DentistProfile dentist) { this.dentist = dentist; }
     public Services getService() { return service; }
     public void setService(Services service) { this.service = service; }
+    public List<AppointmentDetail> getAppointmentDetails() { return appointmentDetails; }
+    public void setAppointmentDetails(List<AppointmentDetail> appointmentDetails) { this.appointmentDetails = appointmentDetails; }
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
     public LocalTime getStartTime() { return startTime; }
     public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
     public LocalTime getEndTime() { return endTime; }
     public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    public Integer getTotalDurationMinutes() { return totalDurationMinutes; }
+    public void setTotalDurationMinutes(Integer totalDurationMinutes) { this.totalDurationMinutes = totalDurationMinutes; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getDepositAmount() { return depositAmount; }
+    public void setDepositAmount(BigDecimal depositAmount) { this.depositAmount = depositAmount; }
     public AppointmentStatus getStatus() { return status; }
     public void setStatus(AppointmentStatus status) { this.status = status; }
     public String getNotes() { return notes; }
@@ -123,4 +169,23 @@ public class Appointment {
             removeAppointmentSlot(as);
         }
     }
+
+    public void addAppointmentDetail(AppointmentDetail appointmentDetail) {
+        appointmentDetails.add(appointmentDetail);
+        appointmentDetail.setAppointment(this);
+    }
+
+    public void removeAppointmentDetail(AppointmentDetail appointmentDetail) {
+        appointmentDetails.remove(appointmentDetail);
+        appointmentDetail.setAppointment(null);
+    }
+
+    public void clearAppointmentDetails() {
+        for (AppointmentDetail detail : new ArrayList<>(appointmentDetails)) {
+            removeAppointmentDetail(detail);
+        }
+    }
+
+    public Appointment getOriginalAppointment() { return originalAppointment; }
+    public void setOriginalAppointment(Appointment originalAppointment) { this.originalAppointment = originalAppointment; }
 }

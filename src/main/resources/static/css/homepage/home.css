@@ -1,4 +1,4 @@
-/* --- 1. CẤU TRÚC LAYOUT TỔNG THỂ --- */
+﻿/* --- 1. CẤU TRÚC LAYOUT TỔNG THỂ --- */
 * {
     margin: 0;
     padding: 0;
@@ -12,9 +12,9 @@ body {
     line-height: 1.6;
 }
 
-/* Container chính bao bọc toàn bộ trang */
+/* Container chính bao bọc to� n bộ trang */
 .app-wrapper {
-    display: flex; /* Sidebar và Main nằm cạnh nhau theo chiều ngang */
+    display: flex; /* Sidebar v�  Main nằm cạnh nhau theo chiều ngang */
     width: 100%;
 }
 
@@ -176,7 +176,7 @@ body {
     margin: 0 auto !important;
 }
 
-/* Grid blog: 2 bài viết nằm 2 bên */
+/* Grid blog: 2 b� i viết nằm 2 bên */
 #blog .blog-grid {
     width: 100% !important;
     display: grid !important;
@@ -208,7 +208,7 @@ body {
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
 }
 
-/* Ảnh blog */
+/* áº¢nh blog */
 #blog .blog-thumb {
     height: 220px;
     background-size: cover;
@@ -220,7 +220,7 @@ body {
     padding: 22px 22px 18px;
 }
 
-/* Ngày đăng */
+/* Ng� y đăng */
 #blog .blog-date {
     display: inline-block;
     font-size: 0.9rem;
@@ -264,7 +264,7 @@ body {
     text-decoration: underline;
 }
 
-/* Responsive: màn hình nhỏ -> 1 cột */
+/* Responsive: m� n hình nhỏ -> 1 cột */
 @media (max-width: 900px) {
     #blog .blog-grid {
         grid-template-columns: 1fr !important;
@@ -276,7 +276,7 @@ body {
 }
 
 
-/* --- 7. PHÂN TRANG (ĐẸP HƠN + ACTIVE RÕ + CĂN GIỮA) --- */
+/* --- 7. PHÂN TRANG (ĐẸP H� N + ACTIVE RÕ + CĂN GIỮA) --- */
 
 /* wrapper nếu bạn có .pagination-wrapper */
 .pagination-wrapper {
@@ -328,7 +328,7 @@ body {
     transition: transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
 }
 
-/* Nút số trang là hình tròn */
+/* Nút số trang l�  hình tròn */
 #blog .page-num {
     padding: 0;
     width: 40px;
@@ -351,7 +351,7 @@ body {
     box-shadow: 0 14px 30px rgba(102,126,234,0.25);
 }
 
-/* Nút disabled (nếu sau này bạn muốn thêm class disabled) */
+/* Nút disabled (nếu sau n� y bạn muốn thêm class disabled) */
 #blog .btn-page.disabled {
     opacity: .5;
     pointer-events: none;
@@ -382,7 +382,159 @@ body {
         width: 100%;
     }
     .patient-sidebar {
-        display: none; /* Ẩn sidebar trên mobile hoặc chuyển thành menu burger */
+        display: none; /* áº¨n sidebar trên mobile hoặc chuyển th� nh menu burger */
     }
 }
+
+.avatar-btn {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    border: 1px solid #dbe2ea;
+    background: #ffffff;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.avatar-btn:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+}
+
+.user-menu,
+.notification-menu {
+    position: relative;
+}
+
+.dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    min-width: 220px;
+    max-width: 360px;
+    background: #ffffff;
+    border: 1px solid #dbe2ea;
+    border-radius: 12px;
+    box-shadow: 0 16px 36px rgba(2, 6, 23, 0.12);
+    z-index: 1200;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    text-decoration: none;
+    color: #1f2937;
+    background: #ffffff;
+    border: 0;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dropdown-item:hover {
+    background: #f8fafc;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e5e7eb;
+}
+
+.dropdown-item.danger {
+    color: #b91c1c;
+}
+
+.notification-btn i {
+    font-size: 16px;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -6px;
+    right: -5px;
+    background: #ef4444;
+    color: #ffffff;
+    border-radius: 999px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.notification-dropdown {
+    width: 360px;
+}
+
+.dropdown-title {
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.dropdown-empty {
+    padding: 14px 12px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.notification-list {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.notification-item.unread {
+    background: #f0f9ff;
+}
+
+.notification-item-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+}
+
+.notification-item-content {
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.4;
+}
+
+.notification-item-time {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.notification-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.notification-mark-read,
+.notification-view-all {
+    font-size: 13px;
+}
+
+
+
 
