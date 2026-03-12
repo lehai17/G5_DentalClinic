@@ -5,6 +5,7 @@
     min-height: 100vh;
     padding: 60px 24px;
     font-family: system-ui, -apple-system;
+    overflow: auto;
 }
 
 .exam-container {
