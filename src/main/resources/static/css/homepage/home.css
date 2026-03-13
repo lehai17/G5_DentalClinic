@@ -10,12 +10,14 @@ body {
     background: #ffffff;
     color: #333;
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 /* Container chính bao bọc to� n bộ trang */
 .app-wrapper {
     display: flex; /* Sidebar v�  Main nằm cạnh nhau theo chiều ngang */
     width: 100%;
+    min-height: 100vh;
 }
 
 /* Phần nội dung bên phải */
@@ -23,6 +25,7 @@ body {
     flex: 1;
     margin-left: 260px; /* Đẩy nội dung sang phải để không bị Sidebar che mất */
     width: calc(100% - 260px);
+    min-height: 100vh;
     transition: all 0.3s ease;
     background: #ffffff;
 }
@@ -33,22 +36,28 @@ body {
     height: 100vh;
     position: fixed; /* Cố định khi cuộn trang */
     top: 0;
+    bottom: 0;
     left: 0;
+    display: flex;
+    flex-direction: column;
     background: #ffffff;
     border-right: 1px solid #e5e7eb;
     z-index: 1001;
+    overflow-y: auto;
 }
 
 /* --- 2. HEADER (NAVBAR) --- */
 .navbar {
     position: sticky; /* Đổi từ fixed sang sticky để nằm gọn trong main-content */
     top: 0;
-    z-index: 1000;
+    z-index: 1200;
     background: #ffffff;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     height: 80px;
     display: flex;
     align-items: center;
+    width: 100%;
+    isolation: isolate;
 }
 
 .navbar-container {
@@ -59,6 +68,18 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.main-content > section,
+.main-content > main,
+.main-content > div:not(.navbar) {
+    position: relative;
+    z-index: 1;
+}
+
+.main-content > .navbar {
+    position: sticky;
+    top: 0;
 }
 
 .navbar-menu {
@@ -78,8 +99,8 @@ body {
 
 /* --- 3. HERO SECTION --- */
 .hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
+    background: linear-gradient(135deg, #eef4ff 0%, #e7f0ff 52%, #f6e7f2 100%) !important;
+    color: #0f172a !important;
     padding: 120px 40px !important;
     text-align: center;
 }
@@ -94,7 +115,8 @@ body {
 .hero-subtitle {
     font-size: 1.2rem !important;
     margin: 0 auto 45px auto !important;
-    opacity: 0.9 !important;
+    color: #475569 !important;
+    opacity: 1 !important;
     max-width: 700px;
 }
 

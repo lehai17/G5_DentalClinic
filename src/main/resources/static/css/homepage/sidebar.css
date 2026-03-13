@@ -3,10 +3,17 @@
   width: 260px !important;
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
-
-  z-index: 1100;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Khi thu gọn */
@@ -36,11 +43,21 @@
 .main-content {
   flex: 1;
   min-width: 0;
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Khi sidebar thụt v� o, nội dung chính thò ra */
-.main-content.expanded {
+.main-content.sidebar-collapsed {
+  margin-left: 80px;
+  width: calc(100% - 80px);
+}
+
+body.sidebar-collapsed .main-content {
+  margin-left: 80px;
+  width: calc(100% - 80px);
 }
 
 /* Nút Toggle 3 gạch */
@@ -111,5 +128,46 @@
 .menu-item.logout:hover {
   background: #fee2e2;
   color: #ef4444 !important;
+}
+
+.sidebar-nav {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+}
+
+@media (max-width: 1024px) {
+  .patient-sidebar {
+    position: static;
+    width: 100% !important;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .main-content.sidebar-collapsed,
+  body.sidebar-collapsed .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .sidebar-header {
+    position: static;
+  }
+
+  .sidebar-nav {
+    overflow: visible;
+  }
 }
 
