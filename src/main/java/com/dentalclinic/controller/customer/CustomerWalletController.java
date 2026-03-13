@@ -70,17 +70,23 @@ public class CustomerWalletController {
         }
 
         Optional<Wallet> walletOpt = walletService.getWalletByUserId(userId);
+        CustomerProfile customer = customerProfileRepository.findByUser_Id(userId).orElse(null);
+        DemoBankAccount savedWithdrawAccount = customer == null ? null : walletService.getPersonalWithdrawAccount(customer);
         if (walletOpt.isEmpty()) {
             return ResponseEntity.ok(Map.of(
                     "balance", 0.0,
-                    "transactions", List.of()
+                    "transactions", List.of(),
+                    "savedWithdrawAccount", savedWithdrawAccount == null ? null : Map.of(
+                            "bankName", savedWithdrawAccount.getBankName(),
+                            "bankAccountNo", savedWithdrawAccount.getAccountNo(),
+                            "accountHolder", savedWithdrawAccount.getAccountHolder(),
+                            "balance", savedWithdrawAccount.getBalance().doubleValue()
+                    )
             ));
         }
 
         Wallet wallet = walletOpt.get();
         List<WalletTransaction> transactions = walletService.getTransactionHistory(wallet);
-        CustomerProfile customer = customerProfileRepository.findByUser_Id(userId).orElse(null);
-        DemoBankAccount savedWithdrawAccount = customer == null ? null : walletService.getPersonalWithdrawAccount(customer);
 
         Map<String, Object> response = new HashMap<>();
         response.put("balance", wallet.getBalance().doubleValue());
@@ -95,7 +101,8 @@ public class CustomerWalletController {
         response.put("savedWithdrawAccount", savedWithdrawAccount == null ? null : Map.of(
                 "bankName", savedWithdrawAccount.getBankName(),
                 "bankAccountNo", savedWithdrawAccount.getAccountNo(),
-                "accountHolder", savedWithdrawAccount.getAccountHolder()
+                "accountHolder", savedWithdrawAccount.getAccountHolder(),
+                "balance", savedWithdrawAccount.getBalance().doubleValue()
         ));
 
         return ResponseEntity.ok(response);
@@ -156,7 +163,8 @@ public class CustomerWalletController {
                     "balance", result.getWalletBalance().doubleValue(),
                     "destinationBank", result.getDestinationAccount().getBankName(),
                     "destinationAccountNo", result.getDestinationAccount().getAccountNo(),
-                    "destinationAccountHolder", result.getDestinationAccount().getAccountHolder()
+                    "destinationAccountHolder", result.getDestinationAccount().getAccountHolder(),
+                    "destinationBalance", result.getDestinationAccount().getBalance().doubleValue()
             ));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -194,7 +202,8 @@ public class CustomerWalletController {
                     "success", true,
                     "bankName", account.getBankName(),
                     "bankAccountNo", account.getAccountNo(),
-                    "accountHolder", account.getAccountHolder()
+                    "accountHolder", account.getAccountHolder(),
+                    "balance", account.getBalance().doubleValue()
             ));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -230,7 +239,8 @@ public class CustomerWalletController {
                     "success", true,
                     "bankName", account.getBankName(),
                     "bankAccountNo", account.getAccountNo(),
-                    "accountHolder", account.getAccountHolder()
+                    "accountHolder", account.getAccountHolder(),
+                    "balance", account.getBalance().doubleValue()
             ));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of(

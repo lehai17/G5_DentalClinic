@@ -7,6 +7,7 @@ import com.dentalclinic.model.wallet.WalletTransaction;
 import com.dentalclinic.model.wallet.WalletTransactionStatus;
 import com.dentalclinic.model.wallet.WalletTransactionType;
 import com.dentalclinic.repository.CustomerProfileRepository;
+import com.dentalclinic.repository.DemoBankAccountRepository;
 import com.dentalclinic.repository.WalletRepository;
 import com.dentalclinic.repository.WalletTransactionRepository;
 import com.dentalclinic.service.notification.NotificationService;
@@ -35,15 +36,18 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository walletTransactionRepository;
     private final CustomerProfileRepository customerProfileRepository;
+    private final DemoBankAccountRepository demoBankAccountRepository;
     private final NotificationService notificationService;
 
     public WalletService(WalletRepository walletRepository,
                          WalletTransactionRepository walletTransactionRepository,
                          CustomerProfileRepository customerProfileRepository,
+                         DemoBankAccountRepository demoBankAccountRepository,
                          NotificationService notificationService) {
         this.walletRepository = walletRepository;
         this.walletTransactionRepository = walletTransactionRepository;
         this.customerProfileRepository = customerProfileRepository;
+        this.demoBankAccountRepository = demoBankAccountRepository;
         this.notificationService = notificationService;
     }
 
@@ -152,7 +156,9 @@ public class WalletService {
 
         String safeBankName = bankName == null ? "" : bankName.trim();
         String safeAccountNo = bankAccountNo == null ? "" : bankAccountNo.trim();
-        DemoBankAccount destinationAccount = buildDemoBankAccount(safeBankName, safeAccountNo);
+        DemoBankAccount destinationAccount = getOrCreateDemoBankAccount(safeBankName, safeAccountNo);
+        destinationAccount.setBalance(destinationAccount.getBalance().add(amount));
+        destinationAccount = demoBankAccountRepository.save(destinationAccount);
 
         String maskedAccountNo = maskBankAccount(safeAccountNo);
         String description = String.format(
@@ -178,7 +184,7 @@ public class WalletService {
     @Transactional
     public DemoBankAccount resolveDemoBankAccount(String bankName, String accountNo) {
         validateBankLookupInput(bankName, accountNo);
-        return buildDemoBankAccount(bankName.trim(), accountNo.trim());
+        return getOrCreateDemoBankAccount(bankName.trim(), accountNo.trim());
     }
 
     @Transactional
@@ -189,7 +195,7 @@ public class WalletService {
         customer.setWithdrawBankName(bankName.trim());
         customer.setWithdrawAccountNo(accountNo.trim());
         customerProfileRepository.save(customer);
-        return buildDemoBankAccount(customer.getWithdrawBankName(), customer.getWithdrawAccountNo());
+        return getOrCreateDemoBankAccount(customer.getWithdrawBankName(), customer.getWithdrawAccountNo());
     }
 
     public DemoBankAccount getPersonalWithdrawAccount(CustomerProfile customer) {
@@ -198,16 +204,19 @@ public class WalletService {
         if (bankName == null || bankName.isBlank() || accountNo == null || accountNo.isBlank()) {
             return null;
         }
-        return buildDemoBankAccount(bankName.trim(), accountNo.trim());
+        return getOrCreateDemoBankAccount(bankName.trim(), accountNo.trim());
     }
 
-    private DemoBankAccount buildDemoBankAccount(String bankName, String accountNo) {
-        DemoBankAccount account = new DemoBankAccount();
-        account.setBankName(bankName);
-        account.setAccountNo(accountNo);
-        account.setAccountHolder(generateAccountHolder(bankName, accountNo));
-        account.setBalance(BigDecimal.ZERO);
-        return account;
+    private DemoBankAccount getOrCreateDemoBankAccount(String bankName, String accountNo) {
+        return demoBankAccountRepository.findByBankNameAndAccountNo(bankName, accountNo)
+                .orElseGet(() -> {
+                    DemoBankAccount account = new DemoBankAccount();
+                    account.setBankName(bankName);
+                    account.setAccountNo(accountNo);
+                    account.setAccountHolder(generateAccountHolder(bankName, accountNo));
+                    account.setBalance(BigDecimal.ZERO);
+                    return demoBankAccountRepository.save(account);
+                });
     }
 
     private void validateBankLookupInput(String bankName, String accountNo) {

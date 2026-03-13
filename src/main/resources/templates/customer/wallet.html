@@ -472,6 +472,47 @@
             </a>
           </div>
 
+          <div
+            id="wallet-demo-account-card"
+            style="
+              display: none;
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+              padding: 1.5rem;
+              margin-bottom: 2rem;
+            "
+          >
+            <h2
+              style="
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #0f172a;
+                margin: 0 0 1rem 0;
+              "
+            >
+              <i class="bi bi-bank"></i> Tài khoản demo cá nhân
+            </h2>
+            <div class="wallet-withdraw-summary">
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Ngân hàng</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-bank">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Số tài khoản</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-account">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Chủ tài khoản</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-holder">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Số dư tài khoản demo</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-balance">0 VND</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Transactions List -->
           <div
             style="
@@ -705,6 +746,10 @@
               readonly
             />
           </div>
+
+          <div class="wallet-helper" id="wallet-withdraw-demo-balance">
+            Số dư tài khoản demo hiện tại: 0 VND
+          </div>
         </div>
 
         <div id="wallet-withdraw-personal-panel" class="wallet-withdraw-panel" hidden>
@@ -721,6 +766,10 @@
               <div class="wallet-withdraw-summary-row">
                 <span class="wallet-withdraw-summary-label">Chủ tài khoản</span>
                 <span class="wallet-withdraw-summary-value" id="wallet-personal-holder-value">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Số dư tài khoản demo</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-personal-balance-value">0 VND</span>
               </div>
             </div>
             <div class="wallet-inline-actions">
@@ -770,6 +819,10 @@
                 readonly
               />
               <div class="wallet-helper">Lần đầu bạn nhập xong, hệ thống sẽ lưu lại cho các lần rút sau.</div>
+            </div>
+
+            <div class="wallet-helper" id="wallet-personal-demo-balance">
+              Số dư tài khoản demo hiện tại: 0 VND
             </div>
 
             <div class="wallet-inline-actions">
@@ -861,6 +914,7 @@
               balanceEl.textContent = formatCurrency(data.balance);
             }
             savedWithdrawAccountState = data.savedWithdrawAccount || null;
+            updateSavedDemoAccountCard(savedWithdrawAccountState);
             if (typeof window.__applySavedWithdrawAccount === "function") {
               window.__applySavedWithdrawAccount(savedWithdrawAccountState);
             }
@@ -961,6 +1015,27 @@
         if (!amount) return "0 VND";
         const num = parseFloat(amount);
         return num.toLocaleString("vi-VN") + " VND";
+      }
+
+      function updateSavedDemoAccountCard(account) {
+        const card = document.getElementById("wallet-demo-account-card");
+        const bankEl = document.getElementById("wallet-demo-card-bank");
+        const accountEl = document.getElementById("wallet-demo-card-account");
+        const holderEl = document.getElementById("wallet-demo-card-holder");
+        const balanceEl = document.getElementById("wallet-demo-card-balance");
+
+        if (!card) return;
+
+        if (!account) {
+          card.style.display = "none";
+          return;
+        }
+
+        card.style.display = "";
+        if (bankEl) bankEl.textContent = account.bankName || "--";
+        if (accountEl) accountEl.textContent = account.bankAccountNo || "--";
+        if (holderEl) holderEl.textContent = account.accountHolder || "--";
+        if (balanceEl) balanceEl.textContent = formatCurrency(account.balance || 0);
       }
 
       function formatVndInput(value) {
@@ -1134,6 +1209,9 @@
         const personalBankValue = document.getElementById("wallet-personal-bank-value");
         const personalAccountValue = document.getElementById("wallet-personal-account-value");
         const personalHolderValue = document.getElementById("wallet-personal-holder-value");
+        const personalBalanceValue = document.getElementById("wallet-personal-balance-value");
+        const manualDemoBalance = document.getElementById("wallet-withdraw-demo-balance");
+        const personalDemoBalance = document.getElementById("wallet-personal-demo-balance");
         const personalSaveBtn = document.getElementById("wallet-personal-save-btn");
         const personalEditBtn = document.getElementById("wallet-personal-edit-btn");
         const submitBtn = document.getElementById("wallet-withdraw-submit");
@@ -1178,11 +1256,33 @@
         function resetResolvedAccount() {
           resolvedAccount = null;
           if (accountHolderInput) accountHolderInput.value = "";
+          if (manualDemoBalance) {
+            manualDemoBalance.textContent = "Số dư tài khoản demo hiện tại: 0 VND";
+          }
         }
 
         function resetPersonalResolvedAccount() {
           personalResolvedAccount = null;
           if (personalAccountHolderInput) personalAccountHolderInput.value = "";
+          if (personalDemoBalance) {
+            personalDemoBalance.textContent = "Số dư tài khoản demo hiện tại: 0 VND";
+          }
+        }
+
+        function updateManualDemoBalance(balance) {
+          if (!manualDemoBalance) return;
+          manualDemoBalance.textContent =
+            "Số dư tài khoản demo hiện tại: " + formatCurrency(balance || 0);
+        }
+
+        function updatePersonalDemoBalance(balance) {
+          const text = "Số dư tài khoản demo hiện tại: " + formatCurrency(balance || 0);
+          if (personalDemoBalance) {
+            personalDemoBalance.textContent = text;
+          }
+          if (personalBalanceValue) {
+            personalBalanceValue.textContent = formatCurrency(balance || 0);
+          }
         }
 
         function triggerLookup() {
@@ -1221,6 +1321,7 @@
               if (accountHolderInput) {
                 accountHolderInput.value = data.accountHolder || "";
               }
+              updateManualDemoBalance(data.balance);
             })
             .catch((error) => {
               resetResolvedAccount();
@@ -1268,6 +1369,7 @@
               if (personalAccountHolderInput) {
                 personalAccountHolderInput.value = data.accountHolder || "";
               }
+              updatePersonalDemoBalance(data.balance);
             })
             .catch((error) => {
               resetPersonalResolvedAccount();
@@ -1281,6 +1383,7 @@
 
         function applySavedWithdrawAccount(account) {
           savedWithdrawAccountState = account || null;
+          updateSavedDemoAccountCard(savedWithdrawAccountState);
           if (!savedWithdrawAccountState) {
             if (personalSavedView) personalSavedView.hidden = true;
             if (personalFormView) personalFormView.hidden = false;
@@ -1291,6 +1394,7 @@
           if (personalBankValue) personalBankValue.textContent = savedWithdrawAccountState.bankName || "--";
           if (personalAccountValue) personalAccountValue.textContent = savedWithdrawAccountState.bankAccountNo || "--";
           if (personalHolderValue) personalHolderValue.textContent = savedWithdrawAccountState.accountHolder || "--";
+          updatePersonalDemoBalance(savedWithdrawAccountState.balance);
 
           if (!personalEditing) {
             if (personalSavedView) personalSavedView.hidden = false;
@@ -1309,6 +1413,7 @@
             if (personalAccountNoInput) personalAccountNoInput.value = savedWithdrawAccountState.bankAccountNo || "";
             if (personalAccountHolderInput) personalAccountHolderInput.value = savedWithdrawAccountState.accountHolder || "";
             personalResolvedAccount = { ...savedWithdrawAccountState };
+            updatePersonalDemoBalance(savedWithdrawAccountState.balance);
           }
 
           renderBanks(
@@ -1366,13 +1471,16 @@
             if (personalAccountNoInput) personalAccountNoInput.value = savedWithdrawAccountState.bankAccountNo || "";
             if (personalAccountHolderInput) personalAccountHolderInput.value = savedWithdrawAccountState.accountHolder || "";
             personalResolvedAccount = { ...savedWithdrawAccountState };
+            updatePersonalDemoBalance(savedWithdrawAccountState.balance);
           } else {
             personalEditing = true;
             personalSelectedBank = "";
             if (personalBankSearchInput) personalBankSearchInput.value = "";
             if (personalAccountNoInput) personalAccountNoInput.value = "";
             if (personalAccountHolderInput) personalAccountHolderInput.value = "";
+            updatePersonalDemoBalance(0);
           }
+          updateManualDemoBalance(0);
           renderBanks("", bankListEl, selectedBank, handleManualBankSelect);
           renderBanks(
             personalBankSearchInput ? personalBankSearchInput.value : "",
@@ -1619,6 +1727,7 @@
                     bankName: data.destinationBank,
                     bankAccountNo: data.destinationAccountNo,
                     accountHolder: data.destinationAccountHolder,
+                    balance: data.destinationBalance,
                   });
                 }
                 closeModal();
@@ -1627,7 +1736,9 @@
                 showToast(
                   (data.message || "Rút tiền thành công.") +
                     " Chu tai khoan: " +
-                    (data.destinationAccountHolder || ""),
+                    (data.destinationAccountHolder || "") +
+                    " | So du demo: " +
+                    formatCurrency(data.destinationBalance || 0),
                   "success",
                   "Rút tiền thành công",
                 );
