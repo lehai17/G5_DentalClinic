@@ -24,6 +24,12 @@ public class CustomerProfile {
     @Column(name = "address", columnDefinition = "NVARCHAR(500)")
     private String address;
 
+    @Column(name = "withdraw_bank_name", columnDefinition = "NVARCHAR(120)")
+    private String withdrawBankName;
+
+    @Column(name = "withdraw_account_no", length = 10)
+    private String withdrawAccountNo;
+
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -35,4 +41,8 @@ public class CustomerProfile {
     public void setPhone(String phone) { this.phone = phone; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+    public String getWithdrawBankName() { return withdrawBankName; }
+    public void setWithdrawBankName(String withdrawBankName) { this.withdrawBankName = withdrawBankName; }
+    public String getWithdrawAccountNo() { return withdrawAccountNo; }
+    public void setWithdrawAccountNo(String withdrawAccountNo) { this.withdrawAccountNo = withdrawAccountNo; }
 }
