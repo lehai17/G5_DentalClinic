@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   if (window.__customerChatWidgetInitialized) return;
   window.__customerChatWidgetInitialized = true;
 
@@ -10,8 +10,16 @@
   const inputEl = document.getElementById("chat-text");
   const sendBtn = document.getElementById("chat-send");
   const badgeEl = document.getElementById("chat-badge");
+  const fileInputEl = document.getElementById("chat-attachment");
+  const attachBtn = document.getElementById("chat-attach");
+  const attachmentBarEl = document.getElementById("chat-attachment-bar");
+  const attachmentNameEl = document.getElementById("chat-attachment-name");
+  const attachmentClearEl = document.getElementById("chat-attachment-clear");
+  const maxAttachmentSize = 5 * 1024 * 1024;
 
-  if (!toggleBtn || !windowEl || !headerEl || !messagesEl || !inputEl || !sendBtn || !badgeEl) return;
+  if (!toggleBtn || !windowEl || !headerEl || !messagesEl || !inputEl || !sendBtn || !badgeEl || !fileInputEl || !attachBtn || !attachmentBarEl || !attachmentNameEl || !attachmentClearEl) {
+    return;
+  }
 
   let threadId = null;
   let threadSummary = null;
@@ -19,6 +27,7 @@
   let lastMessageId = null;
   let loadingMessages = false;
   let sending = false;
+  let selectedAttachment = null;
 
   decorateWidget();
 
@@ -30,18 +39,6 @@
 
   function isOpen() {
     return !windowEl.classList.contains("hidden");
-  }
-
-  function authJsonOptions(method, body) {
-    const options = {
-      method,
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin"
-    };
-    if (body !== undefined) {
-      options.body = JSON.stringify(body);
-    }
-    return options;
   }
 
   function escapeHtml(value) {
@@ -63,6 +60,15 @@
       day: "2-digit",
       month: "2-digit"
     });
+  }
+
+  function formatFileSize(value) {
+    const size = Number(value || 0);
+    if (!size) return "";
+    if (size >= 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
   }
 
   function scrollToBottom(force) {
@@ -90,10 +96,31 @@
     helperEl.dataset.tone = tone || "neutral";
   }
 
+  function renderSelectedAttachment() {
+    if (!selectedAttachment) {
+      attachmentBarEl.classList.add("hidden");
+      attachmentNameEl.textContent = "";
+      return;
+    }
+    attachmentBarEl.classList.remove("hidden");
+    const sizeText = formatFileSize(selectedAttachment.size);
+    attachmentNameEl.textContent = sizeText
+      ? `${selectedAttachment.name} (${sizeText})`
+      : selectedAttachment.name;
+  }
+
+  function clearSelectedAttachment() {
+    selectedAttachment = null;
+    fileInputEl.value = "";
+    renderSelectedAttachment();
+    updateCounter();
+  }
+
   function updateCounter() {
     const length = inputEl.value.trim().length;
-    counterEl.textContent = length + "/1000";
-    sendBtn.disabled = sending || !threadId || length === 0;
+    counterEl.textContent = selectedAttachment ? `${length}/1000 + 1 tệp` : `${length}/1000`;
+    sendBtn.disabled = sending || !threadId || (length === 0 && !selectedAttachment);
+    attachBtn.disabled = sending;
   }
 
   function setLoadingState(isLoading) {
@@ -114,11 +141,24 @@
       .map((message) => {
         const customerSide = message.senderRole === "CUSTOMER";
         const senderLabel = customerSide ? "Bạn" : (message.senderName || "Lễ tân");
+        const textHtml = message.content
+          ? `<div class="chat-text">${escapeHtml(message.content)}</div>`
+          : "";
+        const attachmentHtml = message.hasAttachment && message.attachmentDownloadUrl
+          ? `
+            <a class="chat-attachment-link" href="${message.attachmentDownloadUrl}" target="_blank" rel="noopener">
+              <span class="chat-attachment-icon">📎</span>
+              <span>${escapeHtml(message.attachmentOriginalName || "Tệp đính kèm")}</span>
+              ${message.attachmentSize ? `<small>${escapeHtml(formatFileSize(message.attachmentSize))}</small>` : ""}
+            </a>
+          `
+          : "";
         return `
           <div class="chat-row ${customerSide ? "customer" : "staff"}">
             <div class="chat-bubble">
               <div class="chat-author">${escapeHtml(senderLabel)}</div>
-              <div>${escapeHtml(message.content)}</div>
+              ${textHtml}
+              ${attachmentHtml}
               <span class="chat-meta">${formatDateTime(message.createdAt)}</span>
             </div>
           </div>
@@ -194,21 +234,32 @@
 
   async function sendMessage() {
     const content = inputEl.value.trim();
-    if (!content || !threadId || sending) return;
+    if ((!content && !selectedAttachment) || !threadId || sending) return;
     sending = true;
     sendBtn.disabled = true;
     sendBtn.textContent = "Đang gửi...";
-    setHelper("Đang gửi tin nhắn...", "neutral");
+    setHelper(selectedAttachment ? "Đang gửi tin nhắn và tệp đính kèm..." : "Đang gửi tin nhắn...", "neutral");
     try {
-      const response = await fetch(
-        "/customer/chat/send",
-        authJsonOptions("POST", { threadId, content })
-      );
+      const formData = new FormData();
+      formData.append("threadId", String(threadId));
+      if (content) {
+        formData.append("content", content);
+      }
+      if (selectedAttachment) {
+        formData.append("attachment", selectedAttachment);
+      }
+
+      const response = await fetch("/customer/chat/send", {
+        method: "POST",
+        credentials: "same-origin",
+        body: formData
+      });
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error(error.error || "Gửi tin nhắn thất bại.");
       }
       inputEl.value = "";
+      clearSelectedAttachment();
       updateCounter();
       await loadMessages();
       inputEl.focus();
@@ -262,6 +313,7 @@
       windowEl.classList.add("hidden");
     } finally {
       setLoadingState(false);
+      renderSelectedAttachment();
       updateCounter();
     }
   }
@@ -340,6 +392,31 @@
     sendMessage().catch(() => {});
   });
 
+  attachBtn.addEventListener("click", () => {
+    if (!sending) {
+      fileInputEl.click();
+    }
+  });
+
+  fileInputEl.addEventListener("change", () => {
+    const file = fileInputEl.files && fileInputEl.files[0] ? fileInputEl.files[0] : null;
+    if (!file) {
+      clearSelectedAttachment();
+      return;
+    }
+    if (file.size > maxAttachmentSize) {
+      clearSelectedAttachment();
+      setHelper("Tệp đính kèm không được vượt quá 5MB.", "error");
+      return;
+    }
+    selectedAttachment = file;
+    renderSelectedAttachment();
+    updateCounter();
+    setHelper("Tệp đã sẵn sàng để gửi.", "neutral");
+  });
+
+  attachmentClearEl.addEventListener("click", clearSelectedAttachment);
+
   inputEl.addEventListener("input", updateCounter);
   inputEl.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
@@ -353,5 +430,3 @@
 
   init();
 })();
-
-

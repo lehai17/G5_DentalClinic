@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cập nhật voucher - Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg:#F4F7FE; --card:#fff; --text:#1B2559; --muted:#707EAE; --border:#E6ECF5; --primary:#1A237E; --danger:#DC2626; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Inter, Arial, sans-serif; background: var(--bg); display: flex; color: var(--text); }
+        .main-content { flex: 1; padding: 24px; }
+        .card { background: var(--card); border-radius: 18px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05); padding: 22px; }
+        .page-header { margin-bottom: 18px; }
+        .page-header h1 { margin: 0 0 6px; font-size: 28px; }
+        .page-header p { margin: 0; color: var(--muted); }
+        .flash { border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; font-weight: 600; }
+        .flash-error { background: #FEF2F2; color: #991B1B; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+        .field.full { grid-column: 1 / -1; }
+        .label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+        .input, .textarea, .select { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; font: inherit; }
+        .textarea { resize: vertical; min-height: 110px; }
+        .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .error-text { color: var(--danger); font-size: 12px; margin-top: 6px; }
+        .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+        .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 12px; padding: 10px 16px; text-decoration: none; font-weight: 700; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-light { background: #EEF2FF; color: var(--primary); }
+        @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+
+<div class="main-content">
+    <div class="page-header">
+        <h1>Cập nhật voucher</h1>
+        <p>Chỉnh sửa điều kiện và thời gian áp dụng của voucher hiện có.</p>
+    </div>
+
+    <div class="card">
+        <div th:if="${error}" class="flash flash-error" th:text="${error}">Có lỗi xảy ra.</div>
+
+        <form th:action="@{/admin/vouchers/{id}/edit(id=${voucherId})}" th:object="${voucherForm}" method="post">
+            <div class="form-grid">
+                <div class="field">
+                    <label class="label" for="code">Mã voucher</label>
+                    <input class="input" id="code" type="text" th:field="*{code}" maxlength="50" placeholder="Ví dụ: SMILE10">
+                    <div class="hint">Hệ thống sẽ tự chuẩn hóa thành chữ in hoa.</div>
+                    <div class="error-text" th:if="${#fields.hasErrors('code')}" th:errors="*{code}">Lỗi mã voucher</div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="discountType">Loại giảm giá</label>
+                    <select class="select" id="discountType" th:field="*{discountType}">
+                        <option value="">Chọn loại giảm giá</option>
+                        <option th:each="type : ${discountTypes}" th:value="${type}"
+                                th:text="${type.name() == 'PERCENT' ? 'Phần trăm' : 'Tiền cố định'}">Phần trăm</option>
+                    </select>
+                    <div class="error-text" th:if="${#fields.hasErrors('discountType')}" th:errors="*{discountType}">Lỗi loại giảm giá</div>
+                </div>
+
+                <div class="field full">
+                    <label class="label" for="description">Mô tả</label>
+                    <textarea class="textarea" id="description" th:field="*{description}" maxlength="500"
+                              placeholder="Mô tả ngắn về mục đích hoặc điều kiện sử dụng voucher"></textarea>
+                    <div class="error-text" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Lỗi mô tả</div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="discountValue">Giá trị giảm</label>
+                    <input class="input" id="discountValue" type="number" min="0.01" step="0.01" th:field="*{discountValue}" placeholder="Nhập giá trị giảm">
+                    <div class="hint">Nếu chọn phần trăm, giá trị hợp lệ là từ 1 đến 100.</div>
+                    <div class="error-text" th:if="${#fields.hasErrors('discountValue')}" th:errors="*{discountValue}">Lỗi giá trị giảm</div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="minOrderAmount">Đơn hàng tối thiểu</label>
+                    <input class="input" id="minOrderAmount" type="number" min="0" step="0.01" th:field="*{minOrderAmount}" placeholder="0">
+                    <div class="error-text" th:if="${#fields.hasErrors('minOrderAmount')}" th:errors="*{minOrderAmount}">Lỗi đơn hàng tối thiểu</div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="maxDiscount">Mức giảm tối đa</label>
+                    <input class="input" id="maxDiscount" type="number" min="0" step="0.01" th:field="*{maxDiscount}" placeholder="Để trống nếu không giới hạn">
+                    <div class="error-text" th:if="${#fields.hasErrors('maxDiscount')}" th:errors="*{maxDiscount}">Lỗi mức giảm tối đa</div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="usageLimit">Giới hạn sử dụng</label>
+                    <input class="input" id="usageLimit" type="number" min="0" step="1" th:field="*{usageLimit}" placeholder="Để trống nếu không giới hạn">
+                    <div class="hint">Số lượt đã dùng do hệ thống quản lý và không chỉnh ở màn hình này.</div>
+                    <div class="error-text" th:if="${#fields.hasErrors('usageLimit')}" th:errors="*{usageLimit}">Lỗi giới hạn sử dụng</div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="startDateTime">Bắt đầu áp dụng</label>
+                    <input class="input" id="startDateTime" type="datetime-local" th:field="*{startDateTime}">
+                    <div class="error-text" th:if="${#fields.hasErrors('startDateTime')}" th:errors="*{startDateTime}">Lỗi thời gian bắt đầu</div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="endDateTime">Kết thúc áp dụng</label>
+                    <input class="input" id="endDateTime" type="datetime-local" th:field="*{endDateTime}">
+                    <div class="error-text" th:if="${#fields.hasErrors('endDateTime')}" th:errors="*{endDateTime}">Lỗi thời gian kết thúc</div>
+                </div>
+
+                <div class="field full">
+                    <label class="checkbox-row">
+                        <input type="checkbox" th:field="*{active}">
+                        <span>Bật voucher</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="btn btn-light" th:href="@{/admin/vouchers}">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Quay lại</span>
+                </a>
+                <button class="btn btn-primary" type="submit">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Cập nhật voucher</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

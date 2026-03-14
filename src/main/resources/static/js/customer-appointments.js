@@ -25,7 +25,7 @@
   var invoiceModalCloseEl = document.getElementById("cap-invoice-close");
   var invoiceModalContentEl = document.getElementById("cap-invoice-modal-content");
   var searchTimer = null;
-  var state = { page: 0, size: 5, totalPages: 0, keyword: "", sort: "newest" };
+  var state = { page: 0, size: 5, totalPages: 0, keyword: "", sort: "date_desc" };
   var queryParams = new URLSearchParams(window.location.search);
   var remainingPaymentSelection = null;
 
@@ -529,6 +529,9 @@
     var notesHtml = notesValue
       ? escapeHtml(notesValue)
       : '<span class="cap-muted">Không có ghi chú</span>';
+    var bookedAtHtml = data.createdAt
+      ? escapeHtml(formatDateTime(data.createdAt))
+      : '<span class="cap-muted">Chưa có dữ liệu</span>';
     var contactHtml =
       data.contactChannel && data.contactValue
         ? escapeHtml(data.contactChannel + ": " + data.contactValue)
@@ -540,6 +543,19 @@
       data.status !== "WAITING_PAYMENT";
     var canCheckin = !!data.canCheckIn;
     var canPayRemaining = !!data.canPayRemaining;
+    var hasDepositReceipt = toNumber(data.depositAmount) > 0;
+    var paymentHistoryHtml =
+      '<a class="cap-btn cap-btn-neutral" href="/customer/payments"><i class="bi bi-clock-history"></i> Lịch sử thanh toán</a>';
+    var depositReceiptHtml = hasDepositReceipt
+      ? '<a class="cap-btn cap-btn-neutral" href="/customer/payments/deposit/' +
+        appointmentId +
+        '"><i class="bi bi-receipt"></i> Xem biên nhận đặt cọc</a>'
+      : "";
+    var invoiceReceiptHtml = data.invoiceId
+      ? '<a class="cap-btn cap-btn-neutral" href="/customer/payments/invoice/' +
+        escapeHtml(data.invoiceId) +
+        '"><i class="bi bi-file-earmark-text"></i> Xem chi tiết thanh toán</a>'
+      : "";
     var depositPaidHtml =
       data.status === "PENDING" ||
       data.status === "CONFIRMED" ||
@@ -594,6 +610,9 @@
       " - " +
       escapeHtml(formatTime(data.endTime)) +
       "</div></div>" +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Thời gian đặt lịch</div><div class="cap-inline-value">' +
+      bookedAtHtml +
+      "</div></div>" +
       '  <div class="cap-inline-row"><div class="cap-inline-label">Trạng thái</div><div class="cap-inline-value"><span class="cap-status-badge ' +
       statusMeta.className +
       '">' +
@@ -610,6 +629,9 @@
       invoicePreviewHtml +
       "</div>" +
       '<div class="cap-inline-actions">' +
+      paymentHistoryHtml +
+      depositReceiptHtml +
+      invoiceReceiptHtml +
       (canCancel
         ? '<button type="button" class="cap-btn cap-btn-danger" data-action="cancel"><i class="bi bi-x-circle"></i> Hủy lịch</button>'
         : "") +
@@ -839,6 +861,9 @@
       '    <div class="apt-meta">Mã lịch hẹn #' +
       escapeHtml(apt.id) +
       "</div>" +
+      '    <div class="apt-meta">Thời gian đặt lịch: ' +
+      escapeHtml(formatDateTime(apt.createdAt) || "Chưa có dữ liệu") +
+      "</div>" +
       "  </div>" +
       '  <div class="cap-item-side">' +
       '    <span class="apt-status ' +
@@ -914,7 +939,7 @@
 
         state.page = data.page || 0;
         state.totalPages = data.totalPages || 0;
-        state.sort = data.sort || state.sort || "newest";
+        state.sort = data.sort || state.sort || "date_desc";
         if (sortSelectEl) {
           sortSelectEl.value = state.sort;
         }
@@ -1032,7 +1057,7 @@
 
   if (sortSelectEl) {
     sortSelectEl.addEventListener("change", function () {
-      state.sort = sortSelectEl.value || "newest";
+      state.sort = sortSelectEl.value || "date_desc";
       loadAppointments(null, 0);
     });
   }

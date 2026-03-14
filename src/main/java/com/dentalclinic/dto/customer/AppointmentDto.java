@@ -20,6 +20,7 @@ public class AppointmentDto {
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
+    private LocalDateTime createdAt;
     private String status;
     private String notes;
     private String contactChannel;
@@ -62,6 +63,8 @@ public class AppointmentDto {
     public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
     public LocalTime getEndTime() { return endTime; }
     public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getNotes() { return notes; }

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết biên nhận - GENZ CLINIC</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-feedback.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .receipt-shell { max-width: 980px; margin: 0 auto; }
+    .receipt-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.06);
+      padding: 28px 30px;
+      margin-bottom: 20px;
+    }
+    .receipt-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .receipt-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .receipt-title {
+      margin: 0 0 8px;
+      color: #1b2559;
+      font-size: 30px;
+      font-weight: 800;
+    }
+    .receipt-subtitle { margin: 0; color: #64748b; }
+    .receipt-status {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #166534;
+      white-space: nowrap;
+    }
+    .receipt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .receipt-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 18px;
+      background: #f8fafc;
+    }
+    .receipt-box h3 {
+      margin: 0 0 14px;
+      font-size: 15px;
+      color: #0f172a;
+      font-weight: 800;
+    }
+    .receipt-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 8px 0;
+      border-bottom: 1px dashed #dbe4ff;
+      font-size: 14px;
+    }
+    .receipt-line:last-child { border-bottom: none; }
+    .receipt-line span { color: #64748b; }
+    .receipt-line strong { color: #1e293b; text-align: right; }
+    .receipt-amount {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1d4ed8;
+    }
+    .receipt-note {
+      border-radius: 18px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      padding: 18px;
+      line-height: 1.6;
+    }
+    .receipt-service-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: #334155;
+    }
+    .receipt-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .receipt-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 700;
+      border: 1px solid #dbe4ff;
+      color: #1d4ed8;
+      background: #f8fbff;
+    }
+    .receipt-btn-primary {
+      background: #1d4ed8;
+      color: #fff;
+      border-color: #1d4ed8;
+    }
+    @media (max-width: 900px) {
+      .receipt-grid { grid-template-columns: 1fr; }
+      .receipt-head { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="customer-page-section">
+      <div class="receipt-shell">
+        <div class="receipt-card">
+          <div class="receipt-head">
+            <div>
+              <div class="receipt-eyebrow"><i class="bi bi-receipt"></i> <span th:text="${receipt.recordTypeLabel}">Đặt cọc</span></div>
+              <h1 class="receipt-title" th:text="${receipt.title}">Biên nhận đặt cọc</h1>
+              <p class="receipt-subtitle">Xem lại thông tin giao dịch và chi tiết lịch hẹn liên quan.</p>
+            </div>
+            <div class="receipt-status" th:text="${receipt.paymentStatusLabel}">Đã thanh toán</div>
+          </div>
+
+          <div class="receipt-grid">
+            <div class="receipt-box">
+              <h3>Thông tin giao dịch</h3>
+              <div class="receipt-line"><span>Mã tham chiếu</span><strong th:text="${receipt.referenceCode}">APPOINTMENT-1</strong></div>
+              <div class="receipt-line"><span>Loại giao dịch</span><strong th:text="${receipt.recordTypeLabel}">Đặt cọc</strong></div>
+              <div class="receipt-line"><span>Phương thức</span><strong th:text="${receipt.paymentMethodLabel}">Ví của tôi</strong></div>
+              <div class="receipt-line"><span>Thời gian ghi nhận</span><strong th:text="${receipt.recordedAt != null ? #temporals.format(receipt.recordedAt, 'dd/MM/yyyy HH:mm') : 'Chưa có dữ liệu'}">14/03/2026 10:20</strong></div>
+              <div class="receipt-line"><span>Số tiền</span><strong class="receipt-amount" th:text="${#numbers.formatDecimal(receipt.amount, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">500,000 VNĐ</strong></div>
+            </div>
+
+            <div class="receipt-box">
+              <h3>Thông tin lịch hẹn</h3>
+              <div class="receipt-line"><span>Mã lịch hẹn</span><strong th:text="${receipt.appointmentId != null ? '#' + receipt.appointmentId : 'Không có'}">#1</strong></div>
+              <div class="receipt-line"><span>Khách hàng</span><strong th:text="${receipt.customerName}">Nguyễn Văn A</strong></div>
+              <div class="receipt-line"><span>Ngày khám</span><strong th:text="${receipt.appointmentDate != null ? #temporals.format(receipt.appointmentDate, 'dd/MM/yyyy') : 'Chưa có dữ liệu'}">14/03/2026</strong></div>
+              <div class="receipt-line"><span>Khung giờ</span><strong th:text="${receipt.appointmentStartTime != null ? #temporals.format(receipt.appointmentStartTime, 'HH:mm') + (receipt.appointmentEndTime != null ? ' - ' + #temporals.format(receipt.appointmentEndTime, 'HH:mm') : '') : 'Chưa có dữ liệu'}">08:00 - 09:00</strong></div>
+              <div class="receipt-line"><span>Bác sĩ</span><strong th:text="${receipt.dentistName}">Chưa phân công</strong></div>
+              <div class="receipt-line"><span>Dịch vụ</span><strong th:text="${receipt.serviceSummary}">Khám tổng quát</strong></div>
+            </div>
+          </div>
+
+          <div class="receipt-box" th:if="${receipt.serviceNames != null and !#lists.isEmpty(receipt.serviceNames)}">
+            <h3>Danh sách dịch vụ</h3>
+            <ul class="receipt-service-list">
+              <li th:each="serviceName : ${receipt.serviceNames}" th:text="${serviceName}">Dịch vụ</li>
+            </ul>
+          </div>
+
+          <div class="receipt-note" th:text="${receipt.note}">Hệ thống đã ghi nhận thanh toán cho lịch hẹn này.</div>
+
+          <div class="receipt-actions">
+            <a class="receipt-btn" th:href="${receipt.backUrl}">
+              <i class="bi bi-arrow-left"></i>
+              <span>Quay lại lịch sử thanh toán</span>
+            </a>
+            <a class="receipt-btn receipt-btn-primary" th:if="${receipt.appointmentId != null}"
+               th:href="@{'/customer/my-appointments#highlight=' + ${receipt.appointmentId}}">
+              <i class="bi bi-calendar2-check"></i>
+              <span>Đi đến lịch hẹn</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

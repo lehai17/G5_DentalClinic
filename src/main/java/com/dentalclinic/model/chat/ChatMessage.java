@@ -24,6 +24,18 @@ public class ChatMessage {
     @Column(name = "content", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
+    @Column(name = "attachment_original_name", length = 255)
+    private String attachmentOriginalName;
+
+    @Column(name = "attachment_storage_name", length = 255)
+    private String attachmentStorageName;
+
+    @Column(name = "attachment_content_type", length = 150)
+    private String attachmentContentType;
+
+    @Column(name = "attachment_size")
+    private Long attachmentSize;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -67,6 +79,42 @@ public class ChatMessage {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getAttachmentOriginalName() {
+        return attachmentOriginalName;
+    }
+
+    public void setAttachmentOriginalName(String attachmentOriginalName) {
+        this.attachmentOriginalName = attachmentOriginalName;
+    }
+
+    public String getAttachmentStorageName() {
+        return attachmentStorageName;
+    }
+
+    public void setAttachmentStorageName(String attachmentStorageName) {
+        this.attachmentStorageName = attachmentStorageName;
+    }
+
+    public String getAttachmentContentType() {
+        return attachmentContentType;
+    }
+
+    public void setAttachmentContentType(String attachmentContentType) {
+        this.attachmentContentType = attachmentContentType;
+    }
+
+    public Long getAttachmentSize() {
+        return attachmentSize;
+    }
+
+    public void setAttachmentSize(Long attachmentSize) {
+        this.attachmentSize = attachmentSize;
+    }
+
+    public boolean hasAttachment() {
+        return attachmentStorageName != null && !attachmentStorageName.isBlank();
     }
 
     public boolean isRead() {
