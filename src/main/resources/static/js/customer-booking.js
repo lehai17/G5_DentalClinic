@@ -1,12 +1,14 @@
 ﻿(function () {
   'use strict';
 
+  var SLOT_MINUTES = 30;
   var state = {
     currentYear: new Date().getFullYear(),
     currentMonth: new Date().getMonth(),
     selectedDate: null,
     selectedSlot: null,
-    currentStep: 1
+    currentStep: 1,
+    renderedSlots: []
   };
   var paymentSelection = null;
 
@@ -139,6 +141,84 @@
 
   function formatVnd(amount) {
     return Number(amount || 0).toLocaleString('vi-VN') + ' VNĐ';
+  }
+
+  function calculateSlotsNeeded(durationMinutes) {
+    if (!durationMinutes || durationMinutes <= 0) return 0;
+    return Math.ceil(durationMinutes / SLOT_MINUTES);
+  }
+
+  function parseTimeParts(timeValue) {
+    if (!timeValue) return null;
+    var parts = String(timeValue).split(':');
+    if (parts.length < 2) return null;
+    var hour = parseInt(parts[0], 10);
+    var minute = parseInt(parts[1], 10);
+    if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+    return { hour: hour, minute: minute };
+  }
+
+  function addMinutesToTime(timeValue, minutesToAdd) {
+    var time = parseTimeParts(timeValue);
+    if (!time) return timeValue;
+    var totalMinutes = (time.hour * 60) + time.minute + (minutesToAdd || 0);
+    var normalized = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+    var hour = Math.floor(normalized / 60);
+    var minute = normalized % 60;
+    return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+  }
+
+  function getSelectedDurationMinutes() {
+    return getSelectedServices().reduce(function (sum, item) {
+      return sum + (item.duration || 0);
+    }, 0);
+  }
+
+  function getSelectedSlotDisplayEndTime(slot) {
+    if (!slot || !slot.startTime) return null;
+    var slotsNeeded = calculateSlotsNeeded(getSelectedDurationMinutes());
+    if (slotsNeeded <= 0) {
+      return slot.endTime || addMinutesToTime(slot.startTime, SLOT_MINUTES);
+    }
+    return addMinutesToTime(slot.startTime, slotsNeeded * SLOT_MINUTES);
+  }
+
+  function isSlotWithinSelectedRange(slot) {
+    if (!slot || !state.selectedSlot || !slot.startTime || !state.selectedSlot.startTime) return false;
+    var selectedStart = parseTimeParts(state.selectedSlot.startTime);
+    var candidateStart = parseTimeParts(slot.startTime);
+    var selectedEnd = parseTimeParts(getSelectedSlotDisplayEndTime(state.selectedSlot));
+    if (!selectedStart || !candidateStart || !selectedEnd) return false;
+    var selectedStartMinutes = (selectedStart.hour * 60) + selectedStart.minute;
+    var candidateStartMinutes = (candidateStart.hour * 60) + candidateStart.minute;
+    var selectedEndMinutes = (selectedEnd.hour * 60) + selectedEnd.minute;
+    return candidateStartMinutes >= selectedStartMinutes && candidateStartMinutes < selectedEndMinutes;
+  }
+
+  function renderSlotButtonContent(slot, statusText, useExpandedRange) {
+    var endTime = useExpandedRange ? getSelectedSlotDisplayEndTime(slot) : (slot.endTime || addMinutesToTime(slot.startTime, SLOT_MINUTES));
+    return formatTime(slot.startTime) + ' - ' + formatTime(endTime) +
+      '<span class="time-slot-status">' + statusText + '</span>';
+  }
+
+  function applySelectedSlotVisualState(grid) {
+    if (!grid) return;
+    grid.querySelectorAll('.time-slot-btn').forEach(function (btn) {
+      var slotId = btn.dataset.slotId;
+      var slot = state.renderedSlots.find(function (item) {
+        return String(item.id) === String(slotId);
+      });
+      btn.classList.remove('selected', 'range-selected');
+      if (!slot) return;
+      var isSelected = state.selectedSlot && String(state.selectedSlot.id) === String(slot.id);
+      var isInRange = isSlotWithinSelectedRange(slot);
+      if (isSelected) {
+        btn.classList.add('selected');
+      } else if (isInRange) {
+        btn.classList.add('range-selected');
+      }
+      btn.innerHTML = renderSlotButtonContent(slot, btn.dataset.statusText || '', false);
+    });
   }
 
   function bindStaticEvents() {
@@ -333,6 +413,7 @@
       .then(function (slots) {
         if (loading) loading.style.display = 'none';
         if (!Array.isArray(slots) || !grid) return;
+        state.renderedSlots = [];
 
         var now = new Date();
         var p = dateStr.split('-');
@@ -349,6 +430,8 @@
           return;
         }
 
+        state.renderedSlots = futureSlots.slice();
+
         futureSlots.forEach(function (slot) {
           var btn = document.createElement('button');
           btn.type = 'button';
@@ -364,16 +447,12 @@
           var statusText = 'Hết chỗ';
           if (isDisabled) statusText = 'Đã có lịch';
           if (!isDisabled && isAvailable) statusText = hasSpotsValue ? ('Còn ' + availableSpots + ' chỗ') : 'Còn chỗ';
+          btn.dataset.statusText = statusText;
 
-          btn.innerHTML = formatTime(slot.startTime) + ' - ' + formatTime(slot.endTime) +
-            '<span class="time-slot-status">' + statusText + '</span>';
+          btn.innerHTML = renderSlotButtonContent(slot, statusText, false);
 
           if (!isAvailable) btn.classList.add('disabled');
           else if (hasSpotsValue && availableSpots === 1) btn.classList.add('almost-full');
-
-          if (state.selectedSlot && String(state.selectedSlot.id) === String(slot.id)) {
-            btn.classList.add('selected');
-          }
 
           btn.addEventListener('click', function () {
             if (isDisabled) {
@@ -384,22 +463,30 @@
               showToast('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.', 'warning', 'Khung giờ đã đầy');
               return;
             }
+            if (state.selectedSlot && String(state.selectedSlot.id) === String(slot.id)) {
+              state.selectedSlot = null;
+              document.getElementById('customer-booking-slot-id').value = '';
+              updateSummary();
+              applySelectedSlotVisualState(grid);
+              return;
+            }
             state.selectedSlot = slot;
             document.getElementById('customer-booking-slot-id').value = slot.id;
             updateSummary();
-            grid.querySelectorAll('.time-slot-btn').forEach(function (el) { el.classList.remove('selected'); });
-            btn.classList.add('selected');
+            applySelectedSlotVisualState(grid);
           });
 
           grid.appendChild(btn);
         });
 
+        applySelectedSlotVisualState(grid);
         grid.style.display = '';
       })
       .catch(function (err) {
         if (loading) loading.style.display = 'none';
         if (empty) empty.style.display = '';
         if (grid) grid.style.display = 'none';
+        state.renderedSlots = [];
         showAlert(err && err.message ? err.message : 'Không thể tải danh sách khung giờ.', 'error', 'Tải khung giờ thất bại');
       });
   }
@@ -467,8 +554,8 @@
 
     if (dateEl) dateEl.innerHTML = state.selectedDate ? formatDateDisplay(state.selectedDate) : '<span class="empty">Chưa chọn</span>';
     if (timeEl) {
-      if (state.selectedSlot && state.selectedSlot.startTime && state.selectedSlot.endTime) {
-        timeEl.innerHTML = formatTime(state.selectedSlot.startTime) + ' - ' + formatTime(state.selectedSlot.endTime);
+      if (state.selectedSlot && state.selectedSlot.startTime) {
+        timeEl.innerHTML = formatTime(state.selectedSlot.startTime) + ' - ' + formatTime(getSelectedSlotDisplayEndTime(state.selectedSlot));
       } else {
         timeEl.innerHTML = '<span class="empty">Chưa chọn</span>';
       }

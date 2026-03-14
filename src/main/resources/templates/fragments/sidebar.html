@@ -38,21 +38,21 @@
     </a>
 
     <a
+      th:href="@{/customer/payments}"
+      th:classappend="${active == 'payments'} ? ' active'"
+      class="menu-item"
+    >
+      <i class="bi bi-receipt"></i>
+      <span>Lịch sử thanh toán</span>
+    </a>
+
+    <a
       th:href="@{/patient/medical-records}"
       th:classappend="${active == 'records'} ? ' active'"
       class="menu-item"
     >
       <i class="bi bi-file-medical"></i>
       <span>Hồ sơ bệnh án</span>
-    </a>
-
-    <a
-      th:href="@{/patient/recheck}"
-      th:classappend="${active == 'recheck'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-arrow-repeat"></i>
-      <span>Tái khám</span>
     </a>
 
     <a
@@ -63,16 +63,7 @@
       <i class="bi bi-headset"></i>
       <span>Hỗ trợ chuyên môn</span>
     </a>
-
-    <a
-      th:href="@{/patient/feedback}"
-      th:classappend="${active == 'feedback'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-chat-left-text"></i>
-      <span>Góp ý và khiếu nại</span>
-    </a>
-  </nav>
+    
 
   <div class="p-3 border-top">
     <a th:href="@{/logout}" class="menu-item logout">

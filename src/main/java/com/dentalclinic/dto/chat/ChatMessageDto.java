@@ -10,6 +10,11 @@ public class ChatMessageDto {
     private String senderName;
     private String senderRole;
     private String content;
+    private boolean hasAttachment;
+    private String attachmentOriginalName;
+    private String attachmentContentType;
+    private Long attachmentSize;
+    private String attachmentDownloadUrl;
     private LocalDateTime createdAt;
     private boolean read;
 
@@ -67,6 +72,50 @@ public class ChatMessageDto {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public boolean isHasAttachment() {
+        return hasAttachment;
+    }
+
+    public boolean getHasAttachment() {
+        return hasAttachment;
+    }
+
+    public void setHasAttachment(boolean hasAttachment) {
+        this.hasAttachment = hasAttachment;
+    }
+
+    public String getAttachmentOriginalName() {
+        return attachmentOriginalName;
+    }
+
+    public void setAttachmentOriginalName(String attachmentOriginalName) {
+        this.attachmentOriginalName = attachmentOriginalName;
+    }
+
+    public String getAttachmentContentType() {
+        return attachmentContentType;
+    }
+
+    public void setAttachmentContentType(String attachmentContentType) {
+        this.attachmentContentType = attachmentContentType;
+    }
+
+    public Long getAttachmentSize() {
+        return attachmentSize;
+    }
+
+    public void setAttachmentSize(Long attachmentSize) {
+        this.attachmentSize = attachmentSize;
+    }
+
+    public String getAttachmentDownloadUrl() {
+        return attachmentDownloadUrl;
+    }
+
+    public void setAttachmentDownloadUrl(String attachmentDownloadUrl) {
+        this.attachmentDownloadUrl = attachmentDownloadUrl;
     }
 
     public LocalDateTime getCreatedAt() {

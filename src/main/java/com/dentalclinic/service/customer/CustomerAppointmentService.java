@@ -374,20 +374,21 @@ public class CustomerAppointmentService {
     }
 
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size) {
-        return getMyAppointmentsPage(userId, page, size, null, "newest");
+        return getMyAppointmentsPage(userId, page, size, null, "date_desc");
     }
 
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword) {
-        return getMyAppointmentsPage(userId, page, size, keyword, "newest");
+        return getMyAppointmentsPage(userId, page, size, keyword, "date_desc");
     }
 
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword, String sort) {
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, size);
+        String normalizedSort = normalizeAppointmentSort(sort);
 
         List<AppointmentDto> allDtos = appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream()
                 .filter(a -> a.getStatus() != AppointmentStatus.PENDING_DEPOSIT)
-                .sorted(resolveAppointmentComparator(sort))
+                .sorted(resolveAppointmentComparator(normalizedSort))
                 .map(this::toDto)
                 .filter(dto -> matchesAppointmentKeyword(dto, keyword))
                 .collect(Collectors.toList());
@@ -402,36 +403,58 @@ public class CustomerAppointmentService {
         );
     }
 
+    public String normalizeAppointmentSort(String sort) {
+        String normalized = sort == null ? "" : sort.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "date_asc", "date_desc", "booked_asc", "booked_desc", "status_asc", "status_desc" -> normalized;
+            case "created_asc" -> "booked_asc";
+            case "created_desc" -> "booked_desc";
+            default -> "date_desc";
+        };
+    }
+
     private Comparator<Appointment> resolveAppointmentComparator(String sort) {
-        String normalized = sort == null ? "newest" : sort.trim().toLowerCase(Locale.ROOT);
+        String normalized = normalizeAppointmentSort(sort);
 
-        Comparator<Appointment> byCreatedNewest = Comparator
+        Comparator<Appointment> byDateAsc = Comparator
+                .comparing(Appointment::getDate, Comparator.nullsLast(LocalDate::compareTo))
+                .thenComparing(Appointment::getStartTime, Comparator.nullsLast(LocalTime::compareTo))
+                .thenComparing(Appointment::getId, Comparator.nullsLast(Long::compareTo));
+
+        Comparator<Appointment> byDateDesc = Comparator
+                .comparing(Appointment::getDate, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(Appointment::getStartTime, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(Appointment::getId, Comparator.nullsLast(Comparator.reverseOrder()));
+
+        Comparator<Appointment> byCreatedAsc = Comparator
                 .comparing(Appointment::getCreatedAt, Comparator.nullsLast(LocalDateTime::compareTo))
                 .thenComparing(Appointment::getDate, Comparator.nullsLast(LocalDate::compareTo))
                 .thenComparing(Appointment::getStartTime, Comparator.nullsLast(LocalTime::compareTo))
-                .reversed();
+                .thenComparing(Appointment::getId, Comparator.nullsLast(Long::compareTo));
 
-        Comparator<Appointment> byCreatedOldest = Comparator
-                .comparing(Appointment::getCreatedAt, Comparator.nullsLast(LocalDateTime::compareTo))
-                .thenComparing(Appointment::getDate, Comparator.nullsLast(LocalDate::compareTo))
-                .thenComparing(Appointment::getStartTime, Comparator.nullsLast(LocalTime::compareTo));
+        Comparator<Appointment> byCreatedDesc = Comparator
+                .comparing(Appointment::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(Appointment::getId, Comparator.nullsLast(Comparator.reverseOrder()));
 
-        Comparator<Appointment> byVisitSoonest = Comparator
-                .comparing(Appointment::getDate, Comparator.nullsLast(LocalDate::compareTo))
-                .thenComparing(Appointment::getStartTime, Comparator.nullsLast(LocalTime::compareTo))
-                .thenComparing(Appointment::getCreatedAt, Comparator.nullsLast(LocalDateTime::compareTo).reversed());
+        Comparator<Appointment> byStatusAsc = Comparator
+                .comparing((Appointment appointment) -> appointment.getStatus() == null ? "" : appointment.getStatus().name())
+                .thenComparing(Appointment::getDate, Comparator.nullsLast(LocalDate::compareTo).reversed())
+                .thenComparing(Appointment::getStartTime, Comparator.nullsLast(LocalTime::compareTo).reversed())
+                .thenComparing(Appointment::getId, Comparator.nullsLast(Long::compareTo).reversed());
 
-        Comparator<Appointment> byVisitLatest = Comparator
-                .comparing(Appointment::getDate, Comparator.nullsLast(LocalDate::compareTo))
-                .thenComparing(Appointment::getStartTime, Comparator.nullsLast(LocalTime::compareTo))
-                .thenComparing(Appointment::getCreatedAt, Comparator.nullsLast(LocalDateTime::compareTo))
-                .reversed();
+        Comparator<Appointment> byStatusDesc = Comparator
+                .comparing((Appointment appointment) -> appointment.getStatus() == null ? "" : appointment.getStatus().name(), Comparator.reverseOrder())
+                .thenComparing(Appointment::getDate, Comparator.nullsLast(LocalDate::compareTo).reversed())
+                .thenComparing(Appointment::getStartTime, Comparator.nullsLast(LocalTime::compareTo).reversed())
+                .thenComparing(Appointment::getId, Comparator.nullsLast(Long::compareTo).reversed());
 
         return switch (normalized) {
-            case "oldest" -> byCreatedOldest;
-            case "visit_asc" -> byVisitSoonest;
-            case "visit_desc" -> byVisitLatest;
-            default -> byCreatedNewest;
+            case "date_asc" -> byDateAsc;
+            case "booked_desc" -> byCreatedDesc;
+            case "booked_asc" -> byCreatedAsc;
+            case "status_asc" -> byStatusAsc;
+            case "status_desc" -> byStatusDesc;
+            default -> byDateDesc;
         };
     }
 
@@ -1099,6 +1122,7 @@ public class CustomerAppointmentService {
         dto.setDate(appointment.getDate());
         dto.setStartTime(appointment.getStartTime());
         dto.setEndTime(appointment.getEndTime());
+        dto.setCreatedAt(appointment.getCreatedAt());
         dto.setStatus(appointment.getStatus().name());
         dto.setNotes(appointment.getNotes());
         dto.setContactChannel(appointment.getContactChannel());

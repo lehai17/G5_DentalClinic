@@ -99,22 +99,24 @@ public class CustomerAppointmentController {
     public ResponseEntity<?> getMyAppointments(@RequestParam(required = false) Integer page,
                                                @RequestParam(required = false) Integer size,
                                                @RequestParam(required = false) String keyword,
-                                               @RequestParam(required = false, defaultValue = "newest") String sort,
+                                               @RequestParam(required = false, defaultValue = "date_desc") String sort,
                                                HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
 
+        String normalizedSort = customerAppointmentService.normalizeAppointmentSort(sort);
+
         if (page != null || size != null || (keyword != null && !keyword.isBlank()) || (sort != null && !sort.isBlank())) {
             int p = page == null ? 0 : page;
             int s = size == null ? 5 : size;
-            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, sort);
+            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, normalizedSort);
             return ResponseEntity.ok(Map.of(
                     "content", resultPage.getContent(),
                     "page", resultPage.getNumber(),
                     "size", resultPage.getSize(),
                     "totalPages", resultPage.getTotalPages(),
                     "totalElements", resultPage.getTotalElements(),
-                    "sort", sort
+                    "sort", normalizedSort
             ));
         }
 

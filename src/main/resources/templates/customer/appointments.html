@@ -31,16 +31,20 @@
             </p>
           </div>
 
-          <div class="cap-hero-actions">
-            <a class="cap-primary-link" th:href="@{/customer/book}">
-              <i class="bi bi-calendar-plus"></i>
-              Đặt lịch mới
-            </a>
-            <button type="button" class="cap-refresh-btn" onclick="window.location.reload()">
-              <i class="bi bi-arrow-clockwise"></i>
-              Tải lại
-            </button>
-          </div>
+	          <div class="cap-hero-actions">
+	            <a class="cap-primary-link" th:href="@{/customer/book}">
+	              <i class="bi bi-calendar-plus"></i>
+	              Đặt lịch mới
+	            </a>
+	            <a class="cap-refresh-btn" th:href="@{/customer/payments}">
+	              <i class="bi bi-receipt"></i>
+	              Lịch sử thanh toán
+	            </a>
+	            <button type="button" class="cap-refresh-btn" onclick="window.location.reload()">
+	              <i class="bi bi-arrow-clockwise"></i>
+	              Tải lại
+	            </button>
+	          </div>
         </div>
 
         <div class="cap-summary-strip">
@@ -87,10 +91,12 @@
             <label class="cap-sort-box" for="customer-appointments-sort">
               <span class="cap-sort-label">Sắp xếp theo</span>
               <select id="customer-appointments-sort" class="cap-sort-select">
-                <option value="newest">Mới đặt gần đây nhất</option>
-                <option value="oldest">Đặt từ lâu đến mới</option>
-                <option value="visit_desc">Lịch khám xa nhất trước</option>
-                <option value="visit_asc">Lịch khám gần nhất trước</option>
+                <option value="date_desc">Ngày khám gần nhất</option>
+                <option value="date_asc">Ngày khám xa nhất</option>
+                <option value="booked_desc">Thời gian đặt lịch mới nhất</option>
+                <option value="booked_asc">Thời gian đặt lịch cũ nhất</option>
+                <option value="status_asc">Trạng thái A-Z</option>
+                <option value="status_desc">Trạng thái Z-A</option>
               </select>
             </label>
           </div>
