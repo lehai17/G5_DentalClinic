@@ -37,17 +37,17 @@
 
         <ul class="navbar-menu">
           <li>
-            <a onclick="scrollToSection('services')" style="cursor: pointer"
+            <a onclick="scrollToSection('services', '/homepage#services')" style="cursor: pointer"
               >Dịch vụ</a
             >
           </li>
           <li>
-            <a onclick="scrollToSection('dentists')" style="cursor: pointer"
+            <a onclick="scrollToSection('dentists', '/homepage#dentists')" style="cursor: pointer"
               >Bác sĩ</a
             >
           </li>
-          <li><a th:href="@{/blogs}">Blog</a></li>
-          <li><a href="#contact" style="cursor: pointer">Liên hệ</a></li>
+          <li><a onclick="scrollToSection('blog', '/homepage#blog')" style="cursor: pointer">Blog</a></li>
+          <li><a onclick="scrollToSection('contact', '/homepage#contact')" style="cursor: pointer">Liên hệ</a></li>
         </ul>
 
         <div class="navbar-actions">
@@ -387,6 +387,13 @@
         } else {
           navbar.classList.add("not-scrolled");
         }
+
+        if (window.location.hash) {
+          const targetId = window.location.hash.substring(1);
+          setTimeout(function () {
+            scrollToSection(targetId);
+          }, 50);
+        }
       });
 
       function toggleNotificationMenu(event) {
@@ -401,10 +408,18 @@
         dropdown.classList.toggle("hidden");
       }
 
-      function scrollToSection(id) {
+      function scrollToSection(id, fallbackUrl) {
         const element = document.getElementById(id);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
+          const navbar = document.getElementById("navbar");
+          const headerOffset = navbar ? navbar.offsetHeight + 16 : 96;
+          const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+          const targetPosition = Math.max(0, elementPosition - headerOffset);
+          window.scrollTo({ top: targetPosition, behavior: "smooth" });
+          return;
+        }
+        if (fallbackUrl) {
+          window.location.href = fallbackUrl;
         }
       }
 

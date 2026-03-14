@@ -1451,6 +1451,13 @@
     border-color: rgba(168, 85, 247, 0.24);
 }
 
+.customer-appointments-page .apt-status.waiting-payment,
+.customer-appointments-page .cap-status-badge.waiting-payment {
+    background: rgba(244, 114, 182, 0.12);
+    color: #be185d;
+    border-color: rgba(244, 114, 182, 0.24);
+}
+
 .customer-appointments-page .cap-item-chevron {
     color: #64748b;
     transition: transform 0.18s ease;
@@ -1536,6 +1543,12 @@
     background: rgba(34, 197, 94, 0.10);
     color: #166534;
     border: 1px solid rgba(34, 197, 94, 0.20);
+}
+
+.customer-appointments-page .cap-inline-note-warning {
+    background: rgba(251, 191, 36, 0.14);
+    color: #92400e;
+    border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
 .customer-appointments-page .cap-inline-actions {
@@ -1655,6 +1668,12 @@
     color: #b91c1c;
 }
 
+.customer-appointments-page .cap-btn-warning {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.22);
+    color: #b45309;
+}
+
 .customer-appointments-page .cap-empty {
     padding: 36px 20px 12px;
     text-align: center;
@@ -1676,6 +1695,560 @@
 
 .customer-appointments-page .cap-pagination {
     margin-top: 18px;
+}
+
+.customer-appointments-page .cap-invoice-card {
+    margin-top: 14px;
+    background:
+        radial-gradient(circle at top right, rgba(251, 191, 36, 0.16), transparent 32%),
+        linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
+    border: 1px solid rgba(245, 158, 11, 0.18);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 18px 40px rgba(148, 163, 184, 0.12);
+}
+
+.customer-appointments-page .cap-invoice-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.customer-appointments-page .cap-invoice-title {
+    color: #92400e;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.customer-appointments-page .cap-invoice-chip {
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.18);
+    color: #92400e;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.customer-appointments-page .cap-invoice-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.customer-appointments-page .cap-invoice-overview__item {
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    display: grid;
+    gap: 6px;
+}
+
+.customer-appointments-page .cap-invoice-overview__item span {
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.customer-appointments-page .cap-invoice-overview__item strong {
+    color: #0f172a;
+    font-size: 0.96rem;
+    line-height: 1.45;
+}
+
+.customer-appointments-page .cap-invoice-section {
+    margin-top: 14px;
+}
+
+.customer-appointments-page .cap-invoice-section__title {
+    margin-bottom: 10px;
+    color: #92400e;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+.customer-appointments-page .cap-invoice-list {
+    display: grid;
+    gap: 10px;
+}
+
+.customer-appointments-page .cap-invoice-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.customer-appointments-page .cap-invoice-name {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.customer-appointments-page .cap-invoice-meta {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.customer-appointments-page .cap-invoice-amount {
+    color: #0f172a;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.customer-appointments-page .cap-invoice-total {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid rgba(245, 158, 11, 0.16);
+}
+
+.customer-appointments-page .cap-invoice-total-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.customer-appointments-page .cap-invoice-total-line--due {
+    color: #b45309;
+}
+
+.cap-invoice-prescription-list {
+    display: grid;
+    gap: 10px;
+}
+
+.cap-invoice-prescription-item {
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.cap-invoice-prescription-item__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cap-invoice-prescription-item__head strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.cap-invoice-prescription-item__dosage {
+    color: #1e3a8a;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.cap-invoice-prescription-item__note {
+    margin-top: 8px;
+    color: #475569;
+    line-height: 1.55;
+    font-size: 0.9rem;
+}
+
+.cap-invoice-note {
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px dashed rgba(148, 163, 184, 0.5);
+    border-radius: 14px;
+    padding: 12px 14px;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.cap-invoice-note-time {
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.customer-appointments-page .cap-invoice-settled {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    color: #15803d;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.18);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-weight: 700;
+}
+
+.customer-appointments-page .cap-invoice-preview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: linear-gradient(135deg, rgba(255, 247, 237, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.customer-appointments-page .cap-invoice-preview__copy {
+    display: grid;
+    gap: 4px;
+}
+
+.customer-appointments-page .cap-invoice-preview__title {
+    color: #92400e;
+    font-weight: 800;
+}
+
+.customer-appointments-page .cap-invoice-preview__meta {
+    color: #64748b;
+    font-size: 0.92rem;
+}
+
+@media (max-width: 767.98px) {
+    .customer-appointments-page .cap-invoice-card {
+        padding: 16px;
+        border-radius: 20px;
+    }
+
+    .customer-appointments-page .cap-invoice-preview {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.customer-appointments-page .cap-btn-neutral {
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    color: #0f172a;
+}
+
+#cap-invoice-modal .cap-invoice-card {
+    margin-top: 14px;
+    background:
+        radial-gradient(circle at top right, rgba(251, 191, 36, 0.16), transparent 32%),
+        linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
+    border: 1px solid rgba(245, 158, 11, 0.18);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 18px 40px rgba(148, 163, 184, 0.12);
+}
+
+#cap-invoice-modal .cap-invoice-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#cap-invoice-modal .cap-invoice-title {
+    color: #92400e;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#cap-invoice-modal .cap-invoice-chip {
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.18);
+    color: #92400e;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+#cap-invoice-modal .cap-invoice-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+#cap-invoice-modal .cap-invoice-overview__item {
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    display: grid;
+    gap: 6px;
+}
+
+#cap-invoice-modal .cap-invoice-overview__item span {
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+#cap-invoice-modal .cap-invoice-overview__item strong {
+    color: #0f172a;
+    font-size: 0.96rem;
+    line-height: 1.45;
+}
+
+#cap-invoice-modal .cap-invoice-section {
+    margin-top: 14px;
+}
+
+#cap-invoice-modal .cap-invoice-section__title {
+    margin-bottom: 10px;
+    color: #92400e;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+#cap-invoice-modal .cap-invoice-list {
+    display: grid;
+    gap: 10px;
+}
+
+#cap-invoice-modal .cap-invoice-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+#cap-invoice-modal .cap-invoice-name {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+#cap-invoice-modal .cap-invoice-meta {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+#cap-invoice-modal .cap-invoice-amount {
+    color: #0f172a;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+#cap-invoice-modal .cap-invoice-total {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid rgba(245, 158, 11, 0.16);
+}
+
+#cap-invoice-modal .cap-invoice-total-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-weight: 700;
+    color: #334155;
+}
+
+#cap-invoice-modal .cap-invoice-total-line--due {
+    color: #b45309;
+}
+
+#cap-invoice-modal .cap-invoice-settled {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    color: #15803d;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.18);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-weight: 700;
+}
+
+.cap-payment-modal[hidden] {
+    display: none;
+}
+
+.cap-payment-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+.cap-payment-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.62);
+    backdrop-filter: blur(4px);
+}
+
+.cap-payment-modal__dialog {
+    position: relative;
+    width: min(540px, calc(100vw - 2rem));
+    padding: 1.5rem;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.24);
+    z-index: 1;
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+}
+
+.cap-payment-modal__dialog--invoice {
+    width: min(760px, calc(100vw - 2rem));
+}
+
+.cap-payment-modal__close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #334155;
+    cursor: pointer;
+}
+
+.cap-payment-modal__eyebrow {
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.cap-payment-modal__title {
+    margin: 12px 0 6px;
+    color: #0f172a;
+    font-size: 1.55rem;
+    font-weight: 800;
+}
+
+.cap-payment-modal__subtitle {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.cap-payment-modal__summary {
+    margin-top: 16px;
+    display: grid;
+    gap: 10px;
+}
+
+.cap-payment-modal__line,
+.cap-payment-modal__amount {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.cap-payment-modal__amount {
+    background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+    color: #fff;
+}
+
+.cap-payment-modal__methods {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.cap-payment-method {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: #fff;
+    cursor: pointer;
+}
+
+.cap-payment-method:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.10);
+}
+
+.cap-payment-method__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.cap-payment-method--wallet .cap-payment-method__icon {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.cap-payment-method--vnpay .cap-payment-method__icon {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.cap-payment-method__content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cap-payment-method__content strong {
+    color: #0f172a;
+}
+
+.cap-payment-method__content small {
+    color: #64748b;
+}
+
+body.cap-payment-modal-open {
+    overflow: hidden;
 }
 
 @media (max-width: 900px) {
@@ -1702,6 +2275,15 @@
 
     .customer-appointments-page .cap-inline-actions {
         flex-direction: column;
+    }
+
+    .cap-payment-modal {
+        padding: 16px 12px;
+    }
+
+    .cap-payment-modal__dialog {
+        padding: 1.1rem;
+        max-height: calc(100vh - 32px);
     }
 }
 

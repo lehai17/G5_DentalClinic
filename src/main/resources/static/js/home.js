@@ -53,7 +53,13 @@ window.addEventListener('click', function(event) {
 window.toggleSidebar = function () {
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.querySelector('.main-content');
+    const body = document.body;
 
     sidebar.classList.toggle('collapsed');
-    mainContent.classList.toggle('sidebar-collapsed');
+    if (mainContent) {
+        mainContent.classList.toggle('sidebar-collapsed');
+    }
+    if (body) {
+        body.classList.toggle('sidebar-collapsed');
+    }
 };
