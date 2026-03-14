@@ -352,17 +352,24 @@
             <span id="chat-badge" class="chat-badge hidden">0</span>
           </button>
 
-          <div id="chat-window" class="chat-window hidden" aria-live="polite">
-            <div class="chat-header">
-              <span>Chat với lễ tân</span>
-              <button id="chat-close" class="chat-close" type="button" aria-label="Đóng chat">&times;</button>
+            <div id="chat-window" class="chat-window hidden" aria-live="polite">
+              <div class="chat-header">
+                <span>Chat với lễ tân</span>
+                <button id="chat-close" class="chat-close" type="button" aria-label="Đóng chat">&times;</button>
+              </div>
+              <div id="chat-messages" class="chat-messages"></div>
+              <div id="chat-attachment-bar" class="chat-attachment-bar hidden">
+                <span id="chat-attachment-name" class="chat-attachment-name"></span>
+                <button id="chat-attachment-clear" type="button" class="chat-attachment-clear">Bỏ</button>
+              </div>
+              <div class="chat-input">
+                <button id="chat-attach" type="button" class="chat-attach" aria-label="Đính kèm tệp">📎</button>
+                <input id="chat-attachment" type="file" class="hidden"
+                       accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx,.txt,.csv" />
+                <input id="chat-text" type="text" maxlength="1000" placeholder="Nhập tin nhắn..." />
+                <button id="chat-send" type="button">Gửi</button>
+              </div>
             </div>
-            <div id="chat-messages" class="chat-messages"></div>
-            <div class="chat-input">
-              <input id="chat-text" type="text" maxlength="1000" placeholder="Nhập tin nhắn..." />
-              <button id="chat-send" type="button">Gửi</button>
-            </div>
-          </div>
         </div>
         <script th:src="@{/js/chat-widget.js}" defer></script>
       </th:block>

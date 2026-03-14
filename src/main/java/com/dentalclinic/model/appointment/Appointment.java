@@ -101,7 +101,9 @@ public class Appointment {
     // Tá»± Ä‘á»™ng gÃ¡n thá»i gian lÃºc insert vÃ o DB
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
     }
 
     // ThÃªm Getter vÃ  Setter (Quan trá»ng Ä‘á»ƒ Spring JPA Ä‘á»c Ä‘Æ°á»£c)
