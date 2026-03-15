@@ -66,6 +66,9 @@ public class SupportTicket {
     @Transient
     private String responderDisplayName;
 
+    @Transient
+    private String serviceLabel;
+
     public SupportTicket() {
     }
 
@@ -195,6 +198,14 @@ public class SupportTicket {
 
     public void setResponderDisplayName(String responderDisplayName) {
         this.responderDisplayName = responderDisplayName;
+    }
+
+    public String getServiceLabel() {
+        return serviceLabel;
+    }
+
+    public void setServiceLabel(String serviceLabel) {
+        this.serviceLabel = serviceLabel;
     }
 
     public boolean isClosed() {

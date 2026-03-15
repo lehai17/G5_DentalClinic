@@ -140,6 +140,8 @@ form {
     border-radius: 12px;
     font-size: 14px;
     transition: all 0.2s ease;
+    box-sizing: border-box;
+    max-width: 100%;
 }
 
 .form-control:focus {
@@ -172,8 +174,10 @@ select.form-control:disabled {
 }
 
 textarea.form-control {
-    resize: vertical;
-    min-height: 100px;
+    resize: none;
+    height: 84px;
+    min-height: 84px;
+    line-height: 1.4;
     padding-right: 14px;
 }
 

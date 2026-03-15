@@ -40,12 +40,14 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Giá»¯ tÃªn method Ä‘á»ƒ khá»›p cÃ¡c service/controller Ä‘ang gá»i.
      */
     @Query("""
-        SELECT s
+        SELECT DISTINCT s
         FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
-        LEFT JOIN FETCH a.dentist ad
-        LEFT JOIN FETCH ad.user
+        LEFT JOIN FETCH a.appointmentDetails ad
+        LEFT JOIN FETCH ad.service
+        LEFT JOIN FETCH a.dentist adp
+        LEFT JOIN FETCH adp.user
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
@@ -58,11 +60,13 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Láº¥y danh sÃ¡ch phiáº¿u há»— trá»£ hiá»ƒn thá»‹ cho BÃ¡c sÄ©.
      */
     @Query("""
-        SELECT s FROM SupportTicket s
+        SELECT DISTINCT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
-        LEFT JOIN FETCH a.dentist ad
-        LEFT JOIN FETCH ad.user
+        LEFT JOIN FETCH a.appointmentDetails ad
+        LEFT JOIN FETCH ad.service
+        LEFT JOIN FETCH a.dentist adp
+        LEFT JOIN FETCH adp.user
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
@@ -75,11 +79,13 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Lá»c danh sÃ¡ch phiáº¿u há»— trá»£ theo tráº¡ng thÃ¡i dÃ nh cho BÃ¡c sÄ©.
      */
     @Query("""
-        SELECT s FROM SupportTicket s
+        SELECT DISTINCT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
-        LEFT JOIN FETCH a.dentist ad
-        LEFT JOIN FETCH ad.user
+        LEFT JOIN FETCH a.appointmentDetails ad
+        LEFT JOIN FETCH ad.service
+        LEFT JOIN FETCH a.dentist adp
+        LEFT JOIN FETCH adp.user
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
@@ -96,11 +102,13 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Xem chi tiáº¿t má»™t phiáº¿u há»— trá»£ dÃ nh cho BÃ¡c sÄ© (Kiá»ƒm tra quyá»n sá»Ÿ há»¯u).
      */
     @Query("""
-        SELECT s FROM SupportTicket s
+        SELECT DISTINCT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
-        LEFT JOIN FETCH a.dentist ad
-        LEFT JOIN FETCH ad.user
+        LEFT JOIN FETCH a.appointmentDetails ad
+        LEFT JOIN FETCH ad.service
+        LEFT JOIN FETCH a.dentist adp
+        LEFT JOIN FETCH adp.user
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff

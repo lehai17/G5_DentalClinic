@@ -21,6 +21,7 @@
     <nav class="nav">
       <a class="nav-item" href="/dentist/dashboard">Tổng quan</a>
       <a class="nav-item" href="/dentist/work-schedule">Lịch làm việc</a>
+      <a class="nav-item" href="/dentist/examined-patients">Bệnh nhân của tôi</a>
       <a class="nav-item" href="/dentist/busy-schedule">Lịch bận</a>
       <a class="nav-item active" href="/dentist/support">Phiếu hỗ trợ</a>
       <a class="nav-item" href="/dentist/profile">Hồ sơ</a>
@@ -47,7 +48,7 @@
             <th>BỆNH NHÂN</th>
             <th>THỜI ĐIỂM TẠO</th>
             <th>DỊCH VỤ</th>
-            <th>NỘI DUNG MỚI NHẤT</th>
+            <th>TIÊU ĐỀ</th>
             <th>TRẠNG THÁI</th>
             <th>HÀNH ĐỘNG</th>
           </tr>
@@ -57,7 +58,7 @@
           <tr th:each="t : ${tickets}">
             <td th:text="${t.customer.customerProfile.fullName}"></td>
             <td th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}"></td>
-            <td th:text="${t.appointment != null && t.appointment.service != null ? t.appointment.service.name : '-'}"></td>
+            <td th:text="${t.serviceLabel}"></td>
             <td th:text="${#strings.abbreviate(t.latestCustomerMessage, 60)}"></td>
             <td>
               <span th:class="'badge ' + (${t.displayStatus} == 'OPEN' ? 'open' : 'closed')"

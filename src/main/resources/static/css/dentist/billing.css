@@ -5,6 +5,7 @@
 .billing-page {
     background: #f3f4f6;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    overflow: auto;
 }
 
 .billing-container {
@@ -109,6 +110,11 @@
     transition: 0.2s;
 }
 
+.svc-qty::placeholder {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
 /* tooth input */
 .svc-tooth {
     height: 38px;
@@ -117,6 +123,11 @@
     padding: 0 14px;
     background: #ffffff;
     transition: 0.2s;
+}
+
+.svc-tooth::placeholder {
+    color: #9ca3af;
+    font-size: 13px;
 }
 
 /* focus effect */
@@ -180,6 +191,11 @@
     padding: 0 12px;
     background: #ffffff;
     transition: 0.2s;
+}
+
+#rxTable input::placeholder {
+    color: #9ca3af;
+    font-size: 13px;
 }
 
 #rxTable input:focus {
@@ -378,16 +394,5 @@ textarea:focus {
 #btnAddRx:hover {
     background: #2563eb;
     color: #ffffff;
-}
-#performedTable tbody tr:first-child .del {
-    display: none;
-}
-#performedTable tbody tr:first-child select {
-    pointer-events: none;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: none;
-    background-color: #f3f4f6;
 }
 
