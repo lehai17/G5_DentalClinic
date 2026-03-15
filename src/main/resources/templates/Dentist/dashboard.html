@@ -94,18 +94,23 @@
                         </div>
 
                         <div class="weekly-chips">
-                            <div class="weekly-chip good">
-                                <div class="chip-label">HOÀN THÀNH</div>
-                                <div class="chip-value" th:text="${completedWeek}">0</div>
-                            </div>
                             <div class="weekly-chip pending">
                                 <div class="chip-label">CHỜ KHÁM</div>
                                 <div class="chip-value" th:text="${pendingWeek}">0</div>
+                            </div>
+                            <div class="weekly-chip examining">
+                                <div class="chip-label">ĐANG KHÁM</div>
+                                <div class="chip-value" th:text="${examiningWeek}">0</div>
+                            </div>
+                            <div class="weekly-chip good">
+                                <div class="chip-label">HOÀN THÀNH</div>
+                                <div class="chip-value" th:text="${completedWeek}">0</div>
                             </div>
                         </div>
 
                         <div class="weekly-legend">
                             <span class="legend-item"><span class="dot dot-pending"></span> Chờ khám</span>
+                            <span class="legend-item"><span class="dot dot-examining"></span> Đang khám</span>
                             <span class="legend-item"><span class="dot dot-done"></span> Hoàn thành</span>
                         </div>
 
@@ -113,10 +118,12 @@
                             <div class="weekly-bars">
                                 <div class="wk-col" th:each="d : ${dailyStats}">
                                     <div class="wk-bar">
-                                        <div class="seg seg-pending"
-                                             th:style="${'height:' + (d.pending * 100.0 / maxDailyTotal) + '%'}"></div>
                                         <div class="seg seg-done"
                                              th:style="${'height:' + (d.completed * 100.0 / maxDailyTotal) + '%'}"></div>
+                                        <div class="seg seg-examining"
+                                             th:style="${'height:' + (d.examining * 100.0 / maxDailyTotal) + '%'}"></div>
+                                        <div class="seg seg-pending"
+                                             th:style="${'height:' + (d.pending * 100.0 / maxDailyTotal) + '%'}"></div>
                                     </div>
                                     <div class="wk-tooltip">
                                         <div class="tt-date" th:text="${d.label}"></div>
@@ -124,6 +131,11 @@
                                             <span class="tt-dot done"></span>
                                             <span>Hoàn thành</span>
                                             <strong th:text="${d.completed}">0</strong>
+                                        </div>
+                                        <div class="tt-row">
+                                            <span class="tt-dot examining"></span>
+                                            <span>Đang khám</span>
+                                            <strong th:text="${d.examining}">0</strong>
                                         </div>
                                         <div class="tt-row">
                                             <span class="tt-dot pending"></span>

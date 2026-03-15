@@ -196,6 +196,7 @@ public class DentistWebController {
         long totalWeek = 0;
         long completedWeek = 0;
         long pendingWeek = 0;
+        long examiningWeek = 0;
 
         List<DailyStatView> dailyStats = new ArrayList<>();
         for (LocalDate d : weekDays) {
@@ -205,19 +206,23 @@ public class DentistWebController {
                     + map.getOrDefault(AppointmentStatus.COMPLETED, 0L)
                     + map.getOrDefault(AppointmentStatus.WAITING_PAYMENT, 0L);
 
+            long examiningCount = map.getOrDefault(AppointmentStatus.EXAMINING, 0L);
+
             long pendingCount = map.getOrDefault(AppointmentStatus.CONFIRMED, 0L)
                     + map.getOrDefault(AppointmentStatus.CHECKED_IN, 0L);
 
-            long dayTotal = finishedCount + pendingCount;
+            long dayTotal = finishedCount + examiningCount + pendingCount;
 
             totalWeek += dayTotal;
             completedWeek += finishedCount;
+            examiningWeek += examiningCount;
             pendingWeek += pendingCount;
 
             dailyStats.add(new DailyStatView(
                     d,
                     d.format(DateTimeFormatter.ofPattern("dd/MM")),
                     finishedCount,
+                    examiningCount,
                     pendingCount,
                     dayTotal
             ));
@@ -243,8 +248,11 @@ public class DentistWebController {
                 .filter(a -> a.getDate() != null)
                 .filter(a -> a.getDate().isAfter(today)
                         || (a.getDate().isEqual(today)
-                        && a.getStartTime() != null
-                        && !a.getStartTime().isBefore(now)))
+                        && (
+                        a.getStatus() == AppointmentStatus.EXAMINING
+                                || (a.getStartTime() != null && !a.getStartTime().isBefore(now))
+                                || (a.getEndTime() != null && !a.getEndTime().isBefore(now))
+                )))
                 .limit(3)
                 .map(a -> new UpcomingAppointmentView(
                         a.getId(),
@@ -270,6 +278,7 @@ public class DentistWebController {
         model.addAttribute("weekEnd", weekEnd);
         model.addAttribute("totalWeek", totalWeek);
         model.addAttribute("completedWeek", completedWeek);
+        model.addAttribute("examiningWeek", examiningWeek);
         model.addAttribute("pendingWeek", pendingWeek);
         model.addAttribute("dailyStats", dailyStats);
         model.addAttribute("maxDailyTotal", safeMaxDailyTotal);
@@ -321,6 +330,7 @@ public class DentistWebController {
             LocalDate date,
             String label,
             long completed,
+            long examining,
             long pending,
             long total
     ) {}

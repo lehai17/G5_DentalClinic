@@ -223,8 +223,8 @@
 }
 
 .weekly-chip.good{
-    background: rgba(16,185,129,0.10);
-    border-color: rgba(16,185,129,0.18);
+    background: rgba(248,250,252,0.95);
+    border-color: rgba(16,185,129,0.28);
 }
 
 .weekly-chip.warn{
@@ -233,13 +233,18 @@
 }
 
 .weekly-chip.pending{
-    background: rgba(37,99,235,0.08);
-    border-color: rgba(37,99,235,0.16);
+    background: rgba(248,250,252,0.95);
+    border-color: rgba(37,99,235,0.28);
 }
 
 .weekly-chip.bad{
     background: rgba(239,68,68,0.08);
     border-color: rgba(239,68,68,0.16);
+}
+
+.weekly-chip.examining{
+    background: rgba(248,250,252,0.95);
+    border-color: rgba(245,158,11,0.30);
 }
 
 .chip-label{
@@ -281,6 +286,7 @@
 }
 
 .dot-pending{background:#2563eb}
+.dot-examining{background:#f59e0b}
 .dot-done{background:#10b981}
 
 .weekly-chart{
@@ -321,6 +327,7 @@
 }
 
 .seg-done{background:#10b981}
+.seg-examining{background:#f59e0b}
 .seg-pending{background:#2563eb}
 
 .wk-label{
@@ -390,6 +397,7 @@
 }
 
 .tt-dot.done{background:#10b981}
+.tt-dot.examining{background:#f59e0b}
 .tt-dot.pending{background:#2563eb}
 
 /* ================= UPCOMING ================= */
