@@ -296,5 +296,6 @@ public class StaffAppointmentService {
 
         return total.setScale(2, RoundingMode.HALF_UP);
     }
+
 }
 

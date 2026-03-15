@@ -810,11 +810,83 @@
     return s.length >= 5 ? s.substring(0, 5) : s;
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
+    window.customerBookingAI = {
+        applySuggestion: function (payload) {
+            if (!payload) return;
 
+            var selectedDateInput = document.getElementById('selected-date');
+            var selectedTimeInput = document.getElementById('selected-time');
+
+            if (payload.date) {
+                state.selectedDate = payload.date;
+                if (selectedDateInput) {
+                    selectedDateInput.value = payload.date;
+                }
+            }
+
+            if (payload.startTime) {
+                state.selectedSlot = {
+                    id: 'ai-selected-slot',
+                    startTime: payload.startTime,
+                    endTime: payload.endTime || null
+                };
+
+                if (selectedTimeInput) {
+                    selectedTimeInput.value = payload.startTime;
+                }
+            }
+
+            renderCalendar();
+            updateSummary();
+
+            if (payload.date) {
+                setStep(2);
+                loadSlotsForDate(payload.date).then(function () {
+                    if (!payload.startTime || !Array.isArray(state.renderedSlots)) return;
+
+                    var matched = state.renderedSlots.find(function (slot) {
+                        var hasSpotsValue = slot.availableSpots !== undefined && slot.availableSpots !== null;
+                        var availableSpots = hasSpotsValue ? Number(slot.availableSpots) : null;
+                        var isDisabled = slot.disabled === true;
+                        var isFull = hasSpotsValue ? availableSpots <= 0 : slot.available === false;
+                        var isAvailable = !isDisabled && !isFull;
+
+                        return String(slot.startTime) === String(payload.startTime) && isAvailable;
+                    });
+
+                    if (matched) {
+                        state.selectedSlot = matched;
+
+                        if (selectedTimeInput) {
+                            selectedTimeInput.value = matched.startTime;
+                        }
+
+                        var slotGrid = document.getElementById('time-slots-grid');
+                        if (slotGrid) {
+                            applySelectedSlotVisualState(slotGrid);
+                        }
+
+                        updateSummary();
+                    } else {
+                        state.selectedSlot = null;
+
+                        if (selectedTimeInput) {
+                            selectedTimeInput.value = '';
+                        }
+
+                        updateSummary();
+                    }
+                });
+            }
+
+            showAlert('Đã áp dụng gợi ý AI vào form đặt lịch.', 'success', 'Thành công');
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
 

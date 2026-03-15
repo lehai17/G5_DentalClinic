@@ -52,6 +52,32 @@
             </div>
           </div>
 
+            <div class="ai-booking-box" style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #f9fafb;">
+                <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem; font-weight: 700;">
+                    Đặt lịch nhanh bằng AI
+                </h3>
+
+                <p style="margin-bottom: 0.75rem; color: #6b7280;">
+                    Ví dụ: “Tôi muốn cạo vôi răng chiều mai”, “Tôi đau răng và muốn khám sớm nhất”
+                </p>
+
+                <textarea
+                        id="ai-booking-message"
+                        class="form-textarea"
+                        placeholder="Nhập nhu cầu khám của bạn để AI gợi ý dịch vụ và khung giờ phù hợp"
+                        style="min-height: 100px;"
+                ></textarea>
+
+                <div style="margin-top: 0.75rem; display: flex; gap: 0.75rem; align-items: center;">
+                    <button type="button" id="btn-ai-suggest" class="btn-primary">
+                        AI gợi ý lịch
+                    </button>
+                    <span id="ai-booking-loading" style="display:none; color:#6b7280;">Đang phân tích...</span>
+                </div>
+
+                <div id="ai-booking-result" style="margin-top: 1rem; display:none;"></div>
+            </div>
+
           <!-- Main Booking Card -->
           <div class="booking-card">
             <!-- Left Column: Calendar & Time Slots -->
@@ -465,6 +491,7 @@
 
     <script th:src="@{/js/customer-feedback.js}"></script>
     <script th:src="@{/js/customer-booking.js}"></script>
+    <script th:src="@{/js/customer-booking-ai.js}"></script>
   </body>
 </html>
 
