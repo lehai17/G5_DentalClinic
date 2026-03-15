@@ -185,6 +185,31 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     """)
     long countCompletedByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
 
+    @Query("""
+        SELECT a.date, a.status, COUNT(a)
+        FROM Appointment a
+        WHERE a.dentist.id = :dentistId
+          AND a.date BETWEEN :start AND :end
+        GROUP BY a.date, a.status
+    """)
+    List<Object[]> countStatusByDentistAndDateRange(@Param("dentistId") Long dentistId,
+                                                    @Param("start") LocalDate start,
+                                                    @Param("end") LocalDate end);
+
+    @EntityGraph(attributePaths = {"customer", "customer.user", "appointmentDetails", "appointmentDetails.service", "service", "dentist"})
+    @Query("""
+        SELECT a
+        FROM Appointment a
+        WHERE a.dentist.id = :dentistId
+          AND a.status IN :statuses
+          AND a.date >= :today
+        ORDER BY a.date ASC, a.startTime ASC
+    """)
+    List<Appointment> findUpcomingForDentist(@Param("dentistId") Long dentistId,
+                                             @Param("statuses") List<AppointmentStatus> statuses,
+                                             @Param("today") LocalDate today,
+                                             Pageable pageable);
+
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.dentist.id = :dentistId AND a.date >= :currentDate AND a.status NOT IN :excludedStatuses")
     int countUpcomingAppointments(@Param("dentistId") Long dentistId,
                                   @Param("currentDate") LocalDate currentDate,
@@ -193,6 +218,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // =========================================================
     // 5. CUSTOMER & STATUS QUERIES
     // =========================================================
+
+    @EntityGraph(attributePaths = {"customer", "customer.user", "appointmentDetails", "appointmentDetails.service", "service", "dentist"})
+    List<Appointment> findByDentist_IdAndStatusIn(Long dentistId, List<AppointmentStatus> statuses);
 
     @Query("SELECT a FROM Appointment a WHERE a.customer.id = :customerId AND a.status = 'COMPLETED' ORDER BY a.date DESC, a.startTime DESC")
     List<Appointment> findCompletedAppointmentsByCustomerId(@Param("customerId") Long customerId);

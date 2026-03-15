@@ -108,6 +108,11 @@ public class DentistSessionService {
         if (form.getImages() != null) {
             for (MedicalImage i : form.getImages()) {
 
+                // URL is required for persistence (medical_image.url is NOT NULL).
+                if (i.getUrl() == null || i.getUrl().isBlank()) {
+                    continue;
+                }
+
                 boolean isEmpty =
                         (i.getUrl() == null || i.getUrl().isBlank()) &&
                                 (i.getType() == null || i.getType().isBlank()) &&

@@ -162,7 +162,7 @@
       <div style="display:flex;justify-content:space-between;align-items:end;">
         <div>
           <div style="font-weight:900;">F) Hình ảnh nha khoa</div>
-          <div class="mini">Thêm đường dẫn ảnh, loại ảnh và ghi chú.</div>
+          <div class="mini">Chọn ảnh từ máy, chọn loại ảnh và ghi chú (nếu có).</div>
         </div>
         <button type="button" class="icon-mini" id="btnAddImg">+ Thêm</button>
       </div>
@@ -170,7 +170,7 @@
       <table class="tbl" id="imgTable">
         <thead>
         <tr>
-          <th>Đường dẫn ảnh</th>
+          <th>Ảnh</th>
           <th style="width:140px;">Loại ảnh</th>
           <th>Ghi chú</th>
           <th style="width:60px;"></th>
@@ -178,7 +178,31 @@
         </thead>
         <tbody>
           <tr th:each="i,stat : *{images}">
-            <td><input th:field="*{images[__${stat.index}__].url}" /></td>
+            <td>
+              <div class="img-upload">
+                <input class="img-file" type="file" accept="image/*"/>
+                <input class="img-url" type="hidden" th:field="*{images[__${stat.index}__].url}"/>
+                <a class="img-open"
+                   th:if="${i.url != null and !#strings.isEmpty(i.url)}"
+                   th:href="${i.url}"
+                   target="_blank"
+                   rel="noopener"
+                   style="display:inline-block;">
+                  <img class="img-preview"
+                       th:src="${i.url}"
+                       alt="Ảnh nha khoa"/>
+                </a>
+                <a class="img-open"
+                   th:if="${i.url == null or #strings.isEmpty(i.url)}"
+                   href="#"
+                   target="_blank"
+                   rel="noopener"
+                   style="display:none;">
+                  <img class="img-preview" style="display:none" alt="Ảnh nha khoa"/>
+                </a>
+                <div class="img-status"></div>
+              </div>
+            </td>
             <td>
               <select th:field="*{images[__${stat.index}__].type}">
                 <option value=""></option>
@@ -233,7 +257,16 @@
     const idx = getNextIndex('#imgTable');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input name="images[${idx}].url" placeholder="https://..."/></td>
+      <td>
+        <div class="img-upload">
+          <input class="img-file" type="file" accept="image/*"/>
+          <input class="img-url" type="hidden" name="images[${idx}].url"/>
+          <a class="img-open" href="#" target="_blank" rel="noopener" style="display:none;">
+            <img class="img-preview" style="display:none" alt="Ảnh nha khoa"/>
+          </a>
+          <div class="img-status"></div>
+        </div>
+      </td>
       <td>
         <select name="images[${idx}].type">
           <option value=""></option>
@@ -247,7 +280,79 @@
     `;
     tr.querySelector('.del').addEventListener('click', () => tr.remove());
     tbody.appendChild(tr);
+    wireImageRow(tr);
   });
+
+  async function uploadMedicalImage(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/dentist/medical-images/upload', { method: 'POST', body: fd });
+    if (!res.ok) {
+      throw new Error('UPLOAD_FAILED');
+    }
+    return await res.json();
+  }
+
+  function wireImageRow(tr) {
+    const fileInput = tr.querySelector('.img-file');
+    const urlInput = tr.querySelector('.img-url');
+    const openLink = tr.querySelector('.img-open');
+    const preview = openLink ? openLink.querySelector('.img-preview') : tr.querySelector('.img-preview');
+    const status = tr.querySelector('.img-status');
+    if (!fileInput || !urlInput) return;
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+
+      // Show local preview immediately
+      const localUrl = URL.createObjectURL(file);
+      if (openLink) {
+        openLink.href = localUrl;
+        openLink.style.display = 'inline-block';
+      }
+      if (preview) {
+        preview.src = localUrl;
+        preview.style.display = 'block';
+      }
+
+      tr.dataset.uploading = '1';
+      if (status) {
+        status.classList.remove('error');
+        status.textContent = 'Đang tải ảnh...';
+      }
+      fileInput.disabled = true;
+
+      try {
+        const data = await uploadMedicalImage(file);
+        if (!data || !data.url) {
+          throw new Error('NO_URL');
+        }
+        urlInput.value = data.url;
+
+        if (openLink) {
+          openLink.href = data.url;
+          openLink.style.display = 'inline-block';
+        }
+        if (preview) {
+          preview.src = data.url;
+          preview.style.display = 'block';
+        }
+        if (status) {
+          status.textContent = 'Đã tải lên';
+        }
+      } catch (e) {
+        urlInput.value = '';
+        if (status) {
+          status.classList.add('error');
+          status.textContent = 'Tải ảnh thất bại. Vui lòng thử lại.';
+        }
+      } finally {
+        fileInput.disabled = false;
+        tr.dataset.uploading = '0';
+      }
+    });
+  }
 
   document.getElementById('examForm').addEventListener('submit', () => {
     const container = document.getElementById('proposedInputs');
@@ -269,6 +374,27 @@
   });
   document.querySelectorAll('#imgTable tbody tr').forEach(tr => {
     tr.querySelector('.del')?.addEventListener('click', () => tr.remove());
+    wireImageRow(tr);
+  });
+
+  document.getElementById('examForm').addEventListener('submit', (e) => {
+    const uploading = Array.from(document.querySelectorAll('#imgTable tbody tr'))
+            .some(tr => tr.dataset.uploading === '1');
+    if (uploading) {
+      e.preventDefault();
+      alert('Đang tải ảnh lên. Vui lòng chờ hoàn tất rồi hãy lưu.');
+      return;
+    }
+
+    const hasFileButNoUrl = Array.from(document.querySelectorAll('#imgTable tbody tr')).some(tr => {
+      const fileInput = tr.querySelector('.img-file');
+      const urlInput = tr.querySelector('.img-url');
+      return fileInput && fileInput.files && fileInput.files.length > 0 && urlInput && !urlInput.value;
+    });
+    if (hasFileButNoUrl) {
+      e.preventDefault();
+      alert('Có ảnh chưa tải lên thành công. Vui lòng thử lại trước khi lưu.');
+    }
   });
 </script>
 <script>
