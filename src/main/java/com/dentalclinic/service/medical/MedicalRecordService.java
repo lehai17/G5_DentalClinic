@@ -61,6 +61,9 @@ public class MedicalRecordService {
         record.getImages().clear();
         if (form.getImages() != null) {
             for (com.dentalclinic.model.medical.MedicalImage i : form.getImages()) {
+                if (i.getUrl() == null || i.getUrl().isBlank()) {
+                    continue;
+                }
                 i.setMedicalRecord(record);
                 record.getImages().add(i);
             }

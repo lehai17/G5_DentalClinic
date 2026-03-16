@@ -83,10 +83,10 @@ public class DentistBusyController {
 
             Long dentistId = dentist.getId();
 
-            // 3. Gọi service để kiểm tra hạn mức (tối Ä‘a 2 buổi/tháng) v�  lưu đơn
+            // 3. Gọi service để kiểm tra hạn mức (tối Ä‘a 2 buổi/tháng) v?  lưu đơn
             adminBusyScheduleService.submitBusyRequest(dentistId, start, end, reason);
 
-            redirectAttributes.addFlashAttribute("message", "Đã gửi báo cáo nghỉ th� nh công!");
+            redirectAttributes.addFlashAttribute("message", "Đã gửi báo cáo nghỉ thành công!");
             return "redirect:/dentist/busy-schedule";
 
         } catch (Exception e) {

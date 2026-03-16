@@ -2,6 +2,8 @@ package com.dentalclinic.repository;
 
 import com.dentalclinic.model.medical.MedicalRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -10,17 +12,25 @@ import java.util.Optional;
 @Repository
 public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Long> {
 
-    // âœ… Láº¤Y medical record theo appointment
+    // ✅ LẤY medical record theo appointment
     Optional<MedicalRecord> findByAppointment_Id(Long appointmentId);
 
-    // âœ… customer xem record cá»§a chÃ­nh mÃ¬nh
+    // ✅ customer xem record của chính mình
     Optional<MedicalRecord> findByAppointment_IdAndAppointment_Customer_User_Id(
             Long appointmentId,
             Long customerUserId
     );
 
-    // âœ… lá»‹ch sá»­ khÃ¡m cá»§a customer (má»›i nháº¥t trÆ°á»›c)
+    // ✅ lịch sử khám của customer (mới nhất trước)
     List<MedicalRecord> findTop10ByAppointment_Customer_User_IdOrderByAppointment_DateDesc(
             Long customerUserId
     );
+
+    @Query("""
+        SELECT DISTINCT mr FROM MedicalRecord mr
+        LEFT JOIN FETCH mr.proposedServices ps
+        LEFT JOIN FETCH ps.service
+        WHERE mr.appointment.id IN :appointmentIds
+    """)
+    List<MedicalRecord> findByAppointment_IdInWithDetails(@Param("appointmentIds") List<Long> appointmentIds);
 }

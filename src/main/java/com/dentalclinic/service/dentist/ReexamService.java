@@ -4,7 +4,9 @@ import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentSlot;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.appointment.Slot;
+import com.dentalclinic.model.service.Services;
 import com.dentalclinic.repository.AppointmentRepository;
+import com.dentalclinic.repository.ServicesRepository;
 import com.dentalclinic.repository.SlotRepository;
 import com.dentalclinic.exception.BookingException;
 import com.dentalclinic.exception.BookingErrorCode;
@@ -34,10 +36,12 @@ public class ReexamService {
     
     private final AppointmentRepository appointmentRepository;
     private final SlotRepository slotRepository;
+    private final ServicesRepository servicesRepository;
     
-    public ReexamService(AppointmentRepository appointmentRepository, SlotRepository slotRepository) {
+    public ReexamService(AppointmentRepository appointmentRepository, SlotRepository slotRepository, ServicesRepository servicesRepository) {
         this.appointmentRepository = appointmentRepository;
         this.slotRepository = slotRepository;
+        this.servicesRepository = servicesRepository;
     }
     
     /**
@@ -46,7 +50,8 @@ public class ReexamService {
     public boolean isReexamAvailable(AppointmentStatus status) {
         return status == AppointmentStatus.EXAMINING ||
                status == AppointmentStatus.DONE ||
-               status == AppointmentStatus.COMPLETED;
+               status == AppointmentStatus.COMPLETED ||
+               status == AppointmentStatus.WAITING_PAYMENT;
     }
     
     /**
@@ -54,7 +59,8 @@ public class ReexamService {
      */
     public boolean isReadOnlyMode(AppointmentStatus status) {
         return status == AppointmentStatus.DONE ||
-               status == AppointmentStatus.COMPLETED;
+               status == AppointmentStatus.COMPLETED ||
+               status == AppointmentStatus.WAITING_PAYMENT;
     }
     
     /**
@@ -73,7 +79,8 @@ public class ReexamService {
             LocalDate newDate,
             LocalTime newStartTime,
             LocalTime newEndTime,
-            String notes
+            String notes,
+            Long serviceId
     ) {
         // Load original appointment
         Appointment original = appointmentRepository.findById(originalAppointmentId)
@@ -127,6 +134,14 @@ public class ReexamService {
             reexam.setEndTime(newEndTime);
             reexam.setNotes(notes);
             
+            // Update service if provided
+            if (serviceId != null) {
+                Services service = servicesRepository.findById(serviceId)
+                        .orElseThrow(() -> new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                                "Service not found"));
+                reexam.setService(service);
+            }
+            
             // Reserve new slots
             int slotsNeeded = calculateSlotsNeeded(newStartTime, newEndTime);
             List<Slot> newSlots = reserveSlots(newDate, newStartTime, slotsNeeded);
@@ -156,7 +171,17 @@ public class ReexamService {
             Appointment reexam = new Appointment();
             reexam.setCustomer(original.getCustomer());
             reexam.setDentist(original.getDentist());
-            reexam.setService(original.getService());
+            
+            // Set service: use provided serviceId if given, otherwise use original
+            if (serviceId != null) {
+                Services service = servicesRepository.findById(serviceId)
+                        .orElseThrow(() -> new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                                "Service not found"));
+                reexam.setService(service);
+            } else {
+                reexam.setService(original.getService());
+            }
+            
             reexam.setDate(newDate);
             reexam.setStartTime(newStartTime);
             reexam.setEndTime(newEndTime);

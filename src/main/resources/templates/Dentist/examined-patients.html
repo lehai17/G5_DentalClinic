@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Bệnh nhân của tôi</title>
+  <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dentist/support.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dentist/examined.css}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" style="display:flex;flex-direction:column;height:100vh;">
+    <div class="sidebar-top">
+      <div class="brand-mini">
+        <div class="brand-badge">D+</div>
+        <div style="font-weight:800">DentalPlus</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item" href="/dentist/dashboard">Tổng quan</a>
+      <a class="nav-item" href="/dentist/work-schedule">Lịch làm việc</a>
+      <a class="nav-item active" href="/dentist/examined-patients">Bệnh nhân của tôi</a>
+      <a class="nav-item" href="/dentist/busy-schedule">Lịch bận</a>
+      <a class="nav-item" href="/dentist/support">Phiếu hỗ trợ</a>
+      <a class="nav-item" href="/dentist/profile">Hồ sơ</a>
+    </nav>
+    <div style="margin-top:auto;">
+      <a class="nav-item danger" href="/logout">Đăng xuất</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="color:var(--muted);font-size:12px;">Chuyên mục › Bệnh nhân của tôi</div>
+    </div>
+
+    <div class="content">
+      <div class="support-panel">
+        <div class="support-header">
+          <div>
+            <h2 class="support-title">Bệnh nhân của tôi</h2>
+            <div class="support-sub">Danh sách các ca đã hoàn thành khám</div>
+          </div>
+
+          <form id="filterForm" class="support-filter" method="get" th:action="@{/dentist/examined-patients}">
+            <div class="filter-field">
+              <label for="searchInput">Tìm kiếm</label>
+              <input id="searchInput" class="filter-input" type="text" name="q"
+                     placeholder="Tên / số điện thoại / ID"
+                     th:value="${search}">
+            </div>
+            <div class="filter-field">
+              <label for="fromDate">Từ ngày</label>
+              <input id="fromDate" class="filter-input" type="date" name="from"
+                     th:value="${fromDate}">
+            </div>
+            <div class="filter-field">
+              <label for="toDate">Đến ngày</label>
+              <input id="toDate" class="filter-input" type="date" name="to"
+                     th:value="${toDate}">
+            </div>
+            <div class="filter-field">
+              <label for="statusFilter">Trạng thái</label>
+              <select id="statusFilter" name="status">
+                <option th:each="s : ${statusOptions}"
+                        th:value="${s}"
+                        th:text="${s == 'ALL' ? 'Tất cả' : s}"
+                        th:selected="${s == statusFilter}">
+                </option>
+              </select>
+            </div>
+            <input type="hidden" name="size" th:value="${pageSize}">
+            <button class="btn support-filter-btn" type="submit">Lọc</button>
+            <button class="btn ghost" type="button" id="resetFilters">Đặt lại</button>
+          </form>
+        </div>
+
+        <div class="examined-stats">
+          <div class="stat-card">
+            <div class="stat-label">Tổng ca đã xong</div>
+            <div class="stat-value" th:text="${totalDone}">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Ca hôm nay</div>
+            <div class="stat-value" th:text="${todayDone}">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Khám đơn</div>
+            <div class="stat-value" th:text="${singleCount}">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Khám chuỗi</div>
+            <div class="stat-value" th:text="${chainCount}">0</div>
+          </div>
+        </div>
+
+        <div class="support-table-wrap">
+          <table class="support-table examined-table">
+            <thead>
+            <tr>
+              <th>MÃ LỊCH HẸN</th>
+              <th>BỆNH NHÂN</th>
+              <th>ĐIỆN THOẠI</th>
+              <th>NGÀY GIỜ</th>
+              <th>DỊCH VỤ</th>
+              <th>TRẠNG THÁI</th>
+              <th>CHUỖI TÁI KHÁM</th>
+            </tr>
+            </thead>
+            <tbody>
+            <th:block th:each="chain : ${chains}">
+              <tr class="examined-row"
+                  th:attr="data-chain-id=${chain.root.id}">
+                <td th:text="${chain.root.id}">A1023</td>
+                <td>
+                  <div class="customer-name" th:text="${chain.root.customer.fullName}">Tên</div>
+                </td>
+                <td th:text="${chain.root.customer.phone}">-</td>
+                <td>
+                  <div th:text="${chain.root.date}">2024-03-12</div>
+                  <div class="muted"
+                       th:text="${#temporals.format(chain.root.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(chain.root.endTime, 'HH:mm')}">09:30 - 10:30</div>
+                </td>
+                <td>
+                  <span th:text="${chain.steps[0].serviceLabel}">-</span>
+                </td>
+                <td>
+                  <span class="badge status-badge"
+                        th:classappend="${chain.root.status != null ? chain.root.status.name().toLowerCase() : ''}"
+                        th:text="${chain.root.status}">DONE</span>
+                </td>
+                <td>
+                <div class="chain-pills">
+                  <button class="chain-pill"
+                          th:each="step,iter : ${chain.steps}"
+                          th:attr="data-chain-id=${chain.root.id},data-step-id=${step.appointment.id}"
+                          th:text="'#' + ${step.appointment.id}">#1</button>
+                </div>
+                </td>
+              </tr>
+              <tr class="chain-detail-row" hidden
+                  th:attr="data-chain-id=${chain.root.id}">
+              <td colspan="7">
+                <div class="chain-detail" th:attr="data-chain-id=${chain.root.id}">
+                  <div th:if="${chain.steps.size() > 1}" class="chain-timeline">
+                    <div class="chain-step"
+                         th:each="step,iter : ${chain.steps}"
+                         th:attr="data-chain-id=${chain.root.id},data-step-id=${step.appointment.id}">
+                      <button class="chain-step-btn"
+                              th:classappend="${iter.index == 0 ? ' active' : ''}"
+                              th:attr="data-chain-id=${chain.root.id},data-step-id=${step.appointment.id}"
+                              th:text="${iter.index + 1}">1</button>
+                      <div class="chain-step-meta">
+                        <span class="chain-step-id" th:text="'#' + ${step.appointment.id}">#59</span>
+                        <span>•</span>
+                        <span th:text="${#temporals.format(step.appointment.date, 'dd/MM/yyyy')}">15/03/2026</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="chain-step-panel"
+                       th:each="step,iter : ${chain.steps}"
+                       th:classappend="${iter.index == 0 ? ' active' : ''}"
+                       th:attr="data-chain-id=${chain.root.id},data-step-id=${step.appointment.id}">
+                    <div class="detail-header">
+                      <div>
+                        <div class="detail-name" th:text="${step.appointment.customer.fullName}">Tên</div>
+                        <div class="detail-meta">
+                          <span th:text="'#' + ${step.appointment.id}">#A1023</span>
+                          <span class="dot">•</span>
+                          <span th:text="${step.appointment.date}">2024-03-12</span>
+                          <span class="dot">•</span>
+                          <span th:text="${#temporals.format(step.appointment.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(step.appointment.endTime, 'HH:mm')}">09:30 - 10:30</span>
+                          <span class="dot">•</span>
+                          <span th:text="${step.appointment.status}">DONE</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="detail-section">
+                      <div class="detail-section-title"><i class="fas fa-notes-medical"></i> Chẩn đoán</div>
+                      <div class="detail-box"
+                           th:text="${step.medicalRecord != null ? step.medicalRecord.diagnosis : 'Chưa có dữ liệu'}"></div>
+                    </div>
+
+                    <div class="detail-grid">
+                      <div class="detail-section">
+                        <div class="detail-section-title"><i class="fas fa-comment-medical"></i> Triệu chứng</div>
+                        <div class="detail-box"
+                             th:text="${step.medicalRecord != null ? step.medicalRecord.complaintNote : 'Chưa có dữ liệu'}"></div>
+                      </div>
+                      <div class="detail-section">
+                        <div class="detail-section-title"><i class="fas fa-stethoscope"></i> Ghi chú lâm sàng</div>
+                        <div class="detail-box"
+                             th:text="${step.medicalRecord != null ? step.medicalRecord.clinicalNotes : 'Chưa có dữ liệu'}"></div>
+                      </div>
+                    </div>
+
+                    <div class="detail-section">
+                      <div class="detail-section-title"><i class="fas fa-tooth"></i> Ghi nhận theo răng</div>
+                      <div class="detail-box" th:if="${step.medicalRecord == null || step.medicalRecord.findings == null || step.medicalRecord.findings.isEmpty()}">
+                        Chưa có dữ liệu
+                      </div>
+                      <table class="detail-table" th:if="${step.medicalRecord != null && step.medicalRecord.findings != null && !step.medicalRecord.findings.isEmpty()}">
+                        <thead>
+                        <tr>
+                          <th>Răng</th>
+                          <th>Tình trạng</th>
+                          <th>Mức độ</th>
+                          <th>Ghi chú</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="f : ${step.medicalRecord.findings}">
+                          <td th:text="${f.toothNo}">36</td>
+                          <td th:text="${f.condition}">Sâu răng</td>
+                          <td th:text="${f.severity}">Nhẹ</td>
+                          <td th:text="${f.note}">-</td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div class="detail-section">
+                      <div class="detail-section-title"><i class="fas fa-list-check"></i> Dịch vụ đề xuất</div>
+                      <div class="chip-row" th:if="${step.medicalRecord == null || step.medicalRecord.proposedServices == null || step.medicalRecord.proposedServices.isEmpty()}">
+                        <span class="muted">Chưa có dữ liệu</span>
+                      </div>
+                      <div class="chip-row" th:if="${step.medicalRecord != null && step.medicalRecord.proposedServices != null && !step.medicalRecord.proposedServices.isEmpty()}">
+                        <span class="chip"
+                              th:each="ps : ${step.medicalRecord.proposedServices}"
+                              th:text="${ps.service != null ? ps.service.name : 'Dịch vụ'}">Dịch vụ</span>
+                      </div>
+                    </div>
+
+                    <div class="detail-section">
+                      <div class="detail-section-title"><i class="fas fa-image"></i> Hình ảnh nha khoa</div>
+                      <div class="detail-box" th:if="${step.medicalRecord == null || step.medicalRecord.images == null || step.medicalRecord.images.isEmpty()}">
+                        Chưa có dữ liệu
+                      </div>
+                      <div class="detail-grid" th:if="${step.medicalRecord != null && step.medicalRecord.images != null && !step.medicalRecord.images.isEmpty()}">
+                        <div class="detail-info-box" th:each="img : ${step.medicalRecord.images}">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                            <div><strong>Loại:</strong> <span th:text="${img.type}"></span></div>
+                            <a th:if="${img.url != null && !#strings.isEmpty(img.url)}"
+                               th:href="${img.url}"
+                               target="_blank"
+                               class="chain-pill"
+                               style="cursor:pointer">Mở ảnh</a>
+                          </div>
+                          <a th:if="${img.url != null && !#strings.isEmpty(img.url)}"
+                             th:href="${img.url}"
+                             target="_blank"
+                             style="display:block;margin-top:10px;">
+                            <img th:src="${img.url}"
+                                 alt="Ảnh nha khoa"
+                                 style="width:100%;max-width:420px;height:180px;object-fit:cover;border-radius:14px;border:1px solid #e2e8f0;background:#f8fafc;"/>
+                          </a>
+                          <div style="margin-top:10px;"><strong>Ghi chú:</strong> <span th:text="${img.note}"></span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="detail-section">
+                      <div class="detail-section-title"><i class="fas fa-pills"></i> Đơn thuốc</div>
+                      <div class="detail-box" th:if="${step.billingNote == null || step.billingNote.prescriptionItems == null || step.billingNote.prescriptionItems.isEmpty()}">
+                        Chưa có dữ liệu
+                      </div>
+                      <table class="detail-table" th:if="${step.billingNote != null && step.billingNote.prescriptionItems != null && !step.billingNote.prescriptionItems.isEmpty()}">
+                        <thead>
+                        <tr>
+                          <th>Thuốc</th>
+                          <th>Liều lượng</th>
+                          <th>Ghi chú</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="rx : ${step.billingNote.prescriptionItems}">
+                          <td th:text="${rx.medicineName}">Ibuprofen</td>
+                          <td th:text="${rx.dosage}">400mg</td>
+                          <td th:text="${rx.note}">-</td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            </th:block>
+            <tr th:if="${chains == null || chains.isEmpty()}">
+              <td colspan="7" style="text-align:center; padding:30px; color:#999;">Chưa có dữ liệu.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <div class="page-info" th:text="'Showing ' + ${totalChains == 0 ? 0 : ((page - 1) * pageSize + 1)} + '-' + ${T(java.lang.Math).min(page * pageSize, totalChains)} + ' of ' + ${totalChains} + ' records'">
+            Showing 0-0 of 0 records
+          </div>
+          <div class="page-controls">
+            <a class="page-btn"
+               th:href="@{/dentist/examined-patients(page=${page - 1},size=${pageSize},q=${search},from=${fromDate},to=${toDate},status=${statusFilter})}"
+               th:classappend="${page <= 1 ? ' disabled' : ''}">‹</a>
+            <span class="page-number" th:each="p : ${#numbers.sequence(1, totalPages)}"
+                  th:classappend="${p == page ? ' active' : ''}">
+              <a th:href="@{/dentist/examined-patients(page=${p},size=${pageSize},q=${search},from=${fromDate},to=${toDate},status=${statusFilter})}"
+                 th:text="${p}">1</a>
+            </span>
+            <a class="page-btn"
+               th:href="@{/dentist/examined-patients(page=${page + 1},size=${pageSize},q=${search},from=${fromDate},to=${toDate},status=${statusFilter})}"
+               th:classappend="${page >= totalPages ? ' disabled' : ''}">›</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/dentist/examined.js"></script>
+</body>
+</html>

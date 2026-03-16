@@ -61,10 +61,10 @@ public class AdminStaffController {
         }
         try {
             staffService.saveStaff(dto);
-            ra.addFlashAttribute("success", "Thêm nhï¿½n viên th� nh công!");
+            ra.addFlashAttribute("success", "Th\u00eam nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
             return "redirect:/admin/staff";
         } catch (RuntimeException e) {
-            // Giữ lại form v�  hiển thị lỗi
+            // Giữ lại form v?  hiển thị lỗi
             model.addAttribute("error", e.getMessage());
             model.addAttribute("activePage", "staff");
             return "admin/add-staff";
@@ -75,7 +75,7 @@ public class AdminStaffController {
     public String lockStaff(@PathVariable("id") Long userId, RedirectAttributes ra) {
         // userId n� y l�  ID của bảng User để khớp với h� m trong Service của bạn
         staffService.deactivateStaff(userId);
-        ra.addFlashAttribute("success", "ï¿½ï¿½ khóa nhï¿½n viên th� nh công!");
+        ra.addFlashAttribute("success", "\u0110\u00e3 kh\u00f3a nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
         return "redirect:/admin/staff";
     }
 
@@ -84,7 +84,7 @@ public class AdminStaffController {
         try {
             // Gọi h� m dùng chung để đưa trạng thï¿½i về ACTIVE
             staffService.updateStaffStatus(id, UserStatus.ACTIVE);
-            ra.addFlashAttribute("success", "ï¿½ï¿½ mở khóa nhï¿½n viên th� nh công!");
+            ra.addFlashAttribute("success", "\u0110\u00e3 m\u1edf kh\u00f3a nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -110,12 +110,12 @@ public class AdminStaffController {
                               @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
                               org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
-            ra.addFlashAttribute("error", "Kiểm tra lại thông tin cập nhật (có thể do lỗi định dạng).");
+            ra.addFlashAttribute("error", "Ki\u1ec3m tra l\u1ea1i th\u00f4ng tin c\u1eadp nh\u1eadt (c\u00f3 th\u1ec3 do l\u1ed7i \u0111\u1ecbnh d\u1ea1ng).");
             return "redirect:/admin/staff";
         }
         try {
             staffService.updateStaff(id, dto);
-            ra.addFlashAttribute("success", "Cập nhật nhï¿½n viên th� nh công!");
+            ra.addFlashAttribute("success", "C\u1eadp nh\u1eadt nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -128,7 +128,7 @@ public class AdminStaffController {
         try {
             staffService.deleteStaff(id);
             return org.springframework.http.ResponseEntity.ok()
-                    .body(java.util.Map.of("success", true, "message", "Xóa nhï¿½n viên th� nh công!"));
+                    .body(java.util.Map.of("success", true, "message", "X\u00f3a nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!"));
         } catch (Exception e) {
             return org.springframework.http.ResponseEntity.badRequest()
                     .body(java.util.Map.of("success", false, "message", e.getMessage()));

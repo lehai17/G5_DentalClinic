@@ -2,10 +2,12 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Tổng quan</title>
 
     <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
     <link rel="stylesheet" th:href="@{/css/dentist/dashboard.css}"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
@@ -21,6 +23,7 @@
         <nav class="nav">
             <a class="nav-item active" href="/dentist/dashboard">Tổng quan</a>
             <a class="nav-item" href="/dentist/work-schedule">Lịch làm việc</a>
+            <a class="nav-item" href="/dentist/examined-patients">Bệnh nhân của tôi</a>
             <a class="nav-item" href="/dentist/busy-schedule">Lịch bận</a>
             <a class="nav-item" href="/dentist/support">Phiếu hỗ trợ</a>
             <a class="nav-item" href="/dentist/profile">Hồ sơ</a>
@@ -44,31 +47,29 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon blue">📅</div>
+                    <div class="stat-icon blue"><i class="fa-regular fa-calendar"></i></div>
                     <div class="stat-label">LỊCH HẸN HÔM NAY</div>
                     <div class="stat-value" th:text="${totalToday}">0</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon green">✔</div>
+                    <div class="stat-icon green"><i class="fa-solid fa-check"></i></div>
                     <div class="stat-label">ĐÃ HOÀN THÀNH HÔM NAY</div>
                     <div class="stat-value" th:text="${completedToday}">0</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon orange">⏳</div>
+                    <div class="stat-icon orange"><i class="fa-regular fa-hourglass"></i></div>
                     <div class="stat-label">CÒN LẠI HÔM NAY</div>
                     <div class="stat-value" th:text="${remainingToday}">0</div>
                 </div>
             </div>
 
-            <div class="overview-section">
-                <h2 class="overview-title">Tổng quan hôm nay</h2>
-
-                <div>
-                    <div class="completion-box">
+            <div class="dash-grid">
+                <div class="dash-left">
+                    <div class="dash-card completion-card">
                         <div class="completion-header">
-                            <span>Tỷ lệ hoàn thành</span>
+                            <span>Tỷ lệ hoàn thành hôm nay</span>
                             <span class="completion-percent" th:text="${completionRate} + '%'">0%</span>
                         </div>
 
@@ -80,6 +81,121 @@
                              th:text="'Đã hoàn thành ' + ${completedToday} + ' / ' + ${totalToday} + ' lịch hẹn hôm nay.'">
                             Đã hoàn thành 0 / 0 lịch hẹn hôm nay.
                         </div>
+                    </div>
+
+                    <div class="dash-card weekly-card">
+                        <div class="weekly-head">
+                            <div class="weekly-title">Thống kê tuần này</div>
+                            <div class="weekly-busiest" th:if="${busiestDayLabel != null}">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span th:text="'Bận nhất: ' + ${busiestDayLabel} + ' (' + ${busiestDayTotal} + ' lịch)'">
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="weekly-chips">
+                            <div class="weekly-chip pending">
+                                <div class="chip-label">CHỜ KHÁM</div>
+                                <div class="chip-value" th:text="${pendingWeek}">0</div>
+                            </div>
+                            <div class="weekly-chip examining">
+                                <div class="chip-label">ĐANG KHÁM</div>
+                                <div class="chip-value" th:text="${examiningWeek}">0</div>
+                            </div>
+                            <div class="weekly-chip good">
+                                <div class="chip-label">HOÀN THÀNH</div>
+                                <div class="chip-value" th:text="${completedWeek}">0</div>
+                            </div>
+                        </div>
+
+                        <div class="weekly-legend">
+                            <span class="legend-item"><span class="dot dot-pending"></span> Chờ khám</span>
+                            <span class="legend-item"><span class="dot dot-examining"></span> Đang khám</span>
+                            <span class="legend-item"><span class="dot dot-done"></span> Hoàn thành</span>
+                        </div>
+
+                        <div class="weekly-chart">
+                            <div class="weekly-bars">
+                                <div class="wk-col" th:each="d : ${dailyStats}">
+                                    <div class="wk-bar">
+                                        <div class="seg seg-done"
+                                             th:style="${'height:' + (d.completed * 100.0 / maxDailyTotal) + '%'}"></div>
+                                        <div class="seg seg-examining"
+                                             th:style="${'height:' + (d.examining * 100.0 / maxDailyTotal) + '%'}"></div>
+                                        <div class="seg seg-pending"
+                                             th:style="${'height:' + (d.pending * 100.0 / maxDailyTotal) + '%'}"></div>
+                                    </div>
+                                    <div class="wk-tooltip">
+                                        <div class="tt-date" th:text="${d.label}"></div>
+                                        <div class="tt-row">
+                                            <span class="tt-dot done"></span>
+                                            <span>Hoàn thành</span>
+                                            <strong th:text="${d.completed}">0</strong>
+                                        </div>
+                                        <div class="tt-row">
+                                            <span class="tt-dot examining"></span>
+                                            <span>Đang khám</span>
+                                            <strong th:text="${d.examining}">0</strong>
+                                        </div>
+                                        <div class="tt-row">
+                                            <span class="tt-dot pending"></span>
+                                            <span>Chờ khám</span>
+                                            <strong th:text="${d.pending}">0</strong>
+                                        </div>
+                                    </div>
+                                    <div class="wk-label" th:text="${d.label}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-right">
+                    <div class="dash-card upcoming-card">
+                        <div class="upcoming-head">
+                            <div class="upcoming-title">Ca khám sắp tới</div>
+                        </div>
+
+                        <div class="upcoming-empty" th:if="${upcomingAppointments == null || upcomingAppointments.isEmpty()}">
+                            Chưa có ca khám sắp tới.
+                        </div>
+
+                        <div class="upcoming-list" th:if="${upcomingAppointments != null && !upcomingAppointments.isEmpty()}">
+                            <div class="upcoming-item" th:each="a : ${upcomingAppointments}">
+                                <a class="upcoming-item-link"
+                                   th:href="@{/dentist/work-schedule(weekStart=${a.weekStart})}"
+                                   aria-label="Xem trong lịch làm việc"></a>
+
+                                <div class="up-meta">
+                                    <span class="up-time">
+                                        <i class="fa-regular fa-clock"></i>
+                                        <span th:text="${#temporals.format(a.startTime, 'HH:mm') + ' - ' + #temporals.format(a.endTime, 'HH:mm')}"></span>
+                                    </span>
+                                    <span class="up-date" th:text="${a.date}"></span>
+                                    <span class="up-badge"
+                                          th:classappend="${a.status != null ? ' st-' + #strings.toLowerCase(a.status.name()) : ''}">
+                                        <span th:switch="${a.status}">
+                                            <span th:case="${T(com.dentalclinic.model.appointment.AppointmentStatus).CONFIRMED}">Đã xác nhận</span>
+                                            <span th:case="${T(com.dentalclinic.model.appointment.AppointmentStatus).CHECKED_IN}">Đã check-in</span>
+                                            <span th:case="${T(com.dentalclinic.model.appointment.AppointmentStatus).EXAMINING}">Đang khám</span>
+                                            <span th:case="*">-</span>
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <div class="up-name" th:text="${a.patientName}"></div>
+                                <div class="up-sub">
+                                    <i class="fa-solid fa-phone"></i>
+                                    <span th:text="${a.phone}"></span>
+                                </div>
+                                <div class="up-sub">
+                                    <i class="fa-solid fa-tooth"></i>
+                                    <span th:text="${a.serviceLabel}"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a class="upcoming-footer" href="/dentist/work-schedule">Xem tất cả lịch hẹn →</a>
                     </div>
                 </div>
             </div>

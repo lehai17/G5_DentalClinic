@@ -35,7 +35,7 @@ public class PasswordResetService {
     }
 
     public void requestReset(String email) {
-        // Không tiết lộ email có tồn tại hay không (best practice)
+        // Khong tiet lo email co ton tai hay khong (best practice)
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) return;
 
@@ -57,39 +57,39 @@ public class PasswordResetService {
     public String verifyCode(String email, String code) {
         PasswordReset pr = passwordResetRepository
                 .findTopByEmailOrderByCreatedAtDesc(email)
-                .orElseThrow(() -> new RuntimeException("No reset request"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu đặt lại mật khẩu"));
 
-        if (pr.isUsed()) throw new RuntimeException("Code already used");
-        if (pr.getExpiresAt().isBefore(LocalDateTime.now())) throw new RuntimeException("Code expired");
+        if (pr.isUsed()) throw new RuntimeException("Mã xác thực đã được sử dụng");
+        if (pr.getExpiresAt().isBefore(LocalDateTime.now())) throw new RuntimeException("Mã xác thực đã hết hạn");
 
-        // so sï¿½nh code người dùng nhập với code_hash
+        // so sanh code nguoi dung nhap voi code_hash
         if (!passwordEncoder.matches(code, pr.getCodeHash())) {
-            throw new RuntimeException("Invalid code");
+            throw new RuntimeException("Mã xác thực không hợp lệ");
         }
 
-        // mark used? (tuỳ bạn). á»ž dï¿½y mark "used = true" để code chỉ dùng 1 lần
+        // mark used? (tuy ban). O day mark "used = true" de code chi dung 1 lan
         pr.setUsed(true);
         passwordResetRepository.save(pr);
 
-        return pr.getToken(); // dùng token để qua bước reset password
+        return pr.getToken(); // dung token de qua buoc reset password
     }
 
     public void resetPassword(String token, String newPassword) {
         PasswordReset pr = passwordResetRepository
                 .findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
+                .orElseThrow(() -> new RuntimeException("Liên kết đặt lại mật khẩu không hợp lệ"));
 
-        // token n� y phải dï¿½ verify code (used=true) v�  chưa hết hạn
-        if (!pr.isUsed()) throw new RuntimeException("Not verified");
-        if (pr.getExpiresAt().isBefore(LocalDateTime.now())) throw new RuntimeException("Expired");
+        // token nay phai da verify code (used=true) va chua het han
+        if (!pr.isUsed()) throw new RuntimeException("Mã xác thực chưa được xác minh");
+        if (pr.getExpiresAt().isBefore(LocalDateTime.now())) throw new RuntimeException("Yêu cầu đặt lại mật khẩu đã hết hạn");
 
         User user = userRepository.findByEmail(pr.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // xóa reset request để sạch DB
+        // xoa reset request de sach DB
         passwordResetRepository.delete(pr);
     }
 
@@ -107,8 +107,8 @@ public class PasswordResetService {
     private void sendEmail(String to, String code) {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(to);
-        msg.setSubject("GENZ CLINIC - Password Reset Code");
-        msg.setText("Mï¿½ xï¿½c thực của bạn l� : " + code + "\nMï¿½ có hiệu lực trong 10 phút.");
+        msg.setSubject("GENZ CLINIC - M\u00e3 \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u");
+        msg.setText("M\u00e3 x\u00e1c th\u1ef1c c\u1ee7a b\u1ea1n l\u00e0: " + code + "\nM\u00e3 c\u00f3 hi\u1ec7u l\u1ef1c trong 10 ph\u00fat.");
         mailSender.send(msg);
     }
 }

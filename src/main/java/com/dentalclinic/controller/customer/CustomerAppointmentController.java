@@ -1,6 +1,7 @@
 package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.dto.customer.AppointmentDto;
+import com.dentalclinic.dto.customer.CreateReviewRequest;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
 import com.dentalclinic.dto.customer.RescheduleAppointmentRequest;
 import com.dentalclinic.dto.customer.SlotDto;
@@ -100,27 +101,30 @@ public class CustomerAppointmentController {
                                                @RequestParam(required = false) Integer size,
                                                @RequestParam(required = false) String keyword,
                                                @RequestParam(required = false, defaultValue = "date_desc") String sort,
+                                               @RequestParam(required = false, defaultValue = "default") String view,
                                                HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
 
         String normalizedSort = customerAppointmentService.normalizeAppointmentSort(sort);
+        String normalizedView = customerAppointmentService.normalizeAppointmentView(view);
 
-        if (page != null || size != null || (keyword != null && !keyword.isBlank()) || (sort != null && !sort.isBlank())) {
+        if (page != null || size != null || (keyword != null && !keyword.isBlank()) || (sort != null && !sort.isBlank()) || (view != null && !view.isBlank())) {
             int p = page == null ? 0 : page;
             int s = size == null ? 5 : size;
-            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, normalizedSort);
+            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, normalizedSort, normalizedView);
             return ResponseEntity.ok(Map.of(
                     "content", resultPage.getContent(),
                     "page", resultPage.getNumber(),
                     "size", resultPage.getSize(),
                     "totalPages", resultPage.getTotalPages(),
                     "totalElements", resultPage.getTotalElements(),
-                    "sort", normalizedSort
+                    "sort", normalizedSort,
+                    "view", normalizedView
             ));
         }
 
-        List<AppointmentDto> list = customerAppointmentService.getMyAppointments(userId);
+        List<AppointmentDto> list = customerAppointmentService.getMyAppointments(userId, normalizedView);
         return ResponseEntity.ok(list);
     }
 
@@ -137,12 +141,18 @@ public class CustomerAppointmentController {
     public ResponseEntity<?> checkIn(@PathVariable Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-
-        Optional<AppointmentDto> result = customerAppointmentService.checkIn(userId, id);
-        if (result.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "CHECKIN_NOT_ALLOWED", "message", "Check-in not allowed."));
+        try {
+            customerAppointmentService.checkIn(userId, id);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "CHECKIN_NOT_ALLOWED",
+                    "message", "Luồng hiện tại không sử dụng bước check-in."
+            ));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "CHECKIN_NOT_ALLOWED",
+                    "message", ex.getMessage() != null ? ex.getMessage() : "Check-in not allowed."
+            ));
         }
-        return ResponseEntity.ok(result.get());
     }
 
     @PostMapping("/appointments/{id}/cancel")
@@ -152,6 +162,31 @@ public class CustomerAppointmentController {
 
         AppointmentDto result = customerAppointmentService.cancelAppointment(userId, id);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/appointments/{id}/hide")
+    public ResponseEntity<?> hideCancelledAppointment(@PathVariable Long id, HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+
+        customerAppointmentService.hideCancelledAppointmentFromHistory(userId, id);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Đã ẩn lịch hẹn đã hủy khỏi danh sách chính."));
+    }
+
+    @PostMapping("/appointments/{id}/review")
+    public ResponseEntity<?> createReview(@PathVariable Long id,
+                                          @Valid @RequestBody CreateReviewRequest request,
+                                          HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+
+        var review = customerAppointmentService.createReview(userId, id, request);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã gửi đánh giá bác sĩ thành công.",
+                "rating", review.getRating(),
+                "comment", review.getComment() == null ? "" : review.getComment()
+        ));
     }
 
     @PostMapping("/appointments/{id}/reschedule")
@@ -215,4 +250,3 @@ public class CustomerAppointmentController {
     }
 
 }
-

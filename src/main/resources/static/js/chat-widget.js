@@ -29,6 +29,17 @@
   let sending = false;
   let selectedAttachment = null;
 
+  function normalizeText(value) {
+    if (value == null) return "";
+    const text = String(value);
+    if (!/[ÃÂÄÆÐï]/.test(text)) return text;
+    try {
+      return decodeURIComponent(escape(text));
+    } catch (err) {
+      return text;
+    }
+  }
+
   decorateWidget();
 
   const statusEl = document.getElementById("chat-status");
@@ -42,7 +53,7 @@
   }
 
   function escapeHtml(value) {
-    return String(value || "")
+    return normalizeText(String(value || ""))
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -83,16 +94,16 @@
   }
 
   function setStatus(text, tone) {
-    statusEl.textContent = text;
+    statusEl.textContent = normalizeText(text);
     statusEl.dataset.tone = tone || "neutral";
   }
 
   function setAssignee(text) {
-    assigneeEl.textContent = text || "Lễ tân sẽ phản hồi sớm nhất có thể";
+    assigneeEl.textContent = normalizeText(text || "Lễ tân sẽ phản hồi sớm nhất có thể");
   }
 
   function setHelper(text, tone) {
-    helperEl.textContent = text || "";
+    helperEl.textContent = normalizeText(text || "");
     helperEl.dataset.tone = tone || "neutral";
   }
 
@@ -126,13 +137,13 @@
   function setLoadingState(isLoading) {
     refreshBtn.disabled = isLoading;
     if (isLoading) {
-      messagesEl.innerHTML = '<div class="chat-empty">Đang tải cuộc trò chuyện...</div>';
+      messagesEl.innerHTML = normalizeText('<div class="chat-empty">Đang tải cuộc trò chuyện...</div>');
     }
   }
 
   function renderMessages(messages) {
     if (!Array.isArray(messages) || messages.length === 0) {
-      messagesEl.innerHTML = '<div class="chat-empty">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện với lễ tân.</div>';
+      messagesEl.innerHTML = normalizeText('<div class="chat-empty">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện với lễ tân.</div>');
       lastMessageId = null;
       return;
     }
@@ -140,7 +151,7 @@
     const html = messages
       .map((message) => {
         const customerSide = message.senderRole === "CUSTOMER";
-        const senderLabel = customerSide ? "Bạn" : (message.senderName || "Lễ tân");
+        const senderLabel = customerSide ? normalizeText("Bạn") : normalizeText(message.senderName || "Lễ tân");
         const textHtml = message.content
           ? `<div class="chat-text">${escapeHtml(message.content)}</div>`
           : "";
@@ -148,7 +159,7 @@
           ? `
             <a class="chat-attachment-link" href="${message.attachmentDownloadUrl}" target="_blank" rel="noopener">
               <span class="chat-attachment-icon">📎</span>
-              <span>${escapeHtml(message.attachmentOriginalName || "Tệp đính kèm")}</span>
+              <span>${escapeHtml(message.attachmentOriginalName || normalizeText("Tệp đính kèm"))}</span>
               ${message.attachmentSize ? `<small>${escapeHtml(formatFileSize(message.attachmentSize))}</small>` : ""}
             </a>
           `
@@ -175,12 +186,12 @@
 
   async function ensureThread() {
     if (threadId && threadSummary) return threadId;
-    setStatus("Đang kết nối", "warning");
+    setStatus("\u0110ang k\u1ebft n\u1ed1i", "warning");
     const response = await fetch("/customer/chat/thread", { credentials: "same-origin" });
-    if (!response.ok) throw new Error("Không thể khởi tạo cuộc trò chuyện.");
+    if (!response.ok) throw new Error(normalizeText("Không thể khởi tạo cuộc trò chuyện."));
     threadSummary = await response.json();
     threadId = threadSummary.id;
-    setStatus("Đang hoạt động", "success");
+    setStatus("\u0110ang ho\u1ea1t \u0111\u1ed9ng", "success");
     const assignee = threadSummary.assignedStaffName || threadSummary.assignedStaffEmail;
     setAssignee(assignee ? "Đang phụ trách: " + assignee : "");
     updateCounter();
@@ -212,7 +223,7 @@
     if (!threadId || loadingMessages) return;
     loadingMessages = true;
     if (manual) {
-      setHelper("Đang đồng bộ tin nhắn mới...", "neutral");
+      setHelper("\u0110ang \u0111\u1ed3ng b\u1ed9 tin nh\u1eafn m\u1edbi...", "neutral");
     }
     try {
       const response = await fetch(`/customer/chat/messages?threadId=${threadId}`, {
@@ -220,12 +231,12 @@
       });
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || "Không thể tải tin nhắn.");
+        throw new Error(normalizeText(error.error || "Không thể tải tin nhắn."));
       }
       const data = await response.json();
       renderMessages(data);
       renderBadge(0);
-      setStatus("Đang hoạt động", "success");
+      setStatus("\u0110ang ho\u1ea1t \u0111\u1ed9ng", "success");
       setHelper("Tin nhắn được cập nhật tự động mỗi 3 giây.", "neutral");
     } finally {
       loadingMessages = false;
@@ -238,7 +249,7 @@
     sending = true;
     sendBtn.disabled = true;
     sendBtn.textContent = "Đang gửi...";
-    setHelper(selectedAttachment ? "Đang gửi tin nhắn và tệp đính kèm..." : "Đang gửi tin nhắn...", "neutral");
+    setHelper(selectedAttachment ? "\u0110ang g\u1eedi tin nh\u1eafn v\u00e0 t\u1ec7p \u0111\u00ednh k\u00e8m..." : "\u0110ang g\u1eedi tin nh\u1eafn...", "neutral");
     try {
       const formData = new FormData();
       formData.append("threadId", String(threadId));
@@ -256,14 +267,14 @@
       });
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || "Gửi tin nhắn thất bại.");
+        throw new Error(normalizeText(error.error || "Gửi tin nhắn thất bại."));
       }
       inputEl.value = "";
       clearSelectedAttachment();
       updateCounter();
       await loadMessages();
       inputEl.focus();
-      setHelper("Đã gửi tin nhắn cho lễ tân.", "success");
+      setHelper("\u0110\u00e3 g\u1eedi tin nh\u1eafn cho l\u1ec5 t\u00e2n.", "success");
     } catch (error) {
       setHelper(error.message || "Gửi tin nhắn thất bại.", "error");
     } finally {
@@ -296,7 +307,7 @@
           await loadUnreadCount();
         }
       } catch (error) {
-        setStatus("Mất kết nối tạm thời", "error");
+        setStatus("M\u1ea5t k\u1ebft n\u1ed1i t\u1ea1m th\u1eddi", "error");
       }
     }, 3000);
   }
@@ -306,7 +317,7 @@
       setLoadingState(true);
       await ensureThread();
       await loadUnreadCount();
-      setHelper("Bạn có thể hỏi về lịch hẹn, dịch vụ hoặc chi phí khám.", "neutral");
+      setHelper("B\u1ea1n c\u00f3 th\u1ec3 h\u1ecfi v\u1ec1 l\u1ecbch h\u1eb9n, d\u1ecbch v\u1ee5 ho\u1eb7c chi ph\u00ed kh\u00e1m.", "neutral");
       startPolling();
     } catch (error) {
       toggleBtn.classList.add("hidden");
@@ -322,14 +333,14 @@
     toggleBtn.setAttribute("aria-label", "Mở chat với lễ tân");
     const toggleText = toggleBtn.querySelector("span");
     if (toggleText) {
-      toggleText.innerHTML = "&#128172; Chat với lễ tân";
+      toggleText.innerHTML = normalizeText("&#128172; Chat với lễ tân");
     }
-    inputEl.setAttribute("placeholder", "Nhập tin nhắn...");
-    sendBtn.textContent = "Gửi";
+    inputEl.setAttribute("placeholder", normalizeText("Nhập tin nhắn..."));
+    sendBtn.textContent = normalizeText("Gửi");
 
     const titleEl = headerEl.querySelector("span");
     if (titleEl) {
-      titleEl.innerHTML = 'Chat với lễ tân <small class="chat-title-note">Hỗ trợ trực tuyến</small>';
+      titleEl.innerHTML = normalizeText('Chat với lễ tân <small class="chat-title-note">Hỗ trợ trực tuyến</small>');
     }
 
     const actionWrap = document.createElement("div");
@@ -348,10 +359,10 @@
 
     const subheader = document.createElement("div");
     subheader.className = "chat-subheader";
-    subheader.innerHTML = `
+    subheader.innerHTML = normalizeText(`
       <div id="chat-status" class="chat-status" data-tone="neutral">Đang khởi tạo</div>
       <div id="chat-assignee" class="chat-assignee">Lễ tân sẽ phản hồi sớm nhất có thể</div>
-    `;
+    `);
     headerEl.insertAdjacentElement("afterend", subheader);
 
     const helper = document.createElement("div");

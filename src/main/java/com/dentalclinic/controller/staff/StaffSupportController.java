@@ -56,7 +56,7 @@ public class StaffSupportController {
 
         Long currentUserId = supportService.getCurrentUser(principal).getId();
         supportService.answerTicket(currentUserId, id, form.getAnswer());
-        redirectAttributes.addFlashAttribute("successMessage", "Trả lời phiếu hỗ trợ th� nh công.");
+        redirectAttributes.addFlashAttribute("successMessage", "Trả lời phiếu hỗ trợ thành công.");
         return "redirect:/staff/support";
     }
 

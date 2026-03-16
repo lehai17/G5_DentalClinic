@@ -19,11 +19,11 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     Page<Blog> findByStatusOrderByUpdatedAtDesc(BlogStatus status, Pageable pageable);
     long countByStatus(BlogStatus status);
 
-    // Public logic (Sá»¬A Lá»–I Táº I ï¿½ï¿½Y)
-    // Thay vÃ¬ findByIsPublishedTrue, ta dÃ¹ng status = APPROVED
+    // Public logic (SỬA LỖI TẠI ��Y)
+    // Thay vì findByIsPublishedTrue, ta dùng status = APPROVED
     Page<Blog> findByStatusOrderByApprovedAtDesc(BlogStatus status, Pageable pageable);
 
-    // Náº¿u báº¡n váº«n muá»‘n giá»¯ tÃªn hÃ m tÆ°Æ¡ng tá»± cho ngáº¯n gá»n, dÃ¹ng Query:
+    // Nếu bạn vẫn muốn giữ tên hàm tương tự cho ngắn gọn, dùng Query:
     // @Query("SELECT b FROM Blog b WHERE b.status = com.dentalclinic.model.blog.BlogStatus.APPROVED")
     // Page<Blog> findAllPublished(Pageable pageable);
 }

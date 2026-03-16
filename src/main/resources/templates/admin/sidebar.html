@@ -12,36 +12,36 @@
             <span>Dashboard</span>
         </a>
 
-        <div class="nav-label">Quan ly nguoi dung</div>
+        <div class="nav-label">Quản lý người dùng</div>
 
         <a th:href="@{/admin/dentists}"
            class="nav-item"
            th:classappend="${activePage == 'dentists' ? ' active' : ''}">
             <i class="fas fa-stethoscope"></i>
-            <span>Bac si</span>
+            <span>Bác sĩ</span>
         </a>
 
         <a th:href="@{/admin/staff}"
            class="nav-item"
            th:classappend="${activePage == 'staff' ? ' active' : ''}">
             <i class="fas fa-users-cog"></i>
-            <span>Nhan vien</span>
+            <span>Nhân viên</span>
         </a>
 
         <a th:href="@{/admin/customers}"
            class="nav-item"
            th:classappend="${activePage == 'customers' ? ' active' : ''}">
             <i class="fas fa-user-friends"></i>
-            <span>Khach hang</span>
+            <span>Khách hàng</span>
         </a>
 
-        <div class="nav-label">Van hanh</div>
+        <div class="nav-label">Vận hành</div>
 
         <a th:href="@{/admin/services}"
            class="nav-item"
            th:classappend="${activePage == 'services' ? ' active' : ''}">
             <i class="fas fa-briefcase-medical"></i>
-            <span>Dich vu</span>
+            <span>Dịch vụ</span>
         </a>
 
         <a th:href="@{/admin/vouchers}"
@@ -55,37 +55,37 @@
            class="nav-item"
            th:classappend="${activePage == 'slots' ? ' active' : ''}">
             <i class="fas fa-calendar-alt"></i>
-            <span>Khung gio</span>
+            <span>Khung giờ</span>
         </a>
 
         <a th:href="@{/admin/busy-schedule}"
            class="nav-item"
            th:classappend="${activePage == 'busy-schedule' ? ' active' : ''}">
             <i class="fas fa-user-clock"></i>
-            <span>Lich ban</span>
+            <span>Lịch bận</span>
         </a>
 
         <a th:href="@{/admin/blogs}"
            class="nav-item"
            th:classappend="${activePage == 'blogs' ? ' active' : ''}">
             <i class="fas fa-notes-medical"></i>
-            <span>Bai viet suc khoe</span>
+            <span>Bài viết sức khỏe</span>
         </a>
 
-        <div class="nav-label">Vi tien</div>
+        <div class="nav-label">Ví tiền</div>
 
         <a th:href="@{/admin/wallets/transactions}"
            class="nav-item"
            th:classappend="${activePage == 'wallet-transactions' ? ' active' : ''}">
             <i class="fas fa-wallet"></i>
-            <span>Giao dich vi</span>
+            <span>Giao dịch ví</span>
         </a>
     </div>
 
     <div class="nav-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding: 15px 0; margin-bottom: 20px;">
         <a th:href="@{/logout}" class="nav-item logout-link" style="color: #FFB7B7;">
             <i class="fas fa-sign-out-alt"></i>
-            <span>Dang xuat</span>
+            <span>Đăng xuất</span>
         </a>
     </div>
 </div>

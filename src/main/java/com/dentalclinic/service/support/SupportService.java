@@ -3,6 +3,7 @@ package com.dentalclinic.service.support;
 import com.dentalclinic.exception.BusinessException;
 import com.dentalclinic.exception.SupportAccessDeniedException;
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.appointment.AppointmentDetail;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.notification.NotificationReferenceType;
 import com.dentalclinic.model.notification.NotificationType;
@@ -34,6 +35,7 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 public class SupportService {
@@ -72,7 +74,7 @@ public class SupportService {
     @Transactional(readOnly = true)
     public User getCurrentUser(UserDetails principal) {
         if (principal == null || principal.getUsername() == null || principal.getUsername().isBlank()) {
-            throw new SupportAccessDeniedException("Không xác định được t� i khoản hiện tại.");
+            throw new SupportAccessDeniedException("Không xác định được tài khoản hiện tại.");
         }
         return userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy người dùng hiện tại."));
@@ -215,7 +217,7 @@ public class SupportService {
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
         if (user.getRole() == Role.CUSTOMER && !ticket.getCustomer().getId().equals(userId)) {
-            throw new SupportAccessDeniedException("Bạn không có quyền xem yêu cầu hỗ trợ n� y.");
+            throw new SupportAccessDeniedException("Bạn không có quyền xem yêu cầu hỗ trợ này.");
         }
         return hydrateTicket(ticket);
     }
@@ -242,7 +244,7 @@ public class SupportService {
     public List<SupportTicket> getDentistVisibleTickets(Long dentistUserId, String status) {
         User dentist = requireUser(dentistUserId);
         if (dentist.getRole() != Role.DENTIST) {
-            throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem danh sách n� y.");
+            throw new SupportAccessDeniedException("Chỉ bác sĩ mới có quyền xem danh sách này.");
         }
 
         String normalizedStatus = normalizeStatusFilter(status);
@@ -264,7 +266,7 @@ public class SupportService {
         }
 
         SupportTicket ticket = supportTicketRepository.findVisibleToDentistById(ticketId, dentistUserId)
-                .orElseThrow(() -> new SupportAccessDeniedException("Bạn không có quyền xem phiếu hỗ trợ n� y."));
+                .orElseThrow(() -> new SupportAccessDeniedException("Bạn không có quyền xem phiếu hỗ trợ này."));
         return hydrateTicket(ticket);
     }
 
@@ -276,7 +278,7 @@ public class SupportService {
                 .orElseThrow(() -> new BusinessException("Không tìm thấy yêu cầu hỗ trợ."));
 
         if (!ticket.getCustomer().getId().equals(customerUserId)) {
-            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu hỗ trợ n� y.");
+            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu hỗ trợ này.");
         }
         if (isConversationClosed(ticket)) {
             throw new BusinessException("Phiếu hỗ trợ đã đóng, không thể phản hồi thêm.");
@@ -373,7 +375,7 @@ public class SupportService {
     private User requireCustomer(Long userId) {
         User user = requireUser(userId);
         if (user.getRole() != Role.CUSTOMER) {
-            throw new SupportAccessDeniedException("Chỉ khách h� ng mới được thực hiện thao tác n� y.");
+            throw new SupportAccessDeniedException("Chỉ khách hàng mới được thực hiện thao tác này.");
         }
         return user;
     }
@@ -381,7 +383,7 @@ public class SupportService {
     private User requireStaffOrAdmin(Long userId) {
         User user = requireUser(userId);
         if (user.getRole() != Role.STAFF && user.getRole() != Role.ADMIN) {
-            throw new SupportAccessDeniedException("Bạn không có quyền thực hiện thao tác n� y.");
+            throw new SupportAccessDeniedException("Bạn không có quyền thực hiện thao tác này.");
         }
         return user;
     }
@@ -400,12 +402,12 @@ public class SupportService {
         }
 
         if (ticket.getAppointment().getDentist() == null || ticket.getAppointment().getDentist().getUser() == null) {
-            throw new SupportAccessDeniedException("Phiếu n� y chưa gắn bác sĩ ca khám, bác sĩ không thể phản hồi.");
+            throw new SupportAccessDeniedException("Phiếu này chưa gắn bác sĩ ca khám, bác sĩ không thể phản hồi.");
         }
 
         Long assignedDentistUserId = ticket.getAppointment().getDentist().getUser().getId();
         if (!assignedDentistUserId.equals(dentistUserId)) {
-            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu liên quan ca khám n� y.");
+            throw new SupportAccessDeniedException("Bạn không có quyền phản hồi phiếu liên quan ca khám này.");
         }
     }
 
@@ -423,7 +425,7 @@ public class SupportService {
 
     private void validateAppointmentSupportEligibility(Appointment appointment) {
         if (!isEligibleSupportAppointment(appointment)) {
-            throw new BusinessException("Chỉ có thể gửi hỗ trợ cho ca khám đã ho� n th� nh, có bác sĩ phụ trách v�  còn trong thời hạn 14 ng� y.");
+            throw new BusinessException("Chỉ có thể gửi hỗ trợ cho ca khám đã hoàn thành, có bác sĩ phụ trách và còn trong thời hạn 14 ngày.");
         }
     }
 
@@ -467,7 +469,7 @@ public class SupportService {
         }
         String safeTitle = title.trim();
         if (safeTitle.length() > MAX_TITLE_LENGTH) {
-            throw new BusinessException("Tiêu đề quá d� i.");
+            throw new BusinessException("Tiêu đề quá dài.");
         }
         return safeTitle;
     }
@@ -508,6 +510,7 @@ public class SupportService {
                 .map(entry -> entry.content)
                 .reduce((first, second) -> second)
                 .orElse(ticket.getAnswer()));
+        ticket.setServiceLabel(buildServiceLabel(ticket.getAppointment()));
         ticket.setDisplayStatus(isConversationClosed(ticket) ? "CLOSED" : ticket.getStatus().name());
         return ticket;
     }
@@ -551,7 +554,7 @@ public class SupportService {
         if (rawQuestion != null && !rawQuestion.isBlank()) {
             entries.add(new TranscriptEntry(
                     SENDER_CUSTOMER,
-                    ticket.getCustomer() != null ? resolveCustomerLabel(ticket.getCustomer()) : "Khách h� ng",
+                    ticket.getCustomer() != null ? resolveCustomerLabel(ticket.getCustomer()) : "Khách hàng",
                     rawQuestion,
                     ticket.getCreatedAt()
             ));
@@ -598,12 +601,12 @@ public class SupportService {
 
     private String resolveCustomerLabel(User customer) {
         if (customer == null) {
-            return "Khách h� ng";
+            return "Khách hàng";
         }
         return customerProfileRepository.findByUser_Id(customer.getId())
                 .map(CustomerProfile::getFullName)
                 .filter(name -> name != null && !name.isBlank())
-                .orElseGet(() -> customer.getEmail() != null ? customer.getEmail() : "Khách h� ng");
+                .orElseGet(() -> customer.getEmail() != null ? customer.getEmail() : "Khách hàng");
     }
 
     private String resolveResponderLabel(User responder) {
@@ -615,9 +618,9 @@ public class SupportService {
             return "Bác sĩ " + fullName;
         }
         if (responder.getRole() == Role.ADMIN) {
-            return "Quản trị viên " + fullName;
+            return "Qu?n tr? vi?n " + fullName;
         }
-        return "Lễ tân " + fullName;
+        return "L? t?n " + fullName;
     }
 
     private String resolveTicketResponderDisplayName(SupportTicket ticket) {
@@ -632,6 +635,43 @@ public class SupportService {
                     ticket.getAppointment().getDentist().getUser() != null ? ticket.getAppointment().getDentist().getUser().getEmail() : "Chưa phân công");
         }
         return "Chưa phân công";
+    }
+
+    private String buildServiceLabel(Appointment appointment) {
+        if (appointment == null) {
+            return "-";
+        }
+
+        List<AppointmentDetail> details = appointment.getAppointmentDetails();
+        if (details != null && !details.isEmpty()) {
+            String joined = details.stream()
+                    .sorted(Comparator.comparing(
+                            AppointmentDetail::getDetailOrder,
+                            Comparator.nullsLast(Integer::compareTo)
+                    ))
+                    .map(detail -> {
+                        String name = detail.getServiceNameSnapshot();
+                        if (name == null || name.isBlank()) {
+                            if (detail.getService() != null) {
+                                name = detail.getService().getName();
+                            }
+                        }
+                        return name;
+                    })
+                    .filter(name -> name != null && !name.isBlank())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+            if (!joined.isBlank()) {
+                return joined;
+            }
+        }
+
+        if (appointment.getService() != null && appointment.getService().getName() != null) {
+            return appointment.getService().getName();
+        }
+
+        return "-";
     }
 
     private String resolveUserFullName(User user) {

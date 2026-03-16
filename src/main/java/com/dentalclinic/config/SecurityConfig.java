@@ -75,7 +75,7 @@ public class SecurityConfig {
         return username -> {
             com.dentalclinic.model.user.User user = userRepository
                     .findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng"));
 
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getEmail())
