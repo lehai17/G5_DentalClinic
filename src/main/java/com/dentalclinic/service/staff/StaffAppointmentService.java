@@ -79,6 +79,9 @@ public class StaffAppointmentService {
         appointmentRepository.save(appointment);
 
         emailService.sendAppointmentConfirmed(appointment);
+
+        // Dentist inbox notification
+        notificationService.notifyDentistAppointmentConfirmed(appointment);
     }
 
     @Transactional
@@ -115,6 +118,9 @@ public class StaffAppointmentService {
 
         // 6. Lưu thay đổi
         Appointment saved = appointmentRepository.save(appt);
+
+        // Dentist inbox notification (confirmed/assigned appointment)
+        notificationService.notifyDentistAppointmentConfirmed(saved);
 
         // 7. Gửi Email xác nhận cho khách h� ng (Tận dụng h� m confirm đã có của bạn)
         try {
@@ -229,6 +235,9 @@ public class StaffAppointmentService {
 
         a.setStatus(AppointmentStatus.CHECKED_IN);
         appointmentRepository.save(a);
+
+        // Dentist inbox notification
+        notificationService.notifyDentistAppointmentCheckedIn(a);
     }
 
     public List<DentistProfile> getAvailableDentistsForAppointment(Long appointmentId) {

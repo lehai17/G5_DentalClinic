@@ -124,6 +124,9 @@ public class SupportService {
 
         SupportTicket saved = supportTicketRepository.save(ticket);
         hydrateTicket(saved);
+
+        // Dentist inbox notification: new support ticket created by customer
+        notificationService.notifyDentistSupportTicketCreated(saved);
         return saved;
     }
 
@@ -291,7 +294,11 @@ public class SupportService {
         ticket.setStatus(SupportStatus.OPEN);
 
         SupportTicket saved = supportTicketRepository.save(ticket);
-        return hydrateTicket(saved);
+        SupportTicket hydrated = hydrateTicket(saved);
+
+        // Dentist inbox notification: customer sent a new message in support ticket
+        notificationService.notifyDentistSupportTicketCustomerMessage(hydrated);
+        return hydrated;
     }
 
     @Transactional

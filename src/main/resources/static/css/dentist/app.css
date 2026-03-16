@@ -100,9 +100,19 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .brand-mini{display:flex;align-items:center;gap:10px}
 
 .nav{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.nav-item{color:#fff;opacity:.9;padding:10px;border-radius:10px}
+.nav-item{color:#fff;opacity:.9;padding:10px;border-radius:10px;display:flex;align-items:center;gap:10px}
 .nav-item:hover{background:rgba(255,255,255,.08)}
 .nav-item.active{background:rgba(255,255,255,.14)}
+.nav-badge{
+    margin-left:auto;
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.20);
+    color:#fff;
+    font-weight:900;
+    font-size:12px;
+    padding:2px 8px;
+    border-radius:999px;
+}
 
 .main{
     flex:1;

@@ -6,26 +6,43 @@ import com.dentalclinic.model.notification.Notification;
 import com.dentalclinic.model.notification.NotificationReferenceType;
 import com.dentalclinic.model.notification.NotificationType;
 import com.dentalclinic.model.profile.CustomerProfile;
+import com.dentalclinic.model.schedule.BusySchedule;
+import com.dentalclinic.model.support.SupportTicket;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.NotificationRepository;
 import com.dentalclinic.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.DayOfWeek;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 @Service
 public class NotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
     private static final ZoneId CLINIC_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final Pattern DIACRITICS = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+    private static final Pattern NON_DIGITS = Pattern.compile("\\D+");
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -47,24 +64,106 @@ public class NotificationService {
                                           String url,
                                           NotificationReferenceType referenceType,
                                           Long referenceId) {
-        User recipient = userRepository.findById(recipientId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người nhận thông báo."));
-        if (recipient.getRole() != Role.CUSTOMER) {
-            throw new IllegalArgumentException("Người nhận thông báo phải l�  khách h� ng.");
+        // Notifications are side-effects and must never break core flows.
+        if (recipientId == null) {
+            return null;
         }
+        try {
+            User recipient = userRepository.findById(recipientId).orElse(null);
+            if (recipient == null) {
+                log.warn("Skip customer notification: recipient not found. recipientId={}, type={}, title={}",
+                        recipientId, type, title);
+                return null;
+            }
+            if (recipient.getRole() != Role.CUSTOMER) {
+                log.warn("Skip customer notification: recipient role mismatch. recipientId={}, role={}, type={}, title={}",
+                        recipientId, recipient.getRole(), type, title);
+                return null;
+            }
 
-        Notification notification = new Notification();
-        notification.setUser(recipient);
-        notification.setType(type);
-        notification.setTitle(title);
-        notification.setContent(message);
-        notification.setUrl(url);
-        notification.setReferenceType(referenceType);
-        notification.setReferenceId(referenceId);
-        notification.setRead(false);
-        notification.setCreatedAt(LocalDateTime.now(CLINIC_ZONE));
-        notification.setReadAt(null);
-        return notificationRepository.save(notification);
+            Notification notification = new Notification();
+            notification.setUser(recipient);
+            notification.setType(type);
+            notification.setTitle(title);
+            notification.setContent(message);
+            notification.setUrl(url);
+            notification.setReferenceType(referenceType);
+            notification.setReferenceId(referenceId);
+            notification.setRead(false);
+            notification.setCreatedAt(LocalDateTime.now(CLINIC_ZONE));
+            notification.setReadAt(null);
+
+            try {
+                return notificationRepository.save(notification);
+            } catch (DataIntegrityViolationException ex) {
+                log.warn("Skip customer notification due to DB constraint. recipientId={}, type={}, refType={}, refId={}, title={}",
+                        recipientId, type, referenceType, referenceId, title, ex);
+                return null;
+            } catch (RuntimeException ex) {
+                log.warn("Skip customer notification due to unexpected error. recipientId={}, type={}, refType={}, refId={}, title={}",
+                        recipientId, type, referenceType, referenceId, title, ex);
+                return null;
+            }
+        } catch (RuntimeException ex) {
+            log.warn("Skip customer notification due to unexpected error. recipientId={}, type={}, refType={}, refId={}, title={}",
+                    recipientId, type, referenceType, referenceId, title, ex);
+            return null;
+        }
+    }
+
+    @Transactional
+    public Notification createForDentist(Long recipientId,
+                                         NotificationType type,
+                                         String title,
+                                         String message,
+                                         String url,
+                                         NotificationReferenceType referenceType,
+                                         Long referenceId) {
+        // Dentist notifications are "nice-to-have": they must never break core flows like confirm/check-in.
+        if (recipientId == null) {
+            return null;
+        }
+        try {
+            User recipient = userRepository.findById(recipientId).orElse(null);
+            if (recipient == null) {
+                log.warn("Skip dentist notification: recipient not found. recipientId={}, type={}, title={}",
+                        recipientId, type, title);
+                return null;
+            }
+            if (recipient.getRole() != Role.DENTIST) {
+                log.warn("Skip dentist notification: recipient role mismatch. recipientId={}, role={}, type={}, title={}",
+                        recipientId, recipient.getRole(), type, title);
+                return null;
+            }
+
+            Notification notification = new Notification();
+            notification.setUser(recipient);
+            notification.setType(type);
+            notification.setTitle(title);
+            notification.setContent(message);
+            notification.setUrl(url);
+            notification.setReferenceType(referenceType);
+            notification.setReferenceId(referenceId);
+            notification.setRead(false);
+            notification.setCreatedAt(LocalDateTime.now(CLINIC_ZONE));
+            notification.setReadAt(null);
+
+            try {
+                return notificationRepository.save(notification);
+            } catch (DataIntegrityViolationException ex) {
+                log.warn("Skip dentist notification due to DB constraint. recipientId={}, type={}, refType={}, refId={}, title={}",
+                        recipientId, type, referenceType, referenceId, title, ex);
+                return null;
+            } catch (RuntimeException ex) {
+                log.warn("Skip dentist notification due to unexpected error. recipientId={}, type={}, refType={}, refId={}, title={}",
+                        recipientId, type, referenceType, referenceId, title, ex);
+                return null;
+            }
+        } catch (RuntimeException ex) {
+            log.warn("Skip dentist notification due to unexpected error. recipientId={}, type={}, refType={}, refId={}, title={}",
+                    recipientId, type, referenceType, referenceId, title, ex);
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -107,6 +206,169 @@ public class NotificationService {
         return notificationRepository.markAllAsRead(recipientId);
     }
 
+    @Transactional
+    public void markUnread(Long notificationId, Long recipientId) {
+        int updated = notificationRepository.markAsUnread(notificationId, recipientId);
+        if (updated == 0) {
+            throw new IllegalArgumentException("Không tìm thấy thông báo hoặc bạn không có quyền truy cập.");
+        }
+    }
+
+    @Transactional
+    public void deleteOwned(Long notificationId, Long recipientId) {
+        int deleted = notificationRepository.deleteOwned(notificationId, recipientId);
+        if (deleted == 0) {
+            throw new IllegalArgumentException("Không tìm thấy thông báo hoặc bạn không có quyền truy cập.");
+        }
+    }
+
+    /**
+     * Dentist inbox: filter + search are done in-memory (expected small volume), then paginated.
+     * Params:
+     * - filter: all | unread | read
+     * - category: ALL | APPOINTMENT | BUSY | SUPPORT
+     */
+    @Transactional(readOnly = true)
+    public Page<Notification> getDentistNotifications(Long recipientId,
+                                                      Pageable pageable,
+                                                      String filter,
+                                                      String category,
+                                                      String keyword) {
+        List<Notification> all = notificationRepository.findByUser_IdOrderByCreatedAtDesc(recipientId);
+
+        String safeFilter = filter == null ? "all" : filter.trim().toLowerCase(Locale.ROOT);
+        String safeCategory = category == null ? "ALL" : category.trim().toUpperCase(Locale.ROOT);
+        String normalizedKeyword = normalizeSearch(keyword);
+
+        List<Notification> filtered = new ArrayList<>();
+        for (Notification n : all) {
+            if (!matchesReadFilter(n, safeFilter)) {
+                continue;
+            }
+            if (!matchesDentistCategory(n, safeCategory)) {
+                continue;
+            }
+            if (!matchesKeyword(n, normalizedKeyword)) {
+                continue;
+            }
+            filtered.add(n);
+        }
+
+        int pageNumber = Math.max(0, pageable.getPageNumber());
+        int pageSize = Math.max(1, pageable.getPageSize());
+
+        int fromIndex = Math.min(pageNumber * pageSize, filtered.size());
+        int toIndex = Math.min(fromIndex + pageSize, filtered.size());
+
+        return new org.springframework.data.domain.PageImpl<>(
+                filtered.subList(fromIndex, toIndex),
+                pageable,
+                filtered.size()
+        );
+    }
+
+    private boolean matchesReadFilter(Notification n, String filter) {
+        if (filter == null || "all".equals(filter)) {
+            return true;
+        }
+        if ("unread".equals(filter)) {
+            return n != null && !n.isRead();
+        }
+        if ("read".equals(filter)) {
+            return n != null && n.isRead();
+        }
+        return true;
+    }
+
+    private boolean matchesDentistCategory(Notification n, String category) {
+        if (category == null || category.isBlank() || "ALL".equalsIgnoreCase(category)) {
+            return true;
+        }
+        String normalized = category.trim().toUpperCase(Locale.ROOT);
+        String url = n == null ? null : n.getUrl();
+        NotificationReferenceType refType = n == null ? null : n.getReferenceType();
+
+        return switch (normalized) {
+            case "APPOINTMENT", "LICH_HEN" -> refType == NotificationReferenceType.APPOINTMENT;
+            case "BUSY", "LICH_BAN" -> url != null && url.startsWith("/dentist/busy-schedule");
+            case "SUPPORT", "HO_TRO" -> refType == NotificationReferenceType.TICKET
+                    || (url != null && url.startsWith("/dentist/support"));
+            default -> true;
+        };
+    }
+
+    private String normalizeSearch(String q) {
+        if (q == null) {
+            return "";
+        }
+        String trimmed = q.trim();
+        if (trimmed.startsWith("#")) {
+            trimmed = trimmed.substring(1).trim();
+        }
+        return trimmed.isBlank() ? "" : trimmed;
+    }
+
+    private boolean matchesKeyword(Notification n, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+        String lower = foldForSearch(keyword);
+        String digits = NON_DIGITS.matcher(keyword).replaceAll("");
+
+        boolean hasDigits = !digits.isEmpty();
+        boolean allowPhoneLikeMatch = hasDigits && digits.length() >= 4;
+
+        String title = n == null ? "" : safe(n.getTitle());
+        String content = n == null ? "" : safe(n.getContent());
+        String folded = foldForSearch(title + " " + content);
+
+        if (folded.contains(lower)) {
+            if (hasDigits && digits.length() < 4) {
+                // Avoid matching everything via phone substring when keyword is short digits like "56".
+                return matchesReferenceId(n, digits);
+            }
+            return true;
+        }
+
+        if (hasDigits && matchesReferenceId(n, digits)) {
+            return true;
+        }
+
+        return hasDigits && containsDigitsInText(title, content, digits, allowPhoneLikeMatch);
+    }
+
+    private boolean matchesReferenceId(Notification n, String digits) {
+        if (n == null || digits == null || digits.isBlank()) {
+            return false;
+        }
+        Long ref = n.getReferenceId();
+        if (ref == null) {
+            return false;
+        }
+        return String.valueOf(ref).contains(digits);
+    }
+
+    private boolean containsDigitsInText(String title, String content, String digits, boolean allow) {
+        if (!allow) {
+            return false;
+        }
+        String combinedDigits = NON_DIGITS.matcher(safe(title) + " " + safe(content)).replaceAll("");
+        return !combinedDigits.isEmpty() && combinedDigits.contains(digits);
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
+    }
+
+    private String foldForSearch(String input) {
+        if (input == null) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+        String withoutMarks = DIACRITICS.matcher(normalized).replaceAll("");
+        return withoutMarks.toLowerCase(Locale.ROOT).trim();
+    }
+
     @Transactional(readOnly = true)
     public Notification getOwnedNotification(Long notificationId, Long recipientId) {
         Notification notification = notificationRepository.findById(notificationId)
@@ -115,6 +377,259 @@ public class NotificationService {
             throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo n� y.");
         }
         return notification;
+    }
+
+    // =========================
+    // Dentist notifications (Inbox)
+    // =========================
+
+    @Transactional
+    public void notifyDentistAppointmentConfirmed(Appointment appointment) {
+        if (appointment == null || appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            return;
+        }
+        notifyDentistAppointmentEvent(
+                appointment,
+                NotificationType.BOOKING_CREATED,
+                "Lịch hẹn #" + safeId(appointment) + " đã được xác nhận",
+                "Lịch hẹn #" + safeId(appointment) + " đã được xác nhận. " + buildAppointmentContext(appointment),
+                resolveWorkScheduleUrl(appointment)
+        );
+    }
+
+    @Transactional
+    public void notifyDentistAppointmentCheckedIn(Appointment appointment) {
+        if (appointment == null || appointment.getStatus() != AppointmentStatus.CHECKED_IN) {
+            return;
+        }
+        notifyDentistAppointmentEvent(
+                appointment,
+                NotificationType.BOOKING_UPDATED,
+                "Lịch hẹn #" + safeId(appointment) + " đã check-in",
+                "Bệnh nhân đã check-in cho lịch hẹn #" + safeId(appointment) + ". " + buildAppointmentContext(appointment),
+                resolveWorkScheduleUrl(appointment)
+        );
+    }
+
+    @Transactional
+    public void notifyDentistAppointmentCancelled(Appointment appointment, String reason) {
+        if (appointment == null || appointment.getStatus() != AppointmentStatus.CANCELLED) {
+            return;
+        }
+        String suffix = (reason == null || reason.isBlank()) ? "" : (" Lý do: " + reason.trim() + ".");
+        notifyDentistAppointmentEvent(
+                appointment,
+                NotificationType.BOOKING_CANCELLED,
+                "Lịch hẹn #" + safeId(appointment) + " đã bị hủy",
+                "Lịch hẹn #" + safeId(appointment) + " đã bị hủy." + suffix + " " + buildAppointmentContext(appointment),
+                resolveWorkScheduleUrl(appointment)
+        );
+    }
+
+    @Transactional
+    public void notifyDentistBusyScheduleApproved(BusySchedule request) {
+        notifyDentistBusyScheduleEvent(
+                request,
+                NotificationType.BOOKING_UPDATED,
+                "Lịch bận đã được duyệt",
+                buildBusyScheduleContext(request, "Yêu cầu lịch bận của bạn đã được duyệt."),
+                "/dentist/busy-schedule"
+        );
+    }
+
+    @Transactional
+    public void notifyDentistBusyScheduleRejected(BusySchedule request) {
+        notifyDentistBusyScheduleEvent(
+                request,
+                NotificationType.BOOKING_UPDATED,
+                "Lịch bận không được duyệt",
+                buildBusyScheduleContext(request, "Yêu cầu lịch bận của bạn không được duyệt."),
+                "/dentist/busy-schedule"
+        );
+    }
+
+    @Transactional
+    public void notifyDentistSupportTicketCreated(SupportTicket ticket) {
+        if (ticket == null) return;
+        Long dentistUserId = resolveTicketDentistUserId(ticket);
+        if (dentistUserId == null) return;
+
+        boolean existed = notificationRepository.existsByUser_IdAndTypeAndReferenceTypeAndReferenceId(
+                dentistUserId,
+                NotificationType.TICKET_STATUS_CHANGED,
+                NotificationReferenceType.TICKET,
+                ticket.getId()
+        );
+        if (existed) return;
+
+        String customerName = ticket.getCustomerDisplayName() != null ? ticket.getCustomerDisplayName() : "Bệnh nhân";
+        String title = "Phiếu hỗ trợ mới #" + ticket.getId();
+        String message = customerName + " đã tạo phiếu hỗ trợ mới #" + ticket.getId()
+                + (ticket.getTitle() == null || ticket.getTitle().isBlank() ? "." : (": " + ticket.getTitle().trim() + "."));
+
+        createForDentist(
+                dentistUserId,
+                NotificationType.TICKET_STATUS_CHANGED,
+                title,
+                message,
+                "/dentist/support/" + ticket.getId(),
+                NotificationReferenceType.TICKET,
+                ticket.getId()
+        );
+    }
+
+    @Transactional
+    public void notifyDentistSupportTicketCustomerMessage(SupportTicket ticket) {
+        if (ticket == null) return;
+        Long dentistUserId = resolveTicketDentistUserId(ticket);
+        if (dentistUserId == null) return;
+
+        String customerName = ticket.getCustomerDisplayName() != null ? ticket.getCustomerDisplayName() : "Bệnh nhân";
+        String title = "Tin nhắn mới trong phiếu #" + ticket.getId();
+        String message = customerName + " vừa gửi tin nhắn mới trong phiếu hỗ trợ #" + ticket.getId() + ".";
+
+        createForDentist(
+                dentistUserId,
+                NotificationType.TICKET_STATUS_CHANGED,
+                title,
+                message,
+                "/dentist/support/" + ticket.getId(),
+                NotificationReferenceType.TICKET,
+                ticket.getId()
+        );
+    }
+
+    private void notifyDentistAppointmentEvent(Appointment appointment,
+                                              NotificationType type,
+                                              String title,
+                                              String message,
+                                              String url) {
+        if (appointment == null || appointment.getDentist() == null || appointment.getDentist().getUser() == null) {
+            return;
+        }
+        Long dentistUserId = appointment.getDentist().getUser().getId();
+        if (dentistUserId == null) return;
+
+        boolean existed = notificationRepository.existsByUser_IdAndTypeAndReferenceTypeAndReferenceId(
+                dentistUserId,
+                type,
+                NotificationReferenceType.APPOINTMENT,
+                appointment.getId()
+        );
+        if (existed) return;
+
+        createForDentist(
+                dentistUserId,
+                type,
+                title,
+                message,
+                url,
+                NotificationReferenceType.APPOINTMENT,
+                appointment.getId()
+        );
+    }
+
+    private void notifyDentistBusyScheduleEvent(BusySchedule request,
+                                               NotificationType type,
+                                               String title,
+                                               String message,
+                                               String url) {
+        if (request == null || request.getDentist() == null || request.getDentist().getUser() == null) {
+            return;
+        }
+        Long dentistUserId = request.getDentist().getUser().getId();
+        if (dentistUserId == null) return;
+
+        // We intentionally do not dedupe busy schedule notifications strictly,
+        // because multiple requests can exist and we are not storing requestId as reference here.
+        createForDentist(
+                dentistUserId,
+                type,
+                title,
+                message,
+                url,
+                null,
+                null
+        );
+    }
+
+    private Long resolveTicketDentistUserId(SupportTicket ticket) {
+        if (ticket.getDentist() != null) {
+            return ticket.getDentist().getId();
+        }
+        if (ticket.getAppointment() != null
+                && ticket.getAppointment().getDentist() != null
+                && ticket.getAppointment().getDentist().getUser() != null) {
+            return ticket.getAppointment().getDentist().getUser().getId();
+        }
+        return null;
+    }
+
+    private String resolveWorkScheduleUrl(Appointment appointment) {
+        if (appointment == null || appointment.getDate() == null) {
+            return "/dentist/work-schedule";
+        }
+        LocalDate weekStart = appointment.getDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        return "/dentist/work-schedule?weekStart=" + weekStart;
+    }
+
+    private String buildAppointmentContext(Appointment appointment) {
+        if (appointment == null) {
+            return "";
+        }
+        String patientName = (appointment.getCustomer() != null && appointment.getCustomer().getFullName() != null)
+                ? appointment.getCustomer().getFullName()
+                : "Bệnh nhân";
+        String phone = (appointment.getCustomer() != null && appointment.getCustomer().getPhone() != null)
+                ? appointment.getCustomer().getPhone()
+                : "";
+        LocalDate date = appointment.getDate();
+        LocalTime start = appointment.getStartTime();
+        LocalTime end = appointment.getEndTime();
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Bệnh nhân: ").append(patientName);
+        if (!phone.isBlank()) {
+            sb.append(" (").append(phone).append(")");
+        }
+        if (date != null) {
+            sb.append(" • Ngày: ").append(date.format(df));
+        }
+        if (start != null) {
+            sb.append(" • Giờ: ").append(start.format(tf));
+            if (end != null) {
+                sb.append(" - ").append(end.format(tf));
+            }
+        }
+        sb.append(".");
+        return sb.toString();
+    }
+
+    private String buildBusyScheduleContext(BusySchedule request, String prefix) {
+        if (request == null) return prefix == null ? "" : prefix.trim();
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String range = "";
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            range = request.getStartDate().format(df) + " - " + request.getEndDate().format(df);
+        } else if (request.getStartDate() != null) {
+            range = request.getStartDate().format(df);
+        }
+        String reason = request.getReason() == null ? "" : request.getReason().trim();
+
+        StringBuilder sb = new StringBuilder(prefix == null ? "" : prefix.trim());
+        if (!range.isBlank()) {
+            sb.append(" Thời gian: ").append(range).append(".");
+        }
+        if (!reason.isBlank()) {
+            sb.append(" Lý do: ").append(reason).append(".");
+        }
+        return sb.toString().trim();
+    }
+
+    private String safeId(Appointment appointment) {
+        return appointment != null && appointment.getId() != null ? String.valueOf(appointment.getId()) : "?";
     }
 
     @Transactional
@@ -251,4 +766,5 @@ public class NotificationService {
         }
     }
 }
+
 
