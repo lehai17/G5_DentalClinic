@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${pageTitle != null ? pageTitle : 'Appointment Result'}">Appointment Result</title>
+    <link rel="stylesheet" href="/css/staff/staff.css">
+    <style>
+        .top-actions{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+        .link-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:#fff;border:1px solid #e5e7eb;cursor:pointer;font-weight:700}
+        .card{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,0.06);padding:18px;margin-top:16px}
+        .card h3{font-size:16px;margin-bottom:10px}
+        .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
+        .meta-item{padding:12px 14px;border:1px solid #eef2f7;border-radius:12px;background:#fafafa}
+        .meta-k{font-size:12px;color:#6b7280;text-transform:uppercase;margin-bottom:6px}
+        .meta-v{font-size:14px;font-weight:700}
+        .text-block{white-space:pre-wrap;line-height:1.55;color:#111827;background:#fafafa;border:1px solid #eef2f7;border-radius:12px;padding:12px 14px}
+        .empty-state{border:1px dashed #d1d5db;background:#fff7ed;color:#7c2d12}
+        .chips{display:flex;flex-wrap:wrap;gap:8px}
+        .chip{background:#eef2ff;color:#1e3a8a;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+        .muted{color:#6b7280}
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+    <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div th:replace="staff/fragments/header :: header"></div>
+
+        <div class="content">
+
+            <div class="top-actions">
+                <a class="link-btn" th:href="@{/staff/appointments}">← Back to Appointments</a>
+            </div>
+
+            <!-- Appointment summary -->
+            <div class="card">
+                <h2 style="margin-bottom:8px">Clinical Examination Result</h2>
+                <div class="muted" th:text="'Appointment ID: ' + ${appointment.id}">Appointment ID: -</div>
+
+                <div class="meta-grid" style="margin-top:14px">
+                    <div class="meta-item">
+                        <div class="meta-k">Patient</div>
+                        <div class="meta-v" th:text="${appointment.customer != null ? appointment.customer.fullName : '-'}">-</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-k">Dentist</div>
+                        <div class="meta-v" th:text="${appointment.dentist != null ? appointment.dentist.fullName : 'Not assigned'}">-</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-k">Date</div>
+                        <div class="meta-v" th:text="${appointment.date}">-</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-k">Time</div>
+                        <div class="meta-v" th:text="${appointment.startTime} + ' - ' + ${appointment.endTime}">-</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-k">Requested service</div>
+                        <div class="meta-v" th:text="${appointment.service != null ? appointment.service.name : 'N/A'}">-</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-k">Status</div>
+                        <div class="meta-v" th:text="${appointment.status}">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty state: doctor chưa nhập -->
+            <div class="card empty-state" th:if="${medicalRecord == null or medicalRecord.id == null}">
+                <h3>Chưa có kết quả khám</h3>
+                <div>Bác sĩ chưa nhập dữ liệu khám (hoặc chưa nhấn <b>Save</b>) cho lịch hẹn này.</div>
+            </div>
+
+            <!-- Result sections -->
+            <div th:if="${medicalRecord != null and medicalRecord.id != null}">
+
+                <div class="card">
+                    <h3>A) Diagnosis</h3>
+                    <div class="text-block" th:text="${medicalRecord.diagnosis != null ? medicalRecord.diagnosis : ''}"></div>
+                </div>
+
+                <div class="card">
+                    <h3>B) Patient Complaint</h3>
+                    <div class="text-block" th:text="${medicalRecord.complaintNote != null ? medicalRecord.complaintNote : ''}"></div>
+                </div>
+
+                <div class="card">
+                    <h3>C) Clinical Findings by Tooth</h3>
+
+                    <div class="muted" th:if="${#lists.isEmpty(medicalRecord.findings)}">Không có dữ liệu findings.</div>
+
+                    <table th:if="${!#lists.isEmpty(medicalRecord.findings)}">
+                        <thead>
+                        <tr>
+                            <th>Tooth</th>
+                            <th>Condition</th>
+                            <th>Severity</th>
+                            <th>Note</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="f : ${medicalRecord.findings}">
+                            <td th:text="${f.toothNo}">-</td>
+                            <td th:text="${f.condition}">-</td>
+                            <td th:text="${f.severity}">-</td>
+                            <td th:text="${f.note}">-</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>D) Proposed Services</h3>
+
+                    <div class="muted" th:if="${#lists.isEmpty(medicalRecord.proposedServices)}">Không có dịch vụ đề xuất.</div>
+
+                    <div class="chips" th:if="${!#lists.isEmpty(medicalRecord.proposedServices)}">
+                        <span class="chip" th:each="ps : ${medicalRecord.proposedServices}"
+                              th:text="${(ps.service != null ? ps.service.name : 'Service') + ' × ' + ps.qty}">Service × 1</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>E) Clinical Notes</h3>
+                    <div class="text-block" th:text="${medicalRecord.clinicalNotes != null ? medicalRecord.clinicalNotes : ''}"></div>
+                </div>
+
+                <div class="card">
+                    <h3>F) Images</h3>
+
+                    <div class="muted" th:if="${#lists.isEmpty(medicalRecord.images)}">Không có hình ảnh.</div>
+
+                    <table th:if="${!#lists.isEmpty(medicalRecord.images)}">
+                        <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>URL</th>
+                            <th>Note</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="img : ${medicalRecord.images}">
+                            <td th:text="${img.type}">-</td>
+                            <td>
+                                <a th:href="${img.url}" th:text="${img.url}" target="_blank" rel="noopener">Link</a>
+                            </td>
+                            <td th:text="${img.note}">-</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

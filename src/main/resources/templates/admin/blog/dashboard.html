@@ -51,6 +51,15 @@
         .btn-edit {
             border:1px solid #93c5fd; color:#1d4ed8;
         }
+        .btn-approve {
+            border:none;
+            background:#16a34a;
+            color:#fff;
+            border-radius:8px;
+            cursor:pointer;
+            padding:6px 12px;
+            font-weight:600;
+        }
         .btn-reject {
             border:none; background:#dc2626; color:#fff; border-radius:8px; cursor:pointer; padding:6px 10px;
         }
@@ -128,17 +137,27 @@
 
                 <td>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+
+                        <!-- Approve: hiện cho PENDING hoặc REJECTED -->
+                        <form th:if="${b.status.name() == 'PENDING' or b.status.name() == 'REJECTED'}"
+                              th:action="@{'/admin/blogs/' + ${b.id} + '/approve'}"
+                              method="post"
+                              style="display:inline-flex; align-items:center;">
+                            <input type="hidden" name="returnStatus" th:value="${status}">
+                            <button class="btn-approve" type="submit">Duyệt</button>
+                        </form>
+
                         <!-- View -->
                         <a class="btn-link" th:href="@{'/admin/blogs/' + ${b.id}}">Xem</a>
 
-                        <!-- Edit: CHỈ PENDING/APPROVED -->
+                        <!-- Edit -->
                         <a class="btn-link btn-edit"
                            th:if="${b.status.name() == 'PENDING' or b.status.name() == 'APPROVED'}"
                            th:href="@{'/admin/blogs/' + ${b.id} + '/edit'}">
                             Chỉnh sửa
                         </a>
 
-                        <!-- Reject: CHỈ PENDING -->
+                        <!-- Reject -->
                         <form th:if="${b.status.name() == 'PENDING' or b.status.name() == 'APPROVED'}"
                               th:action="@{'/admin/blogs/' + ${b.id} + '/reject'}"
                               method="post" style="display:flex; gap:6px; align-items:center;">

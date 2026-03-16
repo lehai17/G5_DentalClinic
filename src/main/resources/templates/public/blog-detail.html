@@ -3,22 +3,159 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title th:text="${blog.title}">Blog Detail</title>
+    <title th:text="${blog.title}">Chi tiết bài viết</title>
+    <style>
+        body {
+            margin: 0;
+            background: #f3f4f6;
+            color: #111827;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .page-wrap {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 28px 18px 48px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 18px;
+            color: #1d4ed8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .article {
+            background: #fff;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        .article-title {
+            margin: 0 0 12px;
+            font-size: 46px;
+            line-height: 1.2;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .article-meta {
+            margin-bottom: 18px;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .article-summary {
+            font-size: 31px;
+            line-height: 1.55;
+            color: #1f2937;
+            margin: 0 0 26px;
+            font-weight: 500;
+        }
+
+        .article-thumb {
+            width: 100%;
+            border-radius: 14px;
+            object-fit: cover;
+            margin: 0 0 10px;
+        }
+
+        .article-caption {
+            font-size: 14px;
+            color: #4b5563;
+            font-style: italic;
+            margin: 0 0 26px;
+        }
+
+        .article-content {
+            font-size: 20px;
+            line-height: 1.9;
+            color: #111827;
+        }
+
+        .article-content p {
+            margin: 0 0 22px;
+        }
+
+        .article-content h2,
+        .article-content h3,
+        .article-content h4 {
+            margin: 30px 0 16px;
+            line-height: 1.35;
+            color: #111827;
+        }
+
+        .article-content img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 28px auto 10px;
+            border-radius: 14px;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 0 0 22px 26px;
+        }
+
+        .article-content blockquote {
+            margin: 24px 0;
+            padding: 16px 20px;
+            border-left: 4px solid #2563eb;
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .article {
+                padding: 20px;
+            }
+
+            .article-title {
+                font-size: 34px;
+            }
+
+            .article-summary {
+                font-size: 22px;
+            }
+
+            .article-content {
+                font-size: 18px;
+            }
+        }
+    </style>
 </head>
-<body style="font-family: Arial; max-width: 900px; margin: 30px auto;">
-<a th:href="@{/customer/homepage}">â† Quay lại</a>
+<body>
+<div class="page-wrap">
+    <a th:href="@{/customer/homepage}" class="back-link">← Quay lại</a>
 
-<h1 th:text="${blog.title}" style="margin-top:12px;"></h1>
-<p th:text="${#temporals.format(blog.updatedAt, 'dd/MM/yyyy')}" style="color:#666;"></p>
+    <article class="article">
+        <h1 class="article-title" th:text="${blog.title}"></h1>
 
-<img th:if="${!#strings.isEmpty(blog.imageUrl)}"
-     th:src="${blog.imageUrl}"
-     style="max-width:100%; border-radius:12px; margin:12px 0;"/>
+        <div class="article-meta"
+             th:text="${blog.updatedAt != null ? #temporals.format(blog.updatedAt, 'dd/MM/yyyy') : ''}">
+        </div>
 
-<p th:if="${!#strings.isEmpty(blog.summary)}"
-   th:text="${blog.summary}" style="font-weight:600;"></p>
+        <p class="article-summary"
+           th:if="${!#strings.isEmpty(blog.summary)}"
+           th:text="${blog.summary}">
+        </p>
 
-<div th:text="${blog.content}" style="white-space:pre-wrap; line-height:1.6;"></div>
+        <img th:if="${!#strings.isEmpty(blog.imageUrl)}"
+             th:src="${blog.imageUrl}"
+             class="article-thumb"
+             alt="Ảnh bài viết"/>
+
+        <p class="article-caption"
+           th:if="${!#strings.isEmpty(blog.imageUrl)}">
+            Ảnh minh họa cho bài viết sức khỏe.
+        </p>
+
+        <div class="article-content" th:utext="${blog.content}"></div>
+    </article>
+</div>
 </body>
 </html>
-
