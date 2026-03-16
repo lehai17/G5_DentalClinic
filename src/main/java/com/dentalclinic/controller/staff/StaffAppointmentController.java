@@ -106,6 +106,8 @@ public class StaffAppointmentController {
                 staffAppointmentService.searchAndSort(keyword, serviceKeyword, sort, page);
 
         model.addAttribute("appointments", appointmentPage.getContent());
+        model.addAttribute("dentistLeaveFlags",
+                staffAppointmentService.buildDentistLeaveFlags(appointmentPage.getContent()));
 
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", appointmentPage.getTotalPages());

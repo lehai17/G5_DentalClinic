@@ -37,17 +37,17 @@
 
         <ul class="navbar-menu">
           <li>
-            <a onclick="scrollToSection('services', '/homepage#services')" style="cursor: pointer"
+            <a href="/homepage#services" onclick="return navigateToSection(event, 'services', '/homepage#services')" style="cursor: pointer"
               >Dịch vụ</a
             >
           </li>
           <li>
-            <a onclick="scrollToSection('dentists', '/homepage#dentists')" style="cursor: pointer"
+            <a href="/homepage#dentists" onclick="return navigateToSection(event, 'dentists', '/homepage#dentists')" style="cursor: pointer"
               >Bác sĩ</a
             >
           </li>
-          <li><a onclick="scrollToSection('blog', '/homepage#blog')" style="cursor: pointer">Blog</a></li>
-          <li><a onclick="scrollToSection('contact', '/homepage#contact')" style="cursor: pointer">Liên hệ</a></li>
+          <li><a href="/homepage#blog" onclick="return navigateToSection(event, 'blog', '/homepage#blog')" style="cursor: pointer">Blog</a></li>
+          <li><a href="/homepage#contact" onclick="return navigateToSection(event, 'contact', '/homepage#contact')" style="cursor: pointer">Liên hệ</a></li>
         </ul>
 
         <div class="navbar-actions">
@@ -401,6 +401,14 @@
             scrollToSection(targetId);
           }, 50);
         }
+
+        const storedSection = sessionStorage.getItem("homepageTargetSection");
+        if (storedSection) {
+          sessionStorage.removeItem("homepageTargetSection");
+          setTimeout(function () {
+            scrollToSection(storedSection);
+          }, 120);
+        }
       });
 
       function toggleNotificationMenu(event) {
@@ -428,6 +436,20 @@
         if (fallbackUrl) {
           window.location.href = fallbackUrl;
         }
+      }
+
+      function navigateToSection(event, id, fallbackUrl) {
+        if (event) event.preventDefault();
+        const onHomepage = window.location.pathname === "/homepage" || window.location.pathname === "/";
+        if (onHomepage && document.getElementById(id)) {
+          scrollToSection(id);
+          return false;
+        }
+        try {
+          sessionStorage.setItem("homepageTargetSection", id);
+        } catch (e) {}
+        window.location.href = fallbackUrl || ("/homepage#" + id);
+        return false;
       }
 
       document.addEventListener("click", function (e) {
