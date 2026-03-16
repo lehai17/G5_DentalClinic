@@ -63,6 +63,15 @@ public class DentistProfileController {
                         "Dentist must be at least 25 years old"
                 );
             }
+            int maxExperience = Math.max(age - 22, 0);
+
+            if (dto.getExperienceYears() > maxExperience) {
+                result.rejectValue(
+                        "experienceYears",
+                        "error.exp",
+                        "Experience cannot exceed age minus 22 years"
+                );
+            }
         }
 
         if (result.hasErrors()) {

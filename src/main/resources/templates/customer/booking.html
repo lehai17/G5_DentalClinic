@@ -22,9 +22,22 @@
       <main class="main-content">
         <div th:replace="~{fragments/header :: header}"></div>
 
-        <section class="booking-container">
-          <!-- Header -->
-          <div class="booking-header">
+	        <section class="booking-container">
+	          <div th:if="${infoMessage}" class="cap-inline-note cap-inline-note-success" style="margin-bottom: 1rem;">
+	            <i class="bi bi-info-circle-fill"></i>
+	            <span th:text="${infoMessage}">Đã điền sẵn thông tin từ lịch hẹn cũ.</span>
+	          </div>
+	          <div th:if="${warningMessage}" class="cap-inline-note cap-inline-note-warning" style="margin-bottom: 1rem;">
+	            <i class="bi bi-exclamation-triangle-fill"></i>
+	            <span th:text="${warningMessage}">Có dữ liệu cũ cần bạn kiểm tra lại.</span>
+	          </div>
+	          <div th:if="${errorMessage}" class="cap-inline-note cap-inline-note-danger" style="margin-bottom: 1rem;">
+	            <i class="bi bi-x-octagon-fill"></i>
+	            <span th:text="${errorMessage}">Không thể tải dữ liệu đặt lại lịch.</span>
+	          </div>
+
+	          <!-- Header -->
+	          <div class="booking-header">
             <h1>Đặt lịch khám</h1>
             <p>
               Chỉ cần vài phút để đặt lịch khám. Chọn ngày, giờ và dịch vụ phù
@@ -96,12 +109,13 @@
                         class="booking-service-item"
                         th:each="s : ${services}"
                       >
-                        <input
-                          type="checkbox"
-                          class="customer-service-checkbox"
-                          th:value="${s.id}"
-                          th:attr="data-name=${s.name},data-duration=${s.durationMinutes},data-price=${s.price}"
-                        />
+	                        <input
+	                          type="checkbox"
+	                          class="customer-service-checkbox"
+	                          th:value="${s.id}"
+	                          th:checked="${rebookPrefill != null and rebookPrefill.serviceIds != null and #lists.contains(rebookPrefill.serviceIds, s.id)}"
+	                          th:attr="data-name=${s.name},data-duration=${s.durationMinutes},data-price=${s.price}"
+	                        />
                         <span class="booking-service-content">
                           <span class="booking-service-name" th:text="${s.name}">Dịch vụ</span>
                           <span class="booking-service-meta">
@@ -235,38 +249,40 @@
                     <label class="form-label">
                       Kênh liên hệ <span class="required">*</span>
                     </label>
-                    <select
-                      id="customer-booking-contact-channel"
-                      class="form-select"
-                    >
-                      <option value="">-- Chọn kênh --</option>
-                      <option value="ZALO">Zalo</option>
-                      <option value="EMAIL">Email</option>
-                      <option value="PHONE">Điện thoại</option>
-                    </select>
-                  </div>
+	                    <select
+	                      id="customer-booking-contact-channel"
+	                      class="form-select"
+	                    >
+	                      <option value="">-- Chọn kênh --</option>
+	                      <option value="ZALO" th:selected="${rebookPrefill != null and rebookPrefill.contactChannel == 'ZALO'}">Zalo</option>
+	                      <option value="EMAIL" th:selected="${rebookPrefill != null and rebookPrefill.contactChannel == 'EMAIL'}">Email</option>
+	                      <option value="PHONE" th:selected="${rebookPrefill != null and rebookPrefill.contactChannel == 'PHONE'}">Điện thoại</option>
+	                    </select>
+	                  </div>
 
                   <div class="form-group">
                     <label class="form-label">
                       Số / Email / Zalo <span class="required">*</span>
                     </label>
                     <input
-                      type="text"
-                      id="customer-booking-contact-value"
-                      class="form-input"
-                      placeholder="Nhập số điện thoại, email hoặc ID Zalo"
-                    />
+	                      type="text"
+	                      id="customer-booking-contact-value"
+	                      class="form-input"
+	                      th:value="${rebookPrefill != null ? rebookPrefill.contactValue : ''}"
+	                      placeholder="Nhập số điện thoại, email hoặc ID Zalo"
+	                    />
                   </div>
 
                   <div class="form-group">
                     <label class="form-label">Ghi chú (tùy chọn)</label>
-                    <textarea
-                      id="customer-booking-note"
-                      class="form-textarea"
-                      placeholder="Chia sẻ bất kỳ thông tin quan trọng nào với phòng khám"
-                    ></textarea>
-                  </div>
-                </form>
+	                    <textarea
+	                      id="customer-booking-note"
+	                      class="form-textarea"
+	                      placeholder="Chia sẻ bất kỳ thông tin quan trọng nào với phòng khám"
+	                      th:text="${rebookPrefill != null ? rebookPrefill.patientNote : ''}"
+	                    ></textarea>
+	                  </div>
+	                </form>
               </div>
 
               <!-- Step 4: Success -->

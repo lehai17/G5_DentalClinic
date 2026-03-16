@@ -6,7 +6,7 @@ import org.springframework.ui.Model;
 
 /**
  * Controller xử lý cï¿½c yêu cầu liên quan đến m� n hình Dashboard chính của Admin.
- * Được phï¿½n tï¿½ch v� o sub-package 'admin' để quản lý độc lập.
+ * Được phï¿½n tï¿½ch v? o sub-package 'admin' để quản lý độc lập.
  */
 @Controller
 @RequestMapping("/admin") // Tiền tố URL cho to� n bộ chức năng quản trị
@@ -17,7 +17,7 @@ public class AdminDashboardController {
      */
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
-        // Bạn có thể thêm cï¿½c thông tin động v� o model tại dï¿½y trong tương lai
+        // Bạn có thể thêm cï¿½c thông tin động v? o model tại dï¿½y trong tương lai
         model.addAttribute("pageTitle", "Admin Dashboard - GENZ CLINIC");
         model.addAttribute("adminName", "Administrator"); // Giả lập tên admin từ Role
 

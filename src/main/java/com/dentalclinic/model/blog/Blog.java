@@ -67,7 +67,7 @@ public class Blog {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // --- GETTERS & SETTERS (Viáº¿t tay Ä‘á»ƒ fix lá»—i IDE) ---
+    // --- GETTERS & SETTERS (Viết tay để fix lỗi IDE) ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }

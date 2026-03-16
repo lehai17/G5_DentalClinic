@@ -13,15 +13,15 @@ import java.util.Optional;
 @Repository
 public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long> {
 
-    // 1. TÃ¬m kiáº¿m há»“ sÆ¡ nhï¿½n viÃªn dá»±a trÃªn ID cá»§a User
+    // 1. Tìm kiếm hồ sơ nh�n viên dựa trên ID của User
     Optional<StaffProfile> findByUserId(Long userId);
 
-    // 2. TÃ¬m nhï¿½n viÃªn theo sá»‘ Ä‘iá»‡n thoáº¡i
+    // 2. Tìm nh�n viên theo số điện thoại
     Optional<StaffProfile> findByPhone(String phone);
 
     /**
-     * Lá»c danh sï¿½ch nhï¿½n viÃªn theo Tráº¡ng thï¿½i tÃ i khoáº£n vÃ  Vá»‹ trÃ­ cÃ´ng viá»‡c
-     * Sá»­ dá»¥ng JOIN Ä‘á»ƒ truy cáº­p thuá»™c tÃ­nh status náº±m trong thá»±c thá»ƒ User
+     * Lọc danh s�ch nh�n viên theo Trạng th�i tài khoản và Vị trí công việc
+     * Sử dụng JOIN để truy cập thuộc tính status nằm trong thực thể User
      */
 //    @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
 //            "(:status IS NULL OR u.status = :status) AND " +
@@ -29,16 +29,16 @@ public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long
 //    List<StaffProfile> filterStaffs(@Param("status") UserStatus status,
 //                                    @Param("position") String position);
     @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
-            "(:status IS NULL OR u.status = :status) AND (" + // Bá»• sung lá»c status
-            "(:position = 'Other' AND s.position != 'Receptionist') OR " +
-            "(:position != 'Other' AND s.position = :position) OR " +
+            "(:status IS NULL OR u.status = :status) AND (" + // Bổ sung lọc status
+            "(:position = 'Kh?c' AND s.position != 'Receptionist') OR " +
+            "(:position != 'Kh?c' AND s.position = :position) OR " +
             "(:position IS NULL OR :position = '')" +
             ")")
     List<StaffProfile> filterStaffs(@Param("status") UserStatus status,
                                     @Param("position") String position);
 
     /**
-     * Äáº¿m sá»‘ lÆ°á»£ng nhï¿½n viÃªn dá»±a trÃªn tráº¡ng thï¿½i (DÃ¹ng cho cï¿½c Stat Cards)
+     * Đếm số lượng nh�n viên dựa trên trạng th�i (Dùng cho c?c Stat Cards)
      */
     @Query("SELECT COUNT(s) FROM StaffProfile s WHERE s.user.status = :status")
     long countByUserStatus(@Param("status") UserStatus status);

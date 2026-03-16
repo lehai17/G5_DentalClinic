@@ -107,10 +107,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // =========================================================
 
     @Query("""
-        SELECT a FROM Appointment a
+        SELECT DISTINCT a FROM Appointment a
         JOIN FETCH a.customer c
         JOIN FETCH c.user cu
         JOIN FETCH a.service s
+        LEFT JOIN FETCH a.appointmentDetails ad
         LEFT JOIN FETCH a.dentist d
         WHERE d.id = :dentistProfileId
           AND a.date BETWEEN :start AND :end
@@ -119,8 +120,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                   com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
                       com.dentalclinic.model.appointment.AppointmentStatus.CHECKED_IN,
                           com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
-                              com.dentalclinic.model.appointment.AppointmentStatus.DONE
-                  
+                              com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+                  com.dentalclinic.model.appointment.AppointmentStatus.WAITING_PAYMENT
               ) 
     """)
     List<Appointment> findScheduleForWeek(@Param("dentistProfileId") Long dentistProfileId,
@@ -128,10 +129,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                           @Param("end") LocalDate end);
 
     @Query("""
-        SELECT a FROM Appointment a
+        SELECT DISTINCT a FROM Appointment a
         JOIN FETCH a.customer c
         JOIN FETCH c.user cu
         JOIN FETCH a.service s
+        LEFT JOIN FETCH a.appointmentDetails ad
         LEFT JOIN FETCH a.dentist d
         WHERE a.id = :appointmentId
     """)
@@ -177,10 +179,36 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
           AND a.date = :date
           AND a.status IN (
               com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
-              com.dentalclinic.model.appointment.AppointmentStatus.DONE
+              com.dentalclinic.model.appointment.AppointmentStatus.DONE,
+              com.dentalclinic.model.appointment.AppointmentStatus.WAITING_PAYMENT
           )
     """)
     long countCompletedByDentistAndDate(@Param("dentistId") Long dentistId, @Param("date") LocalDate date);
+
+    @Query("""
+        SELECT a.date, a.status, COUNT(a)
+        FROM Appointment a
+        WHERE a.dentist.id = :dentistId
+          AND a.date BETWEEN :start AND :end
+        GROUP BY a.date, a.status
+    """)
+    List<Object[]> countStatusByDentistAndDateRange(@Param("dentistId") Long dentistId,
+                                                    @Param("start") LocalDate start,
+                                                    @Param("end") LocalDate end);
+
+    @EntityGraph(attributePaths = {"customer", "customer.user", "appointmentDetails", "appointmentDetails.service", "service", "dentist"})
+    @Query("""
+        SELECT a
+        FROM Appointment a
+        WHERE a.dentist.id = :dentistId
+          AND a.status IN :statuses
+          AND a.date >= :today
+        ORDER BY a.date ASC, a.startTime ASC
+    """)
+    List<Appointment> findUpcomingForDentist(@Param("dentistId") Long dentistId,
+                                             @Param("statuses") List<AppointmentStatus> statuses,
+                                             @Param("today") LocalDate today,
+                                             Pageable pageable);
 
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.dentist.id = :dentistId AND a.date >= :currentDate AND a.status NOT IN :excludedStatuses")
     int countUpcomingAppointments(@Param("dentistId") Long dentistId,
@@ -190,6 +218,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // =========================================================
     // 5. CUSTOMER & STATUS QUERIES
     // =========================================================
+
+    @EntityGraph(attributePaths = {"customer", "customer.user", "appointmentDetails", "appointmentDetails.service", "service", "dentist"})
+    List<Appointment> findByDentist_IdAndStatusIn(Long dentistId, List<AppointmentStatus> statuses);
 
     @Query("SELECT a FROM Appointment a WHERE a.customer.id = :customerId AND a.status = 'COMPLETED' ORDER BY a.date DESC, a.startTime DESC")
     List<Appointment> findCompletedAppointmentsByCustomerId(@Param("customerId") Long customerId);
@@ -211,6 +242,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     List<Appointment> findByCustomer_User_IdOrderByDateDesc(Long customerUserId);
+
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
+    List<Appointment> findByCustomer_User_IdAndCustomerHiddenFalseOrderByDateDesc(Long customerUserId);
+
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
+    List<Appointment> findByCustomer_User_IdAndStatusOrderByDateDescStartTimeDesc(Long customerUserId,
+                                                                                   AppointmentStatus status);
 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     List<Appointment> findByCustomer_User_IdAndDateAndStatusNotOrderByStartTimeAsc(Long customerUserId,

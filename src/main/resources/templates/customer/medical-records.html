@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hồ sơ bệnh án - GENZ CLINIC</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-appointments-page.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-medical-records.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="customer-page-section medical-records-page">
+      <div class="cap-shell">
+        <div class="cap-hero">
+          <div class="cap-hero-copy">
+            <span class="cap-eyebrow">Hồ sơ bệnh án</span>
+            <h1 class="customer-page-title">Lịch sử khám bệnh</h1>
+            <p class="cap-subtitle">
+              Theo dõi các lần khám đã hoàn thành, dịch vụ đã thực hiện và đơn thuốc liên quan.
+            </p>
+          </div>
+        </div>
+
+        <div class="cap-summary-strip">
+          <div class="cap-summary-chip">
+            <span class="cap-summary-label">Tổng ca đã khám</span>
+            <strong th:text="${totalVisits}">0</strong>
+          </div>
+          <div class="cap-summary-chip">
+            <span class="cap-summary-label">Khám đơn</span>
+            <strong th:text="${singleCount}">0</strong>
+          </div>
+          <div class="cap-summary-chip">
+            <span class="cap-summary-label">Khám chuỗi</span>
+            <strong th:text="${chainCount}">0</strong>
+          </div>
+        </div>
+
+        <div class="cap-card cap-list-card">
+          <div class="cap-card-head">
+            <div class="cap-card-title">
+              <i class="bi bi-file-medical"></i>
+              Danh sách hồ sơ
+            </div>
+            <div class="cap-card-hint">
+              Mỗi trang hiển thị tối đa 5 hồ sơ. Nhấn vào từng ca để mở chi tiết.
+            </div>
+          </div>
+
+          <form id="medicalRecordFilter" class="cap-toolbar" method="get" th:action="@{/patient/medical-records}">
+            <label class="cap-search-box" for="medical-records-search">
+              <i class="bi bi-search"></i>
+              <input id="medical-records-search"
+                     type="search"
+                     name="q"
+                     placeholder="Tìm theo mã ca, dịch vụ, bác sĩ"
+                     th:value="${search}">
+            </label>
+
+            <label class="cap-date-box" for="medical-from">
+              <span>Từ ngày</span>
+              <input id="medical-from" type="date" name="from" th:value="${fromDate}">
+            </label>
+
+            <label class="cap-date-box" for="medical-to">
+              <span>Đến ngày</span>
+              <input id="medical-to" type="date" name="to" th:value="${toDate}">
+            </label>
+
+            <input type="hidden" name="size" th:value="${pageSize}">
+            <button type="submit" class="cap-search-clear">Lọc</button>
+            <button type="button" class="cap-search-clear" id="medical-reset">Đặt lại</button>
+          </form>
+
+          <div class="cap-list-wrap" th:if="${chains != null && !chains.isEmpty()}">
+            <ul class="customer-appointments-list cap-appointments-list medical-records-list">
+              <li th:each="chain : ${chains}"
+                  class="medical-record-item"
+                  th:attr="data-chain-id=${chain.root.id}">
+                <div class="cap-item-row">
+                  <div class="cap-item-main">
+                    <div class="apt-date">
+                      <i class="bi bi-calendar3"></i>
+                      <span th:text="${#temporals.format(chain.root.date, 'dd/MM/yyyy')}">12/03/2026</span>
+                      <span class="cap-dot"></span>
+                      <span th:text="${#temporals.format(chain.root.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(chain.root.endTime, 'HH:mm')}">09:30 - 10:30</span>
+                    </div>
+                    <div class="apt-service" th:text="${chain.steps[0].serviceLabel}">Dịch vụ</div>
+                    <div class="apt-meta">
+                      Bác sĩ:
+                      <strong th:text="${chain.root.dentist != null ? chain.root.dentist.fullName : 'Chưa phân công'}">Bác sĩ</strong>
+                      <span class="cap-dot"></span>
+                      Hồ sơ #<span th:text="${chain.root.id}">0</span>
+                    </div>
+
+                    <div class="mr-chain" th:if="${chain.steps.size() > 1}">
+                      <div class="mr-chain-label">Chuỗi tái khám</div>
+                      <div class="mr-chain-pills">
+                        <span class="mr-chain-pill"
+                              th:each="step : ${chain.steps}"
+                              th:text="'#' + ${step.appointment.id} + ' • ' + ${#temporals.format(step.appointment.date, 'dd/MM/yyyy')}">#48 • 12/03/2026</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="cap-item-side">
+                    <i class="bi bi-chevron-down cap-item-chevron"></i>
+                  </div>
+                </div>
+
+                <div class="cap-inline-detail" hidden>
+                  <div class="cap-inline-detail-card">
+                    <div class="cap-inline-head">
+                      <div class="cap-inline-title"><i class="bi bi-info-circle"></i> Chi tiết hồ sơ</div>
+                      <button type="button" class="cap-inline-close" aria-label="Đóng">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+
+                    <div class="mr-timeline" th:if="${chain.steps.size() > 1}">
+                      <button class="mr-step-btn"
+                              th:each="step,iter : ${chain.steps}"
+                              th:classappend="${iter.index == 0 ? ' active' : ''}"
+                              th:attr="data-step-id=${step.appointment.id}"
+                              th:text="${iter.index + 1}">1</button>
+                      <div class="mr-step-meta"
+                           th:each="step,iter : ${chain.steps}"
+                           th:classappend="${iter.index == 0 ? ' active' : ''}"
+                           th:attr="data-step-id=${step.appointment.id}">
+                        <span th:text="'#' + ${step.appointment.id}">#48</span>
+                        <span class="cap-dot"></span>
+                        <span th:text="${#temporals.format(step.appointment.date, 'dd/MM/yyyy')}">12/03/2026</span>
+                      </div>
+                    </div>
+
+                    <div class="mr-step-panel"
+                         th:each="step,iter : ${chain.steps}"
+                         th:classappend="${iter.index == 0 ? ' active' : ''}"
+                         th:attr="data-step-id=${step.appointment.id}">
+                      <div class="cap-inline-grid">
+                        <div class="cap-inline-row">
+                          <div class="cap-inline-label">Bác sĩ</div>
+                          <div class="cap-inline-value" th:text="${step.appointment.dentist != null ? step.appointment.dentist.fullName : 'Chưa phân công'}">Bác sĩ</div>
+                        </div>
+                        <div class="cap-inline-row">
+                          <div class="cap-inline-label">Dịch vụ</div>
+                          <div class="cap-inline-value" th:text="${step.serviceLabel}">Dịch vụ</div>
+                        </div>
+                        <div class="cap-inline-row">
+                          <div class="cap-inline-label">Ngày khám</div>
+                          <div class="cap-inline-value" th:text="${#temporals.format(step.appointment.date, 'dd/MM/yyyy')}">12/03/2026</div>
+                        </div>
+                        <div class="cap-inline-row">
+                          <div class="cap-inline-label">Khung giờ</div>
+                          <div class="cap-inline-value"
+                               th:text="${#temporals.format(step.appointment.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(step.appointment.endTime, 'HH:mm')}">09:30 - 10:30</div>
+                        </div>
+                      </div>
+
+                      <div class="mr-section">
+                        <div class="mr-section-title"><i class="bi bi-clipboard-pulse"></i> Chẩn đoán</div>
+                        <div class="mr-box"
+                             th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.diagnosis)) ? 'Chưa có dữ liệu' : step.medicalRecord.diagnosis}"></div>
+                      </div>
+
+                      <div class="mr-section-grid">
+                        <div class="mr-section">
+                          <div class="mr-section-title"><i class="bi bi-chat-left-text"></i> Triệu chứng</div>
+                          <div class="mr-box"
+                               th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.complaintNote)) ? 'Chưa có dữ liệu' : step.medicalRecord.complaintNote}"></div>
+                        </div>
+                        <div class="mr-section">
+                          <div class="mr-section-title"><i class="bi bi-journal-medical"></i> Ghi chú lâm sàng</div>
+                          <div class="mr-box"
+                               th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.clinicalNotes)) ? 'Chưa có dữ liệu' : step.medicalRecord.clinicalNotes}"></div>
+                        </div>
+                      </div>
+
+                      <div class="mr-section">
+                        <div class="mr-section-title"><i class="bi bi-tooth"></i> Ghi nhận theo răng</div>
+                        <div class="mr-box" th:if="${step.medicalRecord == null || step.medicalRecord.findings == null || step.medicalRecord.findings.isEmpty()}">
+                          Chưa có dữ liệu
+                        </div>
+                        <table class="mr-table" th:if="${step.medicalRecord != null && step.medicalRecord.findings != null && !step.medicalRecord.findings.isEmpty()}">
+                          <thead>
+                          <tr>
+                            <th>Răng</th>
+                            <th>Tình trạng</th>
+                            <th>Mức độ</th>
+                            <th>Ghi chú</th>
+                          </tr>
+                          </thead>
+                          <tbody>
+                          <tr th:each="f : ${step.medicalRecord.findings}">
+                            <td th:text="${f.toothNo}">36</td>
+                            <td th:text="${f.condition}">Sâu răng</td>
+                            <td th:text="${f.severity}">Nhẹ</td>
+                            <td th:text="${f.note}">-</td>
+                          </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div class="mr-section">
+                        <div class="mr-section-title"><i class="bi bi-ui-checks"></i> Dịch vụ đề xuất</div>
+                        <div class="mr-pill-row" th:if="${step.medicalRecord == null || step.medicalRecord.proposedServices == null || step.medicalRecord.proposedServices.isEmpty()}">
+                          <span class="cap-muted">Chưa có dữ liệu</span>
+                        </div>
+                        <div class="mr-pill-row" th:if="${step.medicalRecord != null && step.medicalRecord.proposedServices != null && !step.medicalRecord.proposedServices.isEmpty()}">
+                          <span class="mr-pill"
+                                th:each="ps : ${step.medicalRecord.proposedServices}"
+                                th:text="${ps.service != null ? ps.service.name : 'Dịch vụ'}">Dịch vụ</span>
+                        </div>
+                      </div>
+
+                      <div class="mr-section">
+                        <div class="mr-section-title"><i class="bi bi-image"></i> Hình ảnh nha khoa</div>
+                        <div class="mr-box" th:if="${step.medicalRecord == null || step.medicalRecord.images == null || step.medicalRecord.images.isEmpty()}">
+                          Chưa có dữ liệu
+                        </div>
+                        <div class="mr-image-grid" th:if="${step.medicalRecord != null && step.medicalRecord.images != null && !step.medicalRecord.images.isEmpty()}">
+                          <div class="mr-image-card" th:each="img : ${step.medicalRecord.images}">
+                            <div class="mr-image-label" th:text="${img.type}">X-RAY</div>
+                            <a th:if="${img.url != null && !#strings.isEmpty(img.url)}"
+                               th:href="${img.url}"
+                               target="_blank"
+                               style="display:block;margin-top:10px;">
+                              <img th:src="${img.url}"
+                                   alt="Ảnh nha khoa"
+                                   style="width:100%;height:160px;object-fit:cover;border-radius:14px;border:1px solid rgba(148,163,184,0.2);background:#f8fafc;"/>
+                            </a>
+                            <div class="mr-image-note" th:text="${img.note}"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mr-section">
+                        <div class="mr-section-title"><i class="bi bi-capsule"></i> Đơn thuốc</div>
+                        <div class="mr-box" th:if="${step.billingNote == null || step.billingNote.prescriptionItems == null || step.billingNote.prescriptionItems.isEmpty()}">
+                          Chưa có dữ liệu
+                        </div>
+                        <table class="mr-table" th:if="${step.billingNote != null && step.billingNote.prescriptionItems != null && !step.billingNote.prescriptionItems.isEmpty()}">
+                          <thead>
+                          <tr>
+                            <th>Thuốc</th>
+                            <th>Liều lượng</th>
+                            <th>Ghi chú</th>
+                          </tr>
+                          </thead>
+                          <tbody>
+                          <tr th:each="rx : ${step.billingNote.prescriptionItems}">
+                            <td th:text="${rx.medicineName}">Ibuprofen</td>
+                            <td th:text="${rx.dosage}">400mg</td>
+                            <td th:text="${rx.note}">-</td>
+                          </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+
+            <div class="cap-pagination" th:if="${totalPages > 1}">
+              <a class="cap-page-btn"
+                 th:href="@{/patient/medical-records(page=${page - 1},size=${pageSize},q=${search},from=${fromDate},to=${toDate})}"
+                 th:classappend="${page <= 1 ? ' disabled' : ''}">Trước</a>
+              <a class="cap-page-btn"
+                 th:each="p : ${#numbers.sequence(1, totalPages)}"
+                 th:classappend="${p == page ? ' active' : ''}"
+                 th:href="@{/patient/medical-records(page=${p},size=${pageSize},q=${search},from=${fromDate},to=${toDate})}"
+                 th:text="${p}">1</a>
+              <a class="cap-page-btn"
+                 th:href="@{/patient/medical-records(page=${page + 1},size=${pageSize},q=${search},from=${fromDate},to=${toDate})}"
+                 th:classappend="${page >= totalPages ? ' disabled' : ''}">Sau</a>
+            </div>
+          </div>
+
+          <div class="cap-empty" th:if="${chains == null || chains.isEmpty()}">
+            <div class="cap-empty-icon"><i class="bi bi-file-earmark-medical"></i></div>
+            <div class="cap-empty-title">Chưa có hồ sơ bệnh án</div>
+            <div class="cap-empty-desc">Hãy hoàn tất một lịch khám để xem hồ sơ của bạn tại đây.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script th:src="@{/js/customer-medical-records.js}"></script>
+</body>
+</html>

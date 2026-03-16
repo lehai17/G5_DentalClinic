@@ -65,27 +65,30 @@ public class StaffAppointmentService {
     @Transactional
     public void confirmAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
 
         if (appointment.getDentist() == null) {
             throw new RuntimeException("Phải gán bác sĩ trước khi xác nhận");
         }
 
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
-            throw new RuntimeException("Only PENDING appointment can be confirmed");
+            throw new RuntimeException("Chỉ lịch hẹn ở trạng thái PENDING mới có thể xác nhận");
         }
 
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointmentRepository.save(appointment);
 
         emailService.sendAppointmentConfirmed(appointment);
+
+        // Dentist inbox notification
+        notificationService.notifyDentistAppointmentConfirmed(appointment);
     }
 
     @Transactional
     public void assignDentist(Long appointmentId, Long dentistId) {
         // 1. Tìm lịch hẹn
         Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
 
         Long oldDentistId = appt.getDentist() != null ? appt.getDentist().getId() : null;
 
@@ -98,12 +101,12 @@ public class StaffAppointmentService {
         );
 
         if (hasOverlap) {
-            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ n� y");
+            throw new RuntimeException("Bác sĩ đã có lịch trong khung giờ này");
         }
 
         // 3. Tìm thông tin bác sĩ
         DentistProfile dentist = dentistProfileRepository.findById(dentistId)
-                .orElseThrow(() -> new RuntimeException("Dentist not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ"));
 
         // 4. Cập nhật bác sĩ phụ trách
         appt.setDentist(dentist);
@@ -116,6 +119,9 @@ public class StaffAppointmentService {
         // 6. Lưu thay đổi
         Appointment saved = appointmentRepository.save(appt);
 
+        // Dentist inbox notification (confirmed/assigned appointment)
+        notificationService.notifyDentistAppointmentConfirmed(saved);
+
         // 7. Gửi Email xác nhận cho khách h� ng (Tận dụng h� m confirm đã có của bạn)
         try {
             emailService.sendAppointmentConfirmed(saved);
@@ -126,55 +132,13 @@ public class StaffAppointmentService {
 
         // 8. Thông báo hệ thống
         if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
-            notificationService.notifyBookingUpdated(saved, "Đã gán bác sĩ v�  xác nhận lịch hẹn th� nh công");
+            notificationService.notifyBookingUpdated(saved, "Đã gán bác sĩ và xác nhận lịch hẹn thành công");
         }
     }
 
     @Transactional
     public void completeAppointment(Long id) {
-        Appointment a = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        if (a.getStatus() != AppointmentStatus.CHECKED_IN) {
-            throw new RuntimeException("Only CHECKED_IN appointment can be completed");
-        }
-
-        a.setStatus(AppointmentStatus.COMPLETED);
-        appointmentRepository.save(a);
-        appointmentRepository.flush();  // Force flush to DB
-        
-        // Auto-confirm any pending reexams for this appointment
-        logger.info("[STAFF] Appointment {} status changed to COMPLETED, attempting to auto-confirm reexam", a.getId());
-        try {
-            // Debug: check database directly
-            var debugData = appointmentRepository.debugFindReexamByOriginalId(a.getId());
-            logger.info("[STAFF] Debug: Found {} reexam records for appointment ID: {}", debugData.size(), a.getId());
-            for (Object[] row : debugData) {
-                logger.info("[STAFF] Debug: id={}, original_appointment_id={}, status={}", row[0], row[1], row[2]);
-            }
-            
-            // Find reexam for this appointment
-            var reexamOpt = appointmentRepository.findReexamByOriginalAppointmentId(a.getId());
-            if (reexamOpt.isPresent()) {
-                Appointment reexam = reexamOpt.get();
-                logger.info("[STAFF] Found reexam ID: {} with status: {}", reexam.getId(), reexam.getStatus());
-                
-                if (reexam.getStatus() == AppointmentStatus.REEXAM) {
-                    logger.info("[STAFF] Updating reexam ID: {} from REEXAM to CONFIRMED", reexam.getId());
-                    reexam.setStatus(AppointmentStatus.CONFIRMED);
-                    appointmentRepository.save(reexam);
-                    appointmentRepository.flush();
-                    logger.info("[STAFF] Reexam ID: {} successfully updated to CONFIRMED", reexam.getId());
-                } else {
-                    logger.info("[STAFF] Reexam ID: {} has status: {}, not updating", reexam.getId(), reexam.getStatus());
-                }
-            } else {
-                logger.info("[STAFF] No reexam found for appointment ID: {}", a.getId());
-            }
-        } catch (Exception e) {
-            logger.error("[STAFF] Error auto-confirming reexam", e);
-            e.printStackTrace();
-        }
+        throw new RuntimeException("Không còn hỗ trợ chuyển trực tiếp sang COMPLETED. Luồng đúng là EXAMINING -> DONE -> WAITING_PAYMENT -> COMPLETED.");
     }
 
     @Transactional
@@ -229,12 +193,16 @@ public class StaffAppointmentService {
 
         a.setStatus(AppointmentStatus.CHECKED_IN);
         appointmentRepository.save(a);
+
+        // Dentist inbox notification
+        notificationService.notifyDentistAppointmentCheckedIn(a);
+        throw new RuntimeException("Không còn hỗ trợ bước check-in. Sau CONFIRMED, bác sĩ sẽ chuyển lịch sang EXAMINING khi bắt đầu khám.");
     }
 
     public List<DentistProfile> getAvailableDentistsForAppointment(Long appointmentId) {
         // 1. Tìm thông tin cuộc hẹn để biết ng� y khách đặt
         Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
 
         // 2. Lấy bác sĩ ACTIVE và không nghỉ được duyệt trong ngày hẹn
         return dentistProfileRepository.findAvailableDentistsForDate(appt.getDate());
@@ -243,14 +211,14 @@ public class StaffAppointmentService {
     @Transactional
     public void processPayment(Long id) {
         Appointment a = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
 
         if (a.getStatus() != AppointmentStatus.DONE) {
             throw new RuntimeException("Chỉ lịch hẹn có trạng thái DONE mới có thể tiến hành thanh toán.");
         }
 
         BillingNote billingNote = billingNoteRepository.findByAppointment_Id(id)
-                .orElseThrow(() -> new RuntimeException("Chua co billing cho lich hen nay."));
+                .orElseThrow(() -> new RuntimeException("Chưa có phiếu điều trị cho lịch hẹn này."));
 
         BigDecimal billingTotal = calculateBillingTotal(a, billingNote);
         BigDecimal depositAmount = a.getDepositAmount() != null
@@ -267,7 +235,7 @@ public class StaffAppointmentService {
             invoiceRepository.save(invoice);
             a.setStatus(AppointmentStatus.COMPLETED);
             appointmentRepository.save(a);
-            notificationService.notifyBookingUpdated(a, "Da hoan tat thanh toan");
+            notificationService.notifyBookingUpdated(a, "Đã hoàn tất thanh toán");
             return;
         }
 
@@ -275,7 +243,7 @@ public class StaffAppointmentService {
         invoiceRepository.save(invoice);
         a.setStatus(AppointmentStatus.WAITING_PAYMENT);
         appointmentRepository.save(a);
-        notificationService.notifyBookingUpdated(a, "Da tao hoa don thanh toan con lai");
+        notificationService.notifyBookingUpdated(a, "Đã tạo hóa đơn thanh toán còn lại");
     }
 
     private BigDecimal calculateBillingTotal(Appointment appointment, BillingNote billingNote) {

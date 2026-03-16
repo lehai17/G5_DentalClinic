@@ -140,8 +140,13 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/complete")
     @ResponseBody
-    public void complete(@RequestParam Long id) {
-        staffAppointmentService.completeAppointment(id);
+    public ResponseEntity<?> complete(@RequestParam Long id) {
+        try {
+            staffAppointmentService.completeAppointment(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 
@@ -154,11 +159,16 @@ public class StaffAppointmentController {
     }
     @PostMapping("/appointments/checkin")
     @ResponseBody
-    public void checkin(@RequestParam Long id) {
-        staffAppointmentService.checkInAppointment(id);
+    public ResponseEntity<?> checkin(@RequestParam Long id) {
+        try {
+            staffAppointmentService.checkInAppointment(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @GetMapping("/appointments/available-dentists") // Thêm /appointments v� o dï¿½y
+    @GetMapping("/appointments/available-dentists") // Thêm /appointments v? o dï¿½y
     @ResponseBody
     public ResponseEntity<List<DentistProfile>> getAvailableDentists(@RequestParam Long appointmentId) {
         List<DentistProfile> availableDentists = staffAppointmentService.getAvailableDentistsForAppointment(appointmentId);

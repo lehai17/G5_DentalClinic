@@ -1,6 +1,21 @@
 ﻿(function () {
   'use strict';
 
+  function normalizeText(value) {
+    if (value == null) return '';
+    var text = String(value);
+    if (!/[ÃÂÄÆÐï]/.test(text)) return text;
+    try {
+      return decodeURIComponent(escape(text));
+    } catch (err) {
+      return text;
+    }
+  }
+
+  function showAlert(message) {
+    alert(normalizeText(message));
+  }
+
   function openModal(id) {
     var el = document.getElementById(id);
     if (el) {
@@ -82,7 +97,7 @@
             td.addEventListener('click', function () {
               var serviceEl = document.getElementById('customer-booking-service');
               if (!serviceEl || !serviceEl.value) {
-                alert('Vui lòng chọn dịch vụ trước.');
+                showAlert('Vui lòng chọn dịch vụ trước.');
                 return;
               }
               var dateStr = this.dataset.date;
@@ -117,7 +132,7 @@
     var params = new URLSearchParams({ date: dateStr, serviceId: serviceId });
     fetch('/customer/slots?' + params.toString(), { credentials: 'same-origin' })
       .then(function (r) {
-        if (r.status === 401) { alert('Bạn cần đăng nhập để đặt lịch.'); setBookingStep(1); return null; }
+        if (r.status === 401) { showAlert('Bạn cần đăng nhập để đặt lịch.'); setBookingStep(1); return null; }
         return r.json();
       })
       .then(function (data) {
@@ -140,7 +155,7 @@
             tr.addEventListener('click', function () {
               // Only allow selection if slot is available
               if (slot.availableSpots === 0 || slot.available === false) {
-                alert('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.');
+                showAlert('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.');
                 return;
               }
               document.querySelectorAll('.customer-time-row').forEach(function (r) { r.classList.remove('selected'); });
@@ -220,7 +235,7 @@
   if (toDepositBtn) toDepositBtn.addEventListener('click', function () {
     var ch = (document.getElementById('customer-booking-contact-channel') || {}).value;
     var cv = (document.getElementById('customer-booking-contact-value') || {}).value.trim();
-    if (!ch || !cv) { alert('Vui lòng điền đầy đủ thông tin liên hệ.'); return; }
+    if (!ch || !cv) { showAlert('Vui lòng điền đầy đủ thông tin liên hệ.'); return; }
     setBookingStep(4);
   });
 
@@ -233,7 +248,7 @@
       var contactValue = (document.getElementById('customer-booking-contact-value') || {}).value.trim();
       var note = (document.getElementById('customer-booking-note') || {}).value;
       if (!slotId || !serviceId || !contactChannel || !contactValue) {
-        alert('Vui lòng điền đầy đủ thông tin.');
+        showAlert('Vui lòng điền đầy đủ thông tin.');
         return;
       }
       submitBtn.disabled = true;
@@ -251,8 +266,8 @@
         })
       })
         .then(function (r) {
-          if (r.status === 401) { alert('Bạn cần đăng nhập.'); submitBtn.disabled = false; return null; }
-          if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || 'Lỗi'); });
+          if (r.status === 401) { showAlert('Bạn cần đăng nhập.'); submitBtn.disabled = false; return null; }
+          if (!r.ok) return r.json().then(function (e) { throw new Error(normalizeText(e.error || 'Lỗi')); });
           return r.json();
         })
         .then(function (data) {
@@ -263,7 +278,7 @@
         })
         .catch(function (err) {
           submitBtn.disabled = false;
-          alert(err.message || 'Đặt lịch thất bại.');
+          showAlert(err.message || 'Đặt lịch thất bại.');
         });
     });
   }
@@ -289,7 +304,7 @@
     fetch('/customer/appointments', { credentials: 'same-origin' })
       .then(function (r) {
         if (r.status === 401) {
-          alert('Bạn cần đăng nhập để xem lịch hẹn.');
+          showAlert('Bạn cần đăng nhập để xem lịch hẹn.');
           if (loading) loading.style.display = 'none';
           return null;
         }
@@ -313,7 +328,7 @@
       .catch(function () {
         if (loading) loading.style.display = 'none';
         if (listWrap) listWrap.style.display = '';
-        alert('Không thể tải danh sách lịch hẹn.');
+        showAlert('Không thể tải danh sách lịch hẹn.');
       });
   }
 
@@ -325,7 +340,7 @@
     if (loading) loading.style.display = '';
     fetch('/customer/appointments/' + id, { credentials: 'same-origin' })
       .then(function (r) {
-        if (r.status === 401) { alert('Bạn cần đăng nhập.'); if (loading) loading.style.display = 'none'; return null; }
+        if (r.status === 401) { showAlert('Bạn cần đăng nhập.'); if (loading) loading.style.display = 'none'; return null; }
         if (r.status === 404) { if (loading) loading.style.display = 'none'; return null; }
         return r.json();
       })
@@ -340,7 +355,7 @@
         set('customer-detail-time', formatTime(data.startTime) + ' - ' + formatTime(data.endTime));
         set('customer-detail-status', data.status || '');
         set('customer-detail-contact', (data.contactChannel || '') + ': ' + (data.contactValue || ''));
-        set('customer-detail-notes', data.notes || 'â€”');
+        set('customer-detail-notes', data.notes || '—');
         var checkinWrap = document.getElementById('customer-detail-checkin-wrap');
         var checkinBtn = document.getElementById('customer-detail-checkin-btn');
         if (data.canCheckIn && checkinWrap && checkinBtn) {
@@ -349,8 +364,8 @@
             checkinBtn.disabled = true;
             fetch('/customer/appointments/' + id + '/checkin', { method: 'POST', credentials: 'same-origin' })
               .then(function (res) {
-                if (res.status === 401) { alert('Bạn cần đăng nhập.'); checkinBtn.disabled = false; return null; }
-                if (!res.ok) return res.json().then(function (e) { throw new Error(e.error || 'Check-in thất bại'); });
+                if (res.status === 401) { showAlert('Bạn cần đăng nhập.'); checkinBtn.disabled = false; return null; }
+                if (!res.ok) return res.json().then(function (e) { throw new Error(normalizeText(e.error || 'Check-in thất bại')); });
                 return res.json();
               })
               .then(function (updated) {
@@ -363,14 +378,14 @@
               })
               .catch(function (err) {
                 checkinBtn.disabled = false;
-                alert(err.message || 'Check-in thất bại.');
+                showAlert(err.message || 'Check-in thất bại.');
               });
           };
         } else if (checkinWrap) checkinWrap.style.display = 'none';
       })
       .catch(function () {
         if (loading) loading.style.display = 'none';
-        alert('Không thể tải chi tiết.');
+        showAlert('Không thể tải chi tiết.');
       });
   }
 
@@ -389,5 +404,3 @@
 
   if (document.getElementById('customer-calendar-body')) renderCalendar();
 })();
-
-

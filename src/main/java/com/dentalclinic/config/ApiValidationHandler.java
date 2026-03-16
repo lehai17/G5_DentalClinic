@@ -2,6 +2,7 @@ package com.dentalclinic.config;
 
 import com.dentalclinic.exception.BookingErrorCode;
 import com.dentalclinic.exception.BookingException;
+import com.dentalclinic.util.DisplayTextUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -42,8 +43,7 @@ public class ApiValidationHandler {
     private ResponseEntity<Map<String, String>> badRequest(BookingErrorCode code, String message) {
         return ResponseEntity.badRequest().body(Map.of(
                 "error", code.name(),
-                "message", message
+                "message", DisplayTextUtils.normalize(message)
         ));
     }
 }
-
