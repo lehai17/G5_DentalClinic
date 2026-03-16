@@ -156,7 +156,7 @@ public class ChatService {
 
         notificationService.createForCustomer(
                 thread.getCustomer().getId(),
-                NotificationType.SUPPORT,
+                NotificationType.TICKET_STATUS_CHANGED,
                 "Lễ tân đã phản hồi tin nhắn",
                 "Bạn có tin nhắn mới từ lễ tân.",
                 "/customer/chat",

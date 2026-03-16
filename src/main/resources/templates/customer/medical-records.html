@@ -169,19 +169,19 @@
                       <div class="mr-section">
                         <div class="mr-section-title"><i class="bi bi-clipboard-pulse"></i> Chẩn đoán</div>
                         <div class="mr-box"
-                             th:text="${step.medicalRecord != null ? step.medicalRecord.diagnosis : 'Chưa có dữ liệu'}"></div>
+                             th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.diagnosis)) ? 'Chưa có dữ liệu' : step.medicalRecord.diagnosis}"></div>
                       </div>
 
                       <div class="mr-section-grid">
                         <div class="mr-section">
                           <div class="mr-section-title"><i class="bi bi-chat-left-text"></i> Triệu chứng</div>
                           <div class="mr-box"
-                               th:text="${step.medicalRecord != null ? step.medicalRecord.complaintNote : 'Chưa có dữ liệu'}"></div>
+                               th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.complaintNote)) ? 'Chưa có dữ liệu' : step.medicalRecord.complaintNote}"></div>
                         </div>
                         <div class="mr-section">
                           <div class="mr-section-title"><i class="bi bi-journal-medical"></i> Ghi chú lâm sàng</div>
                           <div class="mr-box"
-                               th:text="${step.medicalRecord != null ? step.medicalRecord.clinicalNotes : 'Chưa có dữ liệu'}"></div>
+                               th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.clinicalNotes)) ? 'Chưa có dữ liệu' : step.medicalRecord.clinicalNotes}"></div>
                         </div>
                       </div>
 

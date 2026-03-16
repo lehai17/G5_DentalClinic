@@ -888,6 +888,10 @@ public class CustomerAppointmentService {
         }
 
         Appointment saved = appointmentRepository.save(appointment);
+
+        // Dentist inbox notification: appointment cancelled (if assigned)
+        notificationService.notifyDentistAppointmentCancelled(saved, reason);
+
         releaseSlots(toRelease);
         return saved;
     }

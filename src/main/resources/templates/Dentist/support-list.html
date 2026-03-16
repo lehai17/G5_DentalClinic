@@ -20,6 +20,10 @@
 
     <nav class="nav">
       <a class="nav-item" href="/dentist/dashboard">Tổng quan</a>
+      <a class="nav-item" href="/dentist/notifications">
+        <span>Thông báo</span>
+        <span class="nav-badge" th:if="${unreadCount != null and unreadCount > 0}" th:text="${unreadCount}">0</span>
+      </a>
       <a class="nav-item" href="/dentist/work-schedule">Lịch làm việc</a>
       <a class="nav-item" href="/dentist/examined-patients">Bệnh nhân của tôi</a>
       <a class="nav-item" href="/dentist/busy-schedule">Lịch bận</a>
@@ -59,7 +63,7 @@
             <td th:text="${t.customer.customerProfile.fullName}"></td>
             <td th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}"></td>
             <td th:text="${t.serviceLabel}"></td>
-            <td th:text="${#strings.abbreviate(t.latestCustomerMessage, 60)}"></td>
+            <td th:text="${#strings.abbreviate(t.title, 60)}"></td>
             <td>
               <span th:class="'badge ' + (${t.displayStatus} == 'OPEN' ? 'open' : 'closed')"
                     th:text="${t.displayStatus}"></span>

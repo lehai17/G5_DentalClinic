@@ -65,7 +65,7 @@
         <option th:each="s : ${services}" 
                 th:value="${s.id}" 
                 th:text="${s.name}"
-                th:selected="${!preferServicePlaceholder && s.id == (isUpdate ? reexam.service.id : originalAppointment.service.id)}">
+                th:selected="${!preferServicePlaceholder && s.id == (isUpdate ? (reexam.service != null ? reexam.service.id : null) : (originalAppointment.service != null ? originalAppointment.service.id : null))}">
         </option>
       </select>
       <small>Có thể chọn dịch vụ khác nếu cần.</small>
@@ -87,7 +87,7 @@
       <input type="date"
              class="form-control"
              name="date"
-             th:value="${#temporals.format(reexam.date, 'yyyy-MM-dd')}"
+             th:value="${reexam.date != null ? #temporals.format(reexam.date, 'yyyy-MM-dd') : ''}"
              id="appointmentDate"
              data-original-date="${#temporals.format(originalAppointment.date, 'yyyy-MM-dd')}"
              th:disabled="${isReadOnly}"
@@ -98,51 +98,53 @@
     <div class="two-col">
       <div class="form-group">
         <label class="form-label">Giờ bắt đầu *</label>
-        <select class="form-control" name="startTime" id="startTime" th:disabled="${isReadOnly}" required>
+        <select class="form-control" name="startTime" id="startTime" th:disabled="${isReadOnly}" required
+                th:with="reexamStart=${reexam.startTime != null ? #temporals.format(reexam.startTime, 'HH:mm') : ''}">
           <option value="">-- Chọn giờ bắt đầu --</option>
-          <option value="08:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '08:00'}">08:00</option>
-          <option value="08:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '08:30'}">08:30</option>
-          <option value="09:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '09:00'}">09:00</option>
-          <option value="09:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '09:30'}">09:30</option>
-          <option value="10:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '10:00'}">10:00</option>
-          <option value="10:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '10:30'}">10:30</option>
-          <option value="11:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '11:00'}">11:00</option>
-          <option value="11:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '11:30'}">11:30</option>
-          <option value="12:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '12:00'}">12:00</option>
-          <option value="12:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '12:30'}">12:30</option>
-          <option value="13:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '13:00'}">13:00</option>
-          <option value="13:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '13:30'}">13:30</option>
-          <option value="14:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '14:00'}">14:00</option>
-          <option value="14:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '14:30'}">14:30</option>
-          <option value="15:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '15:00'}">15:00</option>
-          <option value="15:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '15:30'}">15:30</option>
-          <option value="16:00" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '16:00'}">16:00</option>
-          <option value="16:30" th:selected="${#temporals.format(reexam.startTime, 'HH:mm') == '16:30'}">16:30</option>
+          <option value="08:00" th:selected="${reexamStart == '08:00'}">08:00</option>
+          <option value="08:30" th:selected="${reexamStart == '08:30'}">08:30</option>
+          <option value="09:00" th:selected="${reexamStart == '09:00'}">09:00</option>
+          <option value="09:30" th:selected="${reexamStart == '09:30'}">09:30</option>
+          <option value="10:00" th:selected="${reexamStart == '10:00'}">10:00</option>
+          <option value="10:30" th:selected="${reexamStart == '10:30'}">10:30</option>
+          <option value="11:00" th:selected="${reexamStart == '11:00'}">11:00</option>
+          <option value="11:30" th:selected="${reexamStart == '11:30'}">11:30</option>
+          <option value="12:00" th:selected="${reexamStart == '12:00'}">12:00</option>
+          <option value="12:30" th:selected="${reexamStart == '12:30'}">12:30</option>
+          <option value="13:00" th:selected="${reexamStart == '13:00'}">13:00</option>
+          <option value="13:30" th:selected="${reexamStart == '13:30'}">13:30</option>
+          <option value="14:00" th:selected="${reexamStart == '14:00'}">14:00</option>
+          <option value="14:30" th:selected="${reexamStart == '14:30'}">14:30</option>
+          <option value="15:00" th:selected="${reexamStart == '15:00'}">15:00</option>
+          <option value="15:30" th:selected="${reexamStart == '15:30'}">15:30</option>
+          <option value="16:00" th:selected="${reexamStart == '16:00'}">16:00</option>
+          <option value="16:30" th:selected="${reexamStart == '16:30'}">16:30</option>
         </select>
       </div>
 
       <div class="form-group">
         <label class="form-label">Giờ kết thúc *</label>
-        <select class="form-control" name="endTime" id="endTime" th:disabled="${isReadOnly}" required>
+        <select class="form-control" name="endTime" id="endTime" th:disabled="${isReadOnly}" required
+                th:with="reexamEnd=${reexam.endTime != null ? #temporals.format(reexam.endTime, 'HH:mm') : ''}">
           <option value="">-- Chọn giờ kết thúc --</option>
-          <option value="08:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '08:30'}">08:30</option>
-          <option value="09:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '09:00'}">09:00</option>
-          <option value="09:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '09:30'}">09:30</option>
-          <option value="10:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '10:00'}">10:00</option>
-          <option value="10:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '10:30'}">10:30</option>
-          <option value="11:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '11:00'}">11:00</option>
-          <option value="11:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '11:30'}">11:30</option>
-          <option value="12:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '12:00'}">12:00</option>
-          <option value="12:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '12:30'}">12:30</option>
-          <option value="13:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '13:00'}">13:00</option>
-          <option value="13:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '13:30'}">13:30</option>
-          <option value="14:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '14:00'}">14:00</option>
-          <option value="14:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '14:30'}">14:30</option>
-          <option value="15:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '15:00'}">15:00</option>
-          <option value="15:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '15:30'}">15:30</option>
-          <option value="16:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '16:00'}">16:00</option>
-          <option value="16:30" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '16:30'}">16:30</option>
-          <option value="17:00" th:selected="${#temporals.format(reexam.endTime, 'HH:mm') == '17:00'}">17:00</option>
+          <option value="08:30" th:selected="${reexamEnd == '08:30'}">08:30</option>
+          <option value="09:00" th:selected="${reexamEnd == '09:00'}">09:00</option>
+          <option value="09:30" th:selected="${reexamEnd == '09:30'}">09:30</option>
+          <option value="10:00" th:selected="${reexamEnd == '10:00'}">10:00</option>
+          <option value="10:30" th:selected="${reexamEnd == '10:30'}">10:30</option>
+          <option value="11:00" th:selected="${reexamEnd == '11:00'}">11:00</option>
+          <option value="11:30" th:selected="${reexamEnd == '11:30'}">11:30</option>
+          <option value="12:00" th:selected="${reexamEnd == '12:00'}">12:00</option>
+          <option value="12:30" th:selected="${reexamEnd == '12:30'}">12:30</option>
+          <option value="13:00" th:selected="${reexamEnd == '13:00'}">13:00</option>
+          <option value="13:30" th:selected="${reexamEnd == '13:30'}">13:30</option>
+          <option value="14:00" th:selected="${reexamEnd == '14:00'}">14:00</option>
+          <option value="14:30" th:selected="${reexamEnd == '14:30'}">14:30</option>
+          <option value="15:00" th:selected="${reexamEnd == '15:00'}">15:00</option>
+          <option value="15:30" th:selected="${reexamEnd == '15:30'}">15:30</option>
+          <option value="16:00" th:selected="${reexamEnd == '16:00'}">16:00</option>
+          <option value="16:30" th:selected="${reexamEnd == '16:30'}">16:30</option>
+          <option value="17:00" th:selected="${reexamEnd == '17:00'}">17:00</option>
         </select>
       </div>
     </div>
