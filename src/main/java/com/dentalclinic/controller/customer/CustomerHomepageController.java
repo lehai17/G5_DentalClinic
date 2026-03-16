@@ -49,15 +49,15 @@ public class CustomerHomepageController {
         this.customerAppointmentService = customerAppointmentService;
     }
 
-    @GetMapping({ "/", "/index", "/home" })
+    @GetMapping({"/", "/index", "/home"})
     public String redirectToHomepage() {
         return "redirect:/homepage";
     }
 
-    @GetMapping({ "/homepage", "/customer/homepage" })
+    @GetMapping({"/homepage", "/customer/homepage"})
     public String showHomepage(@RequestParam(defaultValue = "0") int page,
-            Authentication authentication,
-            Model model) {
+                               Authentication authentication,
+                               Model model) {
         model.addAttribute("active", "homepage");
         Long currentCustomerId = resolveCurrentUserId(authentication);
         if (currentCustomerId == null) {
@@ -157,3 +157,4 @@ public class CustomerHomepageController {
                 .orElse(null);
     }
 }
+

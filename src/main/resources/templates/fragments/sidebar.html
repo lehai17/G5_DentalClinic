@@ -63,6 +63,7 @@
       <i class="bi bi-headset"></i>
       <span>Hỗ trợ chuyên môn</span>
     </a>
+  </nav>
 
 
   <div class="p-3 border-top">
@@ -74,22 +75,43 @@
 </aside>
 
 <script>
-  if (!window.toggleSidebar) {
-    window.toggleSidebar = function () {
-      const sidebar = document.getElementById("sidebar");
-      const mainContent = document.querySelector(".main-content");
-      const body = document.body;
+  window.toggleSidebar = function () {
+    const sidebar = document.getElementById("sidebar");
+    const body = document.body;
+    const mainNodes = document.querySelectorAll(".main-content");
 
-      if (!sidebar) return;
-      sidebar.classList.toggle("collapsed");
-      if (mainContent) {
-        mainContent.classList.toggle("sidebar-collapsed");
-      }
-      if (body) {
-        body.classList.toggle("sidebar-collapsed");
-      }
-    };
-  }
+    if (!sidebar) return;
+
+    const willCollapse = !sidebar.classList.contains("collapsed");
+    sidebar.classList.toggle("collapsed", willCollapse);
+    body.classList.toggle("sidebar-collapsed", willCollapse);
+    mainNodes.forEach(function (node) {
+      node.classList.toggle("sidebar-collapsed", willCollapse);
+    });
+
+    try {
+      localStorage.setItem("customerSidebarCollapsed", willCollapse ? "1" : "0");
+    } catch (e) {}
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebar = document.getElementById("sidebar");
+    const body = document.body;
+    const mainNodes = document.querySelectorAll(".main-content");
+
+    if (!sidebar) return;
+
+    let collapsed = false;
+    try {
+      collapsed = localStorage.getItem("customerSidebarCollapsed") === "1";
+    } catch (e) {}
+
+    sidebar.classList.toggle("collapsed", collapsed);
+    body.classList.toggle("sidebar-collapsed", collapsed);
+    mainNodes.forEach(function (node) {
+      node.classList.toggle("sidebar-collapsed", collapsed);
+    });
+  });
 </script>
 
 
