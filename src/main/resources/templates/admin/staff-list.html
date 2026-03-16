@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Staff Management - GENZ CLINIC</title>
-    <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
@@ -132,12 +132,15 @@
             align-items: center;
             margin-bottom: 25px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .filter-group {
             display: flex;
-            gap: 25px;
+            gap: 20px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-item {
@@ -152,14 +155,27 @@
             font-size: 11px;
         }
 
+        .search-input {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            background: #F8FAFF;
+            outline: none;
+            width: 250px;
+            font-family: inherit;
+        }
+
         select {
             border: 1px solid #E0E7FF;
-            padding: 8px 15px;
+            padding: 10px 15px;
             border-radius: 10px;
             color: var(--navy-dark);
             font-weight: 600;
             background: #F8FAFF;
             outline: none;
+            min-width: 150px;
+            font-family: inherit;
         }
 
         /* Data Table Styles */
@@ -368,172 +384,95 @@
         .toast.error .toast-icon {
             color: #F44336;
         }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="sidebar">
-        <div class="logo-section">
-            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
-        </div>
-
-        <div class="nav-group">
-            <a th:href="@{/admin/dashboard}" class="nav-item"
-                th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                <i class="fas fa-th-large"></i> Tổng quan
-            </a>
-
-            <div class="nav-label">Quản lý người dùng</div>
-            <a th:href="@{/admin/dentists}" class="nav-item"
-                th:classappend="${activePage == 'dentists' ? 'active' : ''}">
-                <i class="fas fa-stethoscope"></i> Dentists
-            </a>
-
-            <a th:href="@{/admin/staff}" class="nav-item" th:classappend="${activePage == 'staff' ? 'active' : ''}">
-                <i class="fas fa-users-cog"></i> Staff
-            </a>
-
-            <a th:href="@{/admin/customers}" class="nav-item">
-                <i class="fas fa-user-friends"></i> Customer
-            </a>
-
-            <div class="nav-label">Vận hành</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dịch vụ</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giờ</a>
-        </div>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
     <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Staff</h2>
+            <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Nhân viên</h2>
             <a th:href="@{/admin/staff/add}"
                 style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">
-                <i class="fas fa-plus"></i> Add Staff
+                <i class="fas fa-plus"></i> Thêm nhân viên
             </a>
         </div>
 
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="icon-box"><i class="fas fa-users"></i></div> Total Staff
+                    <div class="icon-box"><i class="fas fa-users"></i></div> Tổng nhân viên
                 </div>
                 <div class="stat-value" th:text="${totalStaff}">0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="icon-box" style="background: #FFEBEE; color: #F44336;"><i class="fas fa-user-lock"></i>
-                    </div> Locked Accounts
+                    </div> Tài khoản bị khóa
                 </div>
                 <div class="stat-value" th:text="${lockedStaffCount}">0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="icon-box" style="background: #E8F5E9; color: #4CAF50;"><i
-                            class="fas fa-check-circle"></i></div> Active Accounts
+                            class="fas fa-check-circle"></i></div> Tài khoản hoạt động
                 </div>
                 <div class="stat-value" th:text="${activeStaffCount}">0</div>
             </div>
         </div>
 
         <div class="filter-bar">
-            <form th:action="@{/admin/staff}" method="GET" id="filterForm" class="filter-group">
+            <div class="filter-group">
+                <div class="filter-item" style="position: relative;">
+                    <i class="fas fa-search"
+                        style="color: #A3AED0; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"></i>
+                    <input type="text" id="searchInput" class="search-input"
+                        style="padding-left: 40px; min-width: 250px;" placeholder="Tìm theo tên hoặc vị trí..."
+                        th:value="${selectedKeyword}">
+                </div>
                 <div class="filter-item">
-                    <span class="filter-label">POSITION:</span>
-                    <select name="position" onchange="this.form.submit()">
-                        <option value="">All Positions</option>
-                        <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Lễ tân
-                        </option>
-                        <option value="Other" th:selected="${selectedPos == 'Other'}">Other</option>
+                    <span class="filter-label">VỊ TRÍ:</span>
+                    <select id="positionFilter">
+                        <option value="">Tất cả vị trí</option>
+                        <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Lễ tân</option>
+                        <option value="Other" th:selected="${selectedPos == 'Other'}">Khác</option>
                     </select>
                 </div>
                 <div class="filter-item">
-                    <span class="filter-label">STATUS:</span>
-                    <select name="status" onchange="this.form.submit()">
-                        <option value="">All Status</option>
-                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
-                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
+                    <span class="filter-label">TRẠNG THÁI:</span>
+                    <select id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Hoạt động</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Đã khóa</option>
                     </select>
                 </div>
-            </form>
-            <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
-                Showing <span th:text="${#lists.size(staffs)}">0</span> members
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="loader" id="searchLoader"
+                    style="display: none; border: 3px solid #f3f3f3; border-top: 3px solid #1A237E; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 15px;">
+                </div>
+                <div style="color: #A3AED0; font-size: 13px; font-weight: 700;" id="resultCount">
+                    Hiển thị <span th:text="${#lists.size(staffs)}">0</span> nhân viên
+                </div>
             </div>
         </div>
 
         <div class="data-table-container">
-            <table th:if="${not #lists.isEmpty(staffs)}">
-                <thead>
-                    <tr>
-                        <th>Nhân viên</th>
-                        <th>Position</th>
-                        <th>Số điện thoại</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="staff : ${staffs}" th:id="'staff-row-' + ${staff.id}">
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div
-                                    style="width: 40px; height: 40px; border-radius: 50%; background: #1A237E; color: white; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-user-tie"></i>
-                                </div>
-                                <div>
-                                    <a th:href="@{/admin/staff/detail/{id}(id=${staff.id})}"
-                                        class="fw-bold text-decoration-none staff-name-link"
-                                        style="color: #1B2559; font-size: 14px; transition: color 0.2s;"
-                                        onmouseover="this.style.color='#1A237E'"
-                                        onmouseout="this.style.color='#1B2559'">
-                                        <span th:text="${staff.fullName}">Name</span>
-                                    </a>
-                                    <div style="font-size: 11px; color: #707EAE;" th:text="${staff.user.email}">
-                                        email@clinic.vn</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td th:text="${staff.position}">Position</td>
-                        <td th:text="${staff.phone}">Phone</td>
-                        <td>
-                            <span class="status-badge"
-                                th:classappend="${staff.user.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
-                                th:text="${staff.user.status}">
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${staff.id} + ')'"
-                                    class="action-btn"><i class="far fa-edit"></i></a>
-                                <a href="javascript:void(0)" th:data-id="${staff.id}" th:data-name="${staff.fullName}"
-                                    onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-name'))"
-                                    class="action-btn" style="color: #F44336;"><i class="far fa-trash-alt"></i></a>
-                                <form th:if="${staff.user.status.name() == 'LOCKED'}"
-                                    th:action="@{/admin/staff/unlock/{id}(id=${staff.user.id})}" method="POST">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Mở khóa nhân viên n� y?')">
-                                        <i class="fas fa-user-check"></i>
-                                    </button>
-                                </form>
-                                <form th:if="${staff.user.status.name() == 'ACTIVE'}"
-                                    th:action="@{/admin/staff/lock/{id}(id=${staff.user.id})}" method="POST"
-                                    style="display:inline;">
-                                    <button type="submit" class="action-btn" style="color: #F44336;"
-                                        onclick="return confirm('Khóa nhân viên n� y?')">
-                                        <i class="fas fa-user-lock"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="empty-state" th:if="${#lists.isEmpty(staffs)}"
-                style="text-align: center; padding: 80px 0; color: #A3AED0;">
-                <i class="fas fa-users-slash" style="font-size: 50px; margin-bottom: 15px;"></i>
-                <h3>Chưa có nhân viên n� o</h3>
+            <div id="tableContainer">
+                <th:block th:replace="~{admin/fragments/staff-table :: staff-list}"></th:block>
             </div>
         </div>
     </div>
@@ -594,35 +533,35 @@
                                     pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
                         </div>
                         <div class="input-group">
-                            <label>Position</label>
+                            <label>Vị trí</label>
                             <div class="input-wrapper">
                                 <select id="editPosition" name="position" required>
                                     <option value="Receptionist">Lễ tân</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Other">Khác</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Date of Birth</label>
+                            <label>Ngày sinh</label>
                             <div class="input-wrapper"><input type="date" id="editDob" name="dateOfBirth" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Gender</label>
+                            <label>Giới tính</label>
                             <div class="input-wrapper">
                                 <select id="editGender" name="gender" required>
-                                    <option value="MALE">Male</option>
-                                    <option value="FEMALE">Female</option>
-                                    <option value="OTHER">Other</option>
+                                    <option value="MALE">Nam</option>
+                                    <option value="FEMALE">Nữ</option>
+                                    <option value="OTHER">Khác</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Status</label>
+                            <label>Trạng thái</label>
                             <div class="input-wrapper">
                                 <select id="editStatus" name="status" required>
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="LOCKED">Locked</option>
+                                    <option value="ACTIVE">Hoạt động</option>
+                                    <option value="LOCKED">Đã khóa</option>
                                 </select>
                             </div>
                         </div>
@@ -632,8 +571,8 @@
                         <button type="button" onclick="closeEditModal()"
                             style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Hủy</button>
                         <button type="submit"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Save
-                            Changes</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Lưu
+                            thay đổi</button>
                     </div>
                 </form>
             </div>
@@ -662,7 +601,9 @@
         function confirmDeleteStaff() {
             if (!staffToDelete) return;
 
-            fetch('/admin/staff/api/delete/' + staffToDelete, {
+            const idToDelete = staffToDelete;
+
+            fetch('/admin/staff/api/delete/' + idToDelete, {
                 method: 'DELETE'
             })
                 .then(response => response.json())
@@ -671,7 +612,7 @@
                     if (data.success) {
                         showToast(data.message, 'success');
                         // Xóa dòng tương á»©ng khỏi DOM
-                        const row = document.getElementById('staff-row-' + staffToDelete);
+                        const row = document.getElementById('staff-row-' + idToDelete);
                         if (row) {
                             row.remove();
                         }
@@ -736,10 +677,58 @@
                 closeEditModal();
             }
         }
+
+        // AJAX Search Logic
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function performSearch() {
+            const keyword = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+            const position = document.getElementById('positionFilter') ? document.getElementById('positionFilter').value : '';
+            const status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+
+            const loader = document.getElementById('searchLoader');
+            if (loader) loader.style.display = 'inline-block';
+
+            const params = new URLSearchParams();
+            if (keyword) params.append('keyword', keyword);
+            if (position) params.append('position', position);
+            if (status) params.append('status', status);
+
+            fetch(`/admin/staff/api/search?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text();
+                })
+                .then(htmlStr => {
+                    document.getElementById('tableContainer').innerHTML = htmlStr;
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlStr, 'text/html');
+                    const rows = doc.querySelectorAll('tbody tr');
+                    const countElem = document.getElementById('resultCount');
+                    if (countElem) {
+                        countElem.innerHTML = `Hiển thị <span>${rows.length}</span> nhân viên`;
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error))
+                .finally(() => {
+                    if (loader) loader.style.display = 'none';
+                });
+        }
+
+        // Add event listeners
+        document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
+        document.getElementById('positionFilter').addEventListener('change', performSearch);
+        document.getElementById('statusFilter').addEventListener('change', performSearch);
         /*]]>*/
     </script>
 </body>
 
 </html>
-
-

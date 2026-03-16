@@ -169,36 +169,8 @@
 </head>
 
 <body>
-    <div class="sidebar">
-        <div class="logo-section">
-            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
-        </div>
-
-        <div class="nav-group">
-            <a th:href="@{/admin/dashboard}" class="nav-item"
-                th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                <i class="fas fa-th-large"></i> Tổng quan
-            </a>
-
-            <div class="nav-label">Quản lý người dùng</div>
-            <a th:href="@{/admin/dentists}" class="nav-item"
-                th:classappend="${activePage == 'dentists' ? 'active' : ''}">
-                <i class="fas fa-stethoscope"></i> Dentists
-            </a>
-
-            <a th:href="@{/admin/staff}" class="nav-item" th:classappend="${activePage == 'staff' ? 'active' : ''}">
-                <i class="fas fa-users-cog"></i> Staff
-            </a>
-
-            <a th:href="@{/admin/customers}" class="nav-item">
-                <i class="fas fa-user-friends"></i> Customer
-            </a>
-
-            <div class="nav-label">Vận hành</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dịch vụ</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giờ</a>
-        </div>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
     <div class="main-wrapper">
         <div class="container-fluid">
 
@@ -217,10 +189,20 @@
                             <div class="col-lg-4">
                                 <div class="card border-0 shadow-sm rounded-4 p-4 text-center h-100"
                                     style="background: white;">
-                                    <div class="position-relative d-inline-block mb-4">
-                                        <img th:src="${'/img/default-avatar.png'}"
-                                            class="rounded-circle border border-4 border-white shadow-sm"
-                                            style="width: 180px; height: 180px; object-fit: cover;" alt="Avatar">
+                                    <div class="position-relative d-inline-block mb-4"
+                                        style="width: 180px; height: 180px;">
+                                        <div class="avatar-wrapper rounded-circle border border-4 border-white shadow-sm overflow-hidden"
+                                            style="width: 100%; height: 100%; position: relative; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                                            <img th:if="${dentist.avatar != null}" th:src="@{${dentist.avatar}}"
+                                                class="rounded-circle"
+                                                style="width: 100%; height: 100%; object-fit: cover;"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="fallback-avatar"
+                                                th:style="${dentist.avatar == null ? 'display: flex;' : 'display: none;'}"
+                                                style="width: 100%; height: 100%; align-items: center; justify-content: center; background: #e2e8f0; color: #64748b;">
+                                                <i class="fas fa-user-md" style="font-size: 80px;"></i>
+                                            </div>
+                                        </div>
                                         <button
                                             class="btn btn-primary rounded-circle position-absolute bottom-0 end-0 shadow-sm"
                                             style="width: 45px; height: 45px; border: 3px solid white;">
@@ -228,7 +210,8 @@
                                         </button>
                                     </div>
 
-                                    <h3 th:text="${dentist.fullName}" class="fw-bold mb-1" style="color: #2B3674;">Leo
+                                    <h3 th:text="${dentist?.fullName ?: 'Bác sĩ không tên'}" class="fw-bold mb-1"
+                                        style="color: #2B3674;">Leo
                                         Messi</h3>
                                     <p th:text="${dentist.specialization}"
                                         class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill mb-4">
@@ -246,11 +229,11 @@
                             <div class="col-lg-8">
                                 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: white;">
                                     <h5 class="fw-bold mb-4" style="color: #2B3674;"><i
-                                            class="fas fa-info-circle me-2 text-primary"></i> Detailed Information</h5>
+                                            class="fas fa-info-circle me-2 text-primary"></i> Thông tin chi tiết</h5>
 
                                     <div class="row g-4">
                                         <div class="col-md-6">
-                                            <label class="form-label text-muted fw-bold small">EMAIL ADDRESS</label>
+                                            <label class="form-label text-muted fw-bold small">ĐỊA CHỈ EMAIL</label>
                                             <div class="d-flex align-items-center p-3 rounded-4"
                                                 style="background: #f4f7fe;">
                                                 <i class="fas fa-envelope text-primary me-3"></i>
@@ -259,7 +242,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label text-muted fw-bold small">PHONE NUMBER</label>
+                                            <label class="form-label text-muted fw-bold small">SỐ ĐIỆN THOẠI</label>
                                             <div class="d-flex align-items-center p-3 rounded-4"
                                                 style="background: #f4f7fe;">
                                                 <i class="fas fa-phone-alt text-primary me-3"></i>
@@ -268,7 +251,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label text-muted fw-bold small">DATE OF BIRTH</label>
+                                            <label class="form-label text-muted fw-bold small">NGÀY SINH</label>
                                             <div class="d-flex align-items-center p-3 rounded-4"
                                                 style="background: #f4f7fe;">
                                                 <i class="fas fa-calendar-alt text-primary me-3"></i>
@@ -278,12 +261,12 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label text-muted fw-bold small">GENDER</label>
+                                            <label class="form-label text-muted fw-bold small">GIỚI TÍNH</label>
                                             <div class="d-flex align-items-center p-3 rounded-4"
                                                 style="background: #f4f7fe;">
                                                 <i class="fas fa-venus-mars text-primary me-3"></i>
                                                 <span th:text="${dentist.gender ?: 'N/A'}"
-                                                    class="fw-semibold text-dark">Male</span>
+                                                    class="fw-semibold text-dark">Nam</span>
                                             </div>
                                         </div>
                                     </div>
@@ -294,20 +277,20 @@
                                         <div class="p-2 bg-warning-soft rounded-3 me-3">
                                             <i class="fas fa-graduation-cap text-warning"></i>
                                         </div>
-                                        <h5 class="fw-bold mb-0" style="color: #2B3674;">Professional Background</h5>
+                                        <h5 class="fw-bold mb-0" style="color: #2B3674;">Thông tin chuyên môn</h5>
                                     </div>
 
                                     <div class="row g-4">
                                         <div class="col-md-6">
-                                            <label class="form-label text-muted fw-bold small">YEARS OF
-                                                EXPERIENCE</label>
+                                            <label class="form-label text-muted fw-bold small">SỐ NĂM
+                                                KINH NGHIỆM</label>
                                             <div class="p-3 rounded-4 bg-light fw-bold text-dark">
-                                                <span th:text="${dentist.experienceYears ?: 0}">5</span> Years
+                                                <span th:text="${dentist.experienceYears ?: 0}">5</span> Năm
                                             </div>
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label text-muted fw-bold small">QUALIFICATIONS &
-                                                CERTIFICATIONS</label>
+                                            <label class="form-label text-muted fw-bold small">BẰNG CẤP &
+                                                CHỨNG CHỈ</label>
                                             <div class="p-3 rounded-4 bg-light text-muted italic"
                                                 style="min-height: 100px;">
                                                 <p th:text="${dentist.qualifications ?: 'Bác sĩ hiện chưa cập nhật thông tin bằng cấp chuyên môn.'}"
@@ -326,14 +309,14 @@
                                 <table class="table table-hover align-middle mb-0">
                                     <thead style="background: #f4f7fe;">
                                         <tr class="text-muted small fw-bold">
-                                            <th class="border-0 p-3">SHIFT</th>
-                                            <th class="border-0 p-3">MON</th>
-                                            <th class="border-0 p-3">TUE</th>
-                                            <th class="border-0 p-3">WED</th>
-                                            <th class="border-0 p-3">THU</th>
-                                            <th class="border-0 p-3">FRI</th>
-                                            <th class="border-0 p-3">SAT</th>
-                                            <th class="border-0 p-3">SUN</th>
+                                            <th class="border-0 p-3">CA LÀM</th>
+                                            <th class="border-0 p-3">T2</th>
+                                            <th class="border-0 p-3">T3</th>
+                                            <th class="border-0 p-3">T4</th>
+                                            <th class="border-0 p-3">T5</th>
+                                            <th class="border-0 p-3">T6</th>
+                                            <th class="border-0 p-3">T7</th>
+                                            <th class="border-0 p-3">CN</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -392,5 +375,3 @@
 </body>
 
 </html>
-
-

@@ -81,8 +81,9 @@ public class AdminCustomerController {
     public String showCustomerDetail(@PathVariable("id") Long id, Model model) {
         CustomerDetailDTO customer = adminCustomerService.getCustomerDetail(id);
         model.addAttribute("customer", customer);
-        model.addAttribute("history", adminCustomerService.getCustomerHistory(id));
-        model.addAttribute("upcoming", adminCustomerService.getUpcomingAppointments(id));
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        model.addAttribute("history", adminCustomerService.getCustomerHistory(id, now));
+        model.addAttribute("upcoming", adminCustomerService.getUpcomingAppointments(id, now));
         model.addAttribute("activePage", "customers");
 
         return "admin/customer-detail";

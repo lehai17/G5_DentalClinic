@@ -25,19 +25,44 @@
             background: var(--sidebar-color);
             min-height: 100vh;
             color: white;
+            padding: 20px 0;
+            flex-shrink: 0;
+        }
+
+        .logo-section {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-group {
+            padding: 20px 0;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 0 20px 10px;
+            opacity: 0.6;
+            letter-spacing: 1px;
         }
 
         .nav-item {
             padding: 12px 20px;
             display: flex;
             align-items: center;
-            color: white;
+            cursor: pointer;
             text-decoration: none;
-            opacity: 0.7;
+            color: white;
+            transition: 0.3s;
         }
 
+        .nav-item i {
+            margin-right: 15px;
+            width: 20px;
+        }
+
+        .nav-item:hover,
         .nav-item.active {
-            opacity: 1;
             background: rgba(255, 255, 255, 0.1);
             border-left: 4px solid #fff;
         }
@@ -210,16 +235,8 @@
 
 <body>
 
-    <div class="sidebar">
-        <div style="padding: 30px; display: flex; align-items: center; gap: 10px;">
-            <span style="font-weight: 800; font-size: 18px;">GENZ CLINIC</span>
-        </div>
-        <nav>
-            <a th:href="@{/admin/dashboard}" class="nav-item"><i class="fas fa-th-large"></i> Tổng quan</a>
-            <div style="font-size: 10px; padding: 20px 20px 10px; opacity: 0.5;">USER MANAGEMENT</div>
-            <a th:href="@{/admin/dentists}" class="nav-item active"><i class="fas fa-stethoscope"></i> Dentists</a>
-        </nav>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar(activePage='dentists')}"></th:block>
 
     <div class="main-content">
         <div class="page-header">
@@ -264,10 +281,13 @@
                         <div class="form-grid">
                             <div style="grid-row: span 3; text-align: center;">
                                 <div class="avatar-circle">
-                                    <img id="avatarPreview" src="/img/default-avatar.png"
-                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
-                                    <i id="avatarPlaceholder" class="fas fa-user"
-                                        style="font-size: 35px; color: #D1D9E8;"></i>
+                                    <img id="avatarPreview" src=""
+                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div id="avatarPlaceholder" class="fallback-avatar"
+                                        style="display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; background: #f1f5f9; color: #94a3b8; border-radius: 50%;">
+                                        <i class="fas fa-user-md" style="font-size: 40px;"></i>
+                                    </div>
                                     <button type="button" class="camera-btn"
                                         onclick="document.getElementById('avatarInput').click();">
                                         <i class="fas fa-camera" style="font-size: 12px;"></i>
@@ -275,7 +295,7 @@
                                 </div>
                                 <input type="file" id="avatarInput" name="avatarFile" accept="image/*"
                                     style="display: none;" onchange="previewAvatar(this)">
-                                <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">UPLOAD PHOTO</small>
+                                <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">TẢI ẢNH LÊN</small>
                             </div>
 
                             <script>
@@ -340,32 +360,35 @@
                         <div class="card-title">
                             <div class="icon-box" style="background: #FFF3E0; color: #FF9800;"><i
                                     class="fas fa-graduation-cap"></i></div>
-                            <h4 style="margin:0; color: #2B3674;">Professional Background</h4>
+                            <h4 style="margin:0; color: #2B3674;">Thông tin chuyên môn</h4>
                         </div>
                         <div class="form-grid">
                             <div class="input-group">
-                                <label>Medical Specialty</label>
+                                <label>Chuyên khoa</label>
                                 <div class="input-wrapper">
                                     <select th:field="*{specialization}">
-                                        <option value="Orthodontics">Orthodontics (Niềng răng)</option>
-                                        <option value="Endodontics">Endodontics (Nội nha)</option>
-                                        <option value="Periodontics">Periodontics (Chu nha)</option>
-                                        <option value="Prosthodontics">Prosthodontics (Phục hình)</option>
+                                        <option value="Orthodontics">Chỉnh nha (Niềng răng)</option>
+                                        <option value="Endodontics">Nội nha</option>
+                                        <option value="Periodontics">Chu nha</option>
+                                        <option value="Prosthodontics">Phục hình</option>
+                                        <option value="Oral Surgery">Phẫu thuật miệng</option>
+                                        <option value="General Dentistry">Nha khoa tổng quát</option>
+                                        <option value="Pediatric Dentistry">Nha khoa trẻ em</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="input-group">
-                                <label>Years of Experience</label>
+                                <label>Số năm kinh nghiệm</label>
                                 <div class="input-wrapper">
                                     <i class="fas fa-history"></i>
                                     <input type="number" th:field="*{experienceYears}" min="0">
                                 </div>
                             </div>
                             <div class="input-group" style="grid-column: span 2;">
-                                <label>Qualifications & Certifications</label>
+                                <label>Bằng cấp & Chứng chỉ</label>
                                 <div class="input-wrapper" style="height: 80px;">
                                     <textarea th:field="*{qualifications}"
-                                        placeholder="Degree, University, Certifications..."></textarea>
+                                        placeholder="Bằng cấp, Trường đại học, Chứng chỉ..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -379,9 +402,8 @@
                             <h4 style="margin:0;">Lịch làm việc</h4>
                         </div>
 
-                        <label class="filter-label"
-                            style="display: block; margin-top: 15px; margin-bottom: 10px;">AVAILABLE WORKING
-                            DAYS</label>
+                        <label class="filter-label" style="display: block; margin-top: 15px; margin-bottom: 10px;">NGÀY
+                            LÀM VIỆC KHẢ DỤNG</label>
 
                         <div class="days-container">
                             <div th:each="day : ${T(java.time.DayOfWeek).values()}">
@@ -395,12 +417,12 @@
 
                         <div class="form-grid" style="margin-top: 20px;">
                             <div class="input-group">
-                                <label>Shift Start Time</label>
+                                <label>Giờ bắt đầu ca</label>
                                 <div class="input-wrapper"><i class="far fa-clock"></i><input type="time"
                                         th:field="*{shiftStartTime}"></div>
                             </div>
                             <div class="input-group">
-                                <label>Shift End Time</label>
+                                <label>Giờ kết thúc ca</label>
                                 <div class="input-wrapper"><i class="fas fa-door-closed"></i><input type="time"
                                         th:field="*{shiftEndTime}"></div>
                             </div>
@@ -411,14 +433,14 @@
                         <div class="card-title">
                             <div class="icon-box" style="background: rgba(255,255,255,0.2); color: white;"><i
                                     class="fas fa-shield-alt"></i></div>
-                            <h4 style="margin:0;">Access & Role</h4>
+                            <h4 style="margin:0;">Quyền truy cập</h4>
                         </div>
                         <div class="input-group" style="margin-bottom: 20px;">
-                            <label style="color: rgba(255,255,255,0.6);">Assigned Role</label>
-                            <div class="input-wrapper"><input type="text" value="Dentist" readonly></div>
+                            <label style="color: rgba(255,255,255,0.6);">Vai trò</label>
+                            <div class="input-wrapper"><input type="text" value="Bác sĩ" readonly></div>
                         </div>
                         <div class="input-group">
-                            <label style="color: rgba(255,255,255,0.6);">Temporary Password</label>
+                            <label style="color: rgba(255,255,255,0.6);">Mật khẩu tạm thời</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-lock"></i>
                                 <input type="password" th:field="*{tempPassword}" placeholder="••••••••" required>
@@ -429,10 +451,10 @@
                     <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
                         <button type="button" class="btn-discard"
                             style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #E0E7FF; background: white;"
-                            onclick="window.history.back()">Discard</button>
+                            onclick="window.history.back()">Hủy bỏ</button>
                         <button type="submit" class="btn-create"
-                            style="flex: 1; padding: 12px; border-radius: 12px; background: #1A237E; color: white; border: none;">Create
-                            Profile</button>
+                            style="flex: 1; padding: 12px; border-radius: 12px; background: #1A237E; color: white; border: none;">Tạo
+                            hồ sơ</button>
                     </div>
                 </div>
             </div>
@@ -442,5 +464,3 @@
 </body>
 
 </html>
-
-

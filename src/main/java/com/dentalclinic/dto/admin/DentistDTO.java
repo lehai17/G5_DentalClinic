@@ -15,15 +15,15 @@ import jakarta.validation.constraints.Past;
 public class DentistDTO {
     private Long id;
 
-    @NotBlank(message = "Há» tÃªn khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @NotBlank(message = "Họ tên không được để trống")
     private String fullName;
 
-    @NotBlank(message = "Email khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
-    @Email(message = "Email khÃ´ng há»£p lá»‡")
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không hợp lệ")
     private String email;
 
-    @NotBlank(message = "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
-    @Pattern(regexp = "^(0|\\+84)[0-9]{9}$", message = "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡")
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(regexp = "^(0|\\+84)[0-9]{9}$", message = "Số điện thoại không hợp lệ")
     private String phone;
 
     public String getTempPassword() {
@@ -34,7 +34,7 @@ public class DentistDTO {
         this.tempPassword = tempPassword;
     }
 
-    @NotBlank(message = "Máº­t kháº©u táº¡m thá»i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @NotBlank(message = "Mật khẩu tạm thời không được để trống")
     private String tempPassword;
 
     public LocalDate getDateOfBirth() {
@@ -45,26 +45,27 @@ public class DentistDTO {
         this.dateOfBirth = dateOfBirth;
     }
 
-    @NotNull(message = "NgÃ y sinh khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
-    @Past(message = "NgÃ y sinh pháº£i á»Ÿ quÃ¡ khá»©")
+    @NotNull(message = "Ngày sinh không được để trống")
+    @Past(message = "Ngày sinh phải ở quá khứ")
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 
-    @NotBlank(message = "Giá»›i tÃ­nh khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @NotBlank(message = "Giới tính không được để trống")
     private String gender;
 
-    @NotBlank(message = "ChuyÃªn khoa khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @NotBlank(message = "Chuyên khoa không được để trống")
     private String specialization;
 
     private int experienceYears;
     private String qualifications;
     private String bio;
 
-    // CÃ¡c trÆ°á»ng phá»¥c vá»¥ hiá»ƒn thá»‹ lá»‹ch trá»±c
+    // Các trường phục vụ hiển thị lịch trực
     private List<String> availableDays;
     private String shiftStartTime;
     private String shiftEndTime;
 
-    // CÃ¡c trÆ°á»ng phá»¥c vá»¥ upload vÃ  hiá»ƒn thá»‹ Avatar
+    // Các trường phục vụ upload và hiển thị Avatar
     private MultipartFile avatarFile;
     private String avatarPath;
 

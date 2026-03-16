@@ -13,7 +13,6 @@ import com.dentalclinic.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.model.appointment.AppointmentStatus;
@@ -44,15 +43,23 @@ public class DentistService {
     @Autowired
     private AppointmentRepository appointmentRepository;
 
-    private final String UPLOAD_DIR = "src/main/resources/static/uploads/dentists/";
+    private final String UPLOAD_DIR = "uploads/dentists/";
+
+    private String sanitizeFileName(String fileName) {
+        if (fileName == null)
+            return "avatar.png";
+        // Normalize and remove Vietnamese accents
+        String normalized = java.text.Normalizer.normalize(fileName, java.text.Normalizer.Form.NFD);
+        normalized = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        // Remove spaces and special characters, keep extension
+        return normalized.replaceAll("[^a-zA-Z0-9.-]", "_").replaceAll("__+", "_");
+    }
 
     private String saveImage(MultipartFile image) {
         try {
             String originalFileName = image.getOriginalFilename();
-            if (originalFileName == null)
-                originalFileName = "avatar.png";
-            String fileName = StringUtils.cleanPath(originalFileName);
-            fileName = System.currentTimeMillis() + "_" + fileName;
+            String sanitizedName = sanitizeFileName(originalFileName);
+            String fileName = System.currentTimeMillis() + "_" + sanitizedName;
             Path uploadPath = Paths.get(UPLOAD_DIR);
 
             if (!Files.exists(uploadPath)) {
@@ -87,14 +94,16 @@ public class DentistService {
             throw new IllegalArgumentException("Bï¿½c sĩ phải từ 25 tuổi trở lên (Hiện tại: " + age + " tuổi).");
         }
 
-        // ĐIỀU KIỆN 2: Kiểm tra năm kinh nghiệm (không quï¿½ tuổi trừ Ä‘i 22 năm học đại
+        // ĐIỀU KIỆN 2: Kiểm tra năm kinh nghiệm (không quï¿½ tuổi trừ Ä‘i 22 năm học
+        // đại
         // học)
         int experienceYears = dto.getExperienceYears();
         int maxAllowedExperience = age - 22;
 
         if (experienceYears > maxAllowedExperience) {
             throw new IllegalArgumentException("Số năm kinh nghiệm (" + experienceYears +
-                    ") không hợp lệ cho bï¿½c sĩ " + age + " tuổi. (Tối Ä‘a cho phép: " + maxAllowedExperience + " năm).");
+                    ") không hợp lệ cho bï¿½c sĩ " + age + " tuổi. (Tối Ä‘a cho phép: " + maxAllowedExperience
+                    + " năm).");
         }
         // 1. Tạo t� i khoản User đăng nhập
         User user = new User();
@@ -164,21 +173,20 @@ public class DentistService {
         return null;
     }
 
-    public List<DentistProfile> searchDentists(String specialty, String statusStr) {
+    public List<DentistProfile> searchDentists(String keyword, String specialty, String statusStr) {
         UserStatus status = null;
         if (statusStr != null && !statusStr.isEmpty()) {
             try {
-                status = UserStatus.valueOf(statusStr.toUpperCase()); // Chuyển String sang Enum
+                status = UserStatus.valueOf(statusStr.toUpperCase());
             } catch (IllegalArgumentException e) {
                 status = null;
             }
         }
 
-        // Nếu specialty l�  chuỗi rỗng, gï¿½n null để Repository bỏ qua điều kiện lọc
         String specialtyParam = (specialty != null && !specialty.isEmpty()) ? specialty : null;
+        String keywordParam = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
 
-        return dentistProfileRepository.filterDentists(specialtyParam, status);
-
+        return dentistProfileRepository.filterDentists(keywordParam, specialtyParam, status);
     }
     // public List<DentistDTO> searchByKeyword(String keyword) {
     // List<DentistProfile> profiles;
@@ -420,5 +428,3 @@ public class DentistService {
         return dentistProfileRepository.findAvailableDentistsWithSchedule(date, dayOfWeek);
     }
 }
-
-

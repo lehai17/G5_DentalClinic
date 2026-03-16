@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Qu?n l? d?ch v? - GENZ CLINIC</title>
-    <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
+    <title>Quản lý dịch vụ - GENZ CLINIC</title>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
@@ -126,6 +126,50 @@
             align-items: center;
             margin-bottom: 25px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            color: #A3AED0;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .search-input {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            background: #F8FAFF;
+            outline: none;
+            width: 250px;
+            font-family: inherit;
+        }
+
+        select {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            font-weight: 600;
+            background: #F8FAFF;
+            outline: none;
+            min-width: 150px;
+            font-family: inherit;
         }
 
         .data-table-container {
@@ -380,175 +424,102 @@
 
 <body>
 
-    <div class="sidebar">
-        <div class="logo-section">
-            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
-        </div>
-
-        <div class="nav-group">
-            <a th:href="@{/admin/dashboard}" class="nav-item">
-                <i class="fas fa-th-large"></i> Tá»•ng quan
-            </a>
-
-            <div class="nav-label">Quáº£n lÃ½ ngÆ°á»i dÃ¹ng</div>
-            <a th:href="@{/admin/dentists}" class="nav-item">
-                <i class="fas fa-stethoscope"></i> B?c s?
-            </a>
-            <a th:href="@{/admin/staff}" class="nav-item">
-                <i class="fas fa-users-cog"></i> Staff
-            </a>
-            <a th:href="@{/admin/customers}" class="nav-item">
-                <i class="fas fa-user-friends"></i> Customer
-            </a>
-
-            <div class="nav-label">Váº­n hÃ nh</div>
-            <a th:href="@{/admin/services}" class="nav-item active">
-                <i class="fas fa-briefcase-medical"></i> Dá»‹ch vá»¥
-            </a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giá»</a>
-        </div>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
     <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Qu?n l? d?ch v?</h2>
+            <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Quản lý dịch vụ</h2>
             <button onclick="openAddModal()"
                 style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; border: none; cursor: pointer; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">
-                <i class="fas fa-plus"></i> Th?m d?ch v?
+                <i class="fas fa-plus"></i> Thêm dịch vụ
             </button>
         </div>
 
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="icon-box"><i class="fas fa-briefcase-medical"></i></div> Tá»•ng dá»‹ch vá»¥
-                    <div class="icon-box"><i class="fas fa-briefcase-medical"></i></div> T?ng d?ch v?
+                    <div class="icon-box"><i class="fas fa-briefcase-medical"></i></div> Tổng dịch vụ
+                </div>
                 <!-- You can populate this dynamically if you want -->
                 <div class="stat-value" th:text="${#lists.size(services)}">0</div>
             </div>
         </div>
 
-        <div class="data-table-container">
-            <table th:if="${not #lists.isEmpty(services)}">
-                <thead>
-                    <tr>
-                        <th>Th?ng tin d?ch v?</th>
-                        <th>Gi? ti?n (VN?)</th>
-                        <th>Th?i l??ng</th>
-                        <th>Tr?ng th?i</th>
-                        <th>Thao t?c</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="service : ${services}" th:id="'service-row-' + ${service.id}">
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                <div
-                                    style="width: 50px; height: 50px; border-radius: 10px; overflow: hidden; background: #F4F7FE; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <img th:if="${service.imageUrl}" th:src="@{${service.imageUrl}}"
-                                        style="width: 100%; height: 100%; object-fit: cover;" alt="D?ch v?">
-                                    <i th:unless="${service.imageUrl}" class="fas fa-tooth"
-                                        style="color: #A3AED0; font-size: 24px;"></i>
-                                </div>
-                                <div style="max-width: 250px;">
-                                    <div th:text="${service.name}"
-                                        style="font-weight: 700; color: var(--navy-dark); margin-bottom: 4px;">Service
-                                        T?n d?ch v?</div>
-                                    <div style="font-size: 12px; color: #707EAE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                        th:text="${service.description}">
-                                        M? t? ng?n...
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                        <td th:text="${#numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT')}">Gi? ti?n</td>
-                        <td th:text="${service.durationMinutes} + ' ph?t'">Th?i l??ng</td>
-                        <td>
-                            <span class="status-badge"
-                                th:classappend="${service.active ? 'status-active' : 'status-locked'}"
-                                th:text="${service.active ? 'Ho?t ??ng' : 'Kh?ng ho?t ??ng'}">
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <a href="javascript:void(0)" th:onclick="'openDetailModal(' + ${service.id} + ')'"
-                                    class="action-btn" title="Xem chi tiáº¿t"><i class="far fa-eye"></i></a>
-                                <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${service.id} + ')'"
-                                    class="action-btn" title="Ch?nh s?a d?ch v?"><i class="far fa-edit"></i></a>
-
-                                <form th:if="${!service.active}"
-                                    th:action="@{/admin/services/toggle/{id}(id=${service.id})}" method="POST"
-                                    style="display:inline;">
-                                    <input type="hidden" name="status" value="true">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('K?ch ho?t d?ch v? n?y?')" title="K?ch ho?t">
-                                        <i class="fas fa-user-check"></i>
-                                    </button>
-                                </form>
-                                <form th:if="${service.active}"
-                                    th:action="@{/admin/services/toggle/{id}(id=${service.id})}" method="POST"
-                                    style="display:inline;">
-                                    <input type="hidden" name="status" value="false">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('V? hi?u h?a d?ch v? n?y?')" title="V? hi?u h?a">
-                                        <i class="fas fa-user-lock"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="empty-state" th:if="${#lists.isEmpty(services)}"
-                style="text-align: center; padding: 80px 0; color: #A3AED0;">
-                <i class="fas fa-box-open" style="font-size: 50px; margin-bottom: 15px;"></i>
-                <h3>Ch?a c? d?ch v? n?o</h3>
+        <div class="filter-bar">
+            <div class="filter-group">
+                <div class="filter-item" style="position: relative;">
+                    <i class="fas fa-search"
+                        style="color: #A3AED0; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"></i>
+                    <input type="text" id="searchInput" class="search-input" style="padding-left: 40px;"
+                        placeholder="Tìm theo tên dịch vụ..." th:value="${selectedKeyword}">
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">TRẠNG THÁI:</span>
+                    <select id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="true" th:selected="${selectedStatus == true}">Hoạt động</option>
+                        <option value="false" th:selected="${selectedStatus == false}">Không hoạt động</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="loader" id="searchLoader"
+                    style="display: none; border: 3px solid #f3f3f3; border-top: 3px solid #1A237E; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 15px;">
+                </div>
+                <div style="color: #A3AED0; font-size: 13px; font-weight: 700;" id="resultCount">
+                    Hiển thị <span th:text="${#lists.size(services)}">0</span> dịch vụ
+                </div>
             </div>
         </div>
+
+        <div class="data-table-container">
+            <div id="tableContainer">
+                <div th:replace="~{admin/fragments/service-table :: service-list}"></div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Modal xem chi tiáº¿t -->
+    <!-- Modal xem chi tiết -->
     <div class="modal" id="detailServiceModal">
         <div class="modal-content modal-content-detail">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-info-circle"
-                        style="color: #4CAF50; margin-right: 10px;"></i>Chi ti?t d?ch v?</h5>
+                        style="color: #4CAF50; margin-right: 10px;"></i>Chi tiết dịch vụ</h5>
                 <button class="close-btn" onclick="closeDetailModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="service-detail-header">
-                    <img id="detailImg" src="" class="service-detail-img" alt="H?nh ?nh d?ch v?" style="display: none;">
+                    <img id="detailImg" src="" class="service-detail-img" alt="Hình ảnh dịch vụ" style="display: none;">
                     <div id="detailNoImg" class="service-detail-img"
                         style="display: flex; align-items: center; justify-content: center; background: #E0E7FF;">
                         <i class="fas fa-tooth" style="font-size: 40px; color: #A3AED0;"></i>
                     </div>
                     <div class="service-detail-info" style="flex: 1;">
-                        <h3 id="detailName">T?n d?ch v?</h3>
-                        <span class="status-badge" id="detailStatus">Ho?t ??ng</span>
+                        <h3 id="detailName">Tên dịch vụ</h3>
+                        <span class="status-badge" id="detailStatus">Hoạt động</span>
                         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
                             <div style="font-size: 13px; color: #1B2559;"><i class="fas fa-tag"
-                                    style="color: #A3AED0; width: 20px;"></i> <strong id="detailPrice">0 VN?</strong>
+                                    style="color: #A3AED0; width: 20px;"></i> <strong id="detailPrice">0 VNĐ</strong>
                             </div>
                             <div style="font-size: 13px; color: #1B2559;"><i class="far fa-clock"
                                     style="color: #A3AED0; width: 20px;"></i> <strong id="detailDuration">0
-                                    ph?t</strong></div>
+                                    phút</strong></div>
                         </div>
                     </div>
                 </div>
                 <div style="background: #F8FAFF; padding: 15px; border-radius: 12px; margin-top: 10px;">
                     <h5 style="margin: 0 0 10px 0; color: #A3AED0; font-size: 11px; text-transform: uppercase;">
-                        M? t?</h5>
+                        Mô tả</h5>
                     <p id="detailDesc" style="margin: 0; color: #2B3674; font-size: 14px; line-height: 1.6;"></p>
                 </div>
                 <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
                     <button type="button" onclick="closeDetailModal()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">??ng</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Đóng</button>
                 </div>
             </div>
         </div>
@@ -559,7 +530,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-plus-circle"
-                        style="color: #1A237E; margin-right: 10px;"></i>ThÃªm Dá»‹ch Vá»¥ Má»›i</h5>
+                        style="color: #1A237E; margin-right: 10px;"></i>Thêm Dịch Vụ Mới</h5>
                 <button class="close-btn" onclick="closeAddModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -567,51 +538,51 @@
                     onsubmit="return validateForm('add')">
                     <div class="info-grid">
                         <div class="input-group">
-                            <label>TÃªn dá»‹ch vá»¥ <span style="color: #F44336;">*</span></label>
+                            <label>Tên dịch vụ <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper"><input type="text" name="name" id="addName" required
-                                    placeholder="Nháº­p tÃªn dá»‹ch vá»¥"></div>
+                                    placeholder="Nhập tên dịch vụ"></div>
                         </div>
                         <div class="input-group">
-                            <label>GiÃ¡ tiá»n (VNÄ) <span style="color: #F44336;">*</span></label>
+                            <label>Giá tiền (VNĐ) <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper"><input type="number" name="price" id="addPrice" required min="0"
                                     step="1" placeholder="0"></div>
                         </div>
                         <div class="input-group">
-                            <label>Thá»i gian (PhÃºt) <span style="color: #F44336;">*</span></label>
+                            <label>Thời gian (Phút) <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper"><input type="number" name="durationMinutes" id="addDuration"
                                     required min="5" placeholder="30"></div>
                         </div>
                         <div class="input-group">
-                            <label>Tráº¡ng thÃ¡i</label>
+                            <label>Trạng thái</label>
                             <div class="input-wrapper">
                                 <select name="active">
-                                    <option value="true">Hoáº¡t Ä‘á»™ng</option>
-                                    <option value="false">KhÃ´ng hoáº¡t Ä‘á»™ng</option>
+                                    <option value="true">Hoạt động</option>
+                                    <option value="false">Không hoạt động</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>HÃ¬nh áº£nh Ä‘áº¡i diá»‡n</label>
+                            <label>Hình ảnh đại diện</label>
                             <div class="input-wrapper"><input type="file" name="image" accept="image/*"></div>
                         </div>
                     </div>
 
                     <div class="info-grid info-grid-full" style="margin-top: 15px;">
                         <div class="input-group">
-                            <label>MÃ´ táº£ chi tiáº¿t <span style="color: #F44336;">*</span></label>
+                            <label>Mô tả chi tiết <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper" style="align-items: flex-start;">
                                 <textarea name="description" id="addDesc" required rows="4"
-                                    placeholder="Nháº­p mÃ´ táº£ vá» dá»‹ch vá»¥..."></textarea>
+                                    placeholder="Nhập mô tả về dịch vụ..."></textarea>
                             </div>
                         </div>
                     </div>
 
                     <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
                         <button type="button" onclick="closeAddModal()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Há»§y</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Hủy</button>
                         <button type="submit"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">ThÃªm
-                            Dá»‹ch Vá»¥</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Thêm
+                            Dịch Vụ</button>
                     </div>
                 </form>
             </div>
@@ -623,7 +594,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-edit"
-                        style="color: #1A237E; margin-right: 10px;"></i>Cáº­p Nháº­t Dá»‹ch Vá»¥</h5>
+                        style="color: #1A237E; margin-right: 10px;"></i>Cập Nhật Dịch Vụ</h5>
                 <button class="close-btn" onclick="closeEditModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -631,37 +602,37 @@
                     onsubmit="return validateForm('edit')">
                     <div class="info-grid">
                         <div class="input-group">
-                            <label>TÃªn dá»‹ch vá»¥ <span style="color: #F44336;">*</span></label>
+                            <label>Tên dịch vụ <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper"><input type="text" name="name" id="editName" required></div>
                         </div>
                         <div class="input-group">
-                            <label>GiÃ¡ tiá»n (VNÄ) <span style="color: #F44336;">*</span></label>
+                            <label>Giá tiền (VNĐ) <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper"><input type="number" name="price" id="editPrice" required min="0"
                                     step="1"></div>
                         </div>
                         <div class="input-group">
-                            <label>Thá»i gian (PhÃºt) <span style="color: #F44336;">*</span></label>
+                            <label>Thời gian (Phút) <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper"><input type="number" name="durationMinutes" id="editDuration"
                                     required min="5"></div>
                         </div>
                         <div class="input-group">
-                            <label>Tráº¡ng thÃ¡i</label>
+                            <label>Trạng thái</label>
                             <div class="input-wrapper">
                                 <select name="active" id="editActive">
-                                    <option value="true">Hoáº¡t Ä‘á»™ng</option>
-                                    <option value="false">KhÃ´ng hoáº¡t Ä‘á»™ng</option>
+                                    <option value="true">Hoạt động</option>
+                                    <option value="false">Không hoạt động</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>HÃ¬nh áº£nh má»›i (tÃ¹y chá»n)</label>
+                            <label>Hình ảnh mới (tùy chọn)</label>
                             <div class="input-wrapper"><input type="file" name="image" accept="image/*"></div>
                         </div>
                     </div>
 
                     <div class="info-grid info-grid-full" style="margin-top: 15px;">
                         <div class="input-group">
-                            <label>MÃ´ táº£ chi tiáº¿t <span style="color: #F44336;">*</span></label>
+                            <label>Mô tả chi tiết <span style="color: #F44336;">*</span></label>
                             <div class="input-wrapper" style="align-items: flex-start;">
                                 <textarea name="description" id="editDesc" required rows="4"></textarea>
                             </div>
@@ -670,10 +641,10 @@
 
                     <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
                         <button type="button" onclick="closeEditModal()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Há»§y</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Hủy</button>
                         <button type="submit"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">LÆ°u
-                            Thay Äá»•i</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Lưu
+                            Thay Đổi</button>
                     </div>
                 </form>
             </div>
@@ -743,16 +714,16 @@
                 .then(data => {
                     document.getElementById('detailName').innerText = data.name;
 
-                    document.getElementById('detailPrice').innerText = new Intl.NumberFormat('en-US').format(data.price) + ' VNÄ';
+                    document.getElementById('detailPrice').innerText = new Intl.NumberFormat('en-US').format(data.price) + ' VNĐ';
                     document.getElementById('detailDuration').innerText = data.durationMinutes + ' mins';
                     document.getElementById('detailDesc').innerText = data.description;
 
                     const statusBadge = document.getElementById('detailStatus');
                     if (data.active) {
-                        statusBadge.innerText = 'ACTIVE';
+                        statusBadge.innerText = 'Hoạt động';
                         statusBadge.className = 'status-badge status-active';
                     } else {
-                        statusBadge.innerText = 'LOCKED';
+                        statusBadge.innerText = 'Đã khóa';
                         statusBadge.className = 'status-badge status-locked';
                     }
 
@@ -795,23 +766,71 @@
 
             let name = document.getElementById(nameId).value.trim();
             if (!name) {
-                showToast("TÃªn dá»‹ch vá»¥ khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng", "error");
+                showToast("Tên dịch vụ không được để trống", "error");
                 return false;
             }
 
             let price = document.getElementById(priceId).value;
             if (price < 0) {
-                showToast("GiÃ¡ tiá»n khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n 0", "error");
+                showToast("Giá tiền không được nhỏ hơn 0", "error");
                 return false;
             }
 
             let duration = document.getElementById(durationId).value;
             if (duration <= 0) {
-                showToast("Thá»i gian thá»±c hiá»‡n pháº£i lá»›n hÆ¡n 0", "error");
+                showToast("Thời gian thực hiện phải lớn hơn 0", "error");
                 return false;
             }
             return true;
         }
+
+        // AJAX Search Logic
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function performSearch() {
+            const keyword = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const loader = document.getElementById('searchLoader');
+            if (loader) loader.style.display = 'inline-block';
+
+            const params = new URLSearchParams();
+            if (keyword) params.append('keyword', keyword);
+            if (status) params.append('status', status);
+
+            fetch(`/admin/services/api/search?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text();
+                })
+                .then(htmlStr => {
+                    document.getElementById('tableContainer').innerHTML = htmlStr;
+
+                    // Update result count
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlStr, 'text/html');
+                    const rows = doc.querySelectorAll('tbody tr');
+                    const countElem = document.getElementById('resultCount');
+                    if (countElem) {
+                        countElem.innerHTML = `Hiển thị <span>${rows.length}</span> dịch vụ`;
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error))
+                .finally(() => {
+                    if (loader) loader.style.display = 'none';
+                });
+        }
+
+        // Add event listeners
+        document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
+        document.getElementById('statusFilter').addEventListener('change', performSearch);
         /*]]>*/
     </script>
 </body>

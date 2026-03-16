@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <title>Quáº£n lÃ½ bÃ¡c sÄ© - GENZ CLINIC</title>
-    <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
+    <title>Quản lý bác sĩ - GENZ CLINIC</title>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* CSS ná»™i bá»™ Ä‘á»ƒ Ä‘á»‹nh hÃ¬nh khung Dashboard theo máº«u cá»§a báº¡n */
+        /* CSS nội bộ để định hình khung Dashboard theo máº«u cá»§a báº¡n */
         :root {
             --sidebar-color: #1A237E;
-            /* Mï¿½Â u Navy Blue tá»« máº«u GENZ CLINIC */
+            /* Màu Navy Blue tá»« máº«u GENZ CLINIC */
             --bg-light: #F4F7FE;
             --navy-dark: #1B2559;
         }
@@ -23,7 +23,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Navigation - GIá»® NGUYÃŠN THEO CODE Cá»¦A Bï¿½Â N */
+        /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA BẠN */
         .sidebar {
             width: 250px;
             background: var(--sidebar-color);
@@ -131,12 +131,15 @@
             align-items: center;
             margin-bottom: 25px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .filter-group {
             display: flex;
-            gap: 25px;
+            gap: 20px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-item {
@@ -151,14 +154,27 @@
             font-size: 11px;
         }
 
+        .search-input {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            background: #F8FAFF;
+            outline: none;
+            width: 250px;
+            font-family: inherit;
+        }
+
         select {
             border: 1px solid #E0E7FF;
-            padding: 8px 15px;
+            padding: 10px 15px;
             border-radius: 10px;
             color: var(--navy-dark);
             font-weight: 600;
             background: #F8FAFF;
             outline: none;
+            min-width: 150px;
+            font-family: inherit;
         }
 
         /* Data Table Styles */
@@ -394,225 +410,105 @@
         .toast.error .toast-icon {
             color: #F44336;
         }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="sidebar">
-        <div class="logo-section">
-            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
-        </div>
-
-        <div class="nav-group">
-            <a th:href="@{/admin/dashboard}" class="nav-item"
-                th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                <i class="fas fa-th-large"></i> Tá»•ng quan
-            </a>
-
-            <div class="nav-label">Quáº£n lÃ½ ngÆ°á»i dÃ¹ng</div>
-            <a th:href="@{/admin/dentists}" class="nav-item"
-                th:classappend="${activePage == 'dentists' ? 'active' : ''}">
-                <i class="fas fa-stethoscope"></i> B?c s?
-            </a>
-
-            <a th:href="@{/admin/staff}" class="nav-item" th:classappend="${activePage == 'staff' ? 'active' : ''}">
-                <i class="fas fa-users-cog"></i> Staff
-            </a>
-
-            <a th:href="@{/admin/customers}" class="nav-item">
-                <i class="fas fa-user-friends"></i> Customer
-            </a>
-
-            <div class="nav-label">Váº­n hÃ nh</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dá»‹ch vá»¥</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giá»</a>
-        </div>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
     <div class="main-content">
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 20px;">
 
-            <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">B?c s?</h2>
+            <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">Bác sĩ</h2>
 
-            <div class="search-wrapper" style="flex-grow: 1; max-width: 500px;">
-                <form th:action="@{/admin/dentists}" method="GET">
-                    <div class="input-group"
-                        style="background: #F4F7FE; border-radius: 12px; padding: 2px 15px; display: flex; align-items: center; border: 1px solid #E0E5F2;">
-                        <i class="fas fa-search" style="color: #A3AED0; margin-right: 12px;"></i>
-                        <input type="text" name="keyword" th:value="${keyword}"
-                            placeholder="T?m theo t?n ho?c chuy?n khoa..."
-                            style="border: none; background: transparent; outline: none; width: 100%; padding: 10px 0; color: #1B2559; font-weight: 500; font-size: 14px;">
-                    </div>
-
-                </form>
-            </div>
+            <!-- Search wrapper removed from here -->
 
             <a th:href="@{/admin/dentists/add}"
                 style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2); min-width: fit-content;">
-                <i class="fas fa-plus"></i> Th?m b?c s?
+                <i class="fas fa-plus"></i> Thêm bác sĩ
             </a>
         </div>
 
         <div class="stats-container">
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">T?NG B?C S?
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TỔNG BÁC SĨ
                 </div>
                 <div class="stat-value" th:text="${totalDentists}">0</div>
             </div>
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TR?C H?M NAY</div>
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TRỰC HÔM NAY</div>
                 <div class="stat-value" th:text="${onDutyCount}">0</div>
             </div>
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">??NH GI? TRUNG B?NH
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">ĐÁNH GIÁ TRUNG BÌNH
                 </div>
                 <div class="stat-value">4.8/5.0</div>
             </div>
         </div>
 
         <div class="filter-bar">
-            <form th:action="@{/admin/dentists}" method="GET" class="filter-group">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="filter-label">CHUY?N KHOA:</span>
-                    <select name="specialty" onchange="this.form.submit()">
-                        <option value="">T?t c? chuy?n khoa</option>
+            <div class="filter-group">
+                <div class="filter-item" style="position: relative;">
+                    <i class="fas fa-search"
+                        style="color: #A3AED0; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"></i>
+                    <input type="text" id="searchInput" class="search-input"
+                        style="padding-left: 40px; min-width: 250px;" placeholder="Tìm theo tên hoặc chuyên khoa..."
+                        th:value="${keyword}">
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">CHUYÊN KHOA:</span>
+                    <select id="specialtyFilter">
+                        <option value="">Tất cả chuyên khoa</option>
                         <option value="Orthodontics" th:selected="${selectedSpecialty == 'Orthodontics'}">
-                            Ch?nh nha (Ni?ng r?ng)</option>
-                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">N?i nha</option>
-                            nha)</option>
-                            Chu nha</option>
-                            Periodontics(Chu nha)</option>
-                            Ph?c h?nh</option>
-                            Prosthodontics(Phá»¥c hÃ¬nh)</option>
+                            Chỉnh nha (Niềng răng)</option>
+                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">Nội nha</option>
+                        <option value="Periodontics" th:selected="${selectedSpecialty == 'Periodontics'}">Chu nha
+                        </option>
+                        <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">Phục hình
+                        </option>
+                        <option value="Oral Surgery" th:selected="${selectedSpecialty == 'Oral Surgery'}">Phẫu thuật
+                            miệng</option>
+                        <option value="General Dentistry" th:selected="${selectedSpecialty == 'General Dentistry'}">Nha
+                            khoa tổng quát</option>
+                        <option value="Pediatric Dentistry" th:selected="${selectedSpecialty == 'Pediatric Dentistry'}">
+                            Nha khoa trẻ em</option>
                     </select>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="filter-label">TR?NG TH?I:</span>
-                    <select name="status" onchange="this.form.submit()">
-                        <option value="">T?t c? tr?ng th?i</option>
-                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Ho?t ??ng</option>
-                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">?? kh?a</option>
+                <div class="filter-item">
+                    <span class="filter-label">TRẠNG THÁI:</span>
+                    <select id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Hoạt động</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Đã khóa</option>
                     </select>
                 </div>
-            </form>
-            <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
-                Hi?n th? <span th:text="${#lists.size(dentists)}">0</span> b?c s?
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="loader" id="searchLoader"
+                    style="display: none; border: 3px solid #f3f3f3; border-top: 3px solid #1A237E; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 10px;">
+                </div>
+                <div style="color: #A3AED0; font-size: 12px; font-weight: 700;" id="resultCount">
+                    Hiển thị <span th:text="${#lists.size(dentists)}">0</span> bác sĩ
+                </div>
             </div>
         </div>
 
         <div class="data-table-container">
-            <table th:if="${not #lists.isEmpty(dentists)}">
-                <thead>
-                    <tr>
-                        <th>B?c s?</th>
-                        <th>Email</th>
-                        <th>Chuy?n khoa</th>
-                        <th>Status</th>
-                        <th>Thao t?c</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="dentist : ${dentists}" th:id="'dentist-row-' + ${dentist.id}">
-                        <td class="py-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; color: #1A237E; background-color: rgba(26, 35, 126, 0.1);">
-                                    <img th:if="${dentist.avatar}" th:src="@{${dentist.avatar}}"
-                                        style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">
-                                    <i th:unless="${dentist.avatar}" class="fas fa-user-md"></i>
-                                </div>
-                                <div>
-                                    <a th:href="@{/admin/dentists/detail/{id}(id=${dentist.id})}"
-                                        class="fw-bold text-decoration-none dentist-name-link"
-                                        style="color: #1B2559; font-size: 14px; transition: color 0.2s;"
-                                        onmouseover="this.style.color='#1A237E'"
-                                        onmouseout="this.style.color='#1B2559'">
-                                        <span th:text="${dentist.fullName}">T?n b?c s?</span>
-                                    </a>
-                                    <div class="small text-muted mt-1">ID: #<span th:text="${dentist.id}"></span></div>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td class="p-3">
-                            <span class="text-muted fw-medium" style="font-size: 14px;"
-                                th:text="${dentist.user.email ?: 'Ch?a c?'}">leomessi@gmail.com</span>
-                        </td>
-                        <td th:text="${dentist.specialization}">Chuy?n khoa</td>
-
-                        <!--                <td>-->
-                        <!--                    <div th:if="${dentist.schedules != null and not #lists.isEmpty(dentist.schedules)}">-->
-                        <!--                        <div th:each="sch : ${dentist.schedules}" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">-->
-                        <!--            <span style="color: #1A237E; font-weight: 800; min-width: 35px;"-->
-                        <!--                  th:text="${#strings.capitalize(#strings.toLowerCase(#strings.substring(sch.dayOfWeek, 0, 3)))}">-->
-                        <!--                  Mon-->
-                        <!--            </span>-->
-
-                        <!--                            <span style="color: #707EAE; font-size: 13px;"-->
-                        <!--                                  th:text="${#temporals.format(sch.startTime, 'HH:mm') + ' - ' + #temporals.format(sch.endTime, 'HH:mm')}">-->
-                        <!--                  08:00 - 17:00-->
-                        <!--            </span>-->
-                        <!--                        </div>-->
-                        <!--                    </div>-->
-
-                        <!--                    <div th:if="${dentist.schedules == null or #lists.isEmpty(dentist.schedules)}"-->
-                        <!--                         style="color: #A3AED0; font-style: italic; font-size: 12px; padding: 5px 0;">-->
-                        <!--                        <i class="far fa-calendar-times" style="margin-right: 5px;"></i>Not scheduled-->
-                        <!--                    </div>-->
-                        <!--                </td>-->
-
-                        <td>
-                            <span class="status-badge"
-                                th:classappend="${dentist.user.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
-                                th:text="${dentist.user.status}">
-                                ACTIVE
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-
-                                <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${dentist.id} + ')'"
-                                    class="action-btn">
-                                    <i class="far fa-edit"></i>
-                                </a>
-
-                                <a href="javascript:void(0)" th:data-id="${dentist.id}"
-                                    th:data-name="${dentist.fullName}"
-                                    onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-name'))"
-                                    class="action-btn" style="color: #F44336;">
-                                    <i class="far fa-trash-alt"></i>
-                                </a>
-
-                                <form th:if="${#strings.equals(dentist.user.status, 'LOCKED')}"
-                                    th:action="@{/admin/dentists/unlock/{id}(id=${dentist.user.id})}" method="POST"
-                                    style="display:inline;">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('M? kh?a t?i kho?n b?c s? n?y?')">
-                                        <i class="fas fa-user-check"></i>
-                                    </button>
-                                </form>
-
-                                <form th:if="${#strings.equals(dentist.user.status, 'ACTIVE')}"
-                                    th:action="@{/admin/dentists/lock/{id}(id=${dentist.user.id})}" method="POST"
-                                    style="display:inline;">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('B?n c? ch?c ch?n mu?n kh?a t?i kho?n b?c s? n?y?')">
-                                        <i class="fas fa-user-lock"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="empty-state" th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 50px;">
-                <i class="fas fa-user-slash" style="font-size: 40px; color: #A3AED0; margin-bottom: 15px;"></i>
-                <h3 style="color: #A3AED0;">Kh?ng t?m th?y b?c s? n?o</h3>
+            <div id="tableContainer">
+                <th:block th:replace="~{admin/fragments/dentist-table :: dentist-list}"></th:block>
             </div>
         </div>
     </div>
@@ -620,14 +516,22 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content" style="border-radius: 15px; border: none;">
                 <div class="modal-header" style="background: #1A237E; color: white;">
-                    <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi ti?t h? s? b?c s?</h5>
+                    <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi tiết hồ sơ bác sĩ</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="row">
                         <div class="col-md-4 text-center border-end">
-                            <img id="viewAvatar" src="/img/default-avatar.png" class="rounded-circle mb-3"
-                                style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #f0f2f5;">
+                            <div class="avatar-wrapper mx-auto mb-3"
+                                style="width: 150px; height: 150px; position: relative; border-radius: 50%; overflow: hidden; border: 3px solid #f0f2f5; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                                <img id="viewAvatar" src="" class="rounded-circle"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: none;"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback-avatar"
+                                    style="display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; background: #e2e8f0; color: #64748b;">
+                                    <i class="fas fa-user-md" style="font-size: 60px;"></i>
+                                </div>
+                            </div>
                             <h4 id="viewFullName" style="color: #1B2559; font-weight: 700;">--</h4>
                             <span id="viewSpecialty" class="badge bg-primary mb-2">--</span>
                         </div>
@@ -635,31 +539,31 @@
                         <div class="col-md-8">
                             <div class="row g-3">
                                 <div class="col-6">
-                                    <label class="text-muted small">??a ch? email</label>
+                                    <label class="text-muted small">Địa chỉ email</label>
                                     <p id="viewEmail" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">S? ?i?n tho?i</label>
+                                    <label class="text-muted small">Số điện thoại</label>
                                     <p id="viewPhone" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Ng?y sinh</label>
+                                    <label class="text-muted small">Ngày sinh</label>
                                     <p id="viewDob" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Gi?i t?nh</label>
+                                    <label class="text-muted small">Giới tính</label>
                                     <p id="viewGender" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">S? n?m kinh nghi?m</label>
+                                    <label class="text-muted small">Số năm kinh nghiệm</label>
                                     <p id="viewExp" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-12">
-                                    <label class="text-muted small">B?ng c?p v? ch?ng ch?</label>
+                                    <label class="text-muted small">Bằng cấp và chứng chỉ</label>
                                     <p id="viewQuals" class="p-2 bg-light rounded" style="font-size: 0.9rem;">--</p>
                                 </div>
                                 <div class="col-12">
-                                    <label class="text-muted small">L?ch l?m vi?c</label>
+                                    <label class="text-muted small">Lịch làm việc</label>
                                     <div id="viewSchedule" class="mt-1">
                                     </div>
                                 </div>
@@ -681,21 +585,22 @@
         <div class="modal-content" style="width: 450px;">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #F44336; font-size: 18px;">
-                    <i class="fas fa-exclamation-triangle me-2" style="margin-right: 10px;"></i>X?c nh?n x?a
+                    <i class="fas fa-exclamation-triangle me-2" style="margin-right: 10px;"></i>Xác nhận xóa
                 </h5>
                 <span class="close-btn" onclick="closeDeleteModal()">&times;</span>
             </div>
             <div class="modal-body" style="text-align: center;">
                 <p style="color: #1B2559; font-size: 15px; margin-bottom: 20px;">
-                    B?n c? ch?c ch?n mu?n x?a b?c s? <strong id="deleteDentistName"></strong> kh?ng? <br>
-                    <span style="color: #F44336; font-size: 13px;">H?nh ??ng n?y kh?ng th? ho?n t?c.</span>
+                    Bạn có chắc chắn muốn xóa bác sĩ <strong id="deleteDentistName"></strong> không? <br>
+                    <span style="color: #F44336; font-size: 13px;">Hành động này không thể hoàn tác.</span>
                 </p>
                 <div style="display: flex; justify-content: center; gap: 15px;">
                     <button type="button" onclick="closeDeleteModal()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Há»§y</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Hủy</button>
                     <button type="button" onclick="confirmDeleteDentist()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">X?a b?c s?
-                        Nha SÄ©</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa
+                        bác sĩ
+                        Nha Sĩ</button>
                 </div>
             </div>
         </div>
@@ -706,22 +611,25 @@
         <div class="modal-content" style="width: 800px;">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-user-md me-2"
-                        style="color: #1A237E; margin-right: 10px;"></i>Ch?nh s?a h? s? b?c s?</h5>
+                        style="color: #1A237E; margin-right: 10px;"></i>Chỉnh sửa hồ sơ bác sĩ</h5>
                 <span class="close-btn" onclick="closeEditModal()">&times;</span>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <form id="editDentistForm" method="POST" enctype="multipart/form-data">
                     <input type="hidden" id="editDentistId" name="id">
 
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Th?ng tin c? nh?n</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Thông tin cá nhân</h6>
                     <div class="info-grid">
                         <div style="grid-row: span 3; text-align: center;">
                             <div class="avatar-circle"
                                 style="width: 120px; height: 120px; border-radius: 50%; background: #F4F7FE; display: flex; align-items: center; justify-content: center; position: relative; border: 2px dashed #D1D9E8; margin: 0 auto 10px;">
-                                <img id="editAvatarPreview" src="/img/default-avatar.png"
-                                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
-                                <i id="editAvatarPlaceholder" class="fas fa-user"
-                                    style="font-size: 35px; color: #D1D9E8;"></i>
+                                <img id="editAvatarPreview" src=""
+                                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback-avatar" id="editAvatarPlaceholder"
+                                    style="display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; background: #f1f5f9; color: #94a3b8;">
+                                    <i class="fas fa-user-md" style="font-size: 40px;"></i>
+                                </div>
                                 <button type="button" class="camera-btn"
                                     style="position: absolute; bottom: 5px; right: 5px; background: #1A237E; color: white; width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;"
                                     onclick="document.getElementById('editAvatarInput').click();">
@@ -730,7 +638,7 @@
                             </div>
                             <input type="file" id="editAvatarInput" name="avatarFile" accept="image/*"
                                 style="display: none;" onchange="previewEditAvatar(this)">
-                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">??I ?NH</small>
+                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">ĐỔI ẢNH</small>
                         </div>
                         <script>
                             function previewEditAvatar(input) {
@@ -747,110 +655,110 @@
                         </script>
 
                         <div class="input-group">
-                            <label>H? v? t?n</label>
+                            <label>Họ và tên</label>
                             <div class="input-wrapper"><input type="text" id="editFullName" name="fullName" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>??a ch? email</label>
+                            <label>Địa chỉ email</label>
                             <div class="input-wrapper"><input type="email" id="editEmail" name="email" required></div>
                         </div>
                         <div class="input-group">
-                            <label>S? ?i?n tho?i</label>
+                            <label>Số điện thoại</label>
                             <div class="input-wrapper"><input type="text" id="editPhone" name="phone" required
-                                    pattern="^(0|\+84)[0-9]{9}$" title="S? ?i?n tho?i kh?ng h?p l?"></div>
+                                    pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
                         </div>
                         <div class="input-group">
-                            <label>Ng?y sinh</label>
+                            <label>Ngày sinh</label>
                             <div class="input-wrapper"><input type="date" id="editDob" name="dateOfBirth" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Gi?i t?nh</label>
+                            <label>Giới tính</label>
                             <div class="input-wrapper">
                                 <select id="editGender" name="gender" required>
                                     <option value="MALE">Nam</option>
-                                    <option value="FEMALE">N?</option>
-                                    <option value="OTHER">Kh?c</option>
+                                    <option value="FEMALE">Nữ</option>
+                                    <option value="OTHER">Khác</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Tr?ng th?i</label>
+                            <label>Trạng thái</label>
                             <div class="input-wrapper">
                                 <select id="editStatus" name="status" required>
-                                    <option value="ACTIVE">Ho?t ??ng</option>
-                                    <option value="LOCKED">?? kh?a</option>
+                                    <option value="ACTIVE">Hoạt động</option>
+                                    <option value="LOCKED">Đã khóa</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Th?ng tin chuy?n m?n</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Thông tin chuyên môn</h6>
                     <div class="info-grid">
                         <div class="input-group">
-                            <label>Chuy?n khoa</label>
+                            <label>Chuyên khoa</label>
                             <div class="input-wrapper">
                                 <select id="editSpecialty" name="specialization" required>
-                                    <option value="Orthodontics">Ch?nh nha (Ni?ng r?ng)</option>
-                                    <option value="Endodontics">N?i nha</option>
+                                    <option value="Orthodontics">Chỉnh nha (Niềng răng)</option>
+                                    <option value="Endodontics">Nội nha</option>
                                     <option value="Periodontics">Chu nha</option>
-                                    <option value="Prosthodontics">Ph?c h?nh</option>
-                                    <option value="Oral Surgery">Ph?u thu?t mi?ng</option>
-                                    <option value="General Dentistry">Nha khoa t?ng qu?t</option>
-                                    <option value="Pediatric Dentistry">Nha khoa tr? em</option>
+                                    <option value="Prosthodontics">Phục hình</option>
+                                    <option value="Oral Surgery">Phẫu thuật miệng</option>
+                                    <option value="General Dentistry">Nha khoa tổng quát</option>
+                                    <option value="Pediatric Dentistry">Nha khoa trẻ em</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>S? n?m kinh nghi?m</label>
+                            <label>Số năm kinh nghiệm</label>
                             <div class="input-wrapper"><input type="number" id="editExperienceYears"
                                     name="experienceYears" min="0" required></div>
                         </div>
                         <div class="input-group" style="grid-column: span 2;">
-                            <label>Ti?u s?</label>
+                            <label>Tiểu sử</label>
                             <div class="input-wrapper"><textarea id="editBio" name="bio" rows="3"
                                     style="resize: vertical;"></textarea></div>
                         </div>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">L?ch l?m vi?c</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Lịch làm việc</h6>
                     <div class="info-grid">
                         <div class="input-group" style="grid-column: span 2;">
-                            <label>Ng?y l?m vi?c</label>
+                            <label>Ngày làm việc</label>
                             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="MONDAY"> Th? Hai</label>
+                                        type="checkbox" name="availableDays" value="MONDAY"> Thứ Hai</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="TUESDAY"> Th? Ba</label>
+                                        type="checkbox" name="availableDays" value="TUESDAY"> Thứ Ba</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="WEDNESDAY"> Th? T?</label>
+                                        type="checkbox" name="availableDays" value="WEDNESDAY"> Thứ Tư</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="THURSDAY"> Th? N?m</label>
+                                        type="checkbox" name="availableDays" value="THURSDAY"> Thứ Năm</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="FRIDAY"> Th? S?u</label>
+                                        type="checkbox" name="availableDays" value="FRIDAY"> Thứ Sáu</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="SATURDAY"> Th? B?y</label>
+                                        type="checkbox" name="availableDays" value="SATURDAY"> Thứ Bảy</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="SUNDAY"> Ch? nh?t</label>
+                                        type="checkbox" name="availableDays" value="SUNDAY"> Chủ nhật</label>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Gi? b?t ??u ca</label>
+                            <label>Giờ bắt đầu ca</label>
                             <div class="input-wrapper"><input type="time" id="editShiftStartTime" name="shiftStartTime">
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Gi? k?t th?c ca</label>
+                            <label>Giờ kết thúc ca</label>
                             <div class="input-wrapper"><input type="time" id="editShiftEndTime" name="shiftEndTime">
                             </div>
                         </div>
@@ -858,10 +766,10 @@
 
                     <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
                         <button type="button" onclick="closeEditModal()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">H?y</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Hủy</button>
                         <button type="submit"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Save
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">L?u thay ??i</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Lưu
+                            thay đổi</button>
                     </div>
                 </form>
             </div>
@@ -890,7 +798,9 @@
         function confirmDeleteDentist() {
             if (!dentistToDelete) return;
 
-            fetch('/admin/dentists/api/delete/' + dentistToDelete, {
+            const idToDelete = dentistToDelete;
+
+            fetch('/admin/dentists/api/delete/' + idToDelete, {
                 method: 'DELETE'
             })
                 .then(response => response.json())
@@ -899,7 +809,7 @@
                     if (data.success) {
                         showToast(data.message, 'success');
                         // XÃ³a dÃ²ng tÆ°Æ¡ng Ã¡Â»Â©ng khá»i DOM
-                        const row = document.getElementById('dentist-row-' + dentistToDelete);
+                        const row = document.getElementById('dentist-row-' + idToDelete);
                         if (row) {
                             row.remove();
                         }
@@ -982,6 +892,62 @@
         });
         /*]]>*/
     </script>
+
+    <script th:inline="javascript">
+        // Debounce function to delay search execution while tying
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function performSearch() {
+            const keyword = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+            const specialty = document.getElementById('specialtyFilter') ? document.getElementById('specialtyFilter').value : '';
+            const status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+
+            const loader = document.getElementById('searchLoader');
+            if (loader) loader.style.display = 'inline-block';
+
+            const params = new URLSearchParams();
+            if (keyword) params.append('keyword', keyword);
+            if (specialty) params.append('specialty', specialty);
+            if (status) params.append('status', status);
+
+            fetch(`/admin/dentists/api/search?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text();
+                })
+                .then(htmlStr => {
+                    document.getElementById('tableContainer').innerHTML = htmlStr;
+
+                    // Update count
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlStr, 'text/html');
+                    const rows = doc.querySelectorAll('tbody tr');
+                    const countElem = document.getElementById('resultCount');
+                    if (countElem) {
+                        countElem.innerHTML = `Hiển thị <span>${rows.length}</span> bác sĩ`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                })
+                .finally(() => {
+                    if (loader) loader.style.display = 'none';
+                });
+        }
+
+        // Add event listeners
+        document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
+        document.getElementById('specialtyFilter').addEventListener('change', performSearch);
+        document.getElementById('statusFilter').addEventListener('change', performSearch);
+    </script>
+
 </body>
 
 </html>

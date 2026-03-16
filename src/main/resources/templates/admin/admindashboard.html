@@ -4,14 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tổng quan quản trị - GENZ CLINIC</title>
+    <title th:text="${pageTitle}">Admin Dashboard - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --sidebar-color: #1A237E;
             --bg-light: #F4F7FE;
         }
+
         body {
             display: flex;
             margin: 0;
@@ -19,44 +22,12 @@
             background-color: var(--bg-light);
         }
 
-        /* Sidebar styles (áp dụng cho fragment sidebar) */
-        .sidebar {
-            width: 250px;
-            background: var(--sidebar-color);
-            min-height: 100vh;
-            color: white;
-            padding: 20px 0;
-        }
-        .logo-section {
-            padding: 0 20px 30px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .nav-group { padding: 20px 0; }
-        .nav-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            padding: 0 20px 10px;
-            opacity: 0.6;
-            letter-spacing: 1px;
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            max-width: calc(100vw - 250px);
         }
 
-        .nav-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            text-decoration: none;
-            color: white;
-            transition: 0.3s;
-        }
-        .nav-item i { margin-right: 15px; width: 20px; }
-        .nav-item:hover, .nav-item.active {
-            background: rgba(255,255,255,0.1);
-            border-left: 4px solid #fff;
-        }
-
-        /* Main Content */
-        .main-content { flex: 1; padding: 20px; }
         .header {
             display: flex;
             justify-content: space-between;
@@ -64,8 +35,10 @@
             background: white;
             padding: 15px 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
         }
+
         .search-bar {
             background: #F4F7FE;
             border-radius: 12px;
@@ -89,15 +62,6 @@
             gap: 20px;
         }
 
-        .icon-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            color: #707EAE;
-            cursor: pointer;
-            position: relative;
-        }
-
         .admin-profile {
             display: flex;
             align-items: center;
@@ -105,49 +69,235 @@
             border-left: 1px solid #E0E7FF;
             padding-left: 20px;
         }
-        .admin-info span { display: block; font-size: 12px; }
-        .admin-name { font-weight: 700; color: #1B2559; }
+
+        .admin-name {
+            font-weight: 700;
+            color: #1B2559;
+            display: block;
+            font-size: 14px;
+        }
+
         .avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             background: #1A237E;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
-<!-- DÙNG SIDEBAR FRAGMENT -->
-<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
     <div class="main-content">
         <div class="header">
             <div class="search-bar">
                 <i class="fas fa-search" style="color: #707EAE;"></i>
-                <input type="text" placeholder="Search...">
+                <input type="text" placeholder="Tìm kiếm nhanh...">
             </div>
 
             <div class="header-actions">
-                <button class="icon-btn"><i class="far fa-bell"></i></button>
+                <button class="icon-btn" style="background: none; border: none; cursor: pointer; color: #707EAE;">
+                    <i class="far fa-bell"></i>
+                </button>
 
                 <div class="admin-profile">
                     <div class="admin-info">
-                        <span class="admin-name">Admin User</span>
-                        <span style="color: #707EAE;">Administrator</span>
+                        <span class="admin-name">Quản trị viên</span>
+                        <span style="color: #707EAE; font-size: 12px;">Hệ thống</span>
                     </div>
-                    <div class="avatar"></div>
+                    <div class="avatar">AD</div>
                 </div>
-                <div class="avatar"></div>
             </div>
         </div>
 
-        <div class="content-body" style="margin-top: 30px;">
-            <h3>Welcome back, Admin!</h3>
-            <p>Select a category from the sidebar to manage GENZ CLINIC.</p>
+        <div class="dashboard-container">
+            <h2 style="color: #1B2559; margin-bottom: 25px;">Thống kê tổng quan</h2>
+
+            <div class="stats-grid">
+                <!-- Total Customers -->
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="label">Khách hàng</div>
+                        <div class="value" th:text="${stats.totalCustomers}">0</div>
+                        <div class="trend up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span th:text="${#numbers.formatDecimal(stats.growthRate, 1, 1)} + '%'">0%</span>
+                            tháng này
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Appointments -->
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="label">Tổng ca khám</div>
+                        <div class="value" th:text="${stats.totalAppointments}">0</div>
+                        <div class="trend" style="color: #707EAE;">Từ khi bắt đầu</div>
+                    </div>
+                </div>
+
+                <!-- Pending Appointments -->
+                <div class="stat-card">
+                    <div class="stat-icon bg-orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="label">Đang chờ</div>
+                        <div class="value" th:text="${stats.pendingAppointments}">0</div>
+                        <div class="trend" style="color: #FFA800;">Cần xử lý</div>
+                    </div>
+                </div>
+
+                <!-- Total Revenue -->
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="label">Doanh thu</div>
+                        <div class="value" th:text="${#numbers.formatCurrency(stats.totalRevenue)}">0</div>
+                        <div class="trend" style="color: #05CD99;">Giao dịch thành công</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <!-- Revenue Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Doanh thu 7 ngày qua</div>
+                    </div>
+                    <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+                </div>
+
+                <!-- Service Distribution -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Phân bổ dịch vụ</div>
+                    </div>
+                    <canvas id="serviceChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <div class="chart-header">
+                    <div class="chart-title">Ca khám gần đây</div>
+                </div>
+                <div class="table-responsive">
+                    <table class="activity-table">
+                        <thead>
+                            <tr>
+                                <th>Khách hàng</th>
+                                <th>Dịch vụ</th>
+                                <th>Bác sĩ</th>
+                                <th>Thời gian</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="appointment : ${stats.recentAppointments}">
+                                <td style="font-weight: 600;" th:text="${appointment.customerName}">Patient Name</td>
+                                <td th:text="${appointment.serviceName}">Cleaning</td>
+                                <td th:text="${appointment.dentistName}">Dr. Smith</td>
+                                <td th:text="${appointment.startTime}">10:00</td>
+                                <td>
+                                    <span class="status-badge"
+                                        th:classappend="${appointment.status == 'CONFIRMED' ? 'status-confirmed' : 
+                                                           (appointment.status == 'PENDING' ? 'status-pending' : 'status-completed')}"
+                                        th:text="${appointment.status}">
+                                        Status
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(stats.recentAppointments)}">
+                                <td colspan="5" style="text-align: center; color: #707EAE; padding: 30px;">
+                                    Chưa có hoạt động nào gần đây.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Chart Scripts -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const trendData = /*[[${stats.revenueTrend}]]*/ {};
+        const serviceData = /*[[${stats.serviceDistribution}]]*/ {};
+
+        // Revenue Chart
+        const revCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: Object.keys(trendData),
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: Object.values(trendData),
+                    borderColor: '#4318FF',
+                    backgroundColor: 'rgba(67, 24, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#F4F7FE' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Service Chart
+        const servCtx = document.getElementById('serviceChart').getContext('2d');
+        new Chart(servCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(serviceData),
+                datasets: [{
+                    data: Object.values(serviceData),
+                    backgroundColor: [
+                        '#4318FF', '#05CD99', '#FFA800', '#9B51E0', '#EE5D50'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 15, font: { size: 11 } }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        /*]]>*/
+    </script>
 </body>
+
 </html>
-
-

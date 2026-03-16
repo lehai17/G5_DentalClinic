@@ -1,0 +1,77 @@
+<th:block th:fragment="service-list">
+    <table th:if="${not #lists.isEmpty(services)}">
+        <thead>
+            <tr>
+                <th>Thông tin dịch vụ</th>
+                <th>Giá tiền (VNĐ)</th>
+                <th>Thời lượng</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="service : ${services}" th:id="'service-row-' + ${service.id}">
+                <td>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div
+                            style="width: 50px; height: 50px; border-radius: 10px; overflow: hidden; background: #F4F7FE; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <img th:if="${service.imageUrl}" th:src="@{${service.imageUrl}}"
+                                style="width: 100%; height: 100%; object-fit: cover;" alt="Dịch vụ">
+                            <i th:unless="${service.imageUrl}" class="fas fa-tooth"
+                                style="color: #A3AED0; font-size: 24px;"></i>
+                        </div>
+                        <div style="max-width: 250px;">
+                            <div th:text="${service.name}"
+                                style="font-weight: 700; color: var(--navy-dark); margin-bottom: 4px;">Tên
+                                dịch vụ</div>
+                            <div style="font-size: 12px; color: #707EAE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                th:text="${service.description}">
+                                Mô tả ngắn...
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td th:text="${#numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT')}">Giá tiền</td>
+                <td th:text="${service.durationMinutes} + ' phút'">Thời lượng</td>
+                <td>
+                    <span class="status-badge" th:classappend="${service.active ? 'status-active' : 'status-locked'}"
+                        th:text="${service.active ? 'Hoạt động' : 'Không hoạt động'}">
+                    </span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <a href="javascript:void(0)" th:onclick="'openDetailModal(' + ${service.id} + ')'"
+                            class="action-btn" title="Xem chi tiết"><i class="far fa-eye"></i></a>
+                        <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${service.id} + ')'"
+                            class="action-btn" title="Chỉnh sửa dịch vụ"><i class="far fa-edit"></i></a>
+
+                        <form th:if="${!service.active}" th:action="@{/admin/services/toggle/{id}(id=${service.id})}"
+                            method="POST" style="display:inline;">
+                            <input type="hidden" name="status" value="true">
+                            <button type="submit" class="action-btn"
+                                style="color: #4CAF50; border:none; background:none; cursor:pointer;"
+                                onclick="return confirm('Kích hoạt dịch vụ này?')" title="Kích hoạt">
+                                <i class="fas fa-user-check"></i>
+                            </button>
+                        </form>
+                        <form th:if="${service.active}" th:action="@{/admin/services/toggle/{id}(id=${service.id})}"
+                            method="POST" style="display:inline;">
+                            <input type="hidden" name="status" value="false">
+                            <button type="submit" class="action-btn"
+                                style="color: #F44336; border:none; background:none; cursor:pointer;"
+                                onclick="return confirm('Vô hiệu hóa dịch vụ này?')" title="Vô hiệu hóa">
+                                <i class="fas fa-user-lock"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(services)}"
+        style="text-align: center; padding: 80px 0; color: #A3AED0;">
+        <i class="fas fa-box-open" style="font-size: 50px; margin-bottom: 15px;"></i>
+        <h3>Chưa có dịch vụ nào</h3>
+    </div>
+</th:block>

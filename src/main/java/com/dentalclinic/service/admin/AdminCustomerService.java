@@ -15,7 +15,7 @@ public interface AdminCustomerService {
 
     CustomerDetailDTO getCustomerDetail(Long customerId);
 
-    List<Appointment> getCustomerHistory(Long customerId);
+    List<Appointment> getCustomerHistory(Long customerId, java.time.LocalDateTime now);
 
-    List<Appointment> getUpcomingAppointments(Long customerId);
+    List<Appointment> getUpcomingAppointments(Long customerId, java.time.LocalDateTime now);
 }

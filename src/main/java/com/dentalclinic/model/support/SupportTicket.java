@@ -3,10 +3,7 @@ package com.dentalclinic.model.support;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "support_ticket")
@@ -16,29 +13,25 @@ public class SupportTicket {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "appointment_id")
     private Appointment appointment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "customer_id")
     private User customer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "staff_id")
     private User staff;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dentist_id")
-    private User dentist;
 
     @Column(name = "title", columnDefinition = "NVARCHAR(255)")
     private String title;
 
-    @Column(name = "question", columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String question;
 
-    @Column(name = "answer", columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String answer;
 
     @Enumerated(EnumType.STRING)
@@ -48,27 +41,10 @@ public class SupportTicket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Transient
-    private String latestCustomerMessage;
-
-    @Transient
-    private String latestStaffReply;
-
-    @Transient
-    private String displayStatus;
-
-    @Transient
-    private List<ConversationEntry> conversationEntries = new ArrayList<>();
-
-    @Transient
-    private String customerDisplayName;
-
-    @Transient
-    private String responderDisplayName;
-
     public SupportTicket() {
     }
 
+    // --- Getters and Setters ---
     public Long getId() {
         return id;
     }
@@ -101,12 +77,13 @@ public class SupportTicket {
         this.staff = staff;
     }
 
+    // Alias cho Dentist để tương thích với logic cũ nếu cần
     public User getDentist() {
-        return dentist;
+        return staff;
     }
 
     public void setDentist(User dentist) {
-        this.dentist = dentist;
+        this.staff = dentist;
     }
 
     public String getTitle() {
@@ -149,6 +126,40 @@ public class SupportTicket {
         this.createdAt = createdAt;
     }
 
+    @Transient
+    private String customerDisplayName;
+
+    @Transient
+    private String responderDisplayName;
+
+    @Transient
+    private String latestCustomerMessage;
+
+    @Transient
+    private String latestStaffReply;
+
+    @Transient
+    private String displayStatus;
+
+    @Transient
+    private java.util.List<ConversationEntry> conversationEntries = new java.util.ArrayList<>();
+
+    public String getCustomerDisplayName() {
+        return customerDisplayName;
+    }
+
+    public void setCustomerDisplayName(String customerDisplayName) {
+        this.customerDisplayName = customerDisplayName;
+    }
+
+    public String getResponderDisplayName() {
+        return responderDisplayName;
+    }
+
+    public void setResponderDisplayName(String responderDisplayName) {
+        this.responderDisplayName = responderDisplayName;
+    }
+
     public String getLatestCustomerMessage() {
         return latestCustomerMessage;
     }
@@ -173,50 +184,28 @@ public class SupportTicket {
         this.displayStatus = displayStatus;
     }
 
-    public List<ConversationEntry> getConversationEntries() {
+    public java.util.List<ConversationEntry> getConversationEntries() {
         return conversationEntries;
     }
 
-    public void setConversationEntries(List<ConversationEntry> conversationEntries) {
-        this.conversationEntries = conversationEntries == null ? new ArrayList<>() : conversationEntries;
-    }
-
-    public String getCustomerDisplayName() {
-        return customerDisplayName;
-    }
-
-    public void setCustomerDisplayName(String customerDisplayName) {
-        this.customerDisplayName = customerDisplayName;
-    }
-
-    public String getResponderDisplayName() {
-        return responderDisplayName;
-    }
-
-    public void setResponderDisplayName(String responderDisplayName) {
-        this.responderDisplayName = responderDisplayName;
-    }
-
-    public boolean isClosed() {
-        return "CLOSED".equalsIgnoreCase(displayStatus);
+    public void setConversationEntries(java.util.List<ConversationEntry> conversationEntries) {
+        this.conversationEntries = conversationEntries;
     }
 
     public static class ConversationEntry {
         private String senderType;
         private String senderLabel;
         private String content;
-        private LocalDateTime createdAt;
-        private boolean customerSide;
+        private LocalDateTime timestamp;
+        private boolean isCustomer;
 
-        public ConversationEntry() {
-        }
-
-        public ConversationEntry(String senderType, String senderLabel, String content, LocalDateTime createdAt, boolean customerSide) {
+        public ConversationEntry(String senderType, String senderLabel, String content, LocalDateTime timestamp,
+                boolean isCustomer) {
             this.senderType = senderType;
             this.senderLabel = senderLabel;
             this.content = content;
-            this.createdAt = createdAt;
-            this.customerSide = customerSide;
+            this.timestamp = timestamp;
+            this.isCustomer = isCustomer;
         }
 
         public String getSenderType() {
@@ -243,24 +232,20 @@ public class SupportTicket {
             this.content = content;
         }
 
-        public LocalDateTime getCreatedAt() {
-            return createdAt;
+        public LocalDateTime getTimestamp() {
+            return timestamp;
         }
 
-        public void setCreatedAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
+        public void setTimestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp;
         }
 
-        public boolean isCustomerSide() {
-            return customerSide;
+        public boolean isCustomer() {
+            return isCustomer;
         }
 
-        public void setCustomerSide(boolean customerSide) {
-            this.customerSide = customerSide;
-        }
-
-        public boolean isStaffSide() {
-            return !customerSide;
+        public void setCustomer(boolean isCustomer) {
+            this.isCustomer = isCustomer;
         }
     }
 }
