@@ -79,6 +79,9 @@ public class StaffAppointmentService {
         appointmentRepository.save(appointment);
 
         emailService.sendAppointmentConfirmed(appointment);
+
+        // Dentist inbox notification
+        notificationService.notifyDentistAppointmentConfirmed(appointment);
     }
 
     @Transactional
@@ -115,6 +118,9 @@ public class StaffAppointmentService {
 
         // 6. Lưu thay đổi
         Appointment saved = appointmentRepository.save(appt);
+
+        // Dentist inbox notification (confirmed/assigned appointment)
+        notificationService.notifyDentistAppointmentConfirmed(saved);
 
         // 7. Gửi Email xác nhận cho khách h� ng (Tận dụng h� m confirm đã có của bạn)
         try {
@@ -178,6 +184,18 @@ public class StaffAppointmentService {
         return appointmentRepository.findAll(pageable);
     }
     public void checkInAppointment(Long id) {
+        Appointment a = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (a.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
+        }
+
+        a.setStatus(AppointmentStatus.CHECKED_IN);
+        appointmentRepository.save(a);
+
+        // Dentist inbox notification
+        notificationService.notifyDentistAppointmentCheckedIn(a);
         throw new RuntimeException("Không còn hỗ trợ bước check-in. Sau CONFIRMED, bác sĩ sẽ chuyển lịch sang EXAMINING khi bắt đầu khám.");
     }
 
