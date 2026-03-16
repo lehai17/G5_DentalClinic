@@ -12,14 +12,15 @@
 
     <!-- Modern Styles -->
     <link rel="stylesheet" th:href="@{/css/tailwind-animations.css}" />
+    <link rel="stylesheet" th:href="@{/css/homepage/home.css}" />
     <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}" />
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body style="padding-top: 100px">
+  <body>
     <div class="app-wrapper">
       <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-      <main class="main-content" style="padding-top: 0">
+      <main class="main-content">
         <div th:replace="~{fragments/header :: header}"></div>
 
         <!-- Hero Section -->
@@ -203,7 +204,7 @@
 
                               <span style="background: var(--medical-50); color: var(--medical-600); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600">
                     <span th:if="${service?.price != null}"
-                          th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + ' â‚«'"></span>
+                          th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + ' ₫'"></span>
                     <span th:unless="${service?.price != null}">Liên hệ</span>
                 </span>
                           </div>
@@ -472,7 +473,7 @@
                       font-weight: 600;
                     "
                   >
-                    Sau â†’
+                    Sau →
                   </a>
                 </div>
               </div>

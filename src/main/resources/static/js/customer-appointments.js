@@ -12,6 +12,12 @@
   var searchInputEl = document.getElementById("customer-appointments-search");
   var clearSearchEl = document.getElementById("customer-appointments-clear");
   var sortSelectEl = document.getElementById("customer-appointments-sort");
+  var viewDefaultBtnEl = document.getElementById(
+    "customer-appointments-view-default",
+  );
+  var viewCancelledBtnEl = document.getElementById(
+    "customer-appointments-view-cancelled",
+  );
   var paymentModalEl = document.getElementById("cap-payment-modal");
   var paymentCloseEl = document.getElementById("cap-payment-close");
   var paymentAppointmentIdEl = document.getElementById(
@@ -24,22 +30,49 @@
   var invoiceModalEl = document.getElementById("cap-invoice-modal");
   var invoiceModalCloseEl = document.getElementById("cap-invoice-close");
   var invoiceModalContentEl = document.getElementById("cap-invoice-modal-content");
+  var reviewModalEl = document.getElementById("cap-review-modal");
+  var reviewModalCloseEl = document.getElementById("cap-review-close");
+  var reviewSubmitEl = document.getElementById("cap-review-submit");
+  var reviewCommentEl = document.getElementById("cap-review-comment");
+  var reviewHintEl = document.getElementById("cap-review-hint");
+  var reviewStarEls = Array.prototype.slice.call(
+    document.querySelectorAll(".cap-review-star"),
+  );
   var searchTimer = null;
-  var state = { page: 0, size: 5, totalPages: 0, keyword: "", sort: "newest" };
   var queryParams = new URLSearchParams(window.location.search);
+  var state = {
+    page: 0,
+    size: 5,
+    totalPages: 0,
+    keyword: "",
+    sort: "date_desc",
+    view: queryParams.get("view") === "cancelled" ? "cancelled" : "default",
+  };
   var remainingPaymentSelection = null;
+  var reviewSelection = { appointmentId: null, rating: 0 };
 
   var currentOpen = {
     appointmentId: null,
     detailEl: null,
   };
 
+  function normalizeText(value) {
+    if (value == null) return "";
+    var text = String(value);
+    if (!/[ÃÂÄÆÐï]/.test(text)) return text;
+    try {
+      return decodeURIComponent(escape(text));
+    } catch (err) {
+      return text;
+    }
+  }
+
   function showToast(message, type, title) {
     if (window.CustomerFeedback) {
       window.CustomerFeedback.toast({
-        message: message,
+        message: normalizeText(message),
         type: type || "info",
-        title: title || "",
+        title: normalizeText(title || ""),
       });
       return;
     }
@@ -48,22 +81,32 @@
   function showAlert(message, type, title) {
     if (window.CustomerFeedback) {
       return window.CustomerFeedback.alert({
-        message: message,
+        message: normalizeText(message),
         type: type || "info",
-        title: title || "Thông báo",
+        title: normalizeText(title || "Thông báo"),
       });
     }
-    alert(message);
+    alert(normalizeText(message));
     return Promise.resolve();
   }
 
   function askConfirm(message, options) {
+    var normalizedOptions = Object.assign({}, options || {});
+    if (normalizedOptions.title) {
+      normalizedOptions.title = normalizeText(normalizedOptions.title);
+    }
+    if (normalizedOptions.confirmText) {
+      normalizedOptions.confirmText = normalizeText(normalizedOptions.confirmText);
+    }
+    if (normalizedOptions.cancelText) {
+      normalizedOptions.cancelText = normalizeText(normalizedOptions.cancelText);
+    }
     if (window.CustomerFeedback) {
       return window.CustomerFeedback.confirm(
-        Object.assign({ message: message }, options || {}),
+        Object.assign({ message: normalizeText(message) }, normalizedOptions),
       );
     }
-    return Promise.resolve(confirm(message));
+    return Promise.resolve(confirm(normalizeText(message)));
   }
 
   function formatDate(dateStr) {
@@ -92,7 +135,7 @@
 
   function escapeHtml(s) {
     if (s == null) return "";
-    return String(s)
+    return normalizeText(String(s))
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -117,7 +160,9 @@
       CANCELLED: { label: "Đã hủy", className: "cancelled" },
       REEXAM: { label: "Tái khám", className: "reexam" },
     };
-    return map[key] || { label: key || "Không xác định", className: "default" };
+    var result = map[key] || { label: key || "Không xác định", className: "default" };
+    result.label = normalizeText(result.label);
+    return result;
   }
 
   function formatInvoiceStatus(status) {
@@ -126,14 +171,14 @@
       PAID: "Đã thanh toán",
       UNPAID: "Chưa thanh toán",
     };
-    return map[key] || status || "Không xác định";
+    return normalizeText(map[key] || status || "Không xác định");
   }
 
   function extractApiError(payload, fallbackMessage) {
     if (!payload) return fallbackMessage;
-    if (payload.message) return payload.message;
-    if (payload.error) return payload.error;
-    return fallbackMessage;
+    if (payload.message) return normalizeText(payload.message);
+    if (payload.error) return normalizeText(payload.error);
+    return normalizeText(fallbackMessage);
   }
 
   function toNumber(value) {
@@ -153,6 +198,15 @@
 
   function shouldShowRemaining(data) {
     return !isSettledInvoice(data) && toNumber(data && data.remainingAmount) > 0;
+  }
+
+  function isRefundEligibleForCancel(data) {
+    if (!data || !data.date) return false;
+    var appointmentDate = new Date(data.date + "T00:00:00");
+    if (isNaN(appointmentDate.getTime())) return false;
+    var now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now < appointmentDate;
   }
 
   function closeCurrentDetail() {
@@ -207,7 +261,7 @@
     if (paymentInvoiceIdEl)
       paymentInvoiceIdEl.textContent = data.invoiceId
         ? "#" + data.invoiceId
-        : "Chưa có";
+        : normalizeText("Chưa có");
     if (paymentAmountEl)
       paymentAmountEl.textContent = formatMoney(data.remainingAmount);
     if (paymentWalletBtn) paymentWalletBtn.disabled = false;
@@ -356,7 +410,8 @@
       "</div>" +
       "</div>";
 
-    return (
+    return normalizeText(
+      (
       '<div class="cap-invoice-card">' +
       '<div class="cap-invoice-head">' +
       '<div class="cap-invoice-title"><i class="bi bi-file-earmark-text"></i> Hóa đơn thanh toán</div>' +
@@ -370,7 +425,125 @@
       billNoteHtml +
       totalsHtml +
       "</div>"
+      )
     );
+  }
+
+  function closeReviewModal() {
+    if (!reviewModalEl) return;
+    reviewModalEl.hidden = true;
+    reviewSelection = { appointmentId: null, rating: 0 };
+    if (reviewCommentEl) reviewCommentEl.value = "";
+    updateReviewStars(0);
+    document.body.classList.remove("cap-payment-modal-open");
+    if (reviewSubmitEl) reviewSubmitEl.disabled = false;
+  }
+
+  function updateReviewStars(rating) {
+    reviewSelection.rating = rating || 0;
+    reviewStarEls.forEach(function (starEl) {
+      var starRating = Number(starEl.dataset.rating || 0);
+      starEl.classList.toggle("active", starRating <= reviewSelection.rating);
+    });
+    if (reviewHintEl) {
+      reviewHintEl.textContent = reviewSelection.rating > 0
+        ? normalizeText("B\u1ea1n \u0111ang ch\u1ecdn " + reviewSelection.rating + " sao")
+        : normalizeText("Ch\u1ecdn s\u1ed1 sao t\u1eeb 1 \u0111\u1ebfn 5");
+    }
+  }
+
+  function openReviewModal(appointmentId) {
+    if (!reviewModalEl) return;
+    reviewSelection = { appointmentId: appointmentId, rating: 0 };
+    if (reviewCommentEl) reviewCommentEl.value = "";
+    updateReviewStars(0);
+    reviewModalEl.hidden = false;
+    document.body.classList.add("cap-payment-modal-open");
+    if (reviewCommentEl) reviewCommentEl.focus();
+  }
+
+  function bindReviewModal() {
+    if (!reviewModalEl) return;
+
+    if (reviewModalCloseEl) {
+      reviewModalCloseEl.addEventListener("click", function () {
+        closeReviewModal();
+      });
+    }
+
+    reviewModalEl
+      .querySelectorAll("[data-review-close]")
+      .forEach(function (el) {
+        el.addEventListener("click", function () {
+          closeReviewModal();
+        });
+      });
+
+    reviewModalEl.addEventListener("click", function (e) {
+      if (e.target === reviewModalEl) {
+        closeReviewModal();
+      }
+    });
+
+    reviewStarEls.forEach(function (starEl) {
+      starEl.addEventListener("click", function () {
+        updateReviewStars(Number(starEl.dataset.rating || 0));
+      });
+    });
+
+    if (reviewSubmitEl) {
+      reviewSubmitEl.addEventListener("click", function () {
+        if (!reviewSelection.appointmentId) return;
+        if (!reviewSelection.rating) {
+          showAlert("Vui l\u00f2ng ch\u1ecdn s\u1ed1 sao \u0111\u00e1nh gi\u00e1.", "warning", "Thi\u1ebfu th\u00f4ng tin");
+          return;
+        }
+
+        reviewSubmitEl.disabled = true;
+        fetch("/customer/appointments/" + reviewSelection.appointmentId + "/review", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rating: reviewSelection.rating,
+            comment: reviewCommentEl ? reviewCommentEl.value : "",
+          }),
+        })
+          .then(function (res) {
+            if (res.status === 401) {
+              throw new Error("Bạn cần đăng nhập.");
+            }
+            return res.json().then(function (payload) {
+              if (!res.ok || payload.success === false) {
+                throw new Error(
+                  extractApiError(payload, "Không thể gửi đánh giá."),
+                );
+              }
+              return payload;
+            });
+          })
+          .then(function (payload) {
+            var reviewedAppointmentId = reviewSelection.appointmentId;
+            closeReviewModal();
+            showToast(
+              payload.message || "\u0110\u00e3 g\u1eedi \u0111\u00e1nh gi\u00e1 b\u00e1c s\u0129 th\u00e0nh c\u00f4ng.",
+              "success",
+              "Cảm ơn bạn",
+            );
+            loadAppointments(function () {
+              openInlineDetail(reviewedAppointmentId, true);
+            }, state.page);
+          })
+          .catch(function (err) {
+            if (reviewSubmitEl) reviewSubmitEl.disabled = false;
+            showAlert(
+              err.message || "Không thể gửi đánh giá.",
+              "error",
+              "Gửi đánh giá thất bại",
+            );
+          });
+      });
+    }
   }
 
   function bindRemainingPaymentModal() {
@@ -492,7 +665,8 @@
   function createInlineDetailShell() {
     var wrap = document.createElement("div");
     wrap.className = "cap-inline-detail";
-    wrap.innerHTML =
+    wrap.innerHTML = normalizeText(
+      (
       '<div class="cap-inline-detail-card">' +
       '  <div class="cap-inline-head">' +
       '    <div class="cap-inline-title"><i class="bi bi-info-circle"></i> Chi tiết lịch hẹn</div>' +
@@ -502,7 +676,9 @@
       "  </div>" +
       '  <div class="cap-inline-loading">Đang tải chi tiết...</div>' +
       '  <div class="cap-inline-content" style="display:none;"></div>' +
-      "</div>";
+      "</div>"
+      )
+    );
 
     wrap
       .querySelector(".cap-inline-close")
@@ -529,6 +705,9 @@
     var notesHtml = notesValue
       ? escapeHtml(notesValue)
       : '<span class="cap-muted">Không có ghi chú</span>';
+    var bookedAtHtml = data.createdAt
+      ? escapeHtml(formatDateTime(data.createdAt))
+      : '<span class="cap-muted">Chưa có dữ liệu</span>';
     var contactHtml =
       data.contactChannel && data.contactValue
         ? escapeHtml(data.contactChannel + ": " + data.contactValue)
@@ -537,9 +716,44 @@
     var canCancel =
       data.status !== "CANCELLED" &&
       data.status !== "COMPLETED" &&
-      data.status !== "WAITING_PAYMENT";
-    var canCheckin = !!data.canCheckIn;
+      data.status !== "WAITING_PAYMENT" &&
+      data.status !== "DONE" &&
+      data.status !== "EXAMINING" &&
+      data.status !== "IN_PROGRESS";
     var canPayRemaining = !!data.canPayRemaining;
+    var canReview = !!data.canReview;
+    var hasDepositReceipt = toNumber(data.depositAmount) > 0;
+    var paymentHistoryHtml =
+      '<a class="cap-btn cap-btn-neutral" href="/customer/payments"><i class="bi bi-clock-history"></i> Lịch sử thanh toán</a>';
+    var depositReceiptHtml = hasDepositReceipt
+      ? '<a class="cap-btn cap-btn-neutral" href="/customer/payments/deposit/' +
+        appointmentId +
+        '"><i class="bi bi-receipt"></i> Xem biên nhận đặt cọc</a>'
+      : "";
+    var invoiceReceiptHtml = data.invoiceId
+      ? '<a class="cap-btn cap-btn-neutral" href="/customer/payments/invoice/' +
+        escapeHtml(data.invoiceId) +
+        '"><i class="bi bi-file-earmark-text"></i> Xem chi tiết thanh toán</a>'
+      : "";
+    var rebookHtml = data.canRebook
+      ? '<a class="cap-btn cap-btn-neutral" href="/customer/appointments/' +
+        appointmentId +
+        '/rebook"><i class="bi bi-arrow-repeat"></i> Đặt lại lịch</a>'
+      : "";
+    var reviewActionHtml = canReview
+      ? '<button type="button" class="cap-btn cap-btn-primary" data-action="review"><i class="bi bi-star"></i> Đánh giá bác sĩ</button>'
+      : "";
+    var reviewSummaryHtml = data.reviewed
+      ? '<div class="cap-inline-note cap-inline-note-review">' +
+        '<i class="bi bi-star-fill"></i>' +
+        '<span>Bạn đã đánh giá bác sĩ <strong>' +
+        escapeHtml(String(data.reviewRating || "")) +
+        "/5 sao</strong>" +
+        (data.reviewComment
+          ? ": " + escapeHtml(data.reviewComment)
+          : ".") +
+        "</span></div>"
+      : "";
     var depositPaidHtml =
       data.status === "PENDING" ||
       data.status === "CONFIRMED" ||
@@ -557,13 +771,15 @@
         "<span>Còn lại cần thanh toán: <strong>" +
         escapeHtml(formatMoney(data.remainingAmount)) +
         "</strong>" +
-        (data.invoiceId ? " - Mã hóa đơn #" + escapeHtml(data.invoiceId) : "") +
+        (data.invoiceId ? " - Mã thanh toán #" + escapeHtml(data.invoiceId) : "") +
         "</span></div>"
       : "";
-    var invoicePreviewMeta = ['Tổng billing ' + escapeHtml(formatMoney(data.billedTotal))];
+    var invoicePreviewMeta = [
+      "Tổng billing " + escapeHtml(formatMoney(data.billedTotal)),
+    ];
     if (shouldShowRemaining(data)) {
       invoicePreviewMeta.push(
-        'Còn lại ' + escapeHtml(formatMoney(data.remainingAmount)),
+        "Còn lại " + escapeHtml(formatMoney(data.remainingAmount)),
       );
     } else {
       invoicePreviewMeta.push("Đã thanh toán xong");
@@ -571,14 +787,19 @@
     var invoicePreviewHtml = data.invoiceId
       ? '<div class="cap-invoice-preview">' +
         '<div class="cap-invoice-preview__copy">' +
-        '<div class="cap-invoice-preview__title"><i class="bi bi-file-earmark-text"></i> Hóa đơn #' + escapeHtml(data.invoiceId) + '</div>' +
-        '<div class="cap-invoice-preview__meta">' + invoicePreviewMeta.join(" • ") + '</div>' +
-        '</div>' +
+        '<div class="cap-invoice-preview__title"><i class="bi bi-file-earmark-text"></i> Hóa đơn #' +
+        escapeHtml(data.invoiceId) +
+        "</div>" +
+        '<div class="cap-invoice-preview__meta">' +
+        invoicePreviewMeta.join(" • ") +
+        "</div>" +
+        "</div>" +
         '<button type="button" class="cap-btn cap-btn-neutral" data-action="view-invoice"><i class="bi bi-receipt-cutoff"></i> Xem hóa đơn</button>' +
         "</div>"
       : "";
 
-    content.innerHTML =
+    content.innerHTML = normalizeText(
+      (
       '<div class="cap-inline-grid">' +
       '  <div class="cap-inline-row"><div class="cap-inline-label">Dịch vụ</div><div class="cap-inline-value">' +
       escapeHtml(data.serviceName || "") +
@@ -594,6 +815,9 @@
       " - " +
       escapeHtml(formatTime(data.endTime)) +
       "</div></div>" +
+      '  <div class="cap-inline-row"><div class="cap-inline-label">Thời gian đặt lịch</div><div class="cap-inline-value">' +
+      bookedAtHtml +
+      "</div></div>" +
       '  <div class="cap-inline-row"><div class="cap-inline-label">Trạng thái</div><div class="cap-inline-value"><span class="cap-status-badge ' +
       statusMeta.className +
       '">' +
@@ -605,64 +829,35 @@
       '  <div class="cap-inline-row cap-inline-notes"><div class="cap-inline-label">Ghi chú</div><div class="cap-inline-value">' +
       notesHtml +
       "</div></div>" +
+      reviewSummaryHtml +
       depositPaidHtml +
       remainingPaymentHtml +
       invoicePreviewHtml +
       "</div>" +
       '<div class="cap-inline-actions">' +
+      paymentHistoryHtml +
+      depositReceiptHtml +
+      invoiceReceiptHtml +
+      rebookHtml +
+      reviewActionHtml +
       (canCancel
         ? '<button type="button" class="cap-btn cap-btn-danger" data-action="cancel"><i class="bi bi-x-circle"></i> Hủy lịch</button>'
         : "") +
       (canPayRemaining
         ? '<button type="button" class="cap-btn cap-btn-warning" data-action="pay-remaining"><i class="bi bi-credit-card"></i> Thanh toán phần còn lại</button>'
         : "") +
-      "</div>";
-
-    var checkinBtn = content.querySelector('[data-action="checkin"]');
-    if (checkinBtn) {
-      checkinBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        checkinBtn.disabled = true;
-
-        fetch("/customer/appointments/" + appointmentId + "/checkin", {
-          method: "POST",
-          credentials: "same-origin",
-        })
-          .then(function (res) {
-            if (res.status === 401) {
-              showAlert("Bạn cần đăng nhập.", "warning", "Chưa đăng nhập");
-              checkinBtn.disabled = false;
-              return null;
-            }
-            if (!res.ok) {
-              return res.json().then(function (er) {
-                throw new Error(extractApiError(er, "Check-in thất bại"));
-              });
-            }
-            return res.json();
-          })
-          .then(function () {
-            checkinBtn.disabled = false;
-            loadAppointments(function () {
-              openInlineDetail(appointmentId, true);
-            }, state.page);
-          })
-          .catch(function (err) {
-            checkinBtn.disabled = false;
-            showAlert(
-              err.message || "Check-in thất bại.",
-              "error",
-              "Check-in thất bại",
-            );
-          });
-      });
-    }
+      "</div>"
+      )
+    );
 
     var cancelBtn = content.querySelector('[data-action="cancel"]');
     if (cancelBtn) {
       cancelBtn.addEventListener("click", function (e) {
         e.stopPropagation();
-        askConfirm("Bạn có chắc chắn muốn hủy lịch hẹn này không?", {
+        var cancelMessage = isRefundEligibleForCancel(data)
+          ? "B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n h\u1ee7y l\u1ecbch h\u1eb9n n\u00e0y kh\u00f4ng? Ti\u1ec1n c\u1ecdc s\u1ebd \u0111\u01b0\u1ee3c ho\u00e0n v\u1ec1 v\u00ed."
+          : "B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n h\u1ee7y l\u1ecbch h\u1eb9n n\u00e0y kh\u00f4ng? N\u1ebfu h\u1ee7y trong ng\u00e0y kh\u00e1m, ti\u1ec1n c\u1ecdc s\u1ebd kh\u00f4ng \u0111\u01b0\u1ee3c ho\u00e0n l\u1ea1i.";
+        askConfirm(cancelMessage, {
           title: "Xác nhận hủy lịch",
           type: "warning",
           confirmText: "Hủy lịch",
@@ -689,9 +884,10 @@
               }
               return res.json();
             })
-            .then(function () {
+            .then(function (result) {
+              if (!result) return;
               cancelBtn.disabled = false;
-              showToast("Hủy lịch thành công.", "success", "Đã cập nhật");
+              showToast("H\u1ee7y l\u1ecbch th\u00e0nh c\u00f4ng.", "success", "\u0110\u00e3 c\u1eadp nh\u1eadt");
               loadAppointments(function () {
                 openInlineDetail(appointmentId, true);
               }, state.page);
@@ -723,6 +919,14 @@
       viewInvoiceBtn.addEventListener("click", function (e) {
         e.stopPropagation();
         openInvoiceModal(data);
+      });
+    }
+
+    var reviewBtn = content.querySelector('[data-action="review"]');
+    if (reviewBtn) {
+      reviewBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        openReviewModal(appointmentId);
       });
     }
   }
@@ -777,7 +981,7 @@
       .catch(function (err) {
         var loading = detailWrap.querySelector(".cap-inline-loading");
         if (loading)
-          loading.textContent = err.message || "Không thể tải chi tiết.";
+          loading.textContent = normalizeText(err.message || "Không thể tải chi tiết.");
       });
   }
 
@@ -795,7 +999,7 @@
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "cap-page-btn" + (active ? " active" : "");
-      btn.textContent = label;
+      btn.textContent = normalizeText(label);
       btn.disabled = !!disabled;
       if (!disabled) {
         btn.addEventListener("click", function () {
@@ -825,7 +1029,8 @@
       li.classList.add("highlight-new");
     }
 
-    li.innerHTML =
+    li.innerHTML = normalizeText(
+      (
       '<div class="cap-item-row">' +
       '  <div class="cap-item-main">' +
       '    <div class="apt-date"><i class="bi bi-calendar3"></i> ' +
@@ -839,6 +1044,9 @@
       '    <div class="apt-meta">Mã lịch hẹn #' +
       escapeHtml(apt.id) +
       "</div>" +
+      '    <div class="apt-meta">Thời gian đặt lịch: ' +
+      escapeHtml(formatDateTime(apt.createdAt) || "Chưa có dữ liệu") +
+      "</div>" +
       "  </div>" +
       '  <div class="cap-item-side">' +
       '    <span class="apt-status ' +
@@ -850,13 +1058,24 @@
       "</span>" +
       '    <i class="bi bi-chevron-down cap-item-chevron"></i>' +
       "  </div>" +
-      "</div>";
+      "</div>"
+      )
+    );
 
     li.addEventListener("click", function () {
       openInlineDetail(apt.id, false);
     });
 
     return li;
+  }
+
+  function updateViewSwitch() {
+    if (viewDefaultBtnEl) {
+      viewDefaultBtnEl.classList.toggle("active", state.view !== "cancelled");
+    }
+    if (viewCancelledBtnEl) {
+      viewCancelledBtnEl.classList.toggle("active", state.view === "cancelled");
+    }
   }
 
   function loadAppointments(doneCb, targetPage) {
@@ -883,6 +1102,9 @@
     }
     if (state.sort) {
       query += "&sort=" + encodeURIComponent(state.sort);
+    }
+    if (state.view) {
+      query += "&view=" + encodeURIComponent(state.view);
     }
 
     fetch(query, {
@@ -914,10 +1136,12 @@
 
         state.page = data.page || 0;
         state.totalPages = data.totalPages || 0;
-        state.sort = data.sort || state.sort || "newest";
+        state.sort = data.sort || state.sort || "date_desc";
+        state.view = data.view || state.view || "default";
         if (sortSelectEl) {
           sortSelectEl.value = state.sort;
         }
+        updateViewSwitch();
 
         if (summaryTotalEl)
           summaryTotalEl.textContent = String(
@@ -940,13 +1164,17 @@
           var emptyDesc = empty.querySelector(".cap-empty-desc");
           if (emptyTitle && emptyDesc) {
             if (state.keyword) {
-              emptyTitle.textContent = "Không tìm thấy lịch hẹn phù hợp";
+              emptyTitle.textContent = normalizeText("Không tìm thấy lịch hẹn phù hợp");
               emptyDesc.textContent =
-                "Hãy thử đổi từ khóa hoặc xóa tìm kiếm để xem lại toàn bộ lịch hẹn.";
+                normalizeText("Hãy thử đổi từ khóa hoặc xóa tìm kiếm để xem lại toàn bộ lịch hẹn.");
+            } else if (state.view === "cancelled") {
+              emptyTitle.textContent = normalizeText("Bạn chưa có lịch hẹn đã hủy");
+              emptyDesc.textContent =
+                normalizeText("Các lịch đã hủy sẽ xuất hiện tại đây để bạn tra cứu lại khi cần.");
             } else {
-              emptyTitle.textContent = "Bạn chưa có lịch hẹn nào";
+              emptyTitle.textContent = normalizeText("Bạn chưa có lịch hẹn nào");
               emptyDesc.textContent =
-                "Hãy đặt lịch khám để phòng khám có thể sắp xếp thời gian hỗ trợ bạn.";
+                normalizeText("H\u00e3y \u0111\u1eb7t l\u1ecbch kh\u00e1m \u0111\u1ec3 ph\u00f2ng kh\u00e1m c\u00f3 th\u1ec3 s\u1eafp x\u1ebfp th\u1eddi gian h\u1ed7 tr\u1ee3 b\u1ea1n.");
             }
           }
         }
@@ -1032,13 +1260,31 @@
 
   if (sortSelectEl) {
     sortSelectEl.addEventListener("change", function () {
-      state.sort = sortSelectEl.value || "newest";
+      state.sort = sortSelectEl.value || "date_desc";
+      loadAppointments(null, 0);
+    });
+  }
+
+  if (viewDefaultBtnEl) {
+    viewDefaultBtnEl.addEventListener("click", function () {
+      if (state.view === "default") return;
+      state.view = "default";
+      loadAppointments(null, 0);
+    });
+  }
+
+  if (viewCancelledBtnEl) {
+    viewCancelledBtnEl.addEventListener("click", function () {
+      if (state.view === "cancelled") return;
+      state.view = "cancelled";
       loadAppointments(null, 0);
     });
   }
 
   bindRemainingPaymentModal();
   bindInvoiceModal();
+  bindReviewModal();
+  updateViewSwitch();
 
   loadAppointments(function () {
     if (!openFromNotificationId) return;

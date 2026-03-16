@@ -26,7 +26,7 @@ public class DentistProfileService {
     // =========================
     public DentistProfile getProfileByEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
 
         return dentistProfileRepository.findByUser_Id(user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Dentist profile not found"));

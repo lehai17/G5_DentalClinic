@@ -20,11 +20,18 @@ public class AppointmentDto {
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
+    private LocalDateTime createdAt;
     private String status;
     private String notes;
     private String contactChannel;
     private String contactValue;
     private boolean canCheckIn;
+    private boolean canRebook;
+    private boolean canReview;
+    private boolean reviewed;
+    private Integer reviewRating;
+    private String reviewComment;
+    private LocalDateTime reviewCreatedAt;
     private Long invoiceId;
     private BigDecimal billedTotal;
     private BigDecimal remainingAmount;
@@ -62,6 +69,8 @@ public class AppointmentDto {
     public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
     public LocalTime getEndTime() { return endTime; }
     public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getNotes() { return notes; }
@@ -72,6 +81,18 @@ public class AppointmentDto {
     public void setContactValue(String contactValue) { this.contactValue = contactValue; }
     public boolean isCanCheckIn() { return canCheckIn; }
     public void setCanCheckIn(boolean canCheckIn) { this.canCheckIn = canCheckIn; }
+    public boolean isCanRebook() { return canRebook; }
+    public void setCanRebook(boolean canRebook) { this.canRebook = canRebook; }
+    public boolean isCanReview() { return canReview; }
+    public void setCanReview(boolean canReview) { this.canReview = canReview; }
+    public boolean isReviewed() { return reviewed; }
+    public void setReviewed(boolean reviewed) { this.reviewed = reviewed; }
+    public Integer getReviewRating() { return reviewRating; }
+    public void setReviewRating(Integer reviewRating) { this.reviewRating = reviewRating; }
+    public String getReviewComment() { return reviewComment; }
+    public void setReviewComment(String reviewComment) { this.reviewComment = reviewComment; }
+    public LocalDateTime getReviewCreatedAt() { return reviewCreatedAt; }
+    public void setReviewCreatedAt(LocalDateTime reviewCreatedAt) { this.reviewCreatedAt = reviewCreatedAt; }
     public Long getInvoiceId() { return invoiceId; }
     public void setInvoiceId(Long invoiceId) { this.invoiceId = invoiceId; }
     public BigDecimal getBilledTotal() { return billedTotal; }

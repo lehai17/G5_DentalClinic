@@ -51,6 +51,10 @@
         transition: all 0.3s;
       }
 
+      .wallet-action + .wallet-action {
+        margin-left: 0.5rem;
+      }
+
       .wallet-action:hover {
         background: rgba(255, 255, 255, 0.3);
         border-color: rgba(255, 255, 255, 0.6);
@@ -104,6 +108,11 @@
         color: #dc2626;
       }
 
+      .transaction-icon.withdraw {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+
       .transaction-details h4 {
         margin: 0;
         font-weight: 600;
@@ -132,6 +141,10 @@
 
       .transaction-amount.payment {
         color: #dc2626;
+      }
+
+      .transaction-amount.withdraw {
+        color: #c2410c;
       }
 
       .empty-state {
@@ -170,7 +183,9 @@
       .wallet-modal-dialog {
         position: relative;
         width: min(460px, calc(100vw - 2rem));
-        margin: 10vh auto 0;
+        margin: 4vh auto;
+        max-height: 92vh;
+        overflow-y: auto;
         background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
         border-radius: 24px;
         border: 1px solid #d8e4f3;
@@ -246,6 +261,48 @@
         background: #f8fbff;
       }
 
+      .wallet-bank-search {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 0.95rem 1rem;
+        font-size: 1rem;
+      }
+
+      .wallet-bank-list {
+        margin-top: 0.85rem;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .wallet-bank-option {
+        border: 1px solid #dbe5f2;
+        background: #fff;
+        color: #0f172a;
+        padding: 0.85rem 0.9rem;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 700;
+        text-align: left;
+      }
+
+      .wallet-bank-option:hover {
+        border-color: #7c9ef5;
+        background: #f8fbff;
+      }
+
+      .wallet-bank-option.active {
+        border-color: #2563eb;
+        background: #eff6ff;
+        color: #1d4ed8;
+      }
+
+      .wallet-input-readonly {
+        background: #f8fafc;
+        color: #475569;
+      }
+
       .wallet-modal-submit {
         margin-top: 1rem;
         width: 100%;
@@ -281,6 +338,94 @@
         background: #fef2f2;
         color: #b91c1c;
         border: 1px solid #fecaca;
+      }
+
+      .wallet-withdraw-mode-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .wallet-withdraw-mode {
+        border: 1px solid #dbe5f2;
+        border-radius: 18px;
+        padding: 1rem;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .wallet-withdraw-mode.active {
+        border-color: #2563eb;
+        background: #eff6ff;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12);
+      }
+
+      .wallet-withdraw-mode h4 {
+        margin: 0 0 0.35rem;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .wallet-withdraw-mode p {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: #64748b;
+        line-height: 1.5;
+      }
+
+      .wallet-withdraw-panel {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 18px;
+        border: 1px solid #dbe5f2;
+        background: #ffffff;
+      }
+
+      .wallet-withdraw-summary {
+        display: grid;
+        gap: 0.65rem;
+      }
+
+      .wallet-withdraw-summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eef2f7;
+      }
+
+      .wallet-withdraw-summary-row:last-child {
+        border-bottom: none;
+      }
+
+      .wallet-withdraw-summary-label {
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+
+      .wallet-withdraw-summary-value {
+        color: #0f172a;
+        font-weight: 700;
+        text-align: right;
+      }
+
+      .wallet-inline-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .wallet-inline-btn {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #334155;
+        border-radius: 12px;
+        padding: 0.7rem 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
       }
     </style>
   </head>
@@ -322,6 +467,50 @@
             <a href="#" class="wallet-action" id="wallet-open-topup">
               <i class="bi bi-plus-circle"></i> Nạp tiền
             </a>
+            <a href="#" class="wallet-action" id="wallet-open-withdraw">
+              <i class="bi bi-cash-stack"></i> Rút tiền
+            </a>
+          </div>
+
+          <div
+            id="wallet-demo-account-card"
+            style="
+              display: none;
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+              padding: 1.5rem;
+              margin-bottom: 2rem;
+            "
+          >
+            <h2
+              style="
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #0f172a;
+                margin: 0 0 1rem 0;
+              "
+            >
+              <i class="bi bi-bank"></i> Tài khoản demo cá nhân
+            </h2>
+            <div class="wallet-withdraw-summary">
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Ngân hàng</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-bank">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Số tài khoản</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-account">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Chủ tài khoản</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-holder">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Số dư tài khoản demo</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-balance">0 VND</span>
+              </div>
+            </div>
           </div>
 
           <!-- Transactions List -->
@@ -359,7 +548,7 @@
                 style="font-size: 1.5rem; color: #667eea"
               ></i>
               <p style="color: #64748b; margin-top: 0.5rem">
-                Äang tải dữ liệu...
+                Đang tải dữ liệu...
               </p>
             </div>
           </div>
@@ -461,10 +650,215 @@
       </div>
     </div>
 
+    <div class="wallet-modal" id="wallet-withdraw-modal" hidden>
+      <div class="wallet-modal-backdrop" data-wallet-withdraw-close></div>
+      <div
+        class="wallet-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wallet-withdraw-title"
+      >
+        <button
+          type="button"
+          class="wallet-modal-close"
+          id="wallet-withdraw-close"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <h3 id="wallet-withdraw-title" class="wallet-modal-title">Rút tiền</h3>
+        <p class="wallet-modal-subtitle">
+          Đây là luồng demo transfer: hệ thống trừ ví của bạn và cộng vào tài
+          khoản nhận demo đã nhập bên dưới.
+        </p>
+
+        <div class="wallet-withdraw-mode-grid">
+          <button
+            type="button"
+            class="wallet-withdraw-mode active"
+            id="wallet-withdraw-mode-manual"
+          >
+            <h4>Nhập tài khoản khác</h4>
+            <p>Nhập ngân hàng và số tài khoản nhận tiền cho lần rút hiện tại.</p>
+          </button>
+          <button
+            type="button"
+            class="wallet-withdraw-mode"
+            id="wallet-withdraw-mode-personal"
+          >
+            <h4>Tài khoản cá nhân</h4>
+            <p>Lưu lại tài khoản để các lần rút sau dùng nhanh và có thể chỉnh sửa.</p>
+          </button>
+        </div>
+
+        <div class="wallet-input-group">
+          <label class="wallet-input-label" for="wallet-withdraw-amount"
+            >Số tiền rút</label
+          >
+          <input
+            id="wallet-withdraw-amount"
+            class="wallet-amount-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="Ví dụ: 10.000"
+          />
+        </div>
+
+        <div id="wallet-withdraw-manual-panel" class="wallet-withdraw-panel">
+          <div class="wallet-input-group" style="margin-top: 0">
+            <label class="wallet-input-label" for="wallet-withdraw-bank-search"
+              >Ngân hàng nhận tiền</label
+            >
+            <input
+              id="wallet-withdraw-bank-search"
+              class="wallet-bank-search"
+              type="text"
+              placeholder="Tìm ngân hàng"
+            />
+            <div id="wallet-withdraw-bank-list" class="wallet-bank-list"></div>
+          </div>
+
+          <div class="wallet-input-group">
+            <label class="wallet-input-label" for="wallet-withdraw-account-no"
+              >Số tài khoản</label
+            >
+            <input
+              id="wallet-withdraw-account-no"
+              class="wallet-amount-input"
+              type="text"
+              inputmode="numeric"
+              maxlength="10"
+              placeholder="Nhập 10 chữ số"
+            />
+            <div class="wallet-helper">
+              Hệ thống sẽ tự tra cứu chủ tài khoản mock khi bạn nhập đủ 10 chữ số.
+            </div>
+          </div>
+
+          <div class="wallet-input-group">
+            <label class="wallet-input-label" for="wallet-withdraw-account-holder"
+              >Chủ tài khoản</label
+            >
+            <input
+              id="wallet-withdraw-account-holder"
+              class="wallet-amount-input wallet-input-readonly"
+              type="text"
+              placeholder="Tự động điền sau khi tra cứu"
+              readonly
+            />
+          </div>
+
+          <div class="wallet-helper" id="wallet-withdraw-demo-balance">
+            Số dư tài khoản demo hiện tại: 0 VND
+          </div>
+        </div>
+
+        <div id="wallet-withdraw-personal-panel" class="wallet-withdraw-panel" hidden>
+          <div id="wallet-personal-saved-view" hidden>
+            <div class="wallet-withdraw-summary">
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Ngân hàng</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-personal-bank-value">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Số tài khoản</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-personal-account-value">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Chủ tài khoản</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-personal-holder-value">--</span>
+              </div>
+              <div class="wallet-withdraw-summary-row">
+                <span class="wallet-withdraw-summary-label">Số dư tài khoản demo</span>
+                <span class="wallet-withdraw-summary-value" id="wallet-personal-balance-value">0 VND</span>
+              </div>
+            </div>
+            <div class="wallet-inline-actions">
+              <button type="button" class="wallet-inline-btn" id="wallet-personal-edit-btn">
+                Chỉnh sửa
+              </button>
+            </div>
+          </div>
+
+          <div id="wallet-personal-form-view">
+            <div class="wallet-input-group" style="margin-top: 0">
+              <label class="wallet-input-label" for="wallet-personal-bank-search"
+                >Ngân hàng cá nhân</label
+              >
+              <input
+                id="wallet-personal-bank-search"
+                class="wallet-bank-search"
+                type="text"
+                placeholder="Tìm ngân hàng"
+              />
+              <div id="wallet-personal-bank-list" class="wallet-bank-list"></div>
+            </div>
+
+            <div class="wallet-input-group">
+              <label class="wallet-input-label" for="wallet-personal-account-no"
+                >Số tài khoản cá nhân</label
+              >
+              <input
+                id="wallet-personal-account-no"
+                class="wallet-amount-input"
+                type="text"
+                inputmode="numeric"
+                maxlength="10"
+                placeholder="Nhập 10 chữ số"
+              />
+            </div>
+
+            <div class="wallet-input-group">
+              <label class="wallet-input-label" for="wallet-personal-account-holder"
+                >Chủ tài khoản</label
+              >
+              <input
+                id="wallet-personal-account-holder"
+                class="wallet-amount-input wallet-input-readonly"
+                type="text"
+                placeholder="Tự động điền sau khi tra cứu"
+                readonly
+              />
+              <div class="wallet-helper">Lần đầu bạn nhập xong, hệ thống sẽ lưu lại cho các lần rút sau.</div>
+            </div>
+
+            <div class="wallet-helper" id="wallet-personal-demo-balance">
+              Số dư tài khoản demo hiện tại: 0 VND
+            </div>
+
+            <div class="wallet-inline-actions">
+              <button type="button" class="wallet-inline-btn" id="wallet-personal-save-btn">
+                Lưu tài khoản cá nhân
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="wallet-helper">Số tiền rút tối thiểu là 10.000 VND.</div>
+
+        <button
+          type="button"
+          class="wallet-modal-submit"
+          id="wallet-withdraw-submit"
+        >
+          Xác nhận rút tiền
+        </button>
+      </div>
+    </div>
+
     <script th:src="@{/js/customer-feedback.js}"></script>
     <script>
+      const WITHDRAW_BANKS = [
+        "Vietcombank",
+        "Techcombank",
+        "BIDV",
+        "ACB",
+        "MB Bank",
+        "VPBank",
+      ];
+
       document.addEventListener("DOMContentLoaded", function () {
         bindTopupModal();
+        bindWithdrawModal();
         showWalletStatusFromQuery();
         loadWalletData();
       });
@@ -492,6 +886,8 @@
         return Promise.resolve();
       }
 
+      let savedWithdrawAccountState = null;
+
       function loadWalletData() {
         const loading = document.getElementById("loading");
         const list = document.getElementById("transactions-list");
@@ -516,6 +912,11 @@
             const balanceEl = document.getElementById("wallet-balance");
             if (balanceEl) {
               balanceEl.textContent = formatCurrency(data.balance);
+            }
+            savedWithdrawAccountState = data.savedWithdrawAccount || null;
+            updateSavedDemoAccountCard(savedWithdrawAccountState);
+            if (typeof window.__applySavedWithdrawAccount === "function") {
+              window.__applySavedWithdrawAccount(savedWithdrawAccountState);
             }
 
             if (loading) loading.style.display = "none";
@@ -587,6 +988,12 @@
             class: "payment",
             prefix: "-",
           },
+          WITHDRAW: {
+            name: "Rút tiền",
+            icon: "bi bi-cash-stack",
+            class: "withdraw",
+            prefix: "-",
+          },
           ADJUSTMENT: {
             name: "Điều chỉnh",
             icon: "bi bi-arrow-left-right",
@@ -608,6 +1015,38 @@
         if (!amount) return "0 VND";
         const num = parseFloat(amount);
         return num.toLocaleString("vi-VN") + " VND";
+      }
+
+      function updateSavedDemoAccountCard(account) {
+        const card = document.getElementById("wallet-demo-account-card");
+        const bankEl = document.getElementById("wallet-demo-card-bank");
+        const accountEl = document.getElementById("wallet-demo-card-account");
+        const holderEl = document.getElementById("wallet-demo-card-holder");
+        const balanceEl = document.getElementById("wallet-demo-card-balance");
+
+        if (!card) return;
+
+        if (!account) {
+          card.style.display = "none";
+          return;
+        }
+
+        card.style.display = "";
+        if (bankEl) bankEl.textContent = account.bankName || "--";
+        if (accountEl) accountEl.textContent = account.bankAccountNo || "--";
+        if (holderEl) holderEl.textContent = account.accountHolder || "--";
+        if (balanceEl) balanceEl.textContent = formatCurrency(account.balance || 0);
+      }
+
+      function formatVndInput(value) {
+        const digits = String(value || "").replace(/\D/g, "");
+        if (!digits) return "";
+        return Number(digits).toLocaleString("vi-VN");
+      }
+
+      function parseVndInput(value) {
+        const digits = String(value || "").replace(/\D/g, "");
+        return digits ? Number(digits) : 0;
       }
 
       function formatDate(date) {
@@ -746,6 +1185,580 @@
             "Nạp tiền chưa hoàn tất",
           );
         }
+      }
+
+      function bindWithdrawModal() {
+        const openBtn = document.getElementById("wallet-open-withdraw");
+        const modal = document.getElementById("wallet-withdraw-modal");
+        const closeBtn = document.getElementById("wallet-withdraw-close");
+        const amountInput = document.getElementById("wallet-withdraw-amount");
+        const modeManualBtn = document.getElementById("wallet-withdraw-mode-manual");
+        const modePersonalBtn = document.getElementById("wallet-withdraw-mode-personal");
+        const manualPanel = document.getElementById("wallet-withdraw-manual-panel");
+        const personalPanel = document.getElementById("wallet-withdraw-personal-panel");
+        const bankSearchInput = document.getElementById("wallet-withdraw-bank-search");
+        const bankListEl = document.getElementById("wallet-withdraw-bank-list");
+        const accountNoInput = document.getElementById("wallet-withdraw-account-no");
+        const accountHolderInput = document.getElementById("wallet-withdraw-account-holder");
+        const personalBankSearchInput = document.getElementById("wallet-personal-bank-search");
+        const personalBankListEl = document.getElementById("wallet-personal-bank-list");
+        const personalAccountNoInput = document.getElementById("wallet-personal-account-no");
+        const personalAccountHolderInput = document.getElementById("wallet-personal-account-holder");
+        const personalSavedView = document.getElementById("wallet-personal-saved-view");
+        const personalFormView = document.getElementById("wallet-personal-form-view");
+        const personalBankValue = document.getElementById("wallet-personal-bank-value");
+        const personalAccountValue = document.getElementById("wallet-personal-account-value");
+        const personalHolderValue = document.getElementById("wallet-personal-holder-value");
+        const personalBalanceValue = document.getElementById("wallet-personal-balance-value");
+        const manualDemoBalance = document.getElementById("wallet-withdraw-demo-balance");
+        const personalDemoBalance = document.getElementById("wallet-personal-demo-balance");
+        const personalSaveBtn = document.getElementById("wallet-personal-save-btn");
+        const personalEditBtn = document.getElementById("wallet-personal-edit-btn");
+        const submitBtn = document.getElementById("wallet-withdraw-submit");
+        let currentMode = "manual";
+        let selectedBank = "";
+        let personalSelectedBank = "";
+        let lookupTimer = null;
+        let personalLookupTimer = null;
+        let resolvedAccount = null;
+        let personalResolvedAccount = null;
+        let personalEditing = !savedWithdrawAccountState;
+
+        function renderBanks(keyword, listEl, activeBank, onSelect) {
+          if (!listEl) return;
+          const normalizedKeyword = String(keyword || "").trim().toLowerCase();
+          const banks = WITHDRAW_BANKS.filter((bank) =>
+            !normalizedKeyword || bank.toLowerCase().includes(normalizedKeyword),
+          );
+
+          listEl.innerHTML = banks
+            .map((bank) => {
+              const activeClass = bank === activeBank ? " active" : "";
+              return (
+                '<button type="button" class="wallet-bank-option' +
+                activeClass +
+                '" data-bank-name="' +
+                bank +
+                '">' +
+                bank +
+                "</button>"
+              );
+            })
+            .join("");
+
+          listEl.querySelectorAll("[data-bank-name]").forEach((node) => {
+            node.addEventListener("click", function () {
+              onSelect(this.getAttribute("data-bank-name") || "");
+            });
+          });
+        }
+
+        function resetResolvedAccount() {
+          resolvedAccount = null;
+          if (accountHolderInput) accountHolderInput.value = "";
+          if (manualDemoBalance) {
+            manualDemoBalance.textContent = "Số dư tài khoản demo hiện tại: 0 VND";
+          }
+        }
+
+        function resetPersonalResolvedAccount() {
+          personalResolvedAccount = null;
+          if (personalAccountHolderInput) personalAccountHolderInput.value = "";
+          if (personalDemoBalance) {
+            personalDemoBalance.textContent = "Số dư tài khoản demo hiện tại: 0 VND";
+          }
+        }
+
+        function updateManualDemoBalance(balance) {
+          if (!manualDemoBalance) return;
+          manualDemoBalance.textContent =
+            "Số dư tài khoản demo hiện tại: " + formatCurrency(balance || 0);
+        }
+
+        function updatePersonalDemoBalance(balance) {
+          const text = "Số dư tài khoản demo hiện tại: " + formatCurrency(balance || 0);
+          if (personalDemoBalance) {
+            personalDemoBalance.textContent = text;
+          }
+          if (personalBalanceValue) {
+            personalBalanceValue.textContent = formatCurrency(balance || 0);
+          }
+        }
+
+        function triggerLookup() {
+          const accountNo = accountNoInput ? accountNoInput.value.trim() : "";
+          resetResolvedAccount();
+
+          if (!selectedBank || !/^\d{10}$/.test(accountNo)) {
+            return;
+          }
+
+          if (accountHolderInput) {
+            accountHolderInput.value = "Dang tra cuu...";
+          }
+
+          fetch(
+            "/customer/wallet/api/withdraw/account-lookup?" +
+              new URLSearchParams({
+                bankName: selectedBank,
+                bankAccountNo: accountNo,
+              }).toString(),
+            { credentials: "same-origin" },
+          )
+            .then((response) =>
+              response
+                .json()
+                .catch(() => ({}))
+                .then((data) => {
+                  if (!response.ok || data.success === false) {
+                    throw new Error(data.message || "Khong the tra cuu chu tai khoan.");
+                  }
+                  return data;
+                }),
+            )
+            .then((data) => {
+              resolvedAccount = data;
+              if (accountHolderInput) {
+                accountHolderInput.value = data.accountHolder || "";
+              }
+              updateManualDemoBalance(data.balance);
+            })
+            .catch((error) => {
+              resetResolvedAccount();
+              showAlert(
+                error.message || "Khong the tra cuu chu tai khoan.",
+                "error",
+                "Tra cuu that bai",
+              );
+            });
+        }
+
+        function triggerPersonalLookup() {
+          const accountNo = personalAccountNoInput ? personalAccountNoInput.value.trim() : "";
+          resetPersonalResolvedAccount();
+
+          if (!personalSelectedBank || !/^\d{10}$/.test(accountNo)) {
+            return;
+          }
+
+          if (personalAccountHolderInput) {
+            personalAccountHolderInput.value = "Dang tra cuu...";
+          }
+
+          fetch(
+            "/customer/wallet/api/withdraw/account-lookup?" +
+              new URLSearchParams({
+                bankName: personalSelectedBank,
+                bankAccountNo: accountNo,
+              }).toString(),
+            { credentials: "same-origin" },
+          )
+            .then((response) =>
+              response
+                .json()
+                .catch(() => ({}))
+                .then((data) => {
+                  if (!response.ok || data.success === false) {
+                    throw new Error(data.message || "Khong the tra cuu chu tai khoan.");
+                  }
+                  return data;
+                }),
+            )
+            .then((data) => {
+              personalResolvedAccount = data;
+              if (personalAccountHolderInput) {
+                personalAccountHolderInput.value = data.accountHolder || "";
+              }
+              updatePersonalDemoBalance(data.balance);
+            })
+            .catch((error) => {
+              resetPersonalResolvedAccount();
+              showAlert(
+                error.message || "Khong the tra cuu chu tai khoan.",
+                "error",
+                "Tra cuu that bai",
+              );
+            });
+        }
+
+        function applySavedWithdrawAccount(account) {
+          savedWithdrawAccountState = account || null;
+          updateSavedDemoAccountCard(savedWithdrawAccountState);
+          if (!savedWithdrawAccountState) {
+            if (personalSavedView) personalSavedView.hidden = true;
+            if (personalFormView) personalFormView.hidden = false;
+            personalEditing = true;
+            return;
+          }
+
+          if (personalBankValue) personalBankValue.textContent = savedWithdrawAccountState.bankName || "--";
+          if (personalAccountValue) personalAccountValue.textContent = savedWithdrawAccountState.bankAccountNo || "--";
+          if (personalHolderValue) personalHolderValue.textContent = savedWithdrawAccountState.accountHolder || "--";
+          updatePersonalDemoBalance(savedWithdrawAccountState.balance);
+
+          if (!personalEditing) {
+            if (personalSavedView) personalSavedView.hidden = false;
+            if (personalFormView) personalFormView.hidden = true;
+          }
+        }
+
+        function setPersonalEditing(editing) {
+          personalEditing = editing;
+          if (personalSavedView) personalSavedView.hidden = editing || !savedWithdrawAccountState;
+          if (personalFormView) personalFormView.hidden = !editing && !!savedWithdrawAccountState;
+
+          if (editing && savedWithdrawAccountState) {
+            personalSelectedBank = savedWithdrawAccountState.bankName || "";
+            if (personalBankSearchInput) personalBankSearchInput.value = personalSelectedBank;
+            if (personalAccountNoInput) personalAccountNoInput.value = savedWithdrawAccountState.bankAccountNo || "";
+            if (personalAccountHolderInput) personalAccountHolderInput.value = savedWithdrawAccountState.accountHolder || "";
+            personalResolvedAccount = { ...savedWithdrawAccountState };
+            updatePersonalDemoBalance(savedWithdrawAccountState.balance);
+          }
+
+          renderBanks(
+            personalBankSearchInput ? personalBankSearchInput.value : "",
+            personalBankListEl,
+            personalSelectedBank,
+            handlePersonalBankSelect,
+          );
+        }
+
+        function setMode(mode) {
+          currentMode = mode;
+          if (modeManualBtn) modeManualBtn.classList.toggle("active", mode === "manual");
+          if (modePersonalBtn) modePersonalBtn.classList.toggle("active", mode === "personal");
+          if (manualPanel) manualPanel.hidden = mode !== "manual";
+          if (personalPanel) personalPanel.hidden = mode !== "personal";
+          if (mode === "personal") {
+            setPersonalEditing(!savedWithdrawAccountState);
+          }
+        }
+
+        function openModal() {
+          if (!modal) return;
+          modal.hidden = false;
+          document.body.style.overflow = "hidden";
+          modal.scrollTop = 0;
+          if (amountInput) amountInput.focus();
+        }
+
+        function closeModal() {
+          if (!modal) return;
+          modal.hidden = true;
+          document.body.style.overflow = "";
+        }
+
+        function clearWithdrawForm() {
+          selectedBank = "";
+          resetResolvedAccount();
+          resetPersonalResolvedAccount();
+          if (lookupTimer) {
+            clearTimeout(lookupTimer);
+            lookupTimer = null;
+          }
+          if (personalLookupTimer) {
+            clearTimeout(personalLookupTimer);
+            personalLookupTimer = null;
+          }
+          if (amountInput) amountInput.value = "";
+          if (bankSearchInput) bankSearchInput.value = "";
+          if (accountNoInput) accountNoInput.value = "";
+          if (savedWithdrawAccountState) {
+            personalEditing = false;
+            personalSelectedBank = savedWithdrawAccountState.bankName || "";
+            if (personalBankSearchInput) personalBankSearchInput.value = savedWithdrawAccountState.bankName || "";
+            if (personalAccountNoInput) personalAccountNoInput.value = savedWithdrawAccountState.bankAccountNo || "";
+            if (personalAccountHolderInput) personalAccountHolderInput.value = savedWithdrawAccountState.accountHolder || "";
+            personalResolvedAccount = { ...savedWithdrawAccountState };
+            updatePersonalDemoBalance(savedWithdrawAccountState.balance);
+          } else {
+            personalEditing = true;
+            personalSelectedBank = "";
+            if (personalBankSearchInput) personalBankSearchInput.value = "";
+            if (personalAccountNoInput) personalAccountNoInput.value = "";
+            if (personalAccountHolderInput) personalAccountHolderInput.value = "";
+            updatePersonalDemoBalance(0);
+          }
+          updateManualDemoBalance(0);
+          renderBanks("", bankListEl, selectedBank, handleManualBankSelect);
+          renderBanks(
+            personalBankSearchInput ? personalBankSearchInput.value : "",
+            personalBankListEl,
+            personalSelectedBank,
+            handlePersonalBankSelect,
+          );
+          setMode("manual");
+        }
+
+        function handleManualBankSelect(bank) {
+          selectedBank = bank;
+          if (bankSearchInput) bankSearchInput.value = bank;
+          renderBanks(bank, bankListEl, selectedBank, handleManualBankSelect);
+          triggerLookup();
+        }
+
+        function handlePersonalBankSelect(bank) {
+          personalSelectedBank = bank;
+          if (personalBankSearchInput) personalBankSearchInput.value = bank;
+          renderBanks(bank, personalBankListEl, personalSelectedBank, handlePersonalBankSelect);
+          triggerPersonalLookup();
+        }
+
+        window.__applySavedWithdrawAccount = applySavedWithdrawAccount;
+        applySavedWithdrawAccount(savedWithdrawAccountState);
+
+        if (openBtn) {
+          openBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            clearWithdrawForm();
+            openModal();
+          });
+        }
+
+        if (closeBtn) {
+          closeBtn.addEventListener("click", closeModal);
+        }
+
+        document.querySelectorAll("[data-wallet-withdraw-close]").forEach((node) => {
+          node.addEventListener("click", closeModal);
+        });
+
+        if (bankSearchInput) {
+          bankSearchInput.addEventListener("input", function () {
+            renderBanks(this.value, bankListEl, selectedBank, handleManualBankSelect);
+          });
+        }
+
+        if (personalBankSearchInput) {
+          personalBankSearchInput.addEventListener("input", function () {
+            renderBanks(this.value, personalBankListEl, personalSelectedBank, handlePersonalBankSelect);
+          });
+        }
+
+        if (accountNoInput) {
+          accountNoInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\D/g, "").slice(0, 10);
+            resetResolvedAccount();
+
+            if (lookupTimer) {
+              clearTimeout(lookupTimer);
+            }
+            if (selectedBank && /^\d{10}$/.test(this.value.trim())) {
+              lookupTimer = setTimeout(triggerLookup, 350);
+            }
+          });
+        }
+
+        if (personalAccountNoInput) {
+          personalAccountNoInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\D/g, "").slice(0, 10);
+            resetPersonalResolvedAccount();
+
+            if (personalLookupTimer) {
+              clearTimeout(personalLookupTimer);
+            }
+            if (personalSelectedBank && /^\d{10}$/.test(this.value.trim())) {
+              personalLookupTimer = setTimeout(triggerPersonalLookup, 350);
+            }
+          });
+        }
+
+        if (amountInput) {
+          amountInput.addEventListener("input", function () {
+            this.value = formatVndInput(this.value);
+          });
+        }
+
+        if (modeManualBtn) {
+          modeManualBtn.addEventListener("click", function () {
+            setMode("manual");
+          });
+        }
+
+        if (modePersonalBtn) {
+          modePersonalBtn.addEventListener("click", function () {
+            setMode("personal");
+          });
+        }
+
+        if (personalEditBtn) {
+          personalEditBtn.addEventListener("click", function () {
+            setPersonalEditing(true);
+          });
+        }
+
+        if (personalSaveBtn) {
+          personalSaveBtn.addEventListener("click", function () {
+            const bankAccountNo = (personalAccountNoInput ? personalAccountNoInput.value : "").trim();
+            if (!personalSelectedBank) {
+              showAlert("Vui lòng chọn ngân hàng cá nhân.", "warning", "Thiếu thông tin");
+              return;
+            }
+            if (!/^\d{10}$/.test(bankAccountNo)) {
+              showAlert("Vui lòng nhập số tài khoản cá nhân gồm đúng 10 chữ số.", "warning", "Số tài khoản không hợp lệ");
+              return;
+            }
+            if (!personalResolvedAccount || !personalResolvedAccount.accountHolder) {
+              showAlert("Vui lòng chờ hệ thống tra cứu chủ tài khoản mock.", "warning", "Thiếu thông tin");
+              return;
+            }
+
+            personalSaveBtn.disabled = true;
+            personalSaveBtn.textContent = "Dang luu...";
+
+            fetch("/customer/wallet/api/withdraw/personal-account", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+              },
+              body: new URLSearchParams({
+                bankName: personalSelectedBank,
+                bankAccountNo: bankAccountNo,
+              }).toString(),
+            })
+              .then((response) =>
+                response
+                  .json()
+                  .catch(() => ({}))
+                  .then((data) => {
+                    if (!response.ok || data.success === false) {
+                      throw new Error(data.message || "Khong the luu tai khoan ca nhan.");
+                    }
+                    return data;
+                  }),
+              )
+              .then((data) => {
+                applySavedWithdrawAccount(data);
+                setPersonalEditing(false);
+                showToast("Da luu tai khoan ca nhan thanh cong.", "success", "Da luu");
+              })
+              .catch((error) => {
+                showAlert(error.message || "Khong the luu tai khoan ca nhan.", "error", "Luu that bai");
+              })
+              .finally(() => {
+                personalSaveBtn.disabled = false;
+                personalSaveBtn.textContent = "Lưu tài khoản cá nhân";
+              });
+          });
+        }
+
+        if (submitBtn) {
+          submitBtn.addEventListener("click", function () {
+            const amount = parseVndInput(amountInput ? amountInput.value : 0);
+
+            if (!amount || amount < 10000) {
+              showAlert(
+                "Vui lòng nhập số tiền rút từ 10.000 VND trở lên.",
+                "warning",
+                "Số tiền không hợp lệ",
+              );
+              return;
+            }
+
+            const payload = new URLSearchParams({ amount: String(amount), mode: currentMode });
+
+            if (currentMode === "manual") {
+              const bankAccountNo = (accountNoInput ? accountNoInput.value : "").trim();
+              if (!selectedBank) {
+                showAlert("Vui lòng chọn ngân hàng nhận tiền.", "warning", "Thiếu thông tin");
+                return;
+              }
+              if (!/^\d{10}$/.test(bankAccountNo)) {
+                showAlert("Vui lòng nhập số tài khoản gồm đúng 10 chữ số.", "warning", "Số tài khoản không hợp lệ");
+                return;
+              }
+              if (!resolvedAccount || !resolvedAccount.accountHolder) {
+                showAlert("Vui lòng chờ hệ thống tra cứu chủ tài khoản mock.", "warning", "Thiếu thông tin");
+                return;
+              }
+              payload.append("bankName", selectedBank);
+              payload.append("bankAccountNo", bankAccountNo);
+            } else {
+              if (personalEditing) {
+                const personalAccountNo = (personalAccountNoInput ? personalAccountNoInput.value : "").trim();
+                if (!personalSelectedBank) {
+                  showAlert("Vui lòng chọn ngân hàng cá nhân.", "warning", "Thiếu thông tin");
+                  return;
+                }
+                if (!/^\d{10}$/.test(personalAccountNo)) {
+                  showAlert("Vui lòng nhập số tài khoản cá nhân gồm đúng 10 chữ số.", "warning", "Số tài khoản không hợp lệ");
+                  return;
+                }
+                if (!personalResolvedAccount || !personalResolvedAccount.accountHolder) {
+                  showAlert("Vui lòng chờ hệ thống tra cứu chủ tài khoản mock.", "warning", "Thiếu thông tin");
+                  return;
+                }
+                payload.append("bankName", personalSelectedBank);
+                payload.append("bankAccountNo", personalAccountNo);
+              } else if (!savedWithdrawAccountState) {
+                showAlert("Vui lòng lưu tài khoản cá nhân trước khi rút.", "warning", "Chưa có tài khoản");
+                return;
+              }
+            }
+
+            const submittedMode = currentMode;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Đang xử lý...";
+
+            fetch("/customer/wallet/api/withdraw", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+              },
+              body: payload.toString(),
+            })
+              .then((response) =>
+                response
+                  .json()
+                  .catch(() => ({}))
+                  .then((data) => {
+                    if (!response.ok || data.success === false) {
+                      throw new Error(data.message || "Không thể rút tiền.");
+                    }
+                    return data;
+                  }),
+              )
+              .then((data) => {
+                if (submittedMode === "personal") {
+                  applySavedWithdrawAccount({
+                    bankName: data.destinationBank,
+                    bankAccountNo: data.destinationAccountNo,
+                    accountHolder: data.destinationAccountHolder,
+                    balance: data.destinationBalance,
+                  });
+                }
+                closeModal();
+                clearWithdrawForm();
+                loadWalletData();
+                showToast(
+                  (data.message || "Rút tiền thành công.") +
+                    " Chu tai khoan: " +
+                    (data.destinationAccountHolder || "") +
+                    " | So du demo: " +
+                    formatCurrency(data.destinationBalance || 0),
+                  "success",
+                  "Rút tiền thành công",
+                );
+              })
+              .catch((error) => {
+                showAlert(
+                  error.message || "Không thể rút tiền.",
+                  "error",
+                  "Rút tiền thất bại",
+                );
+              })
+              .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Xác nhận rút tiền";
+              });
+          });
+        }
+
+        renderBanks("", bankListEl, selectedBank, handleManualBankSelect);
+        renderBanks("", personalBankListEl, personalSelectedBank, handlePersonalBankSelect);
       }
     </script>
   </body>

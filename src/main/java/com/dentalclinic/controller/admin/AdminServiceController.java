@@ -41,7 +41,7 @@ public class AdminServiceController {
             RedirectAttributes redirectAttributes) {
         try {
             adminServiceService.addService(serviceDTO, image);
-            redirectAttributes.addFlashAttribute("success", "Thêm dịch vụ th� nh công!");
+            redirectAttributes.addFlashAttribute("success", "Thêm dịch vụ thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -55,7 +55,7 @@ public class AdminServiceController {
             RedirectAttributes redirectAttributes) {
         try {
             adminServiceService.updateService(id, serviceDTO, image);
-            redirectAttributes.addFlashAttribute("success", "Cập nhật dịch vụ th� nh công!");
+            redirectAttributes.addFlashAttribute("success", "Cập nhật dịch vụ thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -67,7 +67,7 @@ public class AdminServiceController {
             RedirectAttributes redirectAttributes) {
         try {
             adminServiceService.toggleServiceStatus(id, status);
-            redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái th� nh công!");
+            redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }

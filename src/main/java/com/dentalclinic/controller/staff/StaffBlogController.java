@@ -70,7 +70,7 @@ public class StaffBlogController {
     }
 
     /**
-     * Save Draft: dùng cho cả create mới v�  update bản draft/rejected
+     * Save Draft: dùng cho cả create mới v?  update bản draft/rejected
      */
     @PostMapping("/save-draft")
     public String saveDraft(@ModelAttribute Blog form,
@@ -103,7 +103,7 @@ public class StaffBlogController {
 
 
     /**
-     * Submit Review: dùng cho cả create mới v�  edit rồi submit
+     * Submit Review: dùng cho cả create mới v?  edit rồi submit
      */
     @PostMapping("/submit-review")
     public String submitReview(@ModelAttribute Blog form,

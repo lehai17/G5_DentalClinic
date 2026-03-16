@@ -9,7 +9,7 @@
            class="nav-item"
            th:classappend="${activePage == 'dashboard' ? ' active' : ''}">
             <i class="fas fa-th-large"></i>
-            <span>Tổng quan</span>
+            <span>Dashboard</span>
         </a>
 
         <div class="nav-label">Quản lý người dùng</div>
@@ -44,6 +44,13 @@
             <span>Dịch vụ</span>
         </a>
 
+        <a th:href="@{/admin/vouchers}"
+           class="nav-item"
+           th:classappend="${activePage == 'vouchers' ? ' active' : ''}">
+            <i class="fas fa-ticket-alt"></i>
+            <span>Voucher</span>
+        </a>
+
         <a th:href="@{/admin/slots}"
            class="nav-item"
            th:classappend="${activePage == 'slots' ? ' active' : ''}">
@@ -64,7 +71,17 @@
             <i class="fas fa-notes-medical"></i>
             <span>Bài viết sức khỏe</span>
         </a>
+
+        <div class="nav-label">Ví tiền</div>
+
+        <a th:href="@{/admin/wallets/transactions}"
+           class="nav-item"
+           th:classappend="${activePage == 'wallet-transactions' ? ' active' : ''}">
+            <i class="fas fa-wallet"></i>
+            <span>Giao dịch ví</span>
+        </a>
     </div>
+
     <div class="nav-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding: 15px 0; margin-bottom: 20px;">
         <a th:href="@{/logout}" class="nav-item logout-link" style="color: #FFB7B7;">
             <i class="fas fa-sign-out-alt"></i>

@@ -244,6 +244,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByCustomer_User_IdOrderByDateDesc(Long customerUserId);
 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
+    List<Appointment> findByCustomer_User_IdAndCustomerHiddenFalseOrderByDateDesc(Long customerUserId);
+
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
+    List<Appointment> findByCustomer_User_IdAndStatusOrderByDateDescStartTimeDesc(Long customerUserId,
+                                                                                   AppointmentStatus status);
+
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     List<Appointment> findByCustomer_User_IdAndDateAndStatusNotOrderByStartTimeAsc(Long customerUserId,
                                                                                     LocalDate date,
                                                                                     AppointmentStatus excludedStatus);

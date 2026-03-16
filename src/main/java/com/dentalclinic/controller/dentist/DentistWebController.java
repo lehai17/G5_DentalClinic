@@ -51,7 +51,7 @@ public class DentistWebController {
         String email = authentication.getName();
 
         var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         Long dentistUserId = user.getId();
 
@@ -148,7 +148,7 @@ public class DentistWebController {
         String email = authentication.getName();
 
         var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         Long dentistUserId = user.getId();
 
