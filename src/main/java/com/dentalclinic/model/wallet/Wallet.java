@@ -26,6 +26,24 @@ public class Wallet {
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
 
+    @Column(name = "pin_code", length = 255)
+    private String pinCode;
+
+    @Column(name = "pin_failed_attempts", nullable = false)
+    private int pinFailedAttempts = 0;
+
+    @Column(name = "pin_locked_until")
+    private LocalDateTime pinLockedUntil;
+
+    @Column(name = "pin_reset_otp_hash", length = 255)
+    private String pinResetOtpHash;
+
+    @Column(name = "pin_reset_otp_expires_at")
+    private LocalDateTime pinResetOtpExpiresAt;
+
+    @Column(name = "pin_reset_verified_until")
+    private LocalDateTime pinResetVerifiedUntil;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -81,6 +99,54 @@ public class Wallet {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getPinCode() {
+        return pinCode;
+    }
+
+    public void setPinCode(String pinCode) {
+        this.pinCode = pinCode;
+    }
+
+    public int getPinFailedAttempts() {
+        return pinFailedAttempts;
+    }
+
+    public void setPinFailedAttempts(int pinFailedAttempts) {
+        this.pinFailedAttempts = pinFailedAttempts;
+    }
+
+    public LocalDateTime getPinLockedUntil() {
+        return pinLockedUntil;
+    }
+
+    public void setPinLockedUntil(LocalDateTime pinLockedUntil) {
+        this.pinLockedUntil = pinLockedUntil;
+    }
+
+    public String getPinResetOtpHash() {
+        return pinResetOtpHash;
+    }
+
+    public void setPinResetOtpHash(String pinResetOtpHash) {
+        this.pinResetOtpHash = pinResetOtpHash;
+    }
+
+    public LocalDateTime getPinResetOtpExpiresAt() {
+        return pinResetOtpExpiresAt;
+    }
+
+    public void setPinResetOtpExpiresAt(LocalDateTime pinResetOtpExpiresAt) {
+        this.pinResetOtpExpiresAt = pinResetOtpExpiresAt;
+    }
+
+    public LocalDateTime getPinResetVerifiedUntil() {
+        return pinResetVerifiedUntil;
+    }
+
+    public void setPinResetVerifiedUntil(LocalDateTime pinResetVerifiedUntil) {
+        this.pinResetVerifiedUntil = pinResetVerifiedUntil;
     }
 
     public static WalletBuilder builder() {

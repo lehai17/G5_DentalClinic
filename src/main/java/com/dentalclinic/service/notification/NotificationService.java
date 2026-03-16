@@ -164,7 +164,8 @@ public class NotificationService {
                     recipientId, type, referenceType, referenceId, title, ex);
             return null;
         }
-        User recipient = userRepository.findById(recipientId)
+        // Merged duplicate block removed.
+        /*
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người nhận thông báo."));
         if (recipient.getRole() != Role.CUSTOMER) {
             throw new IllegalArgumentException("Người nhận thông báo phải là khách hàng.");
@@ -182,6 +183,7 @@ public class NotificationService {
         notification.setCreatedAt(LocalDateTime.now(CLINIC_ZONE));
         notification.setReadAt(null);
         return notificationRepository.save(notification);
+        */
     }
 
     @Transactional(readOnly = true)

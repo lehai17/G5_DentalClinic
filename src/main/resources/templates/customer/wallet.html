@@ -427,6 +427,74 @@
         font-weight: 700;
         cursor: pointer;
       }
+
+      .wallet-security-box {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 16px;
+        background: #f8fbff;
+        border: 1px solid #dbe5f2;
+      }
+
+      .wallet-security-line {
+        color: #475569;
+        font-size: 0.875rem;
+        line-height: 1.6;
+      }
+
+      .wallet-security-line strong {
+        color: #0f172a;
+      }
+
+      .wallet-link-btn {
+        margin-top: 0.75rem;
+        background: transparent;
+        border: none;
+        padding: 0;
+        color: #2563eb;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .wallet-pin-field {
+        position: relative;
+      }
+
+      .wallet-pin-hidden-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: text;
+      }
+
+      .wallet-pin-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.9rem;
+        margin-top: 1rem;
+      }
+
+      .wallet-pin-dot {
+        width: 1.35rem;
+        height: 1.35rem;
+        border-radius: 999px;
+        border: 2px solid #e7b1a3;
+        background: #fff;
+        transition: all 0.2s ease;
+      }
+
+      .wallet-pin-dot.filled {
+        border-color: #cb5936;
+        background: #cb5936;
+        box-shadow: 0 0 0 4px rgba(203, 89, 54, 0.08);
+      }
+
+      .wallet-pin-dot.active {
+        border-color: #cb5936;
+        transform: scale(1.05);
+      }
     </style>
   </head>
   <body>
@@ -588,10 +656,9 @@
           <input
             id="wallet-topup-amount"
             class="wallet-amount-input"
-            type="number"
-            min="10000"
-            step="1000"
-            placeholder="Ví dụ: 100000"
+            type="text"
+            inputmode="numeric"
+            placeholder="Ví dụ: 1.000.000"
           />
           <div class="wallet-amount-presets">
             <button
@@ -834,6 +901,20 @@
         </div>
 
         <div class="wallet-helper">Số tiền rút tối thiểu là 10.000 VND.</div>
+        <div class="wallet-security-box">
+          <div class="wallet-security-line">
+            Mỗi ngày bạn chỉ được rút tối đa <strong>10.000.000 VND</strong>.
+          </div>
+          <div class="wallet-security-line">
+            Giao dịch rút trên <strong>1.000.000 VND</strong> sẽ yêu cầu nhập PIN ví 6 số.
+          </div>
+          <div class="wallet-security-line" id="wallet-daily-limit-info">
+            Hạn mức còn lại hôm nay: <strong>10.000.000 VND</strong>
+          </div>
+          <div class="wallet-security-line" id="wallet-lock-info" hidden>
+            Chức năng ví đang bị khóa tạm thời.
+          </div>
+        </div>
 
         <button
           type="button"
@@ -841,6 +922,101 @@
           id="wallet-withdraw-submit"
         >
           Xác nhận rút tiền
+        </button>
+      </div>
+    </div>
+
+    <div class="wallet-modal" id="wallet-pin-modal" hidden>
+      <div class="wallet-modal-backdrop" data-wallet-pin-close></div>
+      <div
+        class="wallet-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wallet-pin-title"
+      >
+        <button
+          type="button"
+          class="wallet-modal-close"
+          id="wallet-pin-close"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <h3 id="wallet-pin-title" class="wallet-modal-title">Bảo mật ví</h3>
+        <p class="wallet-modal-subtitle" id="wallet-pin-subtitle">
+          Xác nhận PIN để tiếp tục giao dịch rút tiền.
+        </p>
+
+        <div class="wallet-input-group" id="wallet-pin-otp-group" hidden>
+          <label class="wallet-input-label" for="wallet-pin-otp">Mã OTP Email</label>
+          <input
+            id="wallet-pin-otp"
+            class="wallet-amount-input"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="Nhập 6 chữ số OTP"
+          />
+          <div class="wallet-helper">OTP sẽ được gửi về email của bạn sau khi bấm "Forgot PIN?".</div>
+        </div>
+
+        <div class="wallet-input-group">
+          <label class="wallet-input-label" for="wallet-pin-code">PIN ví</label>
+          <div class="wallet-pin-field">
+            <input
+              id="wallet-pin-code"
+              class="wallet-pin-hidden-input"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              autocomplete="one-time-code"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <div class="wallet-pin-dots" id="wallet-pin-code-dots">
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wallet-input-group" id="wallet-pin-confirm-group" hidden>
+          <label class="wallet-input-label" for="wallet-pin-confirm">Xác nhận lại PIN ví</label>
+          <div class="wallet-pin-field">
+            <input
+              id="wallet-pin-confirm"
+              class="wallet-pin-hidden-input"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              autocomplete="one-time-code"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <div class="wallet-pin-dots" id="wallet-pin-confirm-dots">
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+              <span class="wallet-pin-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="wallet-link-btn" id="wallet-pin-forgot-btn">
+          Đặt lại mã PIN
+        </button>
+
+        <button
+          type="button"
+          class="wallet-modal-submit"
+          id="wallet-pin-submit"
+        >
+          Xác nhận
         </button>
       </div>
     </div>
@@ -887,6 +1063,40 @@
       }
 
       let savedWithdrawAccountState = null;
+      let walletSecurityState = {
+        hasPin: false,
+        walletLocked: false,
+        pinLockedUntil: null,
+        dailyWithdrawLimit: 10000000,
+        withdrawnToday: 0,
+        remainingDailyLimit: 10000000,
+        pinRequiredThreshold: 1000000,
+      };
+
+      function updateWalletSecurityInfo() {
+        const dailyLimitEl = document.getElementById("wallet-daily-limit-info");
+        const lockInfoEl = document.getElementById("wallet-lock-info");
+
+        if (dailyLimitEl) {
+          dailyLimitEl.innerHTML =
+            'Hạn mức còn lại hôm nay: <strong>' +
+            formatCurrency(walletSecurityState.remainingDailyLimit || 0) +
+            "</strong>";
+        }
+
+        if (lockInfoEl) {
+          if (walletSecurityState.walletLocked && walletSecurityState.pinLockedUntil) {
+            lockInfoEl.hidden = false;
+            lockInfoEl.textContent =
+              "Chức năng ví đang bị khóa đến " +
+              walletSecurityState.pinLockedUntil.replace("T", " ").slice(0, 16) +
+              ".";
+          } else {
+            lockInfoEl.hidden = true;
+            lockInfoEl.textContent = "";
+          }
+        }
+      }
 
       function loadWalletData() {
         const loading = document.getElementById("loading");
@@ -914,6 +1124,8 @@
               balanceEl.textContent = formatCurrency(data.balance);
             }
             savedWithdrawAccountState = data.savedWithdrawAccount || null;
+            walletSecurityState = Object.assign(walletSecurityState, data.walletSecurity || {});
+            updateWalletSecurityInfo();
             updateSavedDemoAccountCard(savedWithdrawAccountState);
             if (typeof window.__applySavedWithdrawAccount === "function") {
               window.__applySavedWithdrawAccount(savedWithdrawAccountState);
@@ -1096,14 +1308,20 @@
         document.querySelectorAll("[data-amount]").forEach((node) => {
           node.addEventListener("click", function () {
             if (amountInput) {
-              amountInput.value = this.getAttribute("data-amount");
+              amountInput.value = formatVndInput(this.getAttribute("data-amount"));
             }
           });
         });
 
+        if (amountInput) {
+          amountInput.addEventListener("input", function () {
+            this.value = formatVndInput(this.value);
+          });
+        }
+
         if (submitBtn) {
           submitBtn.addEventListener("click", function () {
-            const amount = Number(amountInput ? amountInput.value : 0);
+            const amount = parseVndInput(amountInput ? amountInput.value : 0);
             if (!amount || amount < 10000) {
               showAlert(
                 "Vui lòng nhập số tiền từ 10.000 VND trở lên.",
@@ -1215,6 +1433,19 @@
         const personalSaveBtn = document.getElementById("wallet-personal-save-btn");
         const personalEditBtn = document.getElementById("wallet-personal-edit-btn");
         const submitBtn = document.getElementById("wallet-withdraw-submit");
+        const pinModal = document.getElementById("wallet-pin-modal");
+        const pinCloseBtn = document.getElementById("wallet-pin-close");
+        const pinTitle = document.getElementById("wallet-pin-title");
+        const pinSubtitle = document.getElementById("wallet-pin-subtitle");
+        const pinCodeInput = document.getElementById("wallet-pin-code");
+        const pinCodeDots = document.getElementById("wallet-pin-code-dots");
+        const pinConfirmGroup = document.getElementById("wallet-pin-confirm-group");
+        const pinConfirmInput = document.getElementById("wallet-pin-confirm");
+        const pinConfirmDots = document.getElementById("wallet-pin-confirm-dots");
+        const pinOtpGroup = document.getElementById("wallet-pin-otp-group");
+        const pinOtpInput = document.getElementById("wallet-pin-otp");
+        const pinSubmitBtn = document.getElementById("wallet-pin-submit");
+        const pinForgotBtn = document.getElementById("wallet-pin-forgot-btn");
         let currentMode = "manual";
         let selectedBank = "";
         let personalSelectedBank = "";
@@ -1223,6 +1454,8 @@
         let resolvedAccount = null;
         let personalResolvedAccount = null;
         let personalEditing = !savedWithdrawAccountState;
+        let pinFlowMode = "verify";
+        let pendingWithdrawPayload = null;
 
         function renderBanks(keyword, listEl, activeBank, onSelect) {
           if (!listEl) return;
@@ -1251,6 +1484,176 @@
               onSelect(this.getAttribute("data-bank-name") || "");
             });
           });
+        }
+
+        function digitsOnly(value, maxLength) {
+          return String(value || "").replace(/\D/g, "").slice(0, maxLength || 6);
+        }
+
+        function renderPinDots(inputEl, dotsWrap) {
+          if (!inputEl || !dotsWrap) return;
+          const value = String(inputEl.value || "");
+          const dots = dotsWrap.querySelectorAll(".wallet-pin-dot");
+          dots.forEach((dot, index) => {
+            dot.classList.toggle("filled", index < value.length);
+            dot.classList.toggle("active", index === value.length && value.length < dots.length);
+          });
+        }
+
+        function openPinModal(mode, payload) {
+          pinFlowMode = mode;
+          pendingWithdrawPayload = payload || pendingWithdrawPayload;
+          if (!pinModal) return;
+
+          if (pinCodeInput) pinCodeInput.value = "";
+          if (pinConfirmInput) pinConfirmInput.value = "";
+          if (pinOtpInput) pinOtpInput.value = "";
+          renderPinDots(pinCodeInput, pinCodeDots);
+          renderPinDots(pinConfirmInput, pinConfirmDots);
+
+          if (mode === "setup") {
+            if (pinTitle) pinTitle.textContent = "Thiết lập Digital OTP";
+            if (pinSubtitle) pinSubtitle.textContent = "Lần đầu rút trên 1.000.000 VND, bạn cần đặt PIN ví 6 số và nhập lại để xác nhận.";
+            if (pinConfirmGroup) pinConfirmGroup.hidden = false;
+            if (pinOtpGroup) pinOtpGroup.hidden = true;
+            if (pinForgotBtn) pinForgotBtn.hidden = true;
+            if (pinSubmitBtn) pinSubmitBtn.textContent = "Lưu PIN và tiếp tục";
+          } else if (mode === "otp") {
+            if (pinTitle) pinTitle.textContent = "Xác thực Digital OTP";
+            if (pinSubtitle) pinSubtitle.textContent = "Nhập OTP được gửi về email để đặt lại PIN ví.";
+            if (pinConfirmGroup) pinConfirmGroup.hidden = true;
+            if (pinOtpGroup) pinOtpGroup.hidden = false;
+            if (pinForgotBtn) pinForgotBtn.hidden = true;
+            if (pinSubmitBtn) pinSubmitBtn.textContent = "Xác thực OTP";
+          } else if (mode === "reset") {
+            if (pinTitle) pinTitle.textContent = "Đặt lại mã PIN";
+            if (pinSubtitle) pinSubtitle.textContent = "OTP đã hợp lệ. Hãy nhập PIN mới 2 lần để hoàn tất.";
+            if (pinConfirmGroup) pinConfirmGroup.hidden = false;
+            if (pinOtpGroup) pinOtpGroup.hidden = true;
+            if (pinForgotBtn) pinForgotBtn.hidden = true;
+            if (pinSubmitBtn) pinSubmitBtn.textContent = "Lưu PIN mới";
+          } else {
+            if (pinTitle) pinTitle.textContent = "Xác thực Digital OTP";
+            if (pinSubtitle) pinSubtitle.textContent = "Vui lòng nhập mã PIN Digital OTP để nhận mã xác thực giao dịch.";
+            if (pinConfirmGroup) pinConfirmGroup.hidden = true;
+            if (pinOtpGroup) pinOtpGroup.hidden = true;
+            if (pinForgotBtn) pinForgotBtn.hidden = false;
+            if (pinSubmitBtn) pinSubmitBtn.textContent = "Xác nhận PIN";
+          }
+
+          pinModal.hidden = false;
+          document.body.style.overflow = "hidden";
+          if (mode === "otp" && pinOtpInput) {
+            pinOtpInput.focus();
+          } else if (pinCodeInput) {
+            pinCodeInput.focus();
+          }
+        }
+
+        function closePinModal() {
+          if (!pinModal) return;
+          pinModal.hidden = true;
+          document.body.style.overflow = modal && !modal.hidden ? "hidden" : "";
+        }
+
+        function proceedWithdraw(payload, pinCode) {
+          if (pinCode) {
+            payload.set("pinCode", pinCode);
+          } else {
+            payload.delete("pinCode");
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Đang xử lý...";
+
+          fetch("/customer/wallet/api/withdraw", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            },
+            body: payload.toString(),
+          })
+            .then((response) =>
+              response
+                .json()
+                .catch(() => ({}))
+                .then((data) => {
+                  data.__status = response.status;
+                  if (!response.ok || data.success === false) {
+                    throw data;
+                  }
+                  return data;
+                }),
+            )
+            .then((data) => {
+              const submittedMode = payload.get("mode");
+              if (submittedMode === "personal") {
+                applySavedWithdrawAccount({
+                  bankName: data.destinationBank,
+                  bankAccountNo: data.destinationAccountNo,
+                  accountHolder: data.destinationAccountHolder,
+                  balance: data.destinationBalance,
+                });
+              }
+              closePinModal();
+              closeModal();
+              clearWithdrawForm();
+              loadWalletData();
+              showToast(
+                (data.message || "Rút tiền thành công.") +
+                  " Chu tai khoan: " +
+                  (data.destinationAccountHolder || "") +
+                  " | So du demo: " +
+                  formatCurrency(data.destinationBalance || 0),
+                "success",
+                "Rút tiền thành công",
+              );
+            })
+            .catch((error) => {
+              if (error && error.code === "PIN_INVALID") {
+                loadWalletData();
+                openPinModal("verify", payload);
+                showAlert(error.message || "PIN không đúng.", "warning", "PIN không đúng");
+                return;
+              }
+              if (error && error.code === "PIN_REQUIRED") {
+                openPinModal("verify", payload);
+                return;
+              }
+              if (error && error.code === "PIN_SETUP_REQUIRED") {
+                openPinModal("setup", payload);
+                return;
+              }
+              if (error && error.code === "WALLET_LOCKED") {
+                loadWalletData();
+                showAlert(error.message || "Chức năng ví đang bị khóa.", "error", "Ví đang bị khóa");
+                return;
+              }
+              showAlert(
+                (error && error.message) || "Không thể rút tiền.",
+                "error",
+                "Rút tiền thất bại",
+              );
+            })
+            .finally(() => {
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Xác nhận rút tiền";
+            });
+        }
+
+        function clearManualBankSelection() {
+          selectedBank = "";
+          if (bankSearchInput) bankSearchInput.value = "";
+          resetResolvedAccount();
+          renderBanks("", bankListEl, selectedBank, handleManualBankSelect);
+        }
+
+        function clearPersonalBankSelection() {
+          personalSelectedBank = "";
+          if (personalBankSearchInput) personalBankSearchInput.value = "";
+          resetPersonalResolvedAccount();
+          renderBanks("", personalBankListEl, personalSelectedBank, handlePersonalBankSelect);
         }
 
         function resetResolvedAccount() {
@@ -1492,16 +1895,24 @@
         }
 
         function handleManualBankSelect(bank) {
+          if (bank === selectedBank) {
+            clearManualBankSelection();
+            return;
+          }
           selectedBank = bank;
           if (bankSearchInput) bankSearchInput.value = bank;
-          renderBanks(bank, bankListEl, selectedBank, handleManualBankSelect);
+          renderBanks("", bankListEl, selectedBank, handleManualBankSelect);
           triggerLookup();
         }
 
         function handlePersonalBankSelect(bank) {
+          if (bank === personalSelectedBank) {
+            clearPersonalBankSelection();
+            return;
+          }
           personalSelectedBank = bank;
           if (personalBankSearchInput) personalBankSearchInput.value = bank;
-          renderBanks(bank, personalBankListEl, personalSelectedBank, handlePersonalBankSelect);
+          renderBanks("", personalBankListEl, personalSelectedBank, handlePersonalBankSelect);
           triggerPersonalLookup();
         }
 
@@ -1520,8 +1931,16 @@
           closeBtn.addEventListener("click", closeModal);
         }
 
+        if (pinCloseBtn) {
+          pinCloseBtn.addEventListener("click", closePinModal);
+        }
+
         document.querySelectorAll("[data-wallet-withdraw-close]").forEach((node) => {
           node.addEventListener("click", closeModal);
+        });
+
+        document.querySelectorAll("[data-wallet-pin-close]").forEach((node) => {
+          node.addEventListener("click", closePinModal);
         });
 
         if (bankSearchInput) {
@@ -1570,6 +1989,32 @@
           });
         }
 
+        if (pinCodeInput) {
+          pinCodeInput.addEventListener("input", function () {
+            this.value = digitsOnly(this.value, 6);
+            renderPinDots(this, pinCodeDots);
+          });
+          pinCodeDots?.addEventListener("click", function () {
+            pinCodeInput.focus();
+          });
+        }
+
+        if (pinConfirmInput) {
+          pinConfirmInput.addEventListener("input", function () {
+            this.value = digitsOnly(this.value, 6);
+            renderPinDots(this, pinConfirmDots);
+          });
+          pinConfirmDots?.addEventListener("click", function () {
+            pinConfirmInput.focus();
+          });
+        }
+
+        if (pinOtpInput) {
+          pinOtpInput.addEventListener("input", function () {
+            this.value = digitsOnly(this.value, 6);
+          });
+        }
+
         if (modeManualBtn) {
           modeManualBtn.addEventListener("click", function () {
             setMode("manual");
@@ -1585,6 +2030,133 @@
         if (personalEditBtn) {
           personalEditBtn.addEventListener("click", function () {
             setPersonalEditing(true);
+          });
+        }
+
+        if (pinForgotBtn) {
+          pinForgotBtn.addEventListener("click", function () {
+            pinForgotBtn.disabled = true;
+            fetch("/customer/wallet/api/pin/forgot/request", {
+              method: "POST",
+              credentials: "same-origin",
+            })
+              .then((response) =>
+                response
+                  .json()
+                  .catch(() => ({}))
+                  .then((data) => {
+                    if (!response.ok || data.success === false) {
+                      throw new Error(data.message || "Không thể gửi OTP.");
+                    }
+                    return data;
+                  }),
+              )
+              .then((data) => {
+                showToast(data.message || "Đã gửi OTP về email.", "success", "OTP đã gửi");
+                openPinModal("otp", pendingWithdrawPayload);
+              })
+              .catch((error) => {
+                showAlert(error.message || "Không thể gửi OTP.", "error", "Gửi OTP thất bại");
+              })
+              .finally(() => {
+                pinForgotBtn.disabled = false;
+              });
+          });
+        }
+
+        if (pinSubmitBtn) {
+          pinSubmitBtn.addEventListener("click", function () {
+            const pinCode = pinCodeInput ? pinCodeInput.value.trim() : "";
+            const confirmPin = pinConfirmInput ? pinConfirmInput.value.trim() : "";
+            const otp = pinOtpInput ? pinOtpInput.value.trim() : "";
+
+            if (pinFlowMode === "otp") {
+              if (!/^\d{6}$/.test(otp)) {
+                showAlert("Vui lòng nhập OTP gồm đúng 6 chữ số.", "warning", "OTP không hợp lệ");
+                return;
+              }
+              pinSubmitBtn.disabled = true;
+              fetch("/customer/wallet/api/pin/forgot/verify", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                },
+                body: new URLSearchParams({ otp: otp }).toString(),
+              })
+                .then((response) =>
+                  response
+                    .json()
+                    .catch(() => ({}))
+                    .then((data) => {
+                      if (!response.ok || data.success === false) {
+                        throw new Error(data.message || "OTP không hợp lệ.");
+                      }
+                      return data;
+                    }),
+                )
+                .then((data) => {
+                  showToast(data.message || "OTP hợp lệ.", "success", "Xác thực thành công");
+                  openPinModal("reset", pendingWithdrawPayload);
+                })
+                .catch((error) => {
+                  showAlert(error.message || "OTP không hợp lệ.", "error", "Xác thực thất bại");
+                })
+                .finally(() => {
+                  pinSubmitBtn.disabled = false;
+                });
+              return;
+            }
+
+            if (!/^\d{6}$/.test(pinCode)) {
+              showAlert("PIN phải gồm đúng 6 chữ số.", "warning", "PIN không hợp lệ");
+              return;
+            }
+
+            if (pinFlowMode === "setup" || pinFlowMode === "reset") {
+              if (!/^\d{6}$/.test(confirmPin)) {
+                showAlert("Vui lòng nhập lại PIN xác nhận gồm đúng 6 chữ số.", "warning", "PIN xác nhận không hợp lệ");
+                return;
+              }
+              pinSubmitBtn.disabled = true;
+              fetch("/customer/wallet/api/pin/setup", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                },
+                body: new URLSearchParams({
+                  pinCode: pinCode,
+                  confirmPinCode: confirmPin,
+                }).toString(),
+              })
+                .then((response) =>
+                  response
+                    .json()
+                    .catch(() => ({}))
+                    .then((data) => {
+                      if (!response.ok || data.success === false) {
+                        throw new Error(data.message || "Không thể lưu PIN.");
+                      }
+                      return data;
+                    }),
+                )
+                .then(() => {
+                  walletSecurityState.hasPin = true;
+                  closePinModal();
+                  proceedWithdraw(pendingWithdrawPayload, pinCode);
+                })
+                .catch((error) => {
+                  showAlert(error.message || "Không thể lưu PIN.", "error", "Thiết lập PIN thất bại");
+                })
+                .finally(() => {
+                  pinSubmitBtn.disabled = false;
+                });
+              return;
+            }
+
+            closePinModal();
+            proceedWithdraw(pendingWithdrawPayload, pinCode);
           });
         }
 
@@ -1698,62 +2270,31 @@
               }
             }
 
-            const submittedMode = currentMode;
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Đang xử lý...";
+            if (walletSecurityState.walletLocked) {
+              showAlert(
+                "Chức năng ví đang bị khóa tạm thời. Vui lòng thử lại sau.",
+                "error",
+                "Ví đang bị khóa",
+              );
+              return;
+            }
 
-            fetch("/customer/wallet/api/withdraw", {
-              method: "POST",
-              credentials: "same-origin",
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-              },
-              body: payload.toString(),
-            })
-              .then((response) =>
-                response
-                  .json()
-                  .catch(() => ({}))
-                  .then((data) => {
-                    if (!response.ok || data.success === false) {
-                      throw new Error(data.message || "Không thể rút tiền.");
-                    }
-                    return data;
-                  }),
-              )
-              .then((data) => {
-                if (submittedMode === "personal") {
-                  applySavedWithdrawAccount({
-                    bankName: data.destinationBank,
-                    bankAccountNo: data.destinationAccountNo,
-                    accountHolder: data.destinationAccountHolder,
-                    balance: data.destinationBalance,
-                  });
-                }
-                closeModal();
-                clearWithdrawForm();
-                loadWalletData();
-                showToast(
-                  (data.message || "Rút tiền thành công.") +
-                    " Chu tai khoan: " +
-                    (data.destinationAccountHolder || "") +
-                    " | So du demo: " +
-                    formatCurrency(data.destinationBalance || 0),
-                  "success",
-                  "Rút tiền thành công",
-                );
-              })
-              .catch((error) => {
-                showAlert(
-                  error.message || "Không thể rút tiền.",
-                  "error",
-                  "Rút tiền thất bại",
-                );
-              })
-              .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Xác nhận rút tiền";
-              });
+            if (amount > Number(walletSecurityState.remainingDailyLimit || 0)) {
+              showAlert(
+                "Bạn đã vượt hạn mức rút tối đa 10.000.000 VND trong ngày.",
+                "warning",
+                "Vượt hạn mức ngày",
+              );
+              return;
+            }
+
+            pendingWithdrawPayload = payload;
+            if (amount >= Number(walletSecurityState.pinRequiredThreshold || 1000000)) {
+              openPinModal(walletSecurityState.hasPin ? "verify" : "setup", payload);
+              return;
+            }
+
+            proceedWithdraw(payload, null);
           });
         }
 

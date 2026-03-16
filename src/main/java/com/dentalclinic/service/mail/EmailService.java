@@ -1,6 +1,7 @@
 package com.dentalclinic.service.mail;
 
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.SimpleMailMessage;
@@ -48,6 +49,31 @@ public class EmailService {
                 appointment.getStartTime(),
                 appointment.getEndTime()
         ));
+
+        supportMailSender.send(message);
+    }
+
+    @Async
+    public void sendWalletPinOtp(User user, String code) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("lenguyendaihai17@gmail.com");
+        message.setTo(user.getEmail());
+        message.setSubject("Ma xac minh dat lai PIN vi - GENZ CLINIC");
+        message.setText("""
+            Xin chao,
+
+            Ma OTP dat lai PIN vi cua ban la: %s
+
+            Ma co hieu luc trong 10 phut.
+            Neu ban khong thuc hien yeu cau nay, vui long bo qua email.
+
+            Tran trong,
+            GENZ CLINIC
+            """.formatted(code));
 
         supportMailSender.send(message);
     }

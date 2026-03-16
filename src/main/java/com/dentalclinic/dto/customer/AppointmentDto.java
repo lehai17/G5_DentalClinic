@@ -42,6 +42,8 @@ public class AppointmentDto {
     private String billingNoteNote;
     private LocalDateTime billingNoteUpdatedAt;
     private List<AppointmentPrescriptionItemDto> prescriptionItems;
+    private String cancellationReason;
+    private boolean depositRefunded;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -113,4 +115,8 @@ public class AppointmentDto {
     public void setBillingNoteUpdatedAt(LocalDateTime billingNoteUpdatedAt) { this.billingNoteUpdatedAt = billingNoteUpdatedAt; }
     public List<AppointmentPrescriptionItemDto> getPrescriptionItems() { return prescriptionItems; }
     public void setPrescriptionItems(List<AppointmentPrescriptionItemDto> prescriptionItems) { this.prescriptionItems = prescriptionItems; }
+    public String getCancellationReason() { return cancellationReason; }
+    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
+    public boolean isDepositRefunded() { return depositRefunded; }
+    public void setDepositRefunded(boolean depositRefunded) { this.depositRefunded = depositRefunded; }
 }

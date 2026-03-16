@@ -35,8 +35,10 @@ import com.dentalclinic.repository.ReviewRepository;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.SlotRepository;
 import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.repository.WalletTransactionRepository;
 import com.dentalclinic.service.notification.NotificationService;
 import com.dentalclinic.service.wallet.WalletService;
+import com.dentalclinic.model.wallet.WalletTransactionType;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -92,6 +94,7 @@ public class CustomerAppointmentService {
     private final SlotRepository slotRepository;
     private final NotificationService notificationService;
     private final WalletService walletService;
+    private final WalletTransactionRepository walletTransactionRepository;
     private final EntityManager entityManager;
 
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
@@ -104,6 +107,7 @@ public class CustomerAppointmentService {
                                       SlotRepository slotRepository,
                                       NotificationService notificationService,
                                       WalletService walletService,
+                                      WalletTransactionRepository walletTransactionRepository,
                                       EntityManager entityManager) {
         this.customerProfileRepository = customerProfileRepository;
         this.userRepository = userRepository;
@@ -115,6 +119,7 @@ public class CustomerAppointmentService {
         this.slotRepository = slotRepository;
         this.notificationService = notificationService;
         this.walletService = walletService;
+        this.walletTransactionRepository = walletTransactionRepository;
         this.entityManager = entityManager;
     }
 
@@ -1347,6 +1352,14 @@ public class CustomerAppointmentService {
         dto.setNotes(appointment.getNotes());
         dto.setContactChannel(appointment.getContactChannel());
         dto.setContactValue(appointment.getContactValue());
+        dto.setCancellationReason(appointment.getStatus() == AppointmentStatus.CANCELLED ? appointment.getNotes() : null);
+        dto.setDepositRefunded(
+                appointment.getStatus() == AppointmentStatus.CANCELLED
+                        && walletTransactionRepository.existsByAppointmentIdAndType(
+                        appointment.getId(),
+                        WalletTransactionType.REFUND
+                )
+        );
 
         List<AppointmentServiceItemDto> serviceItems = new ArrayList<>();
         List<AppointmentDetail> details = appointment.getAppointmentDetails();
