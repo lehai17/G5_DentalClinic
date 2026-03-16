@@ -8,32 +8,32 @@ import jakarta.validation.constraints.Size;
 
 public class RegisterRequest {
 
-    @NotBlank(message = "Há» vÃ  tÃªn khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @NotBlank(message = "Họ và tên không được để trống")
     @Pattern(
             regexp = "^[\\p{L} ]+$",
-            message = "Há» vÃ  tÃªn chá»‰ Ä‘Æ°á»£c chá»©a chá»¯ cÃ¡i"
+            message = "Họ và tên chỉ được chứa chữ cái"
     )
     private String fullName;
 
-    @NotBlank(message = "Vui lÃ²ng nháº­p email")
-    @Email(message = "Email khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng")
+    @NotBlank(message = "Vui lòng nhập email")
+    @Email(message = "Email không đúng định dạng")
     private String email;
 
-    @NotBlank(message = "Vui lÃ²ng nháº­p máº­t kháº©u")
-    @Size(min = 6, message = "Máº­t kháº©u tá»‘i thiá»ƒu 6 kÃ½ tá»±")
+    @NotBlank(message = "Vui lòng nhập mật khẩu")
+    @Size(min = 6, message = "Mật khẩu tối thiểu 6 ký tự")
     private String password;
 
-    @NotBlank(message = "Vui lÃ²ng nháº­p sá»‘ Ä‘iá»‡n thoáº¡i")
-    @Pattern(regexp = "^[0-9]{10}$", message = "Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i Ä‘á»§ 10 chá»¯ sá»‘")
+    @NotBlank(message = "Vui lòng nhập số điện thoại")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Số điện thoại phải đủ 10 chữ số")
     private String phone;
 
-    @NotBlank(message = "Vui lÃ²ng chá»n ngÃ y sinh")
+    @NotBlank(message = "Vui lòng chọn ngày sinh")
     private String dateOfBirth;
 
-    @NotBlank(message = "Vui lÃ²ng chá»n giá»›i tÃ­nh")
+    @NotBlank(message = "Vui lòng chọn giới tính")
     private String gender;
 
-    @AssertTrue(message = "Báº¡n pháº£i Ä‘á»“ng Ã½ vá»›i Äiá»u khoáº£n")
+    @AssertTrue(message = "Bạn phải đồng ý với Điều khoản")
     private Boolean agree;
 
     public String getFullName() {

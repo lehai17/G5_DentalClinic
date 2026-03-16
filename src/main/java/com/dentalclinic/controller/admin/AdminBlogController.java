@@ -146,7 +146,7 @@ public class AdminBlogController {
                     .getFilenameExtension(imageFile.getOriginalFilename());
             String fileName = java.util.UUID.randomUUID() + (ext != null ? "." + ext : "");
 
-            // âœ… Lưu v� o thư mục ngo� i: uploads/blog (tính theo thư mục chạy project)
+            // âœ… Lưu v? o thư mục ngo� i: uploads/blog (tính theo thư mục chạy project)
             java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads", "blog");
             java.nio.file.Files.createDirectories(uploadDir); // âœ… đảm bảo folder tồn tại
 

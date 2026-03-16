@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Staff Management - GENZ CLINIC</title>
+    <title>Quản lý nhân viên - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -192,7 +192,7 @@
             border-bottom: 1px solid #F4F7FE;
         }
 
-        /* Badges & Actions */
+        /* Badges & Thao t?c */
         .status-badge {
             padding: 6px 14px;
             border-radius: 10px;
@@ -391,7 +391,7 @@
             </a>
 
             <a th:href="@{/admin/staff}" class="nav-item" th:classappend="${activePage == 'staff' ? 'active' : ''}">
-                <i class="fas fa-users-cog"></i> Staff
+                <i class="fas fa-users-cog"></i> Nhân viên
             </a>
 
             <a th:href="@{/admin/customers}" class="nav-item">
@@ -406,31 +406,31 @@
 
     <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Staff</h2>
+            <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Nhân viên</h2>
             <a th:href="@{/admin/staff/add}"
                 style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">
-                <i class="fas fa-plus"></i> Add Staff
+                <i class="fas fa-plus"></i> Thêm nhân viên
             </a>
         </div>
 
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="icon-box"><i class="fas fa-users"></i></div> Total Staff
+                    <div class="icon-box"><i class="fas fa-users"></i></div> Tổng nhân viên
                 </div>
                 <div class="stat-value" th:text="${totalStaff}">0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="icon-box" style="background: #FFEBEE; color: #F44336;"><i class="fas fa-user-lock"></i>
-                    </div> Locked Accounts
+                    </div> Tài khoản bị khóa
                 </div>
                 <div class="stat-value" th:text="${lockedStaffCount}">0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="icon-box" style="background: #E8F5E9; color: #4CAF50;"><i
-                            class="fas fa-check-circle"></i></div> Active Accounts
+                            class="fas fa-check-circle"></i></div> Tài khoản hoạt động
                 </div>
                 <div class="stat-value" th:text="${activeStaffCount}">0</div>
             </div>
@@ -439,25 +439,25 @@
         <div class="filter-bar">
             <form th:action="@{/admin/staff}" method="GET" id="filterForm" class="filter-group">
                 <div class="filter-item">
-                    <span class="filter-label">POSITION:</span>
+                    <span class="filter-label">VỊ TRÍ:</span>
                     <select name="position" onchange="this.form.submit()">
-                        <option value="">All Positions</option>
+                        <option value="">Tất cả vị trí</option>
                         <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Lễ tân
                         </option>
-                        <option value="Other" th:selected="${selectedPos == 'Other'}">Other</option>
+                        <option value="Other" th:selected="${selectedPos == 'Other'}">Khác</option>
                     </select>
                 </div>
                 <div class="filter-item">
-                    <span class="filter-label">STATUS:</span>
+                    <span class="filter-label">TRẠNG THÁI:</span>
                     <select name="status" onchange="this.form.submit()">
-                        <option value="">All Status</option>
-                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
-                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Locked</option>
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Hoạt động</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Đã khóa</option>
                     </select>
                 </div>
             </form>
             <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
-                Showing <span th:text="${#lists.size(staffs)}">0</span> members
+                Hiển thị <span th:text="${#lists.size(staffs)}">0</span> nhân viên
             </div>
         </div>
 
@@ -466,10 +466,10 @@
                 <thead>
                     <tr>
                         <th>Nhân viên</th>
-                        <th>Position</th>
+                        <th>Vị trí</th>
                         <th>Số điện thoại</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -493,7 +493,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td th:text="${staff.position}">Position</td>
+                        <td th:text="${staff.position}">Vị trí</td>
                         <td th:text="${staff.phone}">Phone</td>
                         <td>
                             <span class="status-badge"
@@ -512,7 +512,7 @@
                                     th:action="@{/admin/staff/unlock/{id}(id=${staff.user.id})}" method="POST">
                                     <button type="submit" class="action-btn"
                                         style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Mở khóa nhân viên n� y?')">
+                                        onclick="return confirm('Mở khóa nhân viên này?')">
                                         <i class="fas fa-user-check"></i>
                                     </button>
                                 </form>
@@ -520,7 +520,7 @@
                                     th:action="@{/admin/staff/lock/{id}(id=${staff.user.id})}" method="POST"
                                     style="display:inline;">
                                     <button type="submit" class="action-btn" style="color: #F44336;"
-                                        onclick="return confirm('Khóa nhân viên n� y?')">
+                                        onclick="return confirm('Khóa nhân viên này?')">
                                         <i class="fas fa-user-lock"></i>
                                     </button>
                                 </form>
@@ -533,7 +533,7 @@
             <div class="empty-state" th:if="${#lists.isEmpty(staffs)}"
                 style="text-align: center; padding: 80px 0; color: #A3AED0;">
                 <i class="fas fa-users-slash" style="font-size: 50px; margin-bottom: 15px;"></i>
-                <h3>Chưa có nhân viên n� o</h3>
+                <h3>Chưa có nhân viên nào</h3>
             </div>
         </div>
     </div>
@@ -594,16 +594,16 @@
                                     pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
                         </div>
                         <div class="input-group">
-                            <label>Position</label>
+                            <label>Vị trí</label>
                             <div class="input-wrapper">
                                 <select id="editPosition" name="position" required>
                                     <option value="Receptionist">Lễ tân</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Other">Khác</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Date of Birth</label>
+                            <label>Ngày sinh</label>
                             <div class="input-wrapper"><input type="date" id="editDob" name="dateOfBirth" required>
                             </div>
                         </div>
@@ -611,9 +611,9 @@
                             <label>Gender</label>
                             <div class="input-wrapper">
                                 <select id="editGender" name="gender" required>
-                                    <option value="MALE">Male</option>
-                                    <option value="FEMALE">Female</option>
-                                    <option value="OTHER">Other</option>
+                                    <option value="MALE">Nam</option>
+                                    <option value="FEMALE">Nữ</option>
+                                    <option value="OTHER">Khác</option>
                                 </select>
                             </div>
                         </div>
@@ -621,8 +621,8 @@
                             <label>Status</label>
                             <div class="input-wrapper">
                                 <select id="editStatus" name="status" required>
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="LOCKED">Locked</option>
+                                    <option value="ACTIVE">Hoạt động</option>
+                                    <option value="LOCKED">Đã khóa</option>
                                 </select>
                             </div>
                         </div>
@@ -721,7 +721,7 @@
                     document.getElementById('editStaffModal').style.display = 'block';
                 })
                 .catch(error => {
-                    showToast("Cannot fetch data", "error");
+                    showToast("Không thể tải dữ liệu", "error");
                 });
         }
 

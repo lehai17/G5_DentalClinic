@@ -78,12 +78,6 @@
                             Xác nhận
                         </button>
 
-                        <button type="button" class="btn-checkin"
-                                th:if="${a.status.name() == 'CONFIRMED'}"
-                                th:onclick="'checkin(' + ${a.id} + ')'">
-                            Check-in
-                        </button>
-
                         <button type="button" class="btn-cancel"
                                 th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}"
                                 th:onclick="'cancelAppointment(' + ${a.id} + ')'">

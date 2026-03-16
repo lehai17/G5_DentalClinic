@@ -1,5 +1,6 @@
 package com.dentalclinic.controller.customer;
 
+import com.dentalclinic.dto.customer.RebookPrefillDto;
 import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.blog.BlogStatus;
 import com.dentalclinic.model.profile.CustomerProfile;
@@ -8,6 +9,7 @@ import com.dentalclinic.repository.BlogRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.customer.CustomerProfileService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +19,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 
@@ -29,17 +33,20 @@ public class CustomerHomepageController {
     private final DentistProfileRepository dentistRepo;
     private final BlogRepository blogRepo;
     private final UserRepository userRepository;
+    private final CustomerAppointmentService customerAppointmentService;
 
     public CustomerHomepageController(CustomerProfileService profileService,
                                       ServiceRepository serviceRepo,
                                       DentistProfileRepository dentistRepo,
                                       BlogRepository blogRepo,
-                                      UserRepository userRepository) {
+                                      UserRepository userRepository,
+                                      CustomerAppointmentService customerAppointmentService) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
         this.blogRepo = blogRepo;
         this.userRepository = userRepository;
+        this.customerAppointmentService = customerAppointmentService;
     }
 
     @GetMapping({"/", "/index", "/home"})
@@ -61,7 +68,7 @@ public class CustomerHomepageController {
             CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
             if (profile == null) {
                 profile = new CustomerProfile();
-                profile.setFullName("Khách h� ng");
+                profile.setFullName("Khách hàng");
                 model.addAttribute("appointments", new ArrayList<>());
             } else {
                 model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
@@ -93,15 +100,44 @@ public class CustomerHomepageController {
 
     @GetMapping("/customer/book")
     public String bookingPage(Model model) {
-        model.addAttribute("services", serviceRepo.findByActiveTrue());
-        model.addAttribute("active", "booking");
+        prepareBookingPage(model, null);
         return "customer/booking";
+    }
+
+    @GetMapping("/customer/appointments/{id}/rebook")
+    public String rebookAppointment(@PathVariable("id") Long appointmentId,
+                                    Authentication authentication,
+                                    Model model,
+                                    RedirectAttributes redirectAttributes) {
+        Long currentUserId = resolveCurrentUserId(authentication);
+        if (currentUserId == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            RebookPrefillDto rebookPrefill = customerAppointmentService.prepareRebookPrefill(currentUserId, appointmentId);
+            prepareBookingPage(model, rebookPrefill);
+            model.addAttribute("infoMessage", "Đã điền sẵn thông tin từ lịch hẹn cũ. Vui lòng chọn ngày và giờ khám mới.");
+            if (rebookPrefill.getWarningMessage() != null && !rebookPrefill.getWarningMessage().isBlank()) {
+                model.addAttribute("warningMessage", rebookPrefill.getWarningMessage());
+            }
+            return "customer/booking";
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/customer/my-appointments";
+        }
     }
 
     @GetMapping("/customer/my-appointments")
     public String appointmentsPage(Model model) {
         model.addAttribute("active", "appointments");
         return "customer/appointments";
+    }
+
+    private void prepareBookingPage(Model model, RebookPrefillDto rebookPrefill) {
+        model.addAttribute("services", serviceRepo.findByActiveTrue());
+        model.addAttribute("active", "booking");
+        model.addAttribute("rebookPrefill", rebookPrefill != null ? rebookPrefill : new RebookPrefillDto());
     }
 
     private Long resolveCurrentUserId(Authentication authentication) {

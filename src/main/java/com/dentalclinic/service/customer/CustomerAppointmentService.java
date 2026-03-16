@@ -4,7 +4,9 @@ import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.dto.customer.AppointmentInvoiceItemDto;
 import com.dentalclinic.dto.customer.AppointmentPrescriptionItemDto;
 import com.dentalclinic.dto.customer.AppointmentServiceItemDto;
+import com.dentalclinic.dto.customer.CreateReviewRequest;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
+import com.dentalclinic.dto.customer.RebookPrefillDto;
 import com.dentalclinic.dto.customer.RescheduleAppointmentRequest;
 import com.dentalclinic.dto.customer.SlotDto;
 import com.dentalclinic.exception.BookingErrorCode;
@@ -24,10 +26,12 @@ import com.dentalclinic.model.service.Services;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.user.UserStatus;
+import com.dentalclinic.model.review.Review;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.BillingNoteRepository;
 import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.InvoiceRepository;
+import com.dentalclinic.repository.ReviewRepository;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.SlotRepository;
 import com.dentalclinic.repository.UserRepository;
@@ -65,7 +69,6 @@ public class CustomerAppointmentService {
     private static final LocalTime LUNCH_END = LocalTime.of(13, 0);
     private static final LocalTime CLOSE = LocalTime.of(17, 0);
     private static final int SLOT_MIN = 30;
-    private static final int CANCEL_MIN_HOURS_BEFORE = 24;
     private static final BigDecimal DEPOSIT_RATE = new BigDecimal("0.50");
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
@@ -84,6 +87,7 @@ public class CustomerAppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final BillingNoteRepository billingNoteRepository;
     private final InvoiceRepository invoiceRepository;
+    private final ReviewRepository reviewRepository;
     private final ServiceRepository serviceRepository;
     private final SlotRepository slotRepository;
     private final NotificationService notificationService;
@@ -95,6 +99,7 @@ public class CustomerAppointmentService {
                                       AppointmentRepository appointmentRepository,
                                       BillingNoteRepository billingNoteRepository,
                                       InvoiceRepository invoiceRepository,
+                                      ReviewRepository reviewRepository,
                                       ServiceRepository serviceRepository,
                                       SlotRepository slotRepository,
                                       NotificationService notificationService,
@@ -105,6 +110,7 @@ public class CustomerAppointmentService {
         this.appointmentRepository = appointmentRepository;
         this.billingNoteRepository = billingNoteRepository;
         this.invoiceRepository = invoiceRepository;
+        this.reviewRepository = reviewRepository;
         this.serviceRepository = serviceRepository;
         this.slotRepository = slotRepository;
         this.notificationService = notificationService;
@@ -142,7 +148,7 @@ public class CustomerAppointmentService {
         List<Slot> slots = getAvailableSlotsForDuration(date, totals.totalDurationMinutes());
         return slots.stream().map(s -> {
             SlotDto dto = toSlotDto(s);
-            LocalDateTime end = s.getSlotTime().plusMinutes((long) slotsNeeded * SLOT_MIN);
+            LocalDateTime end = calculateAppointmentEndDateTime(s.getSlotTime(), slotsNeeded);
             dto.setDisabled(hasCustomerOverlap(
                     userId,
                     s.getSlotTime().toLocalDate(),
@@ -174,7 +180,7 @@ public class CustomerAppointmentService {
 
         int slotsNeeded = calculateSlotsNeeded(totals.totalDurationMinutes());
         LocalDateTime start = resolveStartDateTime(request);
-        LocalDateTime end = start.plusMinutes((long) slotsNeeded * SLOT_MIN);
+        LocalDateTime end = calculateAppointmentEndDateTime(start, slotsNeeded);
 
         validateNotInPast(start);
         validateWorkingWindow(start, end);
@@ -201,7 +207,7 @@ public class CustomerAppointmentService {
     @Transactional
     public AppointmentDto rescheduleAppointment(Long userId, Long appointmentId, RescheduleAppointmentRequest request) {
         if (request == null || request.getSelectedDate() == null || request.getSelectedTime() == null) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ng� y v�  giờ đổi lịch l�  bắt buộc.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ngày và giờ đổi lịch là bắt buộc.");
         }
 
         Appointment appointment = appointmentRepository.findByIdWithSlotsAndCustomerUserId(appointmentId, userId)
@@ -213,7 +219,7 @@ public class CustomerAppointmentService {
         int slotsNeeded = calculateSlotsNeeded(totalDuration);
 
         LocalDateTime newStart = LocalDateTime.of(request.getSelectedDate(), request.getSelectedTime());
-        LocalDateTime newEnd = newStart.plusMinutes((long) slotsNeeded * SLOT_MIN);
+        LocalDateTime newEnd = calculateAppointmentEndDateTime(newStart, slotsNeeded);
 
         validateNotInPast(newStart);
         validateWorkingWindow(newStart, newEnd);
@@ -255,7 +261,11 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         ensureCancelAllowed(appointment);
-        Appointment cancelled = cancelAppointmentEntity(appointmentId, null, true);
+        Appointment cancelled = cancelAppointmentEntity(
+                appointmentId,
+                null,
+                isCustomerDepositRefundEligible(appointment)
+        );
         notificationService.notifyBookingCancelled(cancelled, "Khách hàng đã hủy lịch hẹn");
         return toDto(cancelled);
     }
@@ -291,7 +301,7 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể xác nhận thanh toán cho lịch hẹn n� y.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể xác nhận thanh toán cho lịch hẹn này.");
         }
 
         appointment.setStatus(AppointmentStatus.PENDING);
@@ -303,21 +313,21 @@ public class CustomerAppointmentService {
     @Transactional
     public Appointment payDepositWithWallet(Long userId, Long appointmentId) {
         Appointment appointment = appointmentRepository.findByIdWithSlotsAndCustomerUserId(appointmentId, userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lich hen khong ton tai."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lich hen nay khong o trang thai cho thanh toan coc.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lịch hẹn này không ở trạng thái chờ thanh toán cọc.");
         }
 
         BigDecimal depositAmount = resolveAppointmentDepositAmount(appointment);
         if (depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "So tien dat coc khong hop le.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số tiền đặt cọc không hợp lệ.");
         }
 
         walletService.pay(
                 appointment.getCustomer(),
                 depositAmount,
-                "Thanh toan tien coc lich hen #" + appointment.getId(),
+                "Thanh to?n ti?n c?c l?ch h?n #" + appointment.getId(),
                 appointment.getId()
         );
 
@@ -330,21 +340,21 @@ public class CustomerAppointmentService {
     @Transactional
     public Appointment payRemainingWithWallet(Long userId, Long appointmentId) {
         Appointment appointment = appointmentRepository.findByIdWithSlotsAndCustomerUserId(appointmentId, userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lich hen khong ton tai."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lich hen nay khong o trang thai cho thanh toan phan con lai.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lịch hẹn này không ở trạng thái chờ thanh toán phần còn lại.");
         }
 
         Invoice invoice = invoiceRepository.findByAppointment_Id(appointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Khong tim thay hoa don thanh toan."));
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy hóa đơn thanh toán."));
 
         if (invoice.getStatus() != null && "PAID".equals(invoice.getStatus().name())) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Hoa don nay da duoc thanh toan.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Hóa đơn này đã được thanh toán.");
         }
         BigDecimal remainingAmount = resolveRemainingInvoiceAmount(appointment, invoice);
         if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "So tien thanh toan khong hop le.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số tiền thanh toán không hợp lệ.");
         }
 
         invoice.setTotalAmount(remainingAmount);
@@ -353,7 +363,7 @@ public class CustomerAppointmentService {
         walletService.pay(
                 appointment.getCustomer(),
                 remainingAmount,
-                "Thanh toan hoa don con lai lich hen #" + appointment.getId(),
+                "Thanh toán hóa đơn còn lại lịch hẹn #" + appointment.getId(),
                 appointment.getId()
         );
 
@@ -362,32 +372,89 @@ public class CustomerAppointmentService {
 
         appointment.setStatus(AppointmentStatus.COMPLETED);
         Appointment saved = appointmentRepository.save(appointment);
-        notificationService.notifyBookingUpdated(saved, "Da thanh toan hoa don thanh cong");
+        notificationService.notifyBookingUpdated(saved, "đã thanh toán hóa đơn thành công");
         return saved;
     }
 
     public List<AppointmentDto> getMyAppointments(Long userId) {
-        return appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream()
-                .filter(a -> a.getStatus() != AppointmentStatus.PENDING_DEPOSIT)
+        return getMyAppointments(userId, "default");
+    }
+
+    public List<AppointmentDto> getMyAppointments(Long userId, String view) {
+        return findAppointmentsForView(userId, view).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public RebookPrefillDto prepareRebookPrefill(Long userId, Long appointmentId) {
+        validateBookingUser(userId);
+
+        Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy lịch hẹn để đặt lại."));
+
+        if (!isRebookEligibleStatus(appointment.getStatus())) {
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ có thể đặt lại từ lịch hẹn đã hoàn thành hoặc đã hủy.");
+        }
+
+        RebookPrefillDto dto = new RebookPrefillDto();
+        dto.setSourceAppointmentId(appointment.getId());
+        dto.setPatientNote(appointment.getNotes());
+        dto.setContactChannel(appointment.getContactChannel());
+        dto.setContactValue(appointment.getContactValue());
+
+        List<Long> oldServiceIds = resolveAppointmentServiceIds(appointment);
+        List<Long> activeServiceIds = serviceRepository.findAllById(oldServiceIds).stream()
+                .filter(Services::isActive)
+                .map(Services::getId)
+                .collect(Collectors.toList());
+        dto.setServiceIds(activeServiceIds);
+
+        List<String> unavailableServiceNames = new ArrayList<>();
+        if (!oldServiceIds.isEmpty()) {
+            for (AppointmentServiceItemDto item : toDto(appointment).getServices()) {
+                if (item.getServiceId() == null || activeServiceIds.contains(item.getServiceId())) {
+                    continue;
+                }
+                if (item.getServiceName() != null && !item.getServiceName().isBlank()) {
+                    unavailableServiceNames.add(item.getServiceName());
+                }
+            }
+        }
+
+        if (!unavailableServiceNames.isEmpty()) {
+            dto.setWarningMessage("Một số dịch vụ từ lịch hẹn cũ không còn áp dụng: " + String.join(", ", unavailableServiceNames) + ".");
+        } else if (!oldServiceIds.isEmpty() && activeServiceIds.isEmpty()) {
+            dto.setWarningMessage("Dịch vụ từ lịch hẹn cũ hiện không còn khả dụng. Vui lòng chọn dịch vụ mới trước khi tiếp tục.");
+        }
+
+        if (appointment.getDentist() != null && appointment.getDentist().getUser() != null
+                && appointment.getDentist().getUser().getStatus() == UserStatus.ACTIVE) {
+            dto.setDentistId(appointment.getDentist().getId());
+        }
+
+        return dto;
+    }
+
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size) {
-        return getMyAppointmentsPage(userId, page, size, null, "date_desc");
+        return getMyAppointmentsPage(userId, page, size, null, "date_desc", "default");
     }
 
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword) {
-        return getMyAppointmentsPage(userId, page, size, keyword, "date_desc");
+        return getMyAppointmentsPage(userId, page, size, keyword, "date_desc", "default");
     }
 
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword, String sort) {
+        return getMyAppointmentsPage(userId, page, size, keyword, sort, "default");
+    }
+
+    public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword, String sort, String view) {
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, size);
         String normalizedSort = normalizeAppointmentSort(sort);
+        String normalizedView = normalizeAppointmentView(view);
 
-        List<AppointmentDto> allDtos = appointmentRepository.findByCustomer_User_IdOrderByDateDesc(userId).stream()
-                .filter(a -> a.getStatus() != AppointmentStatus.PENDING_DEPOSIT)
+        List<AppointmentDto> allDtos = findAppointmentsForView(userId, normalizedView).stream()
                 .sorted(resolveAppointmentComparator(normalizedSort))
                 .map(this::toDto)
                 .filter(dto -> matchesAppointmentKeyword(dto, keyword))
@@ -411,6 +478,11 @@ public class CustomerAppointmentService {
             case "created_desc" -> "booked_desc";
             default -> "date_desc";
         };
+    }
+
+    public String normalizeAppointmentView(String view) {
+        String normalized = view == null ? "" : view.trim().toLowerCase(Locale.ROOT);
+        return "cancelled".equals(normalized) ? "cancelled" : "default";
     }
 
     private Comparator<Appointment> resolveAppointmentComparator(String sort) {
@@ -496,18 +568,83 @@ public class CustomerAppointmentService {
 
     @Transactional
     public Optional<AppointmentDto> checkIn(Long userId, Long appointmentId) {
-        Optional<Appointment> opt = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId);
-        if (opt.isEmpty()) {
-            return Optional.empty();
+        validateBookingUser(userId);
+        throw new BookingException(
+                BookingErrorCode.APPOINTMENT_STATUS_INVALID,
+                "Lịch hẹn không còn dùng bước check-in. Sau khi lễ tân xác nhận, bác sĩ sẽ bắt đầu khám trực tiếp."
+        );
+    }
+
+    @Transactional
+    public void hideCancelledAppointmentFromHistory(Long userId, Long appointmentId) {
+        Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy lịch hẹn."));
+
+        if (appointment.getStatus() != AppointmentStatus.CANCELLED) {
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ có thể ẩn khỏi lịch sử với lịch hẹn đã hủy.");
         }
 
-        Appointment appointment = opt.get();
-        if (!appointment.getDate().equals(nowDateTime().toLocalDate()) || appointment.getStatus() != AppointmentStatus.CONFIRMED) {
-            return Optional.empty();
+        appointment.setCustomerHidden(true);
+        appointmentRepository.save(appointment);
+    }
+
+    @Transactional
+    public Review createReview(Long userId, Long appointmentId, CreateReviewRequest request) {
+        validateBookingUser(userId);
+        if (request == null || request.getRating() == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn số sao đánh giá.");
         }
 
-        appointment.setStatus(AppointmentStatus.CHECKED_IN);
-        return Optional.of(toDto(appointmentRepository.save(appointment)));
+        Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
+                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy lịch hẹn để đánh giá."));
+
+        if (!(appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.DONE)) {
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ có thể đánh giá sau khi lịch hẹn đã hoàn thành.");
+        }
+
+        if (appointment.getDentist() == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Lịch hẹn này chưa có thông tin bác sĩ để đánh giá.");
+        }
+
+        if (reviewRepository.existsByAppointment_Id(appointmentId)) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Lịch hẹn này đã được đánh giá trước đó.");
+        }
+
+        int rating = request.getRating();
+        if (rating < 1 || rating > 5) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số sao đánh giá phải từ 1 đến 5.");
+        }
+
+        String comment = request.getComment() == null ? null : request.getComment().trim();
+        if (comment != null && comment.isEmpty()) {
+            comment = null;
+        }
+        if (comment != null && comment.length() > 500) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Nội dung đánh giá tối đa 500 ký tự.");
+        }
+
+        Review review = new Review();
+        review.setAppointment(appointment);
+        review.setCustomer(appointment.getCustomer());
+        review.setDentist(appointment.getDentist());
+        review.setRating(rating);
+        review.setComment(comment);
+        return reviewRepository.save(review);
+    }
+
+    private List<Appointment> findAppointmentsForView(Long userId, String view) {
+        String normalizedView = normalizeAppointmentView(view);
+        if ("cancelled".equals(normalizedView)) {
+            return appointmentRepository.findByCustomer_User_IdAndStatusOrderByDateDescStartTimeDesc(
+                    userId,
+                    AppointmentStatus.CANCELLED
+            );
+        }
+
+        return appointmentRepository.findByCustomer_User_IdAndCustomerHiddenFalseOrderByDateDesc(userId).stream()
+                .filter(appointment -> appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT)
+                .filter(appointment -> appointment.getStatus() != AppointmentStatus.CANCELLED)
+                .collect(Collectors.toList());
     }
 
     public boolean checkDentistOverlap(Long dentistProfileId,
@@ -531,25 +668,27 @@ public class CustomerAppointmentService {
         }
 
         List<Slot> all = date.equals(now.toLocalDate())
-                ? slotRepository.findAvailableSlotsForToday(findNextSlotStart(now), dayEnd)
-                : slotRepository.findAvailableSlotsBetweenTimes(dayStart, dayEnd);
+                ? slotRepository.findAllSlotsForToday(findNextSlotStart(now), dayEnd)
+                : slotRepository.findAllSlotsBetweenTimes(dayStart, dayEnd);
+        Map<LocalDateTime, Slot> slotByTime = all.stream()
+                .collect(Collectors.toMap(Slot::getSlotTime, slot -> slot, (left, right) -> left));
 
         List<Slot> availableStarts = new ArrayList<>();
-        for (int i = 0; i <= all.size() - slotsNeeded; i++) {
+        for (Slot candidate : all) {
+            List<LocalDateTime> requiredSlotTimes = buildRequiredSlotTimes(candidate.getSlotTime(), slotsNeeded);
+            if (requiredSlotTimes.size() != slotsNeeded) {
+                continue;
+            }
             boolean good = true;
-            for (int j = 0; j < slotsNeeded; j++) {
-                Slot slot = all.get(i + j);
-                LocalDateTime expectedTime = all.get(i).getSlotTime().plusMinutes((long) j * SLOT_MIN);
-                if (!slot.getSlotTime().equals(expectedTime) || !slot.isAvailable()) {
+            for (LocalDateTime requiredSlotTime : requiredSlotTimes) {
+                Slot slot = slotByTime.get(requiredSlotTime);
+                if (slot == null || !slot.isAvailable()) {
                     good = false;
                     break;
                 }
             }
             if (good) {
-                LocalDateTime start = all.get(i).getSlotTime();
-                if (isInsideWorkingWindow(start, start.plusMinutes((long) slotsNeeded * SLOT_MIN))) {
-                    availableStarts.add(all.get(i));
-                }
+                availableStarts.add(candidate);
             }
         }
         return availableStarts;
@@ -582,21 +721,23 @@ public class CustomerAppointmentService {
             throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thời lượng đặt lịch không hợp lệ.");
         }
 
-        LocalDateTime endDateTime = startDateTime.plusMinutes((long) slotsNeeded * SLOT_MIN);
+        LocalDateTime endDateTime = calculateAppointmentEndDateTime(startDateTime, slotsNeeded);
         if (!isInsideWorkingWindow(startDateTime, endDateTime)) {
-            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngo� i giờ l� m việc.");
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Th\u1eddi gian n\u1eb1m ngo\u00e0i gi\u1edd l\u00e0m vi\u1ec7c.");
         }
 
-        List<Slot> locked = slotRepository.findActiveSlotsForUpdate(startDateTime, endDateTime);
-        if (locked.size() != slotsNeeded) {
+        List<LocalDateTime> requiredSlotTimes = buildRequiredSlotTimes(startDateTime, slotsNeeded);
+        if (requiredSlotTimes.size() != slotsNeeded) {
             return new ArrayList<>();
         }
 
-        for (int i = 0; i < locked.size(); i++) {
-            LocalDateTime expectedTime = startDateTime.plusMinutes((long) i * SLOT_MIN);
-            if (!locked.get(i).getSlotTime().equals(expectedTime) || !locked.get(i).isAvailable()) {
+        List<Slot> locked = new ArrayList<>();
+        for (LocalDateTime requiredSlotTime : requiredSlotTimes) {
+            Slot slot = slotRepository.findBySlotTimeAndActiveTrueForUpdate(requiredSlotTime).orElse(null);
+            if (slot == null || !slot.isAvailable()) {
                 return new ArrayList<>();
             }
+            locked.add(slot);
         }
 
         for (Slot slot : locked) {
@@ -611,7 +752,7 @@ public class CustomerAppointmentService {
     private void releaseSlots(List<Slot> slots) {
         for (Slot slot : slots) {
             Slot locked = slotRepository.findBySlotTimeForUpdateRegardlessActive(slot.getSlotTime())
-                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung gi\u1edd kh\u00f4ng t\u1ed3n t\u1ea1i."));
 
             if (locked.getBookedCount() > 0) {
                 locked.setBookedCount(locked.getBookedCount() - 1);
@@ -705,7 +846,7 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING && appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể xác nhận lịch hẹn á»Ÿ trạng thái hiện tại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Kh\u00f4ng th\u1ec3 x\u00e1c nh\u1eadn l\u1ecbch h\u1eb9n \u1edf tr\u1ea1ng th\u00e1i hi\u1ec7n t\u1ea1i.");
         }
 
         appointment.setStatus(AppointmentStatus.CONFIRMED);
@@ -717,7 +858,11 @@ public class CustomerAppointmentService {
         Appointment appointment = appointmentRepository.findByIdWithSlots(appointmentId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
-        if (appointment.getStatus() == AppointmentStatus.CANCELLED || appointment.getStatus() == AppointmentStatus.COMPLETED) {
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED
+                || appointment.getStatus() == AppointmentStatus.COMPLETED
+                || appointment.getStatus() == AppointmentStatus.DONE
+                || appointment.getStatus() == AppointmentStatus.EXAMINING
+                || appointment.getStatus() == AppointmentStatus.IN_PROGRESS) {
             throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
         }
 
@@ -727,7 +872,7 @@ public class CustomerAppointmentService {
                 walletService.refund(
                         appointment.getCustomer(),
                         refundAmount,
-                        "Ho� n tiền đặt cọc lịch hẹn #" + appointment.getId(),
+                        "Ho?n ti?n ??t c?c l?ch h?n #" + appointment.getId(),
                         appointment.getId()
                 );
             }
@@ -779,11 +924,11 @@ public class CustomerAppointmentService {
         normalizeAndValidateServiceIds(rawServiceIds, true);
 
         if (!request.isOldFormat() && !request.isNewFormat()) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn ng� y v�  giờ hợp lệ.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn ngày và giờ hợp lệ.");
         }
 
         if (request.getPatientNote() != null && request.getPatientNote().length() > 500) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ghi chú tối Ä‘a 500 ký tự.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ghi ch\u00fa t\u1ed1i \u0111a 500 k\u00fd t\u1ef1.");
         }
 
         if (request.getContactChannel() == null || request.getContactChannel().isBlank()) {
@@ -800,14 +945,14 @@ public class CustomerAppointmentService {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số điện thoại/Zalo không hợp lệ.");
         }
         if ("EMAIL".equals(channel) && !EMAIL_PATTERN.matcher(value).matches()) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Email không hợp lệ.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Email kh\u00f4ng h\u1ee3p l\u1ec7.");
         }
         if (!List.of("PHONE", "ZALO", "EMAIL").contains(channel)) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Kênh liên hệ chỉ được: PHONE, ZALO, EMAIL.");
         }
 
         if (request.getDepositAmount() != null && request.getDepositAmount() < 0) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiền cọc không được Ã¢m.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiền cọc không được âm.");
         }
 
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
@@ -826,7 +971,7 @@ public class CustomerAppointmentService {
         }
 
         if (strictRequired && ids.isEmpty()) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn Ã­t nhất một dịch vụ.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn ít nhất một dịch vụ.");
         }
 
         HashSet<Long> seen = new HashSet<>();
@@ -850,7 +995,7 @@ public class CustomerAppointmentService {
             throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Chỉ bệnh nhân mới được đặt lịch.");
         }
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "T� i khoản Ä‘ang bị khóa.");
+            throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Tài khoản đang bị khóa.");
         }
 
         return user;
@@ -860,14 +1005,14 @@ public class CustomerAppointmentService {
         return customerProfileRepository.findByUser_Id(user.getId()).orElseGet(() -> {
             CustomerProfile profile = new CustomerProfile();
             profile.setUser(user);
-            profile.setFullName(user.getEmail() != null ? user.getEmail() : "Khách h� ng");
+            profile.setFullName(user.getEmail() != null ? user.getEmail() : "Khách hàng");
             return customerProfileRepository.save(profile);
         });
     }
 
     private List<Services> validateServices(List<Long> serviceIds) {
         if (serviceIds == null || serviceIds.isEmpty()) {
-            throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Danh sách dịch vụ không hợp lệ.");
+            throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Danh s\u00e1ch d\u1ecbch v\u1ee5 kh\u00f4ng h\u1ee3p l\u1ec7.");
         }
 
         Map<Long, Services> serviceMap = serviceRepository.findAllById(serviceIds)
@@ -881,7 +1026,7 @@ public class CustomerAppointmentService {
                 throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Dịch vụ không tồn tại.");
             }
             if (!service.isActive()) {
-                throw new BookingException(BookingErrorCode.SERVICE_INACTIVE, "Dịch vụ Ä‘ang tạm ngưng.");
+                throw new BookingException(BookingErrorCode.SERVICE_INACTIVE, "Dịch vụ đang tạm ngưng.");
             }
             if (service.getDurationMinutes() <= 0) {
                 throw new BookingException(BookingErrorCode.INVALID_TIME_RANGE, "Thời lượng dịch vụ không hợp lệ.");
@@ -913,7 +1058,7 @@ public class CustomerAppointmentService {
 
         BigDecimal client = BigDecimal.valueOf(clientDeposit).setScale(2, RoundingMode.HALF_UP);
         if (client.compareTo(expectedDeposit) != 0) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Tiền cọc không hợp lệ theo cấu hình booking.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ti?n c?c kh?ng h?p l? theo c?u h?nh booking.");
         }
     }
 
@@ -979,7 +1124,7 @@ public class CustomerAppointmentService {
     private LocalDateTime resolveStartDateTime(CreateAppointmentRequest request) {
         if (request.isOldFormat()) {
             Slot slot = slotRepository.findById(request.getSlotId())
-                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung gi\u1edd kh\u00f4ng t\u1ed3n t\u1ea1i."));
             return slot.getSlotTime();
         }
         return LocalDateTime.of(request.getSelectedDate(), request.getSelectedTime());
@@ -987,7 +1132,7 @@ public class CustomerAppointmentService {
 
     private void validateSelectedDate(LocalDate date) {
         if (date == null) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ng� y không hợp lệ.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ngày không hợp lệ.");
         }
         if (date.isBefore(nowDateTime().toLocalDate())) {
             throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
@@ -1005,15 +1150,15 @@ public class CustomerAppointmentService {
         LocalTime end = endDateTime.toLocalTime();
 
         if (endDateTime.toLocalDate().isAfter(startDateTime.toLocalDate())) {
-            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngo� i giờ l� m việc.");
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Th\u1eddi gian n\u1eb1m ngo\u00e0i gi\u1edd l\u00e0m vi\u1ec7c.");
         }
 
         if (start.isBefore(OPEN) || !end.isAfter(start) || end.isAfter(CLOSE) || start.equals(CLOSE)) {
-            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngo� i giờ l� m việc.");
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Th\u1eddi gian n\u1eb1m ngo\u00e0i gi\u1edd l\u00e0m vi\u1ec7c.");
         }
 
-        if (start.isBefore(LUNCH_END) && end.isAfter(LUNCH_START)) {
-            throw new BookingException(BookingErrorCode.LUNCH_BREAK_CONFLICT, "Khung giờ cắt ngang thời gian nghỉ trưa 12:00-13:00.");
+        if (isDuringLunchBreak(start)) {
+            throw new BookingException(BookingErrorCode.LUNCH_BREAK_CONFLICT, "Không thể bắt đầu lịch hẹn trong giờ nghỉ trưa 12:00-13:00.");
         }
     }
 
@@ -1023,7 +1168,7 @@ public class CustomerAppointmentService {
                                            LocalTime endTime,
                                            Long excludeAppointmentId) {
         if (hasCustomerOverlap(userId, date, startTime, endTime, excludeAppointmentId)) {
-            throw new BookingException(BookingErrorCode.BOOKING_CONFLICT, "Bạn đã có lịch hẹn trùng thời điểm n� y.");
+            throw new BookingException(BookingErrorCode.BOOKING_CONFLICT, "Bạn đã có lịch hẹn trùng thời điểm này.");
         }
     }
 
@@ -1069,6 +1214,13 @@ public class CustomerAppointmentService {
                 : appointmentRepository.existsCustomerOverlapExcludingAppointment(userId, excludeAppointmentId, date, startTime, endTime, ACTIVE_BOOKING_STATUSES);
     }
 
+    private boolean isRebookEligibleStatus(AppointmentStatus status) {
+        return status == AppointmentStatus.COMPLETED
+                || status == AppointmentStatus.DONE
+                || status == AppointmentStatus.CANCELLED
+                || status == AppointmentStatus.REEXAM;
+    }
+
     private void ensureRescheduleAllowed(Appointment appointment) {
         if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELLED) {
             throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED, "Không thể đổi lịch với trạng thái hiện tại.");
@@ -1080,21 +1232,35 @@ public class CustomerAppointmentService {
     }
 
     private void ensureCancelAllowed(Appointment appointment) {
-        if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELLED) {
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED
+                || appointment.getStatus() == AppointmentStatus.CANCELLED
+                || appointment.getStatus() == AppointmentStatus.EXAMINING
+                || appointment.getStatus() == AppointmentStatus.IN_PROGRESS) {
             throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
         }
+    }
 
-        LocalDateTime threshold = LocalDateTime.of(appointment.getDate(), appointment.getStartTime())
-                .minusHours(CANCEL_MIN_HOURS_BEFORE);
-        if (nowDateTime().isAfter(threshold)) {
-            throw new BookingException(BookingErrorCode.CANCEL_WINDOW_CLOSED, "Chỉ có thể hủy lịch trước giờ khám Ã­t nhất 24 giờ.");
+    private boolean isCustomerDepositRefundEligible(Appointment appointment) {
+        if (appointment == null || appointment.getDate() == null) {
+            return false;
         }
+
+        AppointmentStatus status = appointment.getStatus();
+        if (!(status == AppointmentStatus.PENDING || status == AppointmentStatus.CONFIRMED)) {
+            return false;
+        }
+
+        return nowDateTime().toLocalDate().isBefore(appointment.getDate());
     }
 
     private LocalDateTime findNextSlotStart(LocalDateTime now) {
         int slotMinute = (now.getMinute() / SLOT_MIN) * SLOT_MIN;
         LocalDateTime currentSlotStart = LocalDateTime.of(now.toLocalDate(), LocalTime.of(now.getHour(), slotMinute));
-        return now.isAfter(currentSlotStart) ? currentSlotStart.plusMinutes(SLOT_MIN) : currentSlotStart;
+        LocalDateTime candidate = now.isAfter(currentSlotStart) ? currentSlotStart.plusMinutes(SLOT_MIN) : currentSlotStart;
+        if (isDuringLunchBreak(candidate.toLocalTime())) {
+            return LocalDateTime.of(candidate.toLocalDate(), LUNCH_END);
+        }
+        return candidate;
     }
 
     private boolean isInsideWorkingWindow(LocalDateTime startDateTime, LocalDateTime endDateTime) {
@@ -1109,7 +1275,57 @@ public class CustomerAppointmentService {
             return false;
         }
 
-        return !(start.isBefore(LUNCH_END) && end.isAfter(LUNCH_START));
+        return !isDuringLunchBreak(start);
+    }
+
+    private LocalDateTime calculateAppointmentEndDateTime(LocalDateTime startDateTime, int slotsNeeded) {
+        List<LocalDateTime> requiredSlotTimes = buildRequiredSlotTimes(startDateTime, slotsNeeded);
+        if (requiredSlotTimes.size() != slotsNeeded) {
+            return startDateTime;
+        }
+
+        return requiredSlotTimes.get(requiredSlotTimes.size() - 1).plusMinutes(SLOT_MIN);
+    }
+
+    private List<LocalDateTime> buildRequiredSlotTimes(LocalDateTime startDateTime, int slotsNeeded) {
+        List<LocalDateTime> requiredSlotTimes = new ArrayList<>();
+        if (slotsNeeded <= 0 || startDateTime == null) {
+            return requiredSlotTimes;
+        }
+
+        LocalDateTime current = startDateTime;
+        for (int i = 0; i < slotsNeeded; i++) {
+            if (!isValidWorkingSlotStart(current)) {
+                return new ArrayList<>();
+            }
+
+            requiredSlotTimes.add(current);
+            current = advanceToNextWorkingSlot(current);
+        }
+        return requiredSlotTimes;
+    }
+
+    private LocalDateTime advanceToNextWorkingSlot(LocalDateTime slotStart) {
+        LocalDateTime next = slotStart.plusMinutes(SLOT_MIN);
+        if (next.toLocalTime().equals(LUNCH_START) || isDuringLunchBreak(next.toLocalTime())) {
+            return LocalDateTime.of(next.toLocalDate(), LUNCH_END);
+        }
+        return next;
+    }
+
+    private boolean isValidWorkingSlotStart(LocalDateTime slotStart) {
+        if (slotStart == null) {
+            return false;
+        }
+
+        LocalTime time = slotStart.toLocalTime();
+        return !time.isBefore(OPEN)
+                && time.isBefore(CLOSE)
+                && !isDuringLunchBreak(time);
+    }
+
+    private boolean isDuringLunchBreak(LocalTime time) {
+        return !time.isBefore(LUNCH_START) && time.isBefore(LUNCH_END);
     }
 
     private LocalDateTime nowDateTime() {
@@ -1252,7 +1468,20 @@ public class CustomerAppointmentService {
             dto.setDentistName(appointment.getDentist().getFullName());
         }
 
-        dto.setCanCheckIn(appointment.getDate().equals(nowDateTime().toLocalDate()) && appointment.getStatus() == AppointmentStatus.CONFIRMED);
+        reviewRepository.findByAppointment_Id(appointment.getId()).ifPresent(review -> {
+            dto.setReviewed(true);
+            dto.setReviewRating(review.getRating());
+            dto.setReviewComment(review.getComment());
+            dto.setReviewCreatedAt(review.getCreatedAt());
+        });
+
+        dto.setCanCheckIn(false);
+        dto.setCanRebook(isRebookEligibleStatus(appointment.getStatus()));
+        dto.setCanReview(
+                !dto.isReviewed()
+                        && appointment.getDentist() != null
+                        && (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.DONE)
+        );
         return dto;
     }
 
@@ -1291,4 +1520,3 @@ public class CustomerAppointmentService {
     private record BookingTotals(int totalDurationMinutes, BigDecimal totalAmount, BigDecimal depositAmount) {
     }
 }
-

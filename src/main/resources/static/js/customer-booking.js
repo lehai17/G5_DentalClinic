@@ -12,18 +12,37 @@
   };
   var paymentSelection = null;
 
+  function normalizeText(value) {
+    if (value == null) return '';
+    var text = String(value);
+    if (!/[ÃÂÄÆÐï]/.test(text)) return text;
+    try {
+      return decodeURIComponent(escape(text));
+    } catch (err) {
+      return text;
+    }
+  }
+
   function showToast(message, type, title) {
     if (window.CustomerFeedback) {
-      window.CustomerFeedback.toast({ message: message, type: type || 'info', title: title || '' });
+      window.CustomerFeedback.toast({
+        message: normalizeText(message),
+        type: type || 'info',
+        title: normalizeText(title || '')
+      });
       return;
     }
   }
 
   function showAlert(message, type, title) {
     if (window.CustomerFeedback) {
-      return window.CustomerFeedback.alert({ message: message, type: type || 'info', title: title || 'Thông báo' });
+      return window.CustomerFeedback.alert({
+        message: normalizeText(message),
+        type: type || 'info',
+        title: normalizeText(title || 'Thông báo')
+      });
     }
-    alert(message);
+    alert(normalizeText(message));
     return Promise.resolve();
   }
 
@@ -168,6 +187,44 @@
     return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
   }
 
+  function isDuringLunchBreak(timeValue) {
+    var time = parseTimeParts(timeValue);
+    if (!time) return false;
+    var minutes = (time.hour * 60) + time.minute;
+    return minutes >= 12 * 60 && minutes < 13 * 60;
+  }
+
+  function getNextWorkingSlotStart(timeValue) {
+    var next = addMinutesToTime(timeValue, SLOT_MINUTES);
+    return isDuringLunchBreak(next) ? '13:00' : next;
+  }
+
+  function buildRequiredSlotStartTimes(slotStartTime, slotsNeeded) {
+    var result = [];
+    if (!slotStartTime || !slotsNeeded || slotsNeeded <= 0) return result;
+
+    var current = slotStartTime;
+    for (var i = 0; i < slotsNeeded; i++) {
+      result.push(current);
+      current = getNextWorkingSlotStart(current);
+    }
+    return result;
+  }
+
+  function getDisplayEndTime(slotStartTime, slotsNeeded) {
+    if (!slotStartTime) return null;
+    if (!slotsNeeded || slotsNeeded <= 0) {
+      return addMinutesToTime(slotStartTime, SLOT_MINUTES);
+    }
+
+    var requiredStarts = buildRequiredSlotStartTimes(slotStartTime, slotsNeeded);
+    if (!requiredStarts.length) {
+      return addMinutesToTime(slotStartTime, SLOT_MINUTES);
+    }
+
+    return addMinutesToTime(requiredStarts[requiredStarts.length - 1], SLOT_MINUTES);
+  }
+
   function getSelectedDurationMinutes() {
     return getSelectedServices().reduce(function (sum, item) {
       return sum + (item.duration || 0);
@@ -177,26 +234,26 @@
   function getSelectedSlotDisplayEndTime(slot) {
     if (!slot || !slot.startTime) return null;
     var slotsNeeded = calculateSlotsNeeded(getSelectedDurationMinutes());
-    if (slotsNeeded <= 0) {
-      return slot.endTime || addMinutesToTime(slot.startTime, SLOT_MINUTES);
-    }
-    return addMinutesToTime(slot.startTime, slotsNeeded * SLOT_MINUTES);
+    return getDisplayEndTime(
+      slot.startTime,
+      slotsNeeded <= 0 ? 1 : slotsNeeded,
+    );
   }
 
   function isSlotWithinSelectedRange(slot) {
     if (!slot || !state.selectedSlot || !slot.startTime || !state.selectedSlot.startTime) return false;
-    var selectedStart = parseTimeParts(state.selectedSlot.startTime);
-    var candidateStart = parseTimeParts(slot.startTime);
-    var selectedEnd = parseTimeParts(getSelectedSlotDisplayEndTime(state.selectedSlot));
-    if (!selectedStart || !candidateStart || !selectedEnd) return false;
-    var selectedStartMinutes = (selectedStart.hour * 60) + selectedStart.minute;
-    var candidateStartMinutes = (candidateStart.hour * 60) + candidateStart.minute;
-    var selectedEndMinutes = (selectedEnd.hour * 60) + selectedEnd.minute;
-    return candidateStartMinutes >= selectedStartMinutes && candidateStartMinutes < selectedEndMinutes;
+    var slotsNeeded = calculateSlotsNeeded(getSelectedDurationMinutes());
+    var requiredStarts = buildRequiredSlotStartTimes(
+      state.selectedSlot.startTime,
+      slotsNeeded <= 0 ? 1 : slotsNeeded,
+    );
+    return requiredStarts.indexOf(slot.startTime) !== -1;
   }
 
   function renderSlotButtonContent(slot, statusText, useExpandedRange) {
-    var endTime = useExpandedRange ? getSelectedSlotDisplayEndTime(slot) : (slot.endTime || addMinutesToTime(slot.startTime, SLOT_MINUTES));
+    var endTime = useExpandedRange
+      ? getSelectedSlotDisplayEndTime(slot)
+      : (slot.endTime || addMinutesToTime(slot.startTime, SLOT_MINUTES));
     return formatTime(slot.startTime) + ' - ' + formatTime(endTime) +
       '<span class="time-slot-status">' + statusText + '</span>';
   }
@@ -364,6 +421,8 @@
 
   function loadSlotsForDate(dateStr) {
     var selectedServices = getSelectedServices();
+    var totalDuration = getSelectedDurationMinutes();
+    var slotsNeeded = calculateSlotsNeeded(totalDuration);
     var loading = document.getElementById('time-slots-loading');
     var grid = document.getElementById('time-slots-grid');
     var empty = document.getElementById('time-slots-empty');
@@ -392,33 +451,46 @@
       params.append('serviceIds', String(service.id));
     });
 
-    fetch('/customer/slots?' + params.toString(), { credentials: 'same-origin' })
-      .then(function (res) {
-        if (res.status === 401) {
-          showAlert('Bạn cần đăng nhập để đặt lịch.', 'warning', 'Chưa đăng nhập');
-          setStep(1);
-          return null;
-        }
-        if (!res.ok) {
-          return res.json()
-            .then(function (err) {
-              throw new Error(err.message || 'Không thể tải danh sách khung giờ.');
-            })
-            .catch(function () {
-              throw new Error('Không thể tải danh sách khung giờ.');
-            });
-        }
-        return res.json();
+    Promise.all([
+      fetch('/customer/slots?' + params.toString(), { credentials: 'same-origin' }),
+      fetch('/customer/slots/all?date=' + encodeURIComponent(dateStr), { credentials: 'same-origin' })
+    ])
+      .then(function (responses) {
+        return Promise.all(responses.map(function (res) {
+          if (res.status === 401) {
+            showAlert('Bạn cần đăng nhập để đặt lịch.', 'warning', 'Chưa đăng nhập');
+            setStep(1);
+            return null;
+          }
+          if (!res.ok) {
+            return res.json()
+              .then(function (err) {
+                throw new Error(normalizeText(err.message || 'Không thể tải danh sách khung giờ.'));
+              })
+              .catch(function () {
+                throw new Error('Không thể tải danh sách khung giờ.');
+              });
+          }
+          return res.json();
+        }));
       })
-      .then(function (slots) {
+      .then(function (payloads) {
         if (loading) loading.style.display = 'none';
-        if (!Array.isArray(slots) || !grid) return;
+        if (!Array.isArray(payloads) || !grid) return;
+
+        var availableStarts = Array.isArray(payloads[0]) ? payloads[0] : [];
+        var allSlots = Array.isArray(payloads[1]) ? payloads[1] : [];
+        var availableById = {};
         state.renderedSlots = [];
+
+        availableStarts.forEach(function (slot) {
+          availableById[String(slot.id)] = slot;
+        });
 
         var now = new Date();
         var p = dateStr.split('-');
         var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
-        var futureSlots = slots.filter(function (slot) {
+        var futureSlots = allSlots.filter(function (slot) {
           if (!slot.startTime) return false;
           var t = slot.startTime.split(':');
           var slotDateTime = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parseInt(t[0], 10), parseInt(t[1], 10), 0);
@@ -430,9 +502,12 @@
           return;
         }
 
-        state.renderedSlots = futureSlots.slice();
+        state.renderedSlots = futureSlots.map(function (slot) {
+          return availableById[String(slot.id)] || slot;
+        });
 
-        futureSlots.forEach(function (slot) {
+        futureSlots.forEach(function (rawSlot) {
+          var slot = availableById[String(rawSlot.id)] || rawSlot;
           var btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'time-slot-btn';
@@ -440,27 +515,41 @@
 
           var hasSpotsValue = slot.availableSpots !== undefined && slot.availableSpots !== null;
           var availableSpots = hasSpotsValue ? Number(slot.availableSpots) : null;
-          var isDisabled = slot.disabled === true;
-          var isFull = hasSpotsValue ? availableSpots <= 0 : slot.available === false;
-          var isAvailable = !isDisabled && !isFull;
+          var ownHasSpotsValue = rawSlot.availableSpots !== undefined && rawSlot.availableSpots !== null;
+          var ownAvailableSpots = ownHasSpotsValue ? Number(rawSlot.availableSpots) : null;
+          var isDisabledByOverlap = slot.disabled === true;
+          var isOwnSlotFull = ownHasSpotsValue ? ownAvailableSpots <= 0 : rawSlot.available === false;
+          var isSelectable = !!availableById[String(rawSlot.id)] && !isDisabledByOverlap && !(hasSpotsValue ? availableSpots <= 0 : slot.available === false);
 
           var statusText = 'Hết chỗ';
-          if (isDisabled) statusText = 'Đã có lịch';
-          if (!isDisabled && isAvailable) statusText = hasSpotsValue ? ('Còn ' + availableSpots + ' chỗ') : 'Còn chỗ';
+          if (isSelectable) {
+            statusText = hasSpotsValue ? ('Còn ' + availableSpots + ' chỗ') : 'Còn chỗ';
+          } else if (isDisabledByOverlap) {
+            statusText = 'Đã có lịch';
+	          } else if (isOwnSlotFull) {
+	            statusText = 'Hết chỗ';
+	          } else if (slotsNeeded > 1) {
+	            statusText = 'Cần trống tới ' + formatTime(getDisplayEndTime(rawSlot.startTime, slotsNeeded));
+	          } else {
+	            statusText = 'Không thể chọn';
+	          }
           btn.dataset.statusText = statusText;
 
-          btn.innerHTML = renderSlotButtonContent(slot, statusText, false);
+          btn.innerHTML = renderSlotButtonContent(rawSlot, statusText, false);
 
-          if (!isAvailable) btn.classList.add('disabled');
+          if (!isSelectable) btn.classList.add('disabled');
           else if (hasSpotsValue && availableSpots === 1) btn.classList.add('almost-full');
 
           btn.addEventListener('click', function () {
-            if (isDisabled) {
+            if (isDisabledByOverlap) {
               showToast('Bạn đã có lịch hẹn trùng thời điểm này.', 'warning', 'Không thể chọn');
               return;
             }
-            if (!isAvailable) {
-              showToast('Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.', 'warning', 'Khung giờ đã đầy');
+            if (!isSelectable) {
+              var message = slotsNeeded > 1 && !isOwnSlotFull
+                ? 'Khung giờ này không đủ slot liền kề cho toàn bộ thời lượng khám.'
+                : 'Khung giờ này đã đầy. Vui lòng chọn khung giờ khác.';
+              showToast(message, 'warning', 'Không thể chọn');
               return;
             }
             if (state.selectedSlot && String(state.selectedSlot.id) === String(slot.id)) {
@@ -618,7 +707,7 @@
         }
         if (!response.ok) {
           return response.json().then(function (err) {
-            throw new Error(err.message || 'Không thể tạo lịch hẹn.');
+            throw new Error(normalizeText(err.message || 'Không thể tạo lịch hẹn.'));
           });
         }
         return response.json();
@@ -664,7 +753,7 @@
           return {};
         }).then(function (data) {
           if (!response.ok) {
-            throw new Error(data.message || 'Không thể thanh toán bằng ví.');
+            throw new Error(normalizeText(data.message || 'Không thể thanh toán bằng ví.'));
           }
           return data;
         });
