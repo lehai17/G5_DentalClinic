@@ -35,19 +35,13 @@ public class SlotSeeder {
             logger.info(
                     "Seeding/repairing slots for next {} days with capacity {}",
                     DAYS_TO_SEED,
-                    DEFAULT_CAPACITY
-            );
+                    DEFAULT_CAPACITY);
 
             int totalSlotsCreated = 0;
             int totalSlotsUpdated = 0;
 
             for (int day = 0; day < DAYS_TO_SEED; day++) {
                 LocalDate date = today.plusDays(day);
-
-                // Skip Sunday
-                if (date.getDayOfWeek().getValue() == 7) {
-                    continue;
-                }
 
                 LocalDateTime current = LocalDateTime.of(date, CLINIC_OPEN_TIME);
                 LocalDateTime end = LocalDateTime.of(date, CLINIC_CLOSE_TIME);
@@ -59,10 +53,8 @@ public class SlotSeeder {
                         Slot slot = existing.get();
                         boolean changed = false;
 
-                        if (!slot.isActive()) {
-                            slot.setActive(true);
-                            changed = true;
-                        }
+                        // BOOT REPAIR: Only update capacity or booked count.
+                        // DO NOT force 'active = true' here as it overwrites manual locks.
 
                         if (slot.getCapacity() != DEFAULT_CAPACITY) {
                             slot.setCapacity(DEFAULT_CAPACITY);
@@ -90,8 +82,7 @@ public class SlotSeeder {
             logger.info(
                     "Slot seeding completed. Created={}, Updated={}",
                     totalSlotsCreated,
-                    totalSlotsUpdated
-            );
+                    totalSlotsUpdated);
         };
     }
 
@@ -102,8 +93,7 @@ public class SlotSeeder {
     public void fillMissingLastSlots(
             SlotRepository slotRepository,
             LocalDate fromDate,
-            LocalDate toDate
-    ) {
+            LocalDate toDate) {
         if (fromDate == null || toDate == null) {
             return;
         }
@@ -111,45 +101,37 @@ public class SlotSeeder {
         logger.info(
                 "Checking and filling missing slots from {} to {}...",
                 fromDate,
-                toDate
-        );
+                toDate);
 
         LocalDate currentDay = fromDate;
         int slotsAdded = 0;
 
         while (!currentDay.isAfter(toDate)) {
-            if (currentDay.getDayOfWeek().getValue() != 7) {
-                LocalDateTime dayStart = LocalDateTime.of(currentDay, CLINIC_OPEN_TIME);
-                LocalDateTime dayEnd = LocalDateTime.of(currentDay, CLINIC_CLOSE_TIME);
+            LocalDateTime dayStart = LocalDateTime.of(currentDay, CLINIC_OPEN_TIME);
+            LocalDateTime dayEnd = LocalDateTime.of(currentDay, CLINIC_CLOSE_TIME);
 
-                LocalDateTime slotTime = dayStart;
-                while (slotTime.isBefore(dayEnd)) {
-                    Optional<Slot> existingSlot = slotRepository.findBySlotTime(slotTime);
+            LocalDateTime slotTime = dayStart;
+            while (slotTime.isBefore(dayEnd)) {
+                Optional<Slot> existingSlot = slotRepository.findBySlotTime(slotTime);
 
-                    if (existingSlot.isEmpty()) {
-                        slotRepository.save(new Slot(slotTime, DEFAULT_CAPACITY));
-                        slotsAdded++;
-                    } else {
-                        Slot slot = existingSlot.get();
-                        boolean changed = false;
+                if (existingSlot.isEmpty()) {
+                    slotRepository.save(new Slot(slotTime, DEFAULT_CAPACITY));
+                    slotsAdded++;
+                } else {
+                    Slot slot = existingSlot.get();
+                    boolean changed = false;
 
-                        if (!slot.isActive()) {
-                            slot.setActive(true);
-                            changed = true;
-                        }
-
-                        if (slot.getCapacity() != DEFAULT_CAPACITY) {
-                            slot.setCapacity(DEFAULT_CAPACITY);
-                            changed = true;
-                        }
-
-                        if (changed) {
-                            slotRepository.save(slot);
-                        }
+                    if (slot.getCapacity() != DEFAULT_CAPACITY) {
+                        slot.setCapacity(DEFAULT_CAPACITY);
+                        changed = true;
                     }
 
-                    slotTime = slotTime.plusMinutes(30);
+                    if (changed) {
+                        slotRepository.save(slot);
+                    }
                 }
+
+                slotTime = slotTime.plusMinutes(30);
             }
             currentDay = currentDay.plusDays(1);
         }

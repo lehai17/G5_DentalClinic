@@ -7,6 +7,8 @@ import java.util.List;
 public interface AdminServiceService {
     List<ServiceDTO> getAllServices();
 
+    List<ServiceDTO> searchServices(String keyword, Boolean status);
+
     ServiceDTO getServiceById(Long id);
 
     void addService(ServiceDTO serviceDTO, MultipartFile image);

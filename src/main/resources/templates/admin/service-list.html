@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Quản lý dịch vụ - GENZ CLINIC</title>
-    <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
@@ -126,6 +126,50 @@
             align-items: center;
             margin-bottom: 25px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            color: #A3AED0;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .search-input {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            background: #F8FAFF;
+            outline: none;
+            width: 250px;
+            font-family: inherit;
+        }
+
+        select {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            font-weight: 600;
+            background: #F8FAFF;
+            outline: none;
+            min-width: 150px;
+            font-family: inherit;
         }
 
         .data-table-container {
@@ -380,34 +424,8 @@
 
 <body>
 
-    <div class="sidebar">
-        <div class="logo-section">
-            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
-        </div>
-
-        <div class="nav-group">
-            <a th:href="@{/admin/dashboard}" class="nav-item">
-                <i class="fas fa-th-large"></i> Tổng quan
-            </a>
-
-            <div class="nav-label">Quản lý người dùng</div>
-            <a th:href="@{/admin/dentists}" class="nav-item">
-                <i class="fas fa-stethoscope"></i> Bác sĩ
-            </a>
-            <a th:href="@{/admin/staff}" class="nav-item">
-                <i class="fas fa-users-cog"></i> Staff
-            </a>
-            <a th:href="@{/admin/customers}" class="nav-item">
-                <i class="fas fa-user-friends"></i> Customer
-            </a>
-
-            <div class="nav-label">Vận hành</div>
-            <a th:href="@{/admin/services}" class="nav-item active">
-                <i class="fas fa-briefcase-medical"></i> Dịch vụ
-            </a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giờ</a>
-        </div>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
     <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
@@ -422,92 +440,45 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="icon-box"><i class="fas fa-briefcase-medical"></i></div> Tổng dịch vụ
-                    <div class="icon-box"><i class="fas fa-briefcase-medical"></i></div> Tổng dịch vụ
+                </div>
                 <!-- You can populate this dynamically if you want -->
                 <div class="stat-value" th:text="${#lists.size(services)}">0</div>
             </div>
         </div>
 
-        <div class="data-table-container">
-            <table th:if="${not #lists.isEmpty(services)}">
-                <thead>
-                    <tr>
-                        <th>Thông tin dịch vụ</th>
-                        <th>Giá tiền (VNĐ)</th>
-                        <th>Thời lượng</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="service : ${services}" th:id="'service-row-' + ${service.id}">
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                <div
-                                    style="width: 50px; height: 50px; border-radius: 10px; overflow: hidden; background: #F4F7FE; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <img th:if="${service.imageUrl}" th:src="@{${service.imageUrl}}"
-                                        style="width: 100%; height: 100%; object-fit: cover;" alt="Dịch vụ">
-                                    <i th:unless="${service.imageUrl}" class="fas fa-tooth"
-                                        style="color: #A3AED0; font-size: 24px;"></i>
-                                </div>
-                                <div style="max-width: 250px;">
-                                    <div th:text="${service.name}"
-                                        style="font-weight: 700; color: var(--navy-dark); margin-bottom: 4px;">Service
-                                        Tên dịch vụ</div>
-                                    <div style="font-size: 12px; color: #707EAE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                        th:text="${service.description}">
-                                        Mô tả ngắn...
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                        <td th:text="${#numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT')}">Giá tiền</td>
-                        <td th:text="${service.durationMinutes} + ' phút'">Thời lượng</td>
-                        <td>
-                            <span class="status-badge"
-                                th:classappend="${service.active ? 'status-active' : 'status-locked'}"
-                                th:text="${service.active ? 'Hoạt động' : 'Không hoạt động'}">
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <a href="javascript:void(0)" th:onclick="'openDetailModal(' + ${service.id} + ')'"
-                                    class="action-btn" title="Xem chi tiết"><i class="far fa-eye"></i></a>
-                                <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${service.id} + ')'"
-                                    class="action-btn" title="Chỉnh sửa dịch vụ"><i class="far fa-edit"></i></a>
-
-                                <form th:if="${!service.active}"
-                                    th:action="@{/admin/services/toggle/{id}(id=${service.id})}" method="POST"
-                                    style="display:inline;">
-                                    <input type="hidden" name="status" value="true">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Kích hoạt dịch vụ này?')" title="Kích hoạt">
-                                        <i class="fas fa-user-check"></i>
-                                    </button>
-                                </form>
-                                <form th:if="${service.active}"
-                                    th:action="@{/admin/services/toggle/{id}(id=${service.id})}" method="POST"
-                                    style="display:inline;">
-                                    <input type="hidden" name="status" value="false">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Vô hiệu hóa dịch vụ này?')" title="Vô hiệu hóa">
-                                        <i class="fas fa-user-lock"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="empty-state" th:if="${#lists.isEmpty(services)}"
-                style="text-align: center; padding: 80px 0; color: #A3AED0;">
-                <i class="fas fa-box-open" style="font-size: 50px; margin-bottom: 15px;"></i>
-                <h3>Chưa có dịch vụ nào</h3>
+        <div class="filter-bar">
+            <div class="filter-group">
+                <div class="filter-item" style="position: relative;">
+                    <i class="fas fa-search"
+                        style="color: #A3AED0; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"></i>
+                    <input type="text" id="searchInput" class="search-input" style="padding-left: 40px;"
+                        placeholder="Tìm theo tên dịch vụ..." th:value="${selectedKeyword}">
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">TRẠNG THÁI:</span>
+                    <select id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="true" th:selected="${selectedStatus == true}">Hoạt động</option>
+                        <option value="false" th:selected="${selectedStatus == false}">Không hoạt động</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="loader" id="searchLoader"
+                    style="display: none; border: 3px solid #f3f3f3; border-top: 3px solid #1A237E; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 15px;">
+                </div>
+                <div style="color: #A3AED0; font-size: 13px; font-weight: 700;" id="resultCount">
+                    Hiển thị <span th:text="${#lists.size(services)}">0</span> dịch vụ
+                </div>
             </div>
         </div>
+
+        <div class="data-table-container">
+            <div id="tableContainer">
+                <div th:replace="~{admin/fragments/service-table :: service-list}"></div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Toast Container -->
@@ -749,10 +720,10 @@
 
                     const statusBadge = document.getElementById('detailStatus');
                     if (data.active) {
-                        statusBadge.innerText = 'ACTIVE';
+                        statusBadge.innerText = 'Hoạt động';
                         statusBadge.className = 'status-badge status-active';
                     } else {
-                        statusBadge.innerText = 'LOCKED';
+                        statusBadge.innerText = 'Đã khóa';
                         statusBadge.className = 'status-badge status-locked';
                     }
 
@@ -812,6 +783,54 @@
             }
             return true;
         }
+
+        // AJAX Search Logic
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function performSearch() {
+            const keyword = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const loader = document.getElementById('searchLoader');
+            if (loader) loader.style.display = 'inline-block';
+
+            const params = new URLSearchParams();
+            if (keyword) params.append('keyword', keyword);
+            if (status) params.append('status', status);
+
+            fetch(`/admin/services/api/search?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text();
+                })
+                .then(htmlStr => {
+                    document.getElementById('tableContainer').innerHTML = htmlStr;
+
+                    // Update result count
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlStr, 'text/html');
+                    const rows = doc.querySelectorAll('tbody tr');
+                    const countElem = document.getElementById('resultCount');
+                    if (countElem) {
+                        countElem.innerHTML = `Hiển thị <span>${rows.length}</span> dịch vụ`;
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error))
+                .finally(() => {
+                    if (loader) loader.style.display = 'none';
+                });
+        }
+
+        // Add event listeners
+        document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
+        document.getElementById('statusFilter').addEventListener('change', performSearch);
         /*]]>*/
     </script>
 </body>

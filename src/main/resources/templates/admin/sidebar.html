@@ -9,7 +9,7 @@
            class="nav-item"
            th:classappend="${activePage == 'dashboard' ? ' active' : ''}">
             <i class="fas fa-th-large"></i>
-            <span>Dashboard</span>
+            <span>Trang chủ</span>
         </a>
 
         <div class="nav-label">Quản lý người dùng</div>
@@ -55,7 +55,7 @@
            class="nav-item"
            th:classappend="${activePage == 'slots' ? ' active' : ''}">
             <i class="fas fa-calendar-alt"></i>
-            <span>Khung giờ</span>
+            <span>Lịch làm việc</span>
         </a>
 
         <a th:href="@{/admin/busy-schedule}"

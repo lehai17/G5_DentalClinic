@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý khung giờ - GENZ CLINIC</title>
+    <!-- Standard CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --text: #1e293b;
+        }
+
+        body {
+            display: flex;
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .main-content {
+            flex: 1;
+            min-height: 100vh;
+            padding: 30px;
+            min-width: 0;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .btn:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+        }
+
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .calendar-table th {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .calendar-cell {
+            padding: 12px;
+            border: 1px solid var(--border);
+            height: 110px;
+            vertical-align: top;
+            cursor: pointer;
+            position: relative;
+            transition: 0.15s;
+        }
+
+        .calendar-cell:hover {
+            background: #f8fafc;
+            z-index: 1;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-cell.other-month {
+            opacity: 0.4;
+            background: #fcfcfc;
+        }
+
+        .calendar-cell.today {
+            background: #eff6ff;
+        }
+
+        .calendar-cell.today .day-num {
+            background: var(--primary);
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .lock-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .lock-btn i {
+            pointer-events: none;
+            font-size: 11px;
+        }
+
+        .lock-btn:hover {
+            background: #f1f5f9;
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        .lock-btn.locked {
+            color: #ef4444;
+            border-color: #fee2e2;
+            background: #fff1f2;
+        }
+
+        .lock-btn.unlocked {
+            color: #22c55e;
+            border-color: #d1fae5;
+            background: #f0fdf4;
+        }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-tag.open {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-tag.closed {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .dots-container {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot.available {
+            background: #22c55e;
+        }
+
+        .dot.busy {
+            background: #eab308;
+        }
+
+        .dot.full {
+            background: #ef4444;
+        }
+
+        .agenda-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            transition: 0.2s;
+        }
+
+        .agenda-item:last-child {
+            border-bottom: none;
+        }
+
+        .agenda-item:hover {
+            background: #f8fafc;
+        }
+
+        .time-tag {
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Standard Fragment Sidebar -->
+    <div th:replace="~{admin/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <!-- Persistent State -->
+        <input type="hidden" id="selectedDateValue" th:value="${selectedDate}">
+        <input type="hidden" id="currentMonthValue" th:value="${month}">
+        <input type="hidden" id="isDateSelected" th:value="${dateSelected}">
+
+        <!-- MONTH VIEW -->
+        <div th:if="${!dateSelected}">
+            <div class="page-header">
+                <div>
+                    <h1 th:text="${monthName}">Tháng</h1>
+                    <p style="color: #64748b; margin-top: 4px;">Tổng quan khung giờ làm việc theo tháng</p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="text-align: right; margin-right: 20px;">
+                        <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">Giờ
+                            làm việc:</span>
+                        <div style="font-size: 13px; font-weight: 600; color: #1e293b;">
+                            <i class="fa-regular fa-clock text-primary"></i> 08:00 - 12:00 | 13:00 - 17:00
+                        </div>
+                    </div>
+                    <form th:action="@{/admin/slots/reset-all}" method="post" style="margin:0;"
+                        onsubmit="return confirm('Bạn có chắc muốn MỞ KHÓA tất cả các ngày? Điều này sẽ xóa bỏ toàn bộ tình trạng khóa tĩnh.')">
+                        <button type="submit" class="btn" style="color: #6366f1; border-color: #6366f1;">
+                            <i class="fa-solid fa-rotate-left"></i> Khôi phục tất cả
+                        </button>
+                    </form>
+                    <a class="btn" th:href="@{/admin/slots(month=${prevMonth})}"><i
+                            class="fa-solid fa-chevron-left"></i></a>
+                    <a class="btn" href="/admin/slots">Hôm nay</a>
+                    <a class="btn" th:href="@{/admin/slots(month=${nextMonth})}"><i
+                            class="fa-solid fa-chevron-right"></i></a>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>T2</th>
+                            <th>T3</th>
+                            <th>T4</th>
+                            <th>T5</th>
+                            <th>T6</th>
+                            <th>T7</th>
+                            <th>CN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody">
+                        <tr>
+                            <td colspan="7">
+                                <div class="spinner"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DAY VIEW -->
+        <div th:if="${dateSelected}">
+            <div class="page-header">
+                <div>
+                    <a class="btn" href="/admin/slots" style="margin-bottom: 12px;">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại lịch tháng
+                    </a>
+                    <h1 th:text="${selectedDateName}">Chi tiết ngày</h1>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="text-align: right; margin-right: 20px;">
+                        <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">Giờ
+                            làm việc:</span>
+                        <div style="font-size: 13px; font-weight: 600; color: #1e293b;">
+                            <i class="fa-regular fa-clock text-primary"></i> 08:00 - 12:00 | 13:00 - 17:00
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card"
+                style="margin-bottom: 12px; padding: 12px 24px; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 13px; font-weight: 700; color: #64748b;">LỌC THEO BÁC SĨ:</span>
+                <select id="dentistFilter" class="form-control"
+                    style="width: auto; min-width: 200px; padding: 6px 12px;" onchange="AdminSlots.hydrateAgenda()">
+                    <option value="">Tất cả bác sĩ</option>
+                    <option th:each="d : ${dentists}" th:value="${d.id}" th:text="${d.fullName}">Bác sĩ</option>
+                </select>
+                <div id="filterLoader" style="display: none;"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+
+            <div id="agendaWrapper" class="card" style="padding: 0;">
+                <div class="spinner"></div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button class="btn" style="color: #ef4444; border-color: #fee2e2;" id="btnLockDay"
+                    th:attr="data-date=${selectedDate}" onclick="AdminSlots.lockDay(this.getAttribute('data-date'))">
+                    <i class="fa-solid fa-lock"></i> Khóa toàn bộ ngày
+                </button>
+                <button class="btn" style="color: #10b981; border-color: #d1fae5;" id="btnUnlockDay"
+                    th:attr="data-date=${selectedDate}" onclick="AdminSlots.unlockDay(this.getAttribute('data-date'))">
+                    <i class="fa-solid fa-unlock"></i> Mở khóa toàn bộ ngày
+                </button>
+            </div>
+        </div>
+
+
+
+        <!-- VIEW DETAIL MODAL -->
+        <div id="apptModalBackdrop" class="modal-overlay">
+            <div class="modal-content">
+                <h3 id="mPatientName" style="margin-top: 0; color: #1e293b;">Tên bệnh nhân</h3>
+                <p id="mServiceInfo" style="color: #64748b; font-size: 14px;">Tên dịch vụ</p>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border);">
+                <div style="display: grid; gap: 12px; font-size: 14px;">
+                    <div><strong>Trạng thái:</strong> <span id="mStatusValue">?</span></div>
+                    <div><strong>Thời gian:</strong> <span id="mTimeValue">?</span></div>
+                    <div><strong>Bác sĩ:</strong> <span id="mDentistName">?</span></div>
+                </div>
+                <div style="margin-top: 24px;">
+                    <button class="btn" style="width: 100%; justify-content: center;"
+                        onclick="AdminSlots.closeModal('#apptModalBackdrop')">Đóng</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/js/admin/slots.js"></script>
+</body>
+
+</html>

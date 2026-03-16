@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,158 +8,274 @@
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --sidebar-color: #1A237E; --bg-light: #F4F7FE; }
-        body { display: flex; margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-light); }
+        :root {
+            --sidebar-color: #1A237E;
+            --bg-light: #F4F7FE;
+        }
 
-        /* Main Content Layout chuẩn như Th?m nh?n vi?n */
-        .main-content { flex: 1; padding: 25px; min-height: 100vh; }
+        body {
+            display: flex;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+        }
+
+        /* Main Content Layout chuẩn như Add Staff */
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            min-height: 100vh;
+        }
 
         /* Header chuẩn Dashboard */
         .header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: white; padding: 15px 30px; border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
         }
+
         .search-bar {
-            background: #F4F7FE; border-radius: 12px; padding: 8px 15px;
-            display: flex; align-items: center; width: 300px;
+            background: #F4F7FE;
+            border-radius: 12px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            width: 300px;
         }
-        .search-bar input { border: none; background: transparent; padding-left: 10px; outline: none; width: 100%; }
+
+        .search-bar input {
+            border: none;
+            background: transparent;
+            padding-left: 10px;
+            outline: none;
+            width: 100%;
+        }
 
         /* Card chứa danh sách đơn nghỉ */
         .form-card {
-            background: white; border-radius: 20px; padding: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
         }
 
         /* Table Styles theo phong cách hiện đại */
-        .request-table { width: 100%; border-collapse: separate; border-spacing: 0 15px; }
-        .request-table th {
-            text-align: left; color: #A3AED0; font-size: 12px;
-            text-transform: uppercase; padding: 0 20px; font-weight: 700;
+        .request-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 15px;
         }
-        .request-row { background: #FFFFFF; transition: 0.3s; }
-        .request-row td {
-            padding: 20px; border-top: 1px solid #F4F7FE; border-bottom: 1px solid #F4F7FE;
-        }
-        .request-row td:first-child { border-left: 1px solid #F4F7FE; border-top-left-radius: 15px; border-bottom-left-radius: 15px; }
-        .request-row td:last-child { border-right: 1px solid #F4F7FE; border-top-right-radius: 15px; border-bottom-right-radius: 15px; }
 
-        .dentist-profile { display: flex; align-items: center; gap: 12px; }
+        .request-table th {
+            text-align: left;
+            color: #A3AED0;
+            font-size: 12px;
+            text-transform: uppercase;
+            padding: 0 20px;
+            font-weight: 700;
+        }
+
+        .request-row {
+            background: #FFFFFF;
+            transition: 0.3s;
+        }
+
+        .request-row td {
+            padding: 20px;
+            border-top: 1px solid #F4F7FE;
+            border-bottom: 1px solid #F4F7FE;
+        }
+
+        .request-row td:first-child {
+            border-left: 1px solid #F4F7FE;
+            border-top-left-radius: 15px;
+            border-bottom-left-radius: 15px;
+        }
+
+        .request-row td:last-child {
+            border-right: 1px solid #F4F7FE;
+            border-top-right-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+
+        .dentist-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .avatar-circle {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: #1A237E; color: white;
-            display: flex; align-items: center; justify-content: center; font-weight: 700;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1A237E;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
         }
 
         /* Status Badges */
-        .status-badge { padding: 6px 16px; border-radius: 10px; font-weight: 700; font-size: 12px; }
-        .status-pending { background: #FFF9C4; color: #FFB800; }
-        .status-approved { background: #E8F5E9; color: #4CAF50; }
-        .status-rejected { background: #FFEBEE; color: #EE5D50; }
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .status-pending {
+            background: #FFF9C4;
+            color: #FFB800;
+        }
+
+        .status-approved {
+            background: #E8F5E9;
+            color: #4CAF50;
+        }
+
+        .status-rejected {
+            background: #FFEBEE;
+            color: #EE5D50;
+        }
 
         /* Action Buttons */
         .btn-action {
-            width: 32px; height: 32px; border-radius: 8px; border: none;
-            cursor: pointer; color: white; transition: 0.2s;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
         }
-        .btn-approve { background: #4CAF50; margin-right: 5px; }
-        .btn-reject { background: #EE5D50; }
-        .btn-action:hover { transform: scale(1.1); }
+
+        .btn-approve {
+            background: #4CAF50;
+            margin-right: 5px;
+        }
+
+        .btn-reject {
+            background: #EE5D50;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
+
 <body>
 
-<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
-<div class="main-content">
-    <div class="header">
-<!--        <div class="search-bar">-->
-<!--            <i class="fas fa-search" style="color: #707EAE;"></i>-->
-<!--            <input type="text" placeholder="Search requests...">-->
-<!--        </div>-->
+    <div class="main-content">
+        <div class="header">
+            <!--        <div class="search-bar">-->
+            <!--            <i class="fas fa-search" style="color: #707EAE;"></i>-->
+            <!--            <input type="text" placeholder="Search requests...">-->
+            <!--        </div>-->
 
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <button style="background:none; border:none; color:#707EAE;"><i class="far fa-bell"></i></button>
-            <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #E0E7FF; padding-left: 20px;">
-                <div style="text-align: right;">
-                    <span style="display: block; font-size: 12px; font-weight: 700; color: #1B2559;">Admin User</span>
-                    <span style="display: block; font-size: 11px; color: #707EAE;">Administrator</span>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button style="background:none; border:none; color:#707EAE;"><i class="far fa-bell"></i></button>
+                <div
+                    style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #E0E7FF; padding-left: 20px;">
+                    <div style="text-align: right;">
+                        <span style="display: block; font-size: 12px; font-weight: 700; color: #1B2559;">Admin
+                            User</span>
+                        <span style="display: block; font-size: 11px; color: #707EAE;">Administrator</span>
+                    </div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #1A237E;"></div>
                 </div>
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: #1A237E;"></div>
             </div>
         </div>
-    </div>
 
-    <form th:action="@{/admin/busy-schedule}" method="get" class="search-container" style="display: flex; gap: 15px; align-items: center;">
-        <div class="search-bar">
-            <i class="fas fa-search" style="color: #707EAE;"></i>
-            <input type="text" name="dentistName" th:value="${dentistName}" placeholder="Tìm tên bác sĩ...">
+        <form th:action="@{/admin/busy-schedule}" method="get" class="search-container"
+            style="display: flex; gap: 15px; align-items: center;">
+            <div class="search-bar">
+                <i class="fas fa-search" style="color: #707EAE;"></i>
+                <input type="text" name="dentistName" th:value="${dentistName}" placeholder="Tìm tên bác sĩ...">
+            </div>
+
+            <select name="sort" onchange="this.form.submit()"
+                style="padding: 8px 15px; border-radius: 12px; border: 1px solid #E0E7FF; color: #2B3674; font-weight: 600; outline: none;">
+                <option value="newest" th:selected="${sort == 'newest'}">Mới nhất</option>
+                <option value="oldest" th:selected="${sort == 'oldest'}">Cao nhất</option>
+            </select>
+
+            <button type="submit" class="status-badge status-approved"
+                style="border: none; cursor: pointer;">Lọc</button>
+        </form>
+        <div style="margin-bottom: 25px;">
+            <h2 style="color: #2B3674; margin: 0; font-weight: 800;">Danh sách lịch bận bác sĩ</h2>
+            <p style="color: #A3AED0; font-size: 14px; margin-top: 5px;">Quản lý và phê duyệt đơn xin nghỉ của bác sĩ.
+            </p>
         </div>
 
-        <select name="sort" onchange="this.form.submit()" style="padding: 8px 15px; border-radius: 12px; border: 1px solid #E0E7FF; color: #2B3674; font-weight: 600; outline: none;">
-            <option value="newest" th:selected="${sort == 'newest'}">Mới nhất</option>
-            <option value="oldest" th:selected="${sort == 'oldest'}">CÅ© nhất</option>
-        </select>
-
-        <button type="submit" class="status-badge status-approved" style="border: none; cursor: pointer;">Lọc</button>
-    </form>
-    <div style="margin-bottom: 25px;">
-        <h2 style="color: #2B3674; margin: 0; font-weight: 800;">Danh sách lịch bận bác sĩ</h2>
-        <p style="color: #A3AED0; font-size: 14px; margin-top: 5px;">Quản lý và phê duyệt đơn xin nghỉ của bác sĩ.</p>
+        <div class="form-card">
+            <table class="request-table">
+                <thead>
+                    <tr>
+                        <th>Tên bác sĩ</th>
+                        <th>Thời gian nghỉ</th>
+                        <th>Lý do</th>
+                        <th style="text-align: center;">Trạng thái</th>
+                        <th style="text-align: center;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="req : ${requests}" class="request-row">
+                        <td>
+                            <div class="dentist-profile">
+                                <div class="avatar-circle"
+                                    th:text="${req.dentist?.fullName != null && !req.dentist.fullName.trim().isEmpty() ? #strings.substring(req.dentist.fullName, 0, 1) : '?'}">
+                                    D
+                                </div>
+                                <span th:text="${req.dentist?.fullName ?: 'Bác sĩ không xác định'}"
+                                    style="font-weight: 700; color: #2B3674;"></span>
+                            </div>
+                        </td>
+                        <td style="color: #707EAE; font-weight: 600;">
+                            <i class="far fa-calendar-alt"></i>
+                            <span th:text="${req.startDate} + ' → ' + ${req.endDate}"></span>
+                        </td>
+                        <td style="color: #707EAE; font-size: 14px;" th:text="${req.reason}"></td>
+                        <td style="text-align: center;">
+                            <span th:class="'status-badge status-' + ${#strings.toLowerCase(req.status)}"
+                                th:text="${req.status}">CHỜ XỬ LÝ</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div th:if="${req.status == 'PENDING'}" style="display: flex; justify-content: center;">
+                                <form th:action="@{/admin/busy-schedule/approve}" method="post">
+                                    <input type="hidden" name="id" th:value="${req.id}">
+                                    <button type="submit" class="btn-action btn-approve"><i
+                                            class="fas fa-check"></i></button>
+                                </form>
+                                <form th:action="@{/admin/busy-schedule/reject}" method="post">
+                                    <input type="hidden" name="id" th:value="${req.id}">
+                                    <button type="submit" class="btn-action btn-reject"><i
+                                            class="fas fa-times"></i></button>
+                                </form>
+                            </div>
+                            <span th:unless="${req.status == 'PENDING'}"
+                                style="color: #A3AED0; font-size: 12px; font-style: italic;">Đã xử lý</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(requests)}">
+                        <td colspan="5" style="text-align: center; padding: 50px; color: #A3AED0;">
+                            Không có đơn xin nghỉ nào cần duyệt.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    <div class="form-card">
-        <table class="request-table">
-            <thead>
-            <tr>
-                <th>Tên bác sĩ</th>
-                <th>Thời gian nghỉ</th>
-                <th>Reason</th>
-                <th style="text-align: center;">Status</th>
-                <th style="text-align: center;">Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="req : ${requests}" class="request-row">
-                <td>
-                    <div class="dentist-profile">
-                        <div class="avatar-circle" th:text="${#strings.substring(req.dentist.fullName,0,1)}">D</div>
-                        <span th:text="${req.dentist.fullName}" style="font-weight: 700; color: #2B3674;"></span>
-                    </div>
-                </td>
-                <td style="color: #707EAE; font-weight: 600;">
-                    <i class="far fa-calendar-alt"></i>
-                    <span th:text="${req.startDate} + ' → ' + ${req.endDate}"></span>
-                </td>
-                <td style="color: #707EAE; font-size: 14px;" th:text="${req.reason}"></td>
-                <td style="text-align: center;">
-                        <span th:class="'status-badge status-' + ${#strings.toLowerCase(req.status)}"
-                              th:text="${req.status}">PENDING</span>
-                </td>
-                <td style="text-align: center;">
-                    <div th:if="${req.status == 'PENDING'}" style="display: flex; justify-content: center;">
-                        <form th:action="@{/admin/busy-schedule/approve}" method="post">
-                            <input type="hidden" name="id" th:value="${req.id}">
-                            <button type="submit" class="btn-action btn-approve"><i class="fas fa-check"></i></button>
-                        </form>
-                        <form th:action="@{/admin/busy-schedule/reject}" method="post">
-                            <input type="hidden" name="id" th:value="${req.id}">
-                            <button type="submit" class="btn-action btn-reject"><i class="fas fa-times"></i></button>
-                        </form>
-                    </div>
-                    <span th:unless="${req.status == 'PENDING'}" style="color: #A3AED0; font-size: 12px; font-style: italic;">Processed</span>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(requests)}">
-                <td colspan="5" style="text-align: center; padding: 50px; color: #A3AED0;">
-                    No absence requests to review.
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
 
 </body>
+
 </html>

@@ -5,7 +5,6 @@ import com.dentalclinic.model.service.Services;
 import com.dentalclinic.repository.ServicesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -23,11 +22,18 @@ public class AdminServiceServiceImpl implements AdminServiceService {
     @Autowired
     private ServicesRepository servicesRepository;
 
-    private final String UPLOAD_DIR = "src/main/resources/static/uploads/services/";
+    private final String UPLOAD_DIR = "uploads/services/";
 
     @Override
     public List<ServiceDTO> getAllServices() {
         return servicesRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ServiceDTO> searchServices(String keyword, Boolean status) {
+        String keywordParam = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+        return servicesRepository.searchServices(keywordParam, status).stream().map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -69,13 +75,21 @@ public class AdminServiceServiceImpl implements AdminServiceService {
         servicesRepository.save(service);
     }
 
+    private String sanitizeFileName(String fileName) {
+        if (fileName == null)
+            return "service.png";
+        // Normalize and remove Vietnamese accents
+        String normalized = java.text.Normalizer.normalize(fileName, java.text.Normalizer.Form.NFD);
+        normalized = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        // Remove spaces and special characters, keep extension
+        return normalized.replaceAll("[^a-zA-Z0-9.-]", "_").replaceAll("__+", "_");
+    }
+
     private String saveImage(MultipartFile image) {
         try {
             String originalFileName = image.getOriginalFilename();
-            if (originalFileName == null)
-                originalFileName = "image.png";
-            String fileName = StringUtils.cleanPath(originalFileName);
-            fileName = System.currentTimeMillis() + "_" + fileName; // Make unique
+            String sanitizedName = sanitizeFileName(originalFileName);
+            String fileName = System.currentTimeMillis() + "_" + sanitizedName;
             Path uploadPath = Paths.get(UPLOAD_DIR);
 
             if (!Files.exists(uploadPath)) {
@@ -85,7 +99,7 @@ public class AdminServiceServiceImpl implements AdminServiceService {
             try (InputStream inputStream = image.getInputStream()) {
                 Path filePath = uploadPath.resolve(fileName);
                 Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-                return "/uploads/services/" + fileName; // This URL will be accessible via static resources
+                return "/uploads/services/" + fileName;
             }
         } catch (IOException e) {
             throw new RuntimeException("Could not save image file: " + e.getMessage());

@@ -3,7 +3,6 @@ package com.dentalclinic.controller.admin;
 import com.dentalclinic.dto.admin.StaffDTO;
 import com.dentalclinic.model.profile.StaffProfile;
 import com.dentalclinic.model.user.UserStatus;
-import com.dentalclinic.repository.StaffProfileRepository;
 import com.dentalclinic.service.staff.StaffService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,14 +22,16 @@ public class AdminStaffController {
     // 1. Hiển thị danh sï¿½ch nhï¿½n viên kèm bộ lọc
     @GetMapping
     public String showStaffList(
+            @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "position", required = false) String position,
             Model model) {
 
-        // Gọi h� m lọc an to� n từ Service dï¿½ xử lý Enum
-        List<StaffProfile> staffs = staffService.searchStaffs(status, position);
+        // Gọi hàm lọc an toàn từ Service đã xử lý Enum
+        List<StaffProfile> staffs = staffService.searchStaffs(keyword, status, position);
 
         model.addAttribute("staffs", staffs);
+        model.addAttribute("selectedKeyword", keyword);
         model.addAttribute("selectedStatus", status); // Giữ trạng thï¿½i dropdown sau khi lọc
         model.addAttribute("selectedPos", position);
         model.addAttribute("activePage", "staff");
@@ -41,6 +42,17 @@ public class AdminStaffController {
         model.addAttribute("activeStaffCount", staffService.countByStatus("ACTIVE"));
 
         return "admin/staff-list";
+    }
+
+    @GetMapping("/api/search")
+    public String searchApi(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "position", required = false) String position,
+            Model model) {
+        List<StaffProfile> staffs = staffService.searchStaffs(keyword, status, position);
+        model.addAttribute("staffs", staffs);
+        return "admin/fragments/staff-table :: staff-list";
     }
 
     // 2. Hiển thị Form thêm mới nhï¿½n viên
@@ -54,14 +66,14 @@ public class AdminStaffController {
     // 3. Xử lý lưu dữ liệu
     @PostMapping("/save")
     public String processAddStaff(@jakarta.validation.Valid @ModelAttribute("staffDTO") StaffDTO dto,
-                                  org.springframework.validation.BindingResult bindingResult, Model model, RedirectAttributes ra) {
+            org.springframework.validation.BindingResult bindingResult, Model model, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("activePage", "staff");
             return "admin/add-staff";
         }
         try {
             staffService.saveStaff(dto);
-            ra.addFlashAttribute("success", "Th\u00eam nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
+            ra.addFlashAttribute("success", "Thêm nhân viên thành công!");
             return "redirect:/admin/staff";
         } catch (RuntimeException e) {
             // Giữ lại form v?  hiển thị lỗi
@@ -75,7 +87,7 @@ public class AdminStaffController {
     public String lockStaff(@PathVariable("id") Long userId, RedirectAttributes ra) {
         // userId n� y l�  ID của bảng User để khớp với h� m trong Service của bạn
         staffService.deactivateStaff(userId);
-        ra.addFlashAttribute("success", "\u0110\u00e3 kh\u00f3a nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
+        ra.addFlashAttribute("success", "Khóa nhân viên thành công!");
         return "redirect:/admin/staff";
     }
 
@@ -107,15 +119,15 @@ public class AdminStaffController {
 
     @PostMapping("/update/{id}")
     public String updateStaff(@PathVariable("id") Long id,
-                              @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
-                              org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
+            @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
+            org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
             ra.addFlashAttribute("error", "Ki\u1ec3m tra l\u1ea1i th\u00f4ng tin c\u1eadp nh\u1eadt (c\u00f3 th\u1ec3 do l\u1ed7i \u0111\u1ecbnh d\u1ea1ng).");
             return "redirect:/admin/staff";
         }
         try {
             staffService.updateStaff(id, dto);
-            ra.addFlashAttribute("success", "C\u1eadp nh\u1eadt nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
+            ra.addFlashAttribute("success", "Cập nhật nhân viên thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -128,11 +140,10 @@ public class AdminStaffController {
         try {
             staffService.deleteStaff(id);
             return org.springframework.http.ResponseEntity.ok()
-                    .body(java.util.Map.of("success", true, "message", "X\u00f3a nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!"));
+                    .body(java.util.Map.of("success", true, "message", "Xóa nhân viên thành công!"));
         } catch (Exception e) {
             return org.springframework.http.ResponseEntity.badRequest()
                     .body(java.util.Map.of("success", false, "message", e.getMessage()));
         }
     }
 }
-

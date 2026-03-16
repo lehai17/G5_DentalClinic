@@ -18,10 +18,24 @@ public class AdminServiceController {
     private AdminServiceService adminServiceService;
 
     @GetMapping
-    public String viewServiceList(Model model) {
-        model.addAttribute("services", adminServiceService.getAllServices());
+    public String viewServiceList(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "status", required = false) Boolean status,
+            Model model) {
+        model.addAttribute("services", adminServiceService.searchServices(keyword, status));
+        model.addAttribute("selectedKeyword", keyword);
+        model.addAttribute("selectedStatus", status);
         model.addAttribute("activePage", "services");
         return "admin/service-list";
+    }
+
+    @GetMapping("/api/search")
+    public String searchApi(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "status", required = false) Boolean status,
+            Model model) {
+        model.addAttribute("services", adminServiceService.searchServices(keyword, status));
+        return "admin/fragments/service-table :: service-list";
     }
 
     @GetMapping("/api/get/{id}")
@@ -74,4 +88,3 @@ public class AdminServiceController {
         return "redirect:/admin/services";
     }
 }
-

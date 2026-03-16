@@ -5,16 +5,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
-@Table(
-        name = "slot",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_slot_time", columnNames = "slot_time")
-        },
-        indexes = {
-                @Index(name = "idx_slot_time", columnList = "slot_time"),
-                @Index(name = "idx_slot_time_active", columnList = "slot_time, is_active")
-        }
-)
+@Table(name = "slot", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_slot_time", columnNames = "slot_time")
+}, indexes = {
+        @Index(name = "idx_slot_time", columnList = "slot_time"),
+        @Index(name = "idx_slot_time_active", columnList = "slot_time, is_active")
+})
 public class Slot {
 
     @Id
@@ -32,6 +28,9 @@ public class Slot {
 
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
+
+    @Column(name = "lock_reason", length = 500)
+    private String lockReason;
 
     public Slot() {
     }
@@ -97,5 +96,13 @@ public class Slot {
 
     public int getAvailableSpots() {
         return capacity - bookedCount;
+    }
+
+    public String getLockReason() {
+        return lockReason;
+    }
+
+    public void setLockReason(String lockReason) {
+        this.lockReason = lockReason;
     }
 }

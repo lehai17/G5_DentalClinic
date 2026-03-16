@@ -10,9 +10,10 @@ public class Services {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String name;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     private String imageUrl;

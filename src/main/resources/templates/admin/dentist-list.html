@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <title>Quản lý bác sĩ - GENZ CLINIC</title>
-    <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* CSS nội bộ để định hình khung Dashboard theo mẫu của bạn */
+        /* CSS nội bộ để định hình khung Dashboard theo máº«u cá»§a báº¡n */
         :root {
             --sidebar-color: #1A237E;
-            /* M� u Navy Blue từ mẫu GENZ CLINIC */
+            /* Màu Navy Blue tá»« máº«u GENZ CLINIC */
             --bg-light: #F4F7FE;
             --navy-dark: #1B2559;
         }
@@ -23,7 +23,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA B� N */
+        /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA BẠN */
         .sidebar {
             width: 250px;
             background: var(--sidebar-color);
@@ -131,12 +131,15 @@
             align-items: center;
             margin-bottom: 25px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .filter-group {
             display: flex;
-            gap: 25px;
+            gap: 20px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-item {
@@ -151,14 +154,27 @@
             font-size: 11px;
         }
 
+        .search-input {
+            border: 1px solid #E0E7FF;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: var(--navy-dark);
+            background: #F8FAFF;
+            outline: none;
+            width: 250px;
+            font-family: inherit;
+        }
+
         select {
             border: 1px solid #E0E7FF;
-            padding: 8px 15px;
+            padding: 10px 15px;
             border-radius: 10px;
             color: var(--navy-dark);
             font-weight: 600;
             background: #F8FAFF;
             outline: none;
+            min-width: 150px;
+            font-family: inherit;
         }
 
         /* Data Table Styles */
@@ -394,41 +410,23 @@
         .toast.error .toast-icon {
             color: #F44336;
         }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="sidebar">
-        <div class="logo-section">
-            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
-        </div>
-
-        <div class="nav-group">
-            <a th:href="@{/admin/dashboard}" class="nav-item"
-                th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                <i class="fas fa-th-large"></i> Tổng quan
-            </a>
-
-            <div class="nav-label">Quản lý người dùng</div>
-            <a th:href="@{/admin/dentists}" class="nav-item"
-                th:classappend="${activePage == 'dentists' ? 'active' : ''}">
-                <i class="fas fa-stethoscope"></i> Bác sĩ
-            </a>
-
-            <a th:href="@{/admin/staff}" class="nav-item" th:classappend="${activePage == 'staff' ? 'active' : ''}">
-                <i class="fas fa-users-cog"></i> Staff
-            </a>
-
-            <a th:href="@{/admin/customers}" class="nav-item">
-                <i class="fas fa-user-friends"></i> Customer
-            </a>
-
-            <div class="nav-label">Vận hành</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dịch vụ</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giờ</a>
-        </div>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
     <div class="main-content">
         <div
@@ -436,18 +434,7 @@
 
             <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">Bác sĩ</h2>
 
-            <div class="search-wrapper" style="flex-grow: 1; max-width: 500px;">
-                <form th:action="@{/admin/dentists}" method="GET">
-                    <div class="input-group"
-                        style="background: #F4F7FE; border-radius: 12px; padding: 2px 15px; display: flex; align-items: center; border: 1px solid #E0E5F2;">
-                        <i class="fas fa-search" style="color: #A3AED0; margin-right: 12px;"></i>
-                        <input type="text" name="keyword" th:value="${keyword}"
-                            placeholder="Tìm theo tên hoặc chuyên khoa..."
-                            style="border: none; background: transparent; outline: none; width: 100%; padding: 10px 0; color: #1B2559; font-weight: 500; font-size: 14px;">
-                    </div>
-
-                </form>
-            </div>
+            <!-- Search wrapper removed from here -->
 
             <a th:href="@{/admin/dentists/add}"
                 style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2); min-width: fit-content;">
@@ -473,146 +460,55 @@
         </div>
 
         <div class="filter-bar">
-            <form th:action="@{/admin/dentists}" method="GET" class="filter-group">
-                <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="filter-group">
+                <div class="filter-item" style="position: relative;">
+                    <i class="fas fa-search"
+                        style="color: #A3AED0; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"></i>
+                    <input type="text" id="searchInput" class="search-input"
+                        style="padding-left: 40px; min-width: 250px;" placeholder="Tìm theo tên hoặc chuyên khoa..."
+                        th:value="${keyword}">
+                </div>
+                <div class="filter-item">
                     <span class="filter-label">CHUYÊN KHOA:</span>
-                    <select name="specialty" onchange="this.form.submit()">
+                    <select id="specialtyFilter">
                         <option value="">Tất cả chuyên khoa</option>
                         <option value="Orthodontics" th:selected="${selectedSpecialty == 'Orthodontics'}">
                             Chỉnh nha (Niềng răng)</option>
                         <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">Nội nha</option>
-                            nha)</option>
-                            Chu nha</option>
-                            Periodontics(Chu nha)</option>
-                            Phục hình</option>
-                            Prosthodontics(Phục hình)</option>
+                        <option value="Periodontics" th:selected="${selectedSpecialty == 'Periodontics'}">Chu nha
+                        </option>
+                        <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">Phục hình
+                        </option>
+                        <option value="Oral Surgery" th:selected="${selectedSpecialty == 'Oral Surgery'}">Phẫu thuật
+                            miệng</option>
+                        <option value="General Dentistry" th:selected="${selectedSpecialty == 'General Dentistry'}">Nha
+                            khoa tổng quát</option>
+                        <option value="Pediatric Dentistry" th:selected="${selectedSpecialty == 'Pediatric Dentistry'}">
+                            Nha khoa trẻ em</option>
                     </select>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="filter-item">
                     <span class="filter-label">TRẠNG THÁI:</span>
-                    <select name="status" onchange="this.form.submit()">
+                    <select id="statusFilter">
                         <option value="">Tất cả trạng thái</option>
                         <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Hoạt động</option>
                         <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Đã khóa</option>
                     </select>
                 </div>
-            </form>
-            <div style="color: #A3AED0; font-size: 12px; font-weight: 700;">
-                Hiển thị <span th:text="${#lists.size(dentists)}">0</span> bác sĩ
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="loader" id="searchLoader"
+                    style="display: none; border: 3px solid #f3f3f3; border-top: 3px solid #1A237E; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 10px;">
+                </div>
+                <div style="color: #A3AED0; font-size: 12px; font-weight: 700;" id="resultCount">
+                    Hiển thị <span th:text="${#lists.size(dentists)}">0</span> bác sĩ
+                </div>
             </div>
         </div>
 
         <div class="data-table-container">
-            <table th:if="${not #lists.isEmpty(dentists)}">
-                <thead>
-                    <tr>
-                        <th>Bác sĩ</th>
-                        <th>Email</th>
-                        <th>Chuyên khoa</th>
-                        <th>Status</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="dentist : ${dentists}" th:id="'dentist-row-' + ${dentist.id}">
-                        <td class="py-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; color: #1A237E; background-color: rgba(26, 35, 126, 0.1);">
-                                    <img th:if="${dentist.avatar}" th:src="@{${dentist.avatar}}"
-                                        style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">
-                                    <i th:unless="${dentist.avatar}" class="fas fa-user-md"></i>
-                                </div>
-                                <div>
-                                    <a th:href="@{/admin/dentists/detail/{id}(id=${dentist.id})}"
-                                        class="fw-bold text-decoration-none dentist-name-link"
-                                        style="color: #1B2559; font-size: 14px; transition: color 0.2s;"
-                                        onmouseover="this.style.color='#1A237E'"
-                                        onmouseout="this.style.color='#1B2559'">
-                                        <span th:text="${dentist.fullName}">Tên bác sĩ</span>
-                                    </a>
-                                    <div class="small text-muted mt-1">ID: #<span th:text="${dentist.id}"></span></div>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td class="p-3">
-                            <span class="text-muted fw-medium" style="font-size: 14px;"
-                                th:text="${dentist.user.email ?: 'Chưa có'}">leomessi@gmail.com</span>
-                        </td>
-                        <td th:text="${dentist.specialization}">Chuyên khoa</td>
-
-                        <!--                <td>-->
-                        <!--                    <div th:if="${dentist.schedules != null and not #lists.isEmpty(dentist.schedules)}">-->
-                        <!--                        <div th:each="sch : ${dentist.schedules}" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">-->
-                        <!--            <span style="color: #1A237E; font-weight: 800; min-width: 35px;"-->
-                        <!--                  th:text="${#strings.capitalize(#strings.toLowerCase(#strings.substring(sch.dayOfWeek, 0, 3)))}">-->
-                        <!--                  Mon-->
-                        <!--            </span>-->
-
-                        <!--                            <span style="color: #707EAE; font-size: 13px;"-->
-                        <!--                                  th:text="${#temporals.format(sch.startTime, 'HH:mm') + ' - ' + #temporals.format(sch.endTime, 'HH:mm')}">-->
-                        <!--                  08:00 - 17:00-->
-                        <!--            </span>-->
-                        <!--                        </div>-->
-                        <!--                    </div>-->
-
-                        <!--                    <div th:if="${dentist.schedules == null or #lists.isEmpty(dentist.schedules)}"-->
-                        <!--                         style="color: #A3AED0; font-style: italic; font-size: 12px; padding: 5px 0;">-->
-                        <!--                        <i class="far fa-calendar-times" style="margin-right: 5px;"></i>Not scheduled-->
-                        <!--                    </div>-->
-                        <!--                </td>-->
-
-                        <td>
-                            <span class="status-badge"
-                                th:classappend="${dentist.user.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
-                                th:text="${dentist.user.status}">
-                                ACTIVE
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-
-                                <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${dentist.id} + ')'"
-                                    class="action-btn">
-                                    <i class="far fa-edit"></i>
-                                </a>
-
-                                <a href="javascript:void(0)" th:data-id="${dentist.id}"
-                                    th:data-name="${dentist.fullName}"
-                                    onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-name'))"
-                                    class="action-btn" style="color: #F44336;">
-                                    <i class="far fa-trash-alt"></i>
-                                </a>
-
-                                <form th:if="${#strings.equals(dentist.user.status, 'LOCKED')}"
-                                    th:action="@{/admin/dentists/unlock/{id}(id=${dentist.user.id})}" method="POST"
-                                    style="display:inline;">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #4CAF50; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Mở khóa tài khoản bác sĩ này?')">
-                                        <i class="fas fa-user-check"></i>
-                                    </button>
-                                </form>
-
-                                <form th:if="${#strings.equals(dentist.user.status, 'ACTIVE')}"
-                                    th:action="@{/admin/dentists/lock/{id}(id=${dentist.user.id})}" method="POST"
-                                    style="display:inline;">
-                                    <button type="submit" class="action-btn"
-                                        style="color: #F44336; border:none; background:none; cursor:pointer;"
-                                        onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản bác sĩ này?')">
-                                        <i class="fas fa-user-lock"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="empty-state" th:if="${#lists.isEmpty(dentists)}" style="text-align: center; padding: 50px;">
-                <i class="fas fa-user-slash" style="font-size: 40px; color: #A3AED0; margin-bottom: 15px;"></i>
-                <h3 style="color: #A3AED0;">Không tìm thấy bác sĩ nào</h3>
+            <div id="tableContainer">
+                <th:block th:replace="~{admin/fragments/dentist-table :: dentist-list}"></th:block>
             </div>
         </div>
     </div>
@@ -626,8 +522,16 @@
                 <div class="modal-body p-4">
                     <div class="row">
                         <div class="col-md-4 text-center border-end">
-                            <img id="viewAvatar" src="/img/default-avatar.png" class="rounded-circle mb-3"
-                                style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #f0f2f5;">
+                            <div class="avatar-wrapper mx-auto mb-3"
+                                style="width: 150px; height: 150px; position: relative; border-radius: 50%; overflow: hidden; border: 3px solid #f0f2f5; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                                <img id="viewAvatar" src="" class="rounded-circle"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: none;"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback-avatar"
+                                    style="display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; background: #e2e8f0; color: #64748b;">
+                                    <i class="fas fa-user-md" style="font-size: 60px;"></i>
+                                </div>
+                            </div>
                             <h4 id="viewFullName" style="color: #1B2559; font-weight: 700;">--</h4>
                             <span id="viewSpecialty" class="badge bg-primary mb-2">--</span>
                         </div>
@@ -694,8 +598,9 @@
                     <button type="button" onclick="closeDeleteModal()"
                         style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Hủy</button>
                     <button type="button" onclick="confirmDeleteDentist()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa bác sĩ
-                        Nha sĩ</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa
+                        bác sĩ
+                        Nha Sĩ</button>
                 </div>
             </div>
         </div>
@@ -718,10 +623,13 @@
                         <div style="grid-row: span 3; text-align: center;">
                             <div class="avatar-circle"
                                 style="width: 120px; height: 120px; border-radius: 50%; background: #F4F7FE; display: flex; align-items: center; justify-content: center; position: relative; border: 2px dashed #D1D9E8; margin: 0 auto 10px;">
-                                <img id="editAvatarPreview" src="/img/default-avatar.png"
-                                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
-                                <i id="editAvatarPlaceholder" class="fas fa-user"
-                                    style="font-size: 35px; color: #D1D9E8;"></i>
+                                <img id="editAvatarPreview" src=""
+                                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback-avatar" id="editAvatarPlaceholder"
+                                    style="display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; background: #f1f5f9; color: #94a3b8;">
+                                    <i class="fas fa-user-md" style="font-size: 40px;"></i>
+                                </div>
                                 <button type="button" class="camera-btn"
                                     style="position: absolute; bottom: 5px; right: 5px; background: #1A237E; color: white; width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;"
                                     onclick="document.getElementById('editAvatarInput').click();">
@@ -860,8 +768,8 @@
                         <button type="button" onclick="closeEditModal()"
                             style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Hủy</button>
                         <button type="submit"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Save
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Lưu thay đổi</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Lưu
+                            thay đổi</button>
                     </div>
                 </form>
             </div>
@@ -890,7 +798,9 @@
         function confirmDeleteDentist() {
             if (!dentistToDelete) return;
 
-            fetch('/admin/dentists/api/delete/' + dentistToDelete, {
+            const idToDelete = dentistToDelete;
+
+            fetch('/admin/dentists/api/delete/' + idToDelete, {
                 method: 'DELETE'
             })
                 .then(response => response.json())
@@ -898,8 +808,8 @@
                     closeDeleteModal();
                     if (data.success) {
                         showToast(data.message, 'success');
-                        // Xóa dòng tương á»©ng khỏi DOM
-                        const row = document.getElementById('dentist-row-' + dentistToDelete);
+                        // XÃ³a dÃ²ng tÆ°Æ¡ng Ã¡Â»Â©ng khá»i DOM
+                        const row = document.getElementById('dentist-row-' + idToDelete);
                         if (row) {
                             row.remove();
                         }
@@ -982,6 +892,62 @@
         });
         /*]]>*/
     </script>
+
+    <script th:inline="javascript">
+        // Debounce function to delay search execution while tying
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function performSearch() {
+            const keyword = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+            const specialty = document.getElementById('specialtyFilter') ? document.getElementById('specialtyFilter').value : '';
+            const status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+
+            const loader = document.getElementById('searchLoader');
+            if (loader) loader.style.display = 'inline-block';
+
+            const params = new URLSearchParams();
+            if (keyword) params.append('keyword', keyword);
+            if (specialty) params.append('specialty', specialty);
+            if (status) params.append('status', status);
+
+            fetch(`/admin/dentists/api/search?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text();
+                })
+                .then(htmlStr => {
+                    document.getElementById('tableContainer').innerHTML = htmlStr;
+
+                    // Update count
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlStr, 'text/html');
+                    const rows = doc.querySelectorAll('tbody tr');
+                    const countElem = document.getElementById('resultCount');
+                    if (countElem) {
+                        countElem.innerHTML = `Hiển thị <span>${rows.length}</span> bác sĩ`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                })
+                .finally(() => {
+                    if (loader) loader.style.display = 'none';
+                });
+        }
+
+        // Add event listeners
+        document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
+        document.getElementById('specialtyFilter').addEventListener('change', performSearch);
+        document.getElementById('statusFilter').addEventListener('change', performSearch);
+    </script>
+
 </body>
 
 </html>

@@ -70,12 +70,12 @@ public class AdminCustomerServiceImpl implements AdminCustomerService {
     }
 
     @Override
-    public List<Appointment> getCustomerHistory(Long customerId) {
-        return appointmentRepository.findCompletedAppointmentsByCustomerId(customerId);
+    public List<Appointment> getCustomerHistory(Long customerId, LocalDateTime now) {
+        return appointmentRepository.findCompletedAppointmentsByCustomerId(customerId, now);
     }
 
     @Override
-    public List<Appointment> getUpcomingAppointments(Long customerId) {
-        return appointmentRepository.findUpcomingAppointmentsByCustomerId(customerId);
+    public List<Appointment> getUpcomingAppointments(Long customerId, LocalDateTime now) {
+        return appointmentRepository.findUpcomingAppointmentsByCustomerId(customerId, now);
     }
 }

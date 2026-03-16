@@ -118,41 +118,8 @@
 </head>
 
 <body>
-    <div class="sidebar">
-        <div class="logo-section">
-            <span style="font-weight: bold; font-size: 18px; margin-left: 10px;">GENZ CLINIC</span>
-        </div>
-
-        <div class="nav-group" style="flex-grow: 1;">
-            <a th:href="@{/admin/dashboard}" class="nav-item">
-                <i class="fas fa-th-large"></i> Tổng quan
-            </a>
-
-            <div class="nav-label">Quản lý người dùng</div>
-            <a th:href="@{/admin/dentists}" class="nav-item">
-                <i class="fas fa-stethoscope"></i> Dentists
-            </a>
-
-            <a th:href="@{/admin/staff}" class="nav-item">
-                <i class="fas fa-users-cog"></i> Staff
-            </a>
-
-            <a th:href="@{/admin/customers}" class="nav-item active">
-                <i class="fas fa-user-friends"></i> Customer
-            </a>
-
-            <div class="nav-label">Vận hành</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dịch vụ</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giờ</a>
-        </div>
-
-        <div class="nav-group"
-            style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-bottom: 20px;">
-            <a th:href="@{/login}" class="nav-item logout-item" style="color: #FFB7B7;">
-                <i class="fas fa-sign-out-alt"></i> Đăng xuất
-            </a>
-        </div>
-    </div>
+    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
     <div class="main-wrapper p-4" style="background-color: #F4F7FE; min-height: 100vh;">
         <div class="container-fluid">
@@ -173,28 +140,28 @@
                             </div>
                         </div>
 
-                        <h3 th:text="${customer.fullName}" class="fw-bold mb-1" style="color: #1B2559;">Customer Name
+                        <h3 th:text="${customer?.fullName}" class="fw-bold mb-1" style="color: #1B2559;">Tên khách hàng
                         </h3>
                         <p class="text-muted mb-3" style="font-size: 14px;">
-                            ID: #<span th:text="${customer.id}">ID</span>
+                            ID: #<span th:text="${customer?.id}">ID</span>
                         </p>
 
                         <div class="mb-4">
                             <span class="status-badge"
-                                th:classappend="${customer.status.name() == 'ACTIVE' ? 'bg-success-soft text-success' : 'bg-danger text-white'}"
-                                th:text="${customer.status}">
+                                th:classappend="${customer?.status?.name() == 'ACTIVE' ? 'bg-success-soft text-success' : 'bg-danger text-white'}"
+                                th:text="${customer?.status ?: 'UNKNOWN'}">
                             </span>
                         </div>
 
                         <div class="text-start mt-2 p-3 rounded-4" style="background: #f4f7fe;">
                             <label class="text-uppercase text-muted fw-bold mb-2"
-                                style="font-size: 11px; letter-spacing: 1px;">Account Info</label>
+                                style="font-size: 11px; letter-spacing: 1px;">Thông tin tài khoản</label>
 
                             <div class="d-flex align-items-center mb-2" style="font-size: 13px;">
                                 <i class="far fa-calendar-alt text-muted me-2" style="width: 20px;"></i>
-                                <span class="text-muted me-1">Joined: </span>
+                                <span class="text-muted me-1">Ngày tham gia: </span>
                                 <span class="fw-bold text-dark"
-                                    th:text="${#temporals.format(customer.createdAt, 'dd/MM/yyyy')}">Date</span>
+                                    th:text="${customer?.createdAt != null ? #temporals.format(customer.createdAt, 'dd/MM/yyyy') : '--/--/----'}">Date</span>
                             </div>
                         </div>
                     </div>
@@ -209,23 +176,24 @@
                                 <div class="bg-primary-soft p-2 rounded-3 me-3">
                                     <i class="fas fa-id-card text-primary"></i>
                                 </div>
-                                Personal Details
+                                Thông tin cá nhân
                             </div>
                         </h5>
 
                         <div class="row g-4 mt-1">
                             <div class="col-md-6">
                                 <label class="form-label text-muted fw-bold small mb-1"
-                                    style="font-size: 10px; letter-spacing: 0.5px;">EMAIL ADDRESS</label>
+                                    style="font-size: 10px; letter-spacing: 0.5px;">ĐỊA CHỈ EMAIL</label>
                                 <div class="d-flex align-items-center p-3 rounded-4"
                                     style="background: #f4f7fe; border: 1px solid #E0E7FF;">
                                     <i class="fas fa-envelope text-primary me-3"></i>
-                                    <span th:text="${customer.email}" class="fw-semibold text-dark">email</span>
+                                    <span th:text="${customer?.email ?: 'N/A'}"
+                                        class="fw-semibold text-dark">email</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted fw-bold small mb-1"
-                                    style="font-size: 10px; letter-spacing: 0.5px;">PHONE NUMBER</label>
+                                    style="font-size: 10px; letter-spacing: 0.5px;">SỐ ĐIỆN THOẠI</label>
                                 <div class="d-flex align-items-center p-3 rounded-4"
                                     style="background: #f4f7fe; border: 1px solid #E0E7FF;">
                                     <i class="fas fa-phone-alt text-primary me-3"></i>
@@ -235,32 +203,32 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted fw-bold small mb-1"
-                                    style="font-size: 10px; letter-spacing: 0.5px;">DATE OF BIRTH</label>
+                                    style="font-size: 10px; letter-spacing: 0.5px;">NGÀY SINH</label>
                                 <div class="d-flex align-items-center p-3 rounded-4"
                                     style="background: #f4f7fe; border: 1px solid #E0E7FF;">
                                     <i class="fas fa-birthday-cake text-primary me-3"></i>
                                     <span
-                                        th:text="${customer.dateOfBirth != null ? #temporals.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Chưa cung cấp'}"
+                                        th:text="${customer?.dateOfBirth != null ? #temporals.format(customer.dateOfBirth,'dd/MM/yyyy') : 'Chưa cung cấp'}"
                                         class="fw-semibold text-dark">dob</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted fw-bold small mb-1"
-                                    style="font-size: 10px; letter-spacing: 0.5px;">GENDER</label>
+                                    style="font-size: 10px; letter-spacing: 0.5px;">GIỚI TÍNH</label>
                                 <div class="d-flex align-items-center p-3 rounded-4"
                                     style="background: #f4f7fe; border: 1px solid #E0E7FF;">
                                     <i class="fas fa-venus-mars text-primary me-3"></i>
-                                    <span th:text="${customer.gender ?: 'Chưa cung cấp'}"
+                                    <span th:text="${customer?.gender ?: 'Chưa cung cấp'}"
                                         class="fw-semibold text-dark">gender</span>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label text-muted fw-bold small mb-1"
-                                    style="font-size: 10px; letter-spacing: 0.5px;">HOME ADDRESS</label>
+                                    style="font-size: 10px; letter-spacing: 0.5px;">ĐỊA CHỈ NHÀ</label>
                                 <div class="d-flex align-items-center p-3 rounded-4"
                                     style="background: #f4f7fe; border: 1px solid #E0E7FF;">
                                     <i class="fas fa-map-marker-alt text-primary me-3"></i>
-                                    <span th:text="${customer.address ?: 'Chưa cập nhật địa chỉ'}"
+                                    <span th:text="${customer?.address ?: 'Chưa cập nhật địa chỉ'}"
                                         class="fw-semibold text-dark">address</span>
                                 </div>
                             </div>
@@ -276,7 +244,7 @@
                         <div class="bg-warning-soft p-2 rounded-3 me-3">
                             <i class="far fa-calendar-check mt-1"></i>
                         </div>
-                        Upcoming Appointments
+                        Lịch hẹn sắp tới
                     </div>
                 </h5>
 
@@ -284,10 +252,10 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead style="background: #f4f7fe;">
                             <tr>
-                                <th class="border-0 p-3">Date & Time</th>
-                                <th class="border-0 p-3">Service</th>
-                                <th class="border-0 p-3">Dentist</th>
-                                <th class="border-0 p-3">Status</th>
+                                <th class="border-0 p-3">Ngày & Giờ</th>
+                                <th class="border-0 p-3">Dịch vụ</th>
+                                <th class="border-0 p-3">Bác sĩ</th>
+                                <th class="border-0 p-3">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -295,31 +263,37 @@
                                 style="border-color: #F4F7FE !important;">
                                 <td class="p-3">
                                     <div class="fw-bold" style="color: #1B2559;"
-                                        th:text="${#temporals.format(apt.date, 'dd/MM/yyyy')}">Date</div>
+                                        th:text="${apt?.date != null ? #temporals.format(apt.date, 'dd/MM/yyyy') : '--/--/----'}">
+                                        Date</div>
                                     <div class="small text-muted">
                                         <i class="far fa-clock me-1"></i>
-                                        <span th:text="${#temporals.format(apt.startTime, 'HH:mm')}">Time</span>
+                                        <span
+                                            th:text="${apt?.startTime != null ? #temporals.format(apt.startTime, 'HH:mm') : '--:--'}">Thời
+                                            gian</span>
                                     </div>
                                 </td>
-                                <td class="p-3 fw-semibold text-dark" th:text="${apt.service.name}">Service</td>
+                                <td class="p-3 fw-semibold text-dark"
+                                    th:text="${apt?.service?.name ?: 'Dịch vụ đã xóa'}">Dịch vụ</td>
                                 <td class="p-3">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="bg-primary-soft rounded-circle d-flex align-items-center justify-content-center"
                                             style="width: 25px; height: 25px;">
                                             <i class="fas fa-user-md" style="font-size: 10px;"></i>
                                         </div>
-                                        <span class="text-dark" th:text="${apt.dentist.fullName}">Dr. Name</span>
+                                        <span class="text-dark" th:text="${apt?.dentist?.fullName ?: 'N/A'}">Tên
+                                            BDS</span>
                                     </div>
                                 </td>
                                 <td class="p-3">
-                                    <span class="status-badge bg-warning-soft" th:text="${apt.status}">PENDING</span>
+                                    <span class="status-badge bg-warning-soft"
+                                        th:text="${apt?.status ?: 'UNKNOWN'}">PENDING</span>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(upcoming)}">
                                 <td colspan="4" class="text-center text-muted py-5">
                                     <div class="mb-2"><i class="far fa-calendar-times fs-2 fw-light"
                                             style="opacity: 0.3;"></i></div>
-                                    <p class="mb-0">No upcoming appointments scheduled</p>
+                                    <p class="mb-0">Không có lịch hẹn nào sắp tới</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -334,7 +308,7 @@
                         <div class="bg-success-soft p-2 rounded-3 me-3">
                             <i class="fas fa-notes-medical mt-1"></i>
                         </div>
-                        Treatment History
+                        Lịch sử điều trị
                     </div>
                 </h5>
 
@@ -342,9 +316,9 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead style="background: #f4f7fe;">
                             <tr>
-                                <th class="border-0 p-3">Date</th>
-                                <th class="border-0 p-3">Service</th>
-                                <th class="border-0 p-3">Dentist</th>
+                                <th class="border-0 p-3">Ngày</th>
+                                <th class="border-0 p-3">Dịch vụ</th>
+                                <th class="border-0 p-3">Bác sĩ</th>
                                 <th class="border-0 p-3">Ghi chú</th>
                             </tr>
                         </thead>
@@ -353,18 +327,21 @@
                                 style="border-color: #F4F7FE !important;">
                                 <td class="p-3">
                                     <div class="fw-bold" style="color: #1B2559;"
-                                        th:text="${#temporals.format(apt.date, 'dd/MM/yyyy')}">Date</div>
+                                        th:text="${apt?.date != null ? #temporals.format(apt.date, 'dd/MM/yyyy') : '--/--/----'}">
+                                        Date</div>
                                 </td>
-                                <td class="p-3 text-dark fw-semibold" th:text="${apt.service.name}">Service Name</td>
-                                <td class="p-3 text-dark" th:text="${'Dr. ' + apt.dentist.fullName}">Dentist</td>
-                                <td class="p-3 text-muted small" th:text="${apt.notes ?: '-'}">Ghi chú</td>
+                                <td class="p-3 text-dark fw-semibold" th:text="${apt?.service?.name ?: 'N/A'}">Tên dịch
+                                    vụ</td>
+                                <td class="p-3 text-dark" th:text="${'Bs. ' + (apt?.dentist?.fullName ?: 'N/A')}">Bác sĩ
+                                </td>
+                                <td class="p-3 text-muted small" th:text="${apt?.notes ?: '-'}">Ghi chú</td>
                             </tr>
 
                             <tr th:if="${#lists.isEmpty(history)}">
                                 <td colspan="4" class="text-center text-muted py-5">
                                     <div class="mb-2"><i class="fas fa-file-medical-alt fs-2 fw-light"
                                             style="opacity: 0.3;"></i></div>
-                                    <p class="mb-0">No past treatment history found</p>
+                                    <p class="mb-0">Không tìm thấy lịch sử điều trị</p>
                                 </td>
                             </tr>
                         </tbody>

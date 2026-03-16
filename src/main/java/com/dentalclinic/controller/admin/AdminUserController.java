@@ -26,17 +26,19 @@ public class AdminUserController {
     // 1. Hiển thị danh sï¿½ch kèm bộ lọc Tìm kiếm
     @GetMapping
     public String showDentistList(
+            @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "specialty", required = false) String specialty,
             @RequestParam(value = "status", required = false) String status,
             Model model) {
 
-        // Gọi Service xử lý lọc dữ liệu an to� n
-        List<DentistProfile> dentists = dentistService.searchDentists(specialty, status);
+        // Gọi Service xử lý lọc dữ liệu an to n
+        List<DentistProfile> dentists = dentistService.searchDentists(keyword, specialty, status);
 
         model.addAttribute("dentists", dentists);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thï¿½i Dropdown
         model.addAttribute("selectedStatus", status);
-        model.addAttribute("activePage", "dentists"); // L� m sï¿½ng Menu Sidebar
+        model.addAttribute("activePage", "dentists"); // L m sï¿½ng Menu Sidebar
 
         // Cập nhật số liệu thực tế cho Stat Cards
         model.addAttribute("totalDentists", dentistProfileRepository.count());
@@ -63,7 +65,7 @@ public class AdminUserController {
         }
         try {
             dentistService.saveDentist(dto);
-            ra.addFlashAttribute("success", "Th\u00eam b\u00e1c s\u0129 th\u00e0nh c\u00f4ng!");
+            ra.addFlashAttribute("success", "Thêm bác sĩ thành công!");
             return "redirect:/admin/dentists";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
@@ -76,7 +78,7 @@ public class AdminUserController {
     public String lockDentist(@PathVariable("id") Long userId, RedirectAttributes ra) {
         // Sử dụng chung logic khóa từ hệ thống (trạng thï¿½i User sang LOCKED)
         dentistService.deactivateDentist(userId);
-        ra.addFlashAttribute("success", "\u0110\u00e3 kh\u00f3a t\u00e0i kho\u1ea3n b\u00e1c s\u0129 th\u00e0nh c\u00f4ng!");
+        ra.addFlashAttribute("success", "Khóa tài khoản bác sĩ thành công!");
         return "redirect:/admin/dentists";
     }
 
@@ -85,7 +87,7 @@ public class AdminUserController {
         try {
             // ï¿½ï¿½ có userService để gọi h� m n� y
             dentistService.updateDentistStatus(id, UserStatus.ACTIVE);
-            ra.addFlashAttribute("success", "\u0110\u00e3 m\u1edf kh\u00f3a t\u00e0i kho\u1ea3n th\u00e0nh c\u00f4ng!");
+            ra.addFlashAttribute("success", "Mở khóa bác sĩ thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -94,8 +96,8 @@ public class AdminUserController {
 
     @GetMapping("/detail/{id}")
     public String showDentistDetail(@PathVariable("id") Long id, Model model) {
-        // Log ra để kiểm tra xem request dï¿½ v? o tới dï¿½y chưa
-        System.out.println("Äang xem chi tiết bï¿½c sĩ có ID: " + id);
+        // Log ra để kiểm tra xem request dï¿½ v� o tới dï¿½y chưa
+        System.out.println(" xem chi tiết bác sĩ có ID: " + id);
 
         DentistDTO dentist = dentistService.getDentistById(id);
         model.addAttribute("dentist", dentist);
@@ -103,28 +105,18 @@ public class AdminUserController {
         // Trả về file HTML tại: src/main/resources/templates/admin/dentist-detail.html
         return "admin/dentist-detail";
     }
-    // @GetMapping("/admin/dentists")
-    // public String listDentists(@RequestParam(value = "keyword", required = false)
-    // String keyword, Model model) {
-    // // Gọi h� m search mới từ Service
-    // List<DentistDTO> dentists = dentistService.searchByKeyword(keyword);
-    //
-    // model.addAttribute("dentists", dentists);
-    //
-    // // BẮT BUỘC: Gửi keyword về View để Ã´ input giữ lại nội dung dï¿½ gõ
-    // model.addAttribute("keyword", keyword != null ? keyword : "");
-    //
-    // // (Cï¿½c logic đếm số lượng Total, On Duty... vẫn giữ nguyên)
-    // return "admin/dentist-list";
-    // }
-    // @GetMapping("/admin/dentists/api/search")
-    // public String searchApi(@RequestParam String keyword, Model model) {
-    // // Phải nạp v? o biến mang tên "dentists"
-    // List<DentistDTO> dentists = dentistService.searchByKeyword(keyword);
-    // model.addAttribute("dentists", dentists);
-    //
-    // return "admin/fragments/dentist-table :: dentist-list";
-    // }
+
+    @GetMapping("/api/search")
+    public String searchApi(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "specialty", required = false) String specialty,
+            @RequestParam(value = "status", required = false) String status,
+            Model model) {
+        List<com.dentalclinic.model.profile.DentistProfile> dentists = dentistService.searchDentists(keyword, specialty,
+                status);
+        model.addAttribute("dentists", dentists);
+        return "admin/fragments/dentist-table :: dentist-list";
+    }
 
     @GetMapping("/api/get/{id}")
     @ResponseBody
@@ -142,7 +134,7 @@ public class AdminUserController {
         }
         try {
             dentistService.updateDentist(id, dto);
-            ra.addFlashAttribute("success", "C\u1eadp nh\u1eadt h\u1ed3 s\u01a1 b\u00e1c s\u0129 th\u00e0nh c\u00f4ng!");
+            ra.addFlashAttribute("success", "Cập nhật hồ sơ bác sĩ thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -155,12 +147,10 @@ public class AdminUserController {
         try {
             dentistService.deleteDentist(id);
             return org.springframework.http.ResponseEntity.ok()
-                    .body(java.util.Map.of("success", true, "message", "X\u00f3a nha s\u0129 th\u00e0nh c\u00f4ng!"));
+                    .body(java.util.Map.of("success", true, "message", "Xóa nha sĩ thành công!"));
         } catch (Exception e) {
             return org.springframework.http.ResponseEntity.badRequest()
                     .body(java.util.Map.of("success", false, "message", e.getMessage()));
         }
     }
 }
-
-

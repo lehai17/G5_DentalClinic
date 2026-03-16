@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="staff-list">
+        <table th:if="${not #lists.isEmpty(staffs)}">
+            <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th>Vị trí</th>
+                    <th>Số điện thoại</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="staff : ${staffs}" th:id="'staff-row-' + ${staff.id}">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="width: 40px; height: 40px; border-radius: 50%; background: #1A237E; color: white; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div>
+                                <a th:href="@{/admin/staff/detail/{id}(id=${staff.id})}"
+                                    class="fw-bold text-decoration-none staff-name-link"
+                                    style="color: #1B2559; font-size: 14px; transition: color 0.2s;"
+                                    onmouseover="this.style.color='#1A237E'" onmouseout="this.style.color='#1B2559'">
+                                    <span th:text="${staff?.fullName ?: 'N/A'}">Name</span>
+                                </a>
+                                <div style="font-size: 11px; color: #707EAE;" th:text="${staff.user.email}">
+                                    email@clinic.vn</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td th:text="${staff.position}">Position</td>
+                    <td th:text="${staff.phone}">Phone</td>
+                    <td>
+                        <span class="status-badge"
+                            th:classappend="${staff.user.status.name() == 'ACTIVE' ? 'status-active' : 'status-locked'}"
+                            th:text="${staff.user.status}">
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <a href="javascript:void(0)" th:onclick="'openEditModal(' + ${staff.id} + ')'"
+                                class="action-btn"><i class="far fa-edit"></i></a>
+                            <a href="javascript:void(0)" th:data-id="${staff.id}"
+                                th:data-name="${staff?.fullName ?: ''}"
+                                onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-name'))"
+                                class="action-btn" style="color: #F44336;"><i class="far fa-trash-alt"></i></a>
+                            <form th:if="${staff.user.status.name() == 'LOCKED'}"
+                                th:action="@{/admin/staff/unlock/{id}(id=${staff.user.id})}" method="POST">
+                                <button type="submit" class="action-btn"
+                                    style="color: #4CAF50; border:none; background:none; cursor:pointer;"
+                                    onclick="return confirm('Mở khóa nhân viên này?')">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            </form>
+                            <form th:if="${staff.user.status.name() == 'ACTIVE'}"
+                                th:action="@{/admin/staff/lock/{id}(id=${staff.user.id})}" method="POST"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn" style="color: #F44336;"
+                                    onclick="return confirm('Khóa nhân viên này?')">
+                                    <i class="fas fa-user-lock"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(staffs)}"
+            style="text-align: center; padding: 80px 0; color: #A3AED0;">
+            <i class="fas fa-users-slash" style="font-size: 50px; margin-bottom: 15px;"></i>
+            <h3>Chưa có nhân viên nào</h3>
+        </div>
+    </div>
+</body>
+
+</html>

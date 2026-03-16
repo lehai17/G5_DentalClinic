@@ -47,6 +47,7 @@ public class DentistDTO {
 
     @NotNull(message = "Ngày sinh không được để trống")
     @Past(message = "Ngày sinh phải ở quá khứ")
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 
     @NotBlank(message = "Giới tính không được để trống")

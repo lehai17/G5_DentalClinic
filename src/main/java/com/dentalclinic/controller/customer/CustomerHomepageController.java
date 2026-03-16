@@ -49,15 +49,15 @@ public class CustomerHomepageController {
         this.customerAppointmentService = customerAppointmentService;
     }
 
-    @GetMapping({"/", "/index", "/home"})
+    @GetMapping({ "/", "/index", "/home" })
     public String redirectToHomepage() {
         return "redirect:/homepage";
     }
 
-    @GetMapping({"/homepage", "/customer/homepage"})
+    @GetMapping({ "/homepage", "/customer/homepage" })
     public String showHomepage(@RequestParam(defaultValue = "0") int page,
-                               Authentication authentication,
-                               Model model) {
+            Authentication authentication,
+            Model model) {
         model.addAttribute("active", "homepage");
         Long currentCustomerId = resolveCurrentUserId(authentication);
         if (currentCustomerId == null) {
@@ -76,7 +76,7 @@ public class CustomerHomepageController {
             model.addAttribute("customer", profile);
 
             model.addAttribute("services", serviceRepo.findByActiveTrue());
-            model.addAttribute("dentists", dentistRepo.filterDentists(null, UserStatus.ACTIVE));
+            model.addAttribute("dentists", dentistRepo.filterDentists(null, null, UserStatus.ACTIVE));
 
             int safePage = Math.max(page, 0);
             Pageable pageable = PageRequest.of(safePage, 2);
@@ -157,4 +157,3 @@ public class CustomerHomepageController {
                 .orElse(null);
     }
 }
-
