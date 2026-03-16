@@ -78,6 +78,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Tránh nhập HTML độc -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.17.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

@@ -17,7 +17,7 @@ public class BlogForm {
     private String content;
 
     @Size(max = 500, message = "Image URL max 500 characters")
-    private String imageUrl;
+    private String thumbnailUrl;
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -28,6 +28,6 @@ public class BlogForm {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public String getThumbnailUrl() { return thumbnailUrl; }
+    public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 }

@@ -1,9 +1,12 @@
 package com.dentalclinic.service;
 
+import com.dentalclinic.exception.BlogValidationException;
 import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.blog.BlogStatus;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.BlogRepository;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,13 +26,14 @@ public class BlogWorkflowService {
 
         blog.setTitle(cleanRequired(blog.getTitle(), "Title"));
         blog.setSummary(cleanRequired(blog.getSummary(), "Summary"));
-        blog.setContent(cleanRequired(blog.getContent(), "Content"));
+        blog.setContent(cleanHtmlContent(blog.getContent()));
         blog.setImageUrl(cleanOptional(blog.getImageUrl()));
 
         blog.setStatus(BlogStatus.DRAFT);
         blog.setApprovedBy(null);
         blog.setApprovedAt(null);
         blog.setRejectionReason(null);
+
         return blogRepository.save(blog);
     }
 
@@ -42,7 +46,7 @@ public class BlogWorkflowService {
 
         blog.setTitle(cleanRequired(formData.getTitle(), "Title"));
         blog.setSummary(cleanRequired(formData.getSummary(), "Summary"));
-        blog.setContent(cleanRequired(formData.getContent(), "Content"));
+        blog.setContent(cleanHtmlContent(formData.getContent()));
         blog.setImageUrl(cleanOptional(formData.getImageUrl()));
 
         return blogRepository.save(blog);
@@ -75,10 +79,12 @@ public class BlogWorkflowService {
         if (blog.getStatus() != BlogStatus.PENDING) {
             throw new IllegalStateException("Only PENDING blog can be approved.");
         }
+
         blog.setStatus(BlogStatus.APPROVED);
         blog.setApprovedBy(admin);
         blog.setApprovedAt(LocalDateTime.now());
         blog.setRejectionReason(null);
+
         return blogRepository.save(blog);
     }
 
@@ -86,13 +92,16 @@ public class BlogWorkflowService {
         if (!(blog.getStatus() == BlogStatus.PENDING || blog.getStatus() == BlogStatus.APPROVED)) {
             throw new IllegalStateException("Only PENDING/APPROVED blog can be rejected.");
         }
+
         if (reason == null || reason.trim().isEmpty()) {
             throw new IllegalArgumentException("Rejection reason is required.");
         }
+
         blog.setStatus(BlogStatus.REJECTED);
         blog.setApprovedBy(admin);
         blog.setApprovedAt(LocalDateTime.now());
         blog.setRejectionReason(reason.trim());
+
         return blogRepository.save(blog);
     }
 
@@ -101,9 +110,10 @@ public class BlogWorkflowService {
             throw new SecurityException("You are not owner of this blog.");
         }
     }
+
     private String cleanRequired(String s, String field) {
-        if (s == null || s.isBlank()) {   // isBlank chặn luôn toàn space
-            throw new com.dentalclinic.exception.BlogValidationException(field + " must not be blank");
+        if (s == null || s.isBlank()) {
+            throw new BlogValidationException(field + " must not be blank");
         }
         return s.trim();
     }
@@ -112,5 +122,19 @@ public class BlogWorkflowService {
         if (s == null) return null;
         String t = s.trim();
         return t.isEmpty() ? null : t;
+    }
+
+    private String cleanHtmlContent(String html) {
+        if (html == null || html.isBlank()) {
+            throw new BlogValidationException("Content must not be blank");
+        }
+
+        Safelist safelist = Safelist.relaxed()
+                .addTags("img", "figure", "figcaption", "section", "article")
+                .addAttributes("img", "src", "alt", "title", "width", "height", "style")
+                .addAttributes(":all", "class", "style")
+                .addProtocols("img", "src", "http", "https");
+
+        return Jsoup.clean(html, safelist);
     }
 }

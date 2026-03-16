@@ -8,14 +8,29 @@ import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.BlogWorkflowService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/staff/blogs")
 public class StaffBlogController {
+
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif");
 
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
@@ -69,29 +84,24 @@ public class StaffBlogController {
         return "staff/blog-form";
     }
 
-    /**
-     * Save Draft: dùng cho cả create mới v�  update bản draft/rejected
-     */
     @PostMapping("/save-draft")
     public String saveDraft(@ModelAttribute Blog form,
-                            @RequestParam(value = "imageFile", required = false) org.springframework.web.multipart.MultipartFile imageFile,
+                            @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
                             @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
-                            Authentication authentication) throws java.io.IOException {
+                            Authentication authentication) throws IOException {
 
         User staff = userRepository.findByEmail(authentication.getName()).orElseThrow();
 
-        // set imageUrl
-        if (imageFile != null && !imageFile.isEmpty()) {
-            form.setImageUrl(storeBlogImage(imageFile));
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            form.setImageUrl(storeBlogImage(thumbnailFile));
         } else {
-            form.setImageUrl(existingImageUrl); // giữ áº£nh cÅ© nếu không upload mới
+            form.setImageUrl(existingImageUrl);
         }
 
         if (form.getId() == null) {
             workflowService.createDraft(form, staff);
         } else {
             Blog existing = blogRepository.findById(form.getId()).orElseThrow();
-            // chặn sửa blog người khác
             if (!existing.getCreatedBy().getId().equals(staff.getId())) {
                 return "redirect:/staff/blogs?forbidden=true";
             }
@@ -101,20 +111,16 @@ public class StaffBlogController {
         return "redirect:/staff/blogs?saved=true";
     }
 
-
-    /**
-     * Submit Review: dùng cho cả create mới v�  edit rồi submit
-     */
     @PostMapping("/submit-review")
     public String submitReview(@ModelAttribute Blog form,
-                               @RequestParam(value = "imageFile", required = false) org.springframework.web.multipart.MultipartFile imageFile,
+                               @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
                                @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
-                               Authentication authentication) throws java.io.IOException {
+                               Authentication authentication) throws IOException {
 
         User staff = userRepository.findByEmail(authentication.getName()).orElseThrow();
 
-        if (imageFile != null && !imageFile.isEmpty()) {
-            form.setImageUrl(storeBlogImage(imageFile));
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            form.setImageUrl(storeBlogImage(thumbnailFile));
         } else {
             form.setImageUrl(existingImageUrl);
         }
@@ -134,15 +140,6 @@ public class StaffBlogController {
         return "redirect:/staff/blogs?submitted=true";
     }
 
-
-    private void assertOwner(Blog blog, User staff) {
-        if (!blog.getCreatedBy().getId().equals(staff.getId())) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN
-            );
-        }
-    }
-
     @PostMapping("/{id}/submit")
     public String submit(@PathVariable Long id, Authentication authentication) {
         User staff = userRepository.findByEmail(authentication.getName()).orElseThrow();
@@ -160,19 +157,46 @@ public class StaffBlogController {
         workflowService.withdrawPending(blog, staff);
         return "redirect:/staff/blogs?withdrawn=true";
     }
-    private String storeBlogImage(org.springframework.web.multipart.MultipartFile imageFile) throws java.io.IOException {
-        String ext = org.springframework.util.StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
-        String fileName = java.util.UUID.randomUUID() + (ext != null ? "." + ext : "");
 
-        java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads", "blog");
-        java.nio.file.Files.createDirectories(uploadDir);
+    @PostMapping(value = "/upload-inline-image", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> uploadInlineImage(@RequestParam("upload") MultipartFile file) throws IOException {
+        String url = storeBlogImage(file);
 
-        java.nio.file.Path filePath = uploadDir.resolve(fileName);
-        try (java.io.InputStream in = imageFile.getInputStream()) {
-            java.nio.file.Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        }
-        return "/uploads/blog/" + fileName;
+        Map<String, Object> response = new HashMap<>();
+        response.put("url", url);
+        return response;
     }
 
-}
+    private void assertOwner(Blog blog, User staff) {
+        if (!blog.getCreatedBy().getId().equals(staff.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
 
+    private String storeBlogImage(MultipartFile imageFile) throws IOException {
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
+
+        String ext = StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
+        ext = ext != null ? ext.toLowerCase() : "";
+
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only jpg, jpeg, png, webp, gif are allowed");
+        }
+
+        String fileName = UUID.randomUUID() + "." + ext;
+
+        Path uploadDir = Paths.get("uploads", "blog");
+        Files.createDirectories(uploadDir);
+
+        Path filePath = uploadDir.resolve(fileName);
+
+        try (InputStream in = imageFile.getInputStream()) {
+            Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        return "/uploads/blog/" + fileName;
+    }
+}

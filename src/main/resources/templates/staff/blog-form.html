@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,7 @@
         }
 
         .blog-form-card {
-            max-width: 980px;
+            max-width: 1100px;
             background: #fff;
             border-radius: 14px;
             padding: 24px;
@@ -70,6 +70,22 @@
             min-height: 120px;
         }
 
+        .thumbnail-box {
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 14px;
+            background: #f8fafc;
+        }
+
+        .thumbnail-preview {
+            margin-top: 10px;
+            width: 100%;
+            max-width: 360px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            display: block;
+        }
+
         .actions {
             margin-top: 18px;
             display: flex;
@@ -117,6 +133,16 @@
             font-size: 13px;
         }
 
+        .editor-note {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .ck-editor__editable_inline {
+            min-height: 420px;
+        }
+
         @media (max-width: 860px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -135,12 +161,8 @@
             <h2 class="page-title" th:text="${blog.id == null} ? 'Tạo bài viết sức khỏe' : 'Chỉnh sửa bài viết sức khỏe'"></h2>
 
             <div class="blog-form-card">
-                <!-- Form chính: mặc định lưu nháp -->
                 <form th:action="@{/staff/blogs/save-draft}" method="post" enctype="multipart/form-data">
-                <!-- CSRF (nếu bật Spring Security) -->
                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-                    <!-- id để update khi edit -->
                     <input type="hidden" name="id" th:if="${blog.id != null}" th:value="${blog.id}"/>
 
                     <div class="form-grid">
@@ -156,48 +178,40 @@
                         </div>
 
                         <div class="form-group full">
-                            <label for="imageFile">Ảnh bài viết</label>
+                            <label for="thumbnailFile">Ảnh thumbnail / ảnh đầu bài</label>
 
-                            <input id="imageFile" type="file" name="imageFile" accept="image/*">
+                            <div class="thumbnail-box">
+                                <input id="thumbnailFile" type="file" name="thumbnailFile" accept="image/*">
+                                <input type="hidden" name="existingImageUrl" th:value="${blog.imageUrl}"/>
 
-                            <!-- giữ ảnh cũ nếu không tải ảnh mới -->
-                            <input type="hidden" name="existingImageUrl" th:value="${blog.imageUrl}"/>
+                                <div class="editor-note">
+                                    Ảnh này sẽ hiển thị ở trang danh sách bài viết và đầu trang chi tiết.
+                                </div>
 
-                            <img id="preview"
-                                 th:if="${!#strings.isEmpty(blog.imageUrl)}"
-                                 th:src="${blog.imageUrl}"
-                                 style="margin-top:10px; max-width:320px; border-radius:12px; border:1px solid #e5e7eb;" />
+                                <img id="thumbnailPreviewOld"
+                                     class="thumbnail-preview"
+                                     th:if="${!#strings.isEmpty(blog.imageUrl)}"
+                                     th:src="${blog.imageUrl}" />
 
-                            <img id="previewNew"
-                                 style="margin-top:10px; max-width:320px; display:none; border-radius:12px; border:1px solid #e5e7eb;" />
+                                <img id="thumbnailPreviewNew"
+                                     class="thumbnail-preview"
+                                     style="display:none;" />
+                            </div>
                         </div>
 
-                        <script>
-                            const input = document.getElementById('imageFile');
-                            const pvNew = document.getElementById('previewNew');
-                            if (input) {
-                                input.addEventListener('change', (e) => {
-                                    const file = e.target.files && e.target.files[0];
-                                    if (!file) { pvNew.style.display='none'; return; }
-                                    pvNew.src = URL.createObjectURL(file);
-                                    pvNew.style.display='block';
-                                });
-                            }
-                        </script>
-
-
                         <div class="form-group full">
-                            <label for="content">Nội dung <span style="color:#dc2626">*</span></label>
-                            <textarea id="content" name="content" rows="12" required
+                            <label for="content">Nội dung bài viết <span style="color:#dc2626">*</span></label>
+                            <textarea id="content" name="content" rows="12"
                                       th:text="${blog.content}"></textarea>
+                            <div class="editor-note">
+                                Bạn có thể bấm nút chèn ảnh trong editor để đưa ảnh vào giữa các đoạn như bài báo.
+                            </div>
                         </div>
                     </div>
 
                     <div class="actions">
-                        <!-- Lưu nháp -->
                         <button type="submit" class="btn btn-draft">Lưu bản nháp</button>
 
-                        <!-- Gửi duyệt -->
                         <button type="submit"
                                 class="btn btn-submit"
                                 th:formaction="@{/staff/blogs/submit-review}">
@@ -215,6 +229,118 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script>
+    const thumbnailInput = document.getElementById('thumbnailFile');
+    const thumbnailPreviewNew = document.getElementById('thumbnailPreviewNew');
+
+    if (thumbnailInput) {
+        thumbnailInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) {
+                thumbnailPreviewNew.style.display = 'none';
+                return;
+            }
+            thumbnailPreviewNew.src = URL.createObjectURL(file);
+            thumbnailPreviewNew.style.display = 'block';
+        });
+    }
+
+    let blogEditor;
+
+    function BlogUploadAdapter(loader) {
+        this.loader = loader;
+    }
+
+    BlogUploadAdapter.prototype.upload = function() {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+            const data = new FormData();
+            data.append('upload', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/staff/blogs/upload-inline-image', true);
+
+            const csrfInput = document.querySelector('input[name="_csrf"]');
+            if (csrfInput) {
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrfInput.value);
+            }
+
+            xhr.responseType = 'json';
+
+            xhr.addEventListener('error', () => reject('Không thể upload ảnh.'));
+            xhr.addEventListener('abort', () => reject('Upload ảnh đã bị huỷ.'));
+            xhr.addEventListener('load', () => {
+                const response = xhr.response;
+
+                if (!response || xhr.status >= 400) {
+                    reject((response && response.message) || 'Upload ảnh thất bại.');
+                    return;
+                }
+
+                resolve({ default: response.url });
+            });
+
+            xhr.send(data);
+        }));
+    };
+
+    BlogUploadAdapter.prototype.abort = function() {};
+
+    function BlogUploadAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return new BlogUploadAdapter(loader);
+        };
+    }
+
+    ClassicEditor
+        .create(document.querySelector('#content'), {
+            extraPlugins: [BlogUploadAdapterPlugin],
+            toolbar: [
+                'heading',
+                '|',
+                'bold', 'italic', 'link',
+                '|',
+                'bulletedList', 'numberedList',
+                '|',
+                'insertTable', 'blockQuote', 'imageUpload',
+                '|',
+                'undo', 'redo'
+            ]
+        })
+        .then(editor => {
+            blogEditor = editor;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const title = document.getElementById('title').value.trim();
+        const summary = document.getElementById('summary').value.trim();
+        const content = blogEditor ? blogEditor.getData().trim() : '';
+
+        if (blogEditor) {
+            document.getElementById('content').value = content;
+        }
+
+        if (!title) {
+            e.preventDefault();
+            alert('Vui lòng nhập tiêu đề.');
+            return;
+        }
+
+        if (!summary) {
+            e.preventDefault();
+            alert('Vui lòng nhập tóm tắt.');
+            return;
+        }
+
+        if (!content) {
+            e.preventDefault();
+            alert('Vui lòng nhập nội dung bài viết.');
+        }
+    });
+</script>
 </body>
 </html>
-

@@ -1093,4 +1093,20 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+    .ai-booking-box {
+        width: 100%;
+    }
+
+    .ai-booking-box textarea {
+        width: 100%;
+        min-height: 120px;
+        box-sizing: border-box;
+        display: block;
+        resize: vertical;
+    }
+
+    .ai-booking-box #ai-booking-result {
+        width: 100%;
+    }
 }
