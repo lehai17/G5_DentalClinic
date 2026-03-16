@@ -23,23 +23,28 @@ public class StaffAppointmentResultService {
 
     @Transactional(readOnly = true)
     public AppointmentResult load(Long appointmentId) {
-
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        MedicalRecord mr = medicalRecordRepository.findByAppointment_Id(appointmentId)
-                .orElse(null); // ✅ đúng cú pháp Java
+        MedicalRecord mr = medicalRecordRepository.findByAppointment_Id(appointmentId).orElse(null);
 
-        // init lazy collections để Thymeleaf render không lỗi
         if (mr != null) {
-            mr.getFindings().size();
-            mr.getImages().size();
-            mr.getProposedServices().size();
+            if (mr.getFindings() != null) {
+                mr.getFindings().size();
+            }
 
-            // ✅ lambda đúng cú pháp
-            mr.getProposedServices().forEach(ps -> {
-                if (ps.getService() != null) ps.getService().getName();
-            });
+            if (mr.getImages() != null) {
+                mr.getImages().size();
+            }
+
+            if (mr.getProposedServices() != null) {
+                mr.getProposedServices().size();
+                mr.getProposedServices().forEach(ps -> {
+                    if (ps.getService() != null) {
+                        ps.getService().getName();
+                    }
+                });
+            }
         }
 
         return new AppointmentResult(appt, mr);

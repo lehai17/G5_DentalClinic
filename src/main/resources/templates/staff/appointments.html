@@ -78,6 +78,12 @@
                             Xác nhận
                         </button>
 
+                        <button type="button" class="btn-checkin"
+                                th:if="${a.status.name() == 'CONFIRMED'}"
+                                th:onclick="'checkin(' + ${a.id} + ')'">
+                            Check-in
+                        </button>
+
                         <button type="button" class="btn-cancel"
                                 th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}"
                                 th:onclick="'cancelAppointment(' + ${a.id} + ')'">
@@ -89,6 +95,12 @@
                                 th:onclick="'goToPayment(' + ${a.id} + ')'">
                             Thanh toán
                         </button>
+
+                        <a class="btn-result"
+                           th:if="${a.status.name() == 'COMPLETED'}"
+                           th:href="@{/staff/appointments/{id}/result(id=${a.id})}">
+                            Result
+                        </a>
                     </td>
                 </tr>
                 </tbody>
