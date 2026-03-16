@@ -702,6 +702,13 @@
       ? escapeHtml(data.dentistName)
       : '<span class="cap-muted">Chưa phân công</span>';
     var notesValue = data.notes == null ? "" : String(data.notes).trim();
+    if (
+      data.status === "CANCELLED" &&
+      data.cancellationReason &&
+      notesValue === String(data.cancellationReason).trim()
+    ) {
+      notesValue = "";
+    }
     var notesHtml = notesValue
       ? escapeHtml(notesValue)
       : '<span class="cap-muted">Không có ghi chú</span>';
@@ -764,6 +771,16 @@
       data.status === "REEXAM" ||
       data.status === "IN_PROGRESS"
         ? '<div class="cap-inline-note cap-inline-note-success"><i class="bi bi-check-circle-fill"></i><span>Đã thanh toán đặt cọc 50%</span></div>'
+        : "";
+    var cancelledDepositHtml =
+      data.status === "CANCELLED" && data.depositRefunded
+        ? '<div class="cap-inline-note cap-inline-note-success"><i class="bi bi-wallet2"></i><span>Đã hoàn tiền cọc vào ví của bạn.</span></div>'
+        : "";
+    var cancellationReasonHtml =
+      data.status === "CANCELLED" && data.cancellationReason
+        ? '<div class="cap-inline-note cap-inline-note-warning"><i class="bi bi-info-circle"></i><span>' +
+          escapeHtml(data.cancellationReason) +
+          "</span></div>"
         : "";
     var remainingPaymentHtml = canPayRemaining
       ? '<div class="cap-inline-note cap-inline-note-warning">' +
@@ -831,6 +848,8 @@
       "</div></div>" +
       reviewSummaryHtml +
       depositPaidHtml +
+      cancelledDepositHtml +
+      cancellationReasonHtml +
       remainingPaymentHtml +
       invoicePreviewHtml +
       "</div>" +

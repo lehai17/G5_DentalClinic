@@ -38,4 +38,14 @@ public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedul
     List<BusySchedule> findByDentistName(@Param("name") String name, Sort sort);
 
     List<BusySchedule> findByDentistFullNameContainingIgnoreCase(String name, Sort sort);
+
+    @Query("""
+            SELECT COUNT(b) > 0
+            FROM BusySchedule b
+            WHERE b.dentist.id = :dentistId
+              AND UPPER(COALESCE(b.status, '')) = 'APPROVED'
+              AND :targetDate BETWEEN b.startDate AND b.endDate
+            """)
+    boolean existsApprovedLeaveByDentistAndDate(@Param("dentistId") Long dentistId,
+                                                @Param("targetDate") LocalDate targetDate);
 }

@@ -71,18 +71,20 @@ public class CustomerWalletController {
 
         Optional<Wallet> walletOpt = walletService.getWalletByUserId(userId);
         CustomerProfile customer = customerProfileRepository.findByUser_Id(userId).orElse(null);
+        WalletService.WalletSecurityState securityState = customer == null ? null : walletService.getSecurityState(customer);
         DemoBankAccount savedWithdrawAccount = customer == null ? null : walletService.getPersonalWithdrawAccount(customer);
         if (walletOpt.isEmpty()) {
-            return ResponseEntity.ok(Map.of(
-                    "balance", 0.0,
-                    "transactions", List.of(),
-                    "savedWithdrawAccount", savedWithdrawAccount == null ? null : Map.of(
-                            "bankName", savedWithdrawAccount.getBankName(),
-                            "bankAccountNo", savedWithdrawAccount.getAccountNo(),
-                            "accountHolder", savedWithdrawAccount.getAccountHolder(),
-                            "balance", savedWithdrawAccount.getBalance().doubleValue()
-                    )
+            Map<String, Object> emptyResponse = new HashMap<>();
+            emptyResponse.put("balance", 0.0);
+            emptyResponse.put("transactions", List.of());
+            emptyResponse.put("walletSecurity", buildWalletSecurityMap(securityState));
+            emptyResponse.put("savedWithdrawAccount", savedWithdrawAccount == null ? null : Map.of(
+                    "bankName", savedWithdrawAccount.getBankName(),
+                    "bankAccountNo", savedWithdrawAccount.getAccountNo(),
+                    "accountHolder", savedWithdrawAccount.getAccountHolder(),
+                    "balance", savedWithdrawAccount.getBalance().doubleValue()
             ));
+            return ResponseEntity.ok(emptyResponse);
         }
 
         Wallet wallet = walletOpt.get();
@@ -98,6 +100,7 @@ public class CustomerWalletController {
                 "createdAt", t.getCreatedAt().toString(),
                 "status", t.getStatus().toString()
         )).toList());
+        response.put("walletSecurity", buildWalletSecurityMap(securityState));
         response.put("savedWithdrawAccount", savedWithdrawAccount == null ? null : Map.of(
                 "bankName", savedWithdrawAccount.getBankName(),
                 "bankAccountNo", savedWithdrawAccount.getAccountNo(),
@@ -113,7 +116,8 @@ public class CustomerWalletController {
                                       @RequestParam BigDecimal amount,
                                       @RequestParam String mode,
                                       @RequestParam(required = false) String bankName,
-                                      @RequestParam(required = false) String bankAccountNo) {
+                                      @RequestParam(required = false) String bankAccountNo,
+                                      @RequestParam(required = false) String pinCode) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
@@ -155,7 +159,8 @@ public class CustomerWalletController {
                     customer,
                     amount,
                     targetAccount.getBankName(),
-                    targetAccount.getAccountNo()
+                    targetAccount.getAccountNo(),
+                    pinCode
             );
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -165,6 +170,19 @@ public class CustomerWalletController {
                     "destinationAccountNo", result.getDestinationAccount().getAccountNo(),
                     "destinationAccountHolder", result.getDestinationAccount().getAccountHolder(),
                     "destinationBalance", result.getDestinationAccount().getBalance().doubleValue()
+            ));
+        } catch (WalletService.WalletLockedException ex) {
+            return ResponseEntity.status(HttpStatus.LOCKED).body(Map.of(
+                    "success", false,
+                    "code", ex.getCode(),
+                    "message", ex.getMessage(),
+                    "lockedUntil", ex.getLockedUntil()
+            ));
+        } catch (WalletService.WalletPinRequiredException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "success", false,
+                    "code", ex.getCode(),
+                    "message", ex.getMessage()
             ));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -179,6 +197,60 @@ public class CustomerWalletController {
                             + ex.getClass().getSimpleName()
                             + (ex.getMessage() != null && !ex.getMessage().isBlank() ? " - " + ex.getMessage() : "")
             ));
+        }
+    }
+
+    @PostMapping("/api/pin/setup")
+    public ResponseEntity<?> setupPin(HttpSession session,
+                                      @RequestParam String pinCode,
+                                      @RequestParam String confirmPinCode) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Not authenticated"));
+        }
+
+        try {
+            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
+            walletService.setupPin(customer, pinCode, confirmPinCode);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Da thiet lap PIN cho vi."));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/pin/forgot/request")
+    public ResponseEntity<?> requestPinResetOtp(HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Not authenticated"));
+        }
+
+        try {
+            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
+            walletService.requestPinResetOtp(customer);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Da gui OTP ve email cua ban."));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/pin/forgot/verify")
+    public ResponseEntity<?> verifyPinResetOtp(HttpSession session,
+                                               @RequestParam String otp) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Not authenticated"));
+        }
+
+        try {
+            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
+            walletService.verifyPinResetOtp(customer, otp);
+            return ResponseEntity.ok(Map.of("success", true, "message", "OTP hop le. Ban co the dat PIN moi."));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
         }
     }
 
@@ -256,5 +328,20 @@ public class CustomerWalletController {
                             + (ex.getMessage() != null && !ex.getMessage().isBlank() ? " - " + ex.getMessage() : "")
             ));
         }
+    }
+
+    private Map<String, Object> buildWalletSecurityMap(WalletService.WalletSecurityState securityState) {
+        if (securityState == null) {
+            return null;
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("hasPin", securityState.hasPin());
+        data.put("walletLocked", securityState.walletLocked());
+        data.put("pinLockedUntil", securityState.pinLockedUntil() == null ? null : securityState.pinLockedUntil().toString());
+        data.put("dailyWithdrawLimit", securityState.dailyWithdrawLimit().doubleValue());
+        data.put("withdrawnToday", securityState.withdrawnToday().doubleValue());
+        data.put("remainingDailyLimit", securityState.remainingDailyLimit().doubleValue());
+        data.put("pinRequiredThreshold", securityState.pinRequiredThreshold().doubleValue());
+        return data;
     }
 }
