@@ -204,7 +204,7 @@
 
                               <span style="background: var(--medical-50); color: var(--medical-600); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600">
                     <span th:if="${service?.price != null}"
-                          th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + ' â‚«'"></span>
+                          th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + ' ₫'"></span>
                     <span th:unless="${service?.price != null}">Liên hệ</span>
                 </span>
                           </div>
@@ -473,7 +473,7 @@
                       font-weight: 600;
                     "
                   >
-                    Sau â†’
+                    Sau →
                   </a>
                 </div>
               </div>

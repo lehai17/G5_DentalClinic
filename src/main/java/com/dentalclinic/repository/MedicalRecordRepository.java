@@ -12,16 +12,16 @@ import java.util.Optional;
 @Repository
 public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Long> {
 
-    // âœ… Láº¤Y medical record theo appointment
+    // ✅ LẤY medical record theo appointment
     Optional<MedicalRecord> findByAppointment_Id(Long appointmentId);
 
-    // âœ… customer xem record cá»§a chÃ­nh mÃ¬nh
+    // ✅ customer xem record của chính mình
     Optional<MedicalRecord> findByAppointment_IdAndAppointment_Customer_User_Id(
             Long appointmentId,
             Long customerUserId
     );
 
-    // âœ… lá»‹ch sá»­ khÃ¡m cá»§a customer (má»›i nháº¥t trÆ°á»›c)
+    // ✅ lịch sử khám của customer (mới nhất trước)
     List<MedicalRecord> findTop10ByAppointment_Customer_User_IdOrderByAppointment_DateDesc(
             Long customerUserId
     );

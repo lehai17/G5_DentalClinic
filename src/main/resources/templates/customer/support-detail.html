@@ -29,7 +29,7 @@
       <div th:if="${errorMessage}" class="mb-4 px-4 py-3 rounded-xl bg-red-100 text-red-800" th:text="${errorMessage}"></div>
 
       <div class="flex flex-wrap items-center gap-3 mb-4">
-        <span th:if="${ticket.displayStatus == 'OPEN'}" class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Äang chờ phản hồi</span>
+        <span th:if="${ticket.displayStatus == 'OPEN'}" class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Đang chờ phản hồi</span>
         <span th:if="${ticket.displayStatus == 'ANSWERED'}" class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Đã có phản hồi</span>
         <span th:if="${ticket.displayStatus == 'CLOSED'}" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">Đã đóng</span>
       </div>

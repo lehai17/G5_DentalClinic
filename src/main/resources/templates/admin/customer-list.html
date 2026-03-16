@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Quáº£n lÃ½ khÃ¡ch hÃ ng - GENZ CLINIC</title>
+    <title>Quản lý khách hàng - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -226,7 +226,7 @@
             background-color: #F8FAFF;
         }
 
-        /* Badges & Actions */
+        /* Badges & Thao t?c */
         .status-badge {
             padding: 6px 14px;
             border-radius: 10px;
@@ -294,10 +294,10 @@
 
         <div class="nav-group" style="flex-grow: 1;">
             <a th:href="@{/admin/dashboard}" class="nav-item">
-                <i class="fas fa-th-large"></i> Tá»•ng quan
+                <i class="fas fa-th-large"></i> Tổng quan
             </a>
 
-            <div class="nav-label">Quáº£n lÃ½ ngÆ°á»i dÃ¹ng</div>
+            <div class="nav-label">Quản lý người dùng</div>
             <a th:href="@{/admin/dentists}" class="nav-item">
                 <i class="fas fa-stethoscope"></i> Dentists
             </a>
@@ -310,15 +310,15 @@
                 <i class="fas fa-user-friends"></i> Customer
             </a>
 
-            <div class="nav-label">Váº­n hÃ nh</div>
-            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dá»‹ch vá»¥</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giá»</a>
+            <div class="nav-label">Vận hành</div>
+            <a th:href="@{/admin/services}" class="nav-item"><i class="fas fa-briefcase-medical"></i> Dịch vụ</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Khung giờ</a>
         </div>
 
         <div class="nav-group"
             style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-bottom: 20px;">
             <a th:href="@{/login}" class="nav-item logout-item" style="color: #FFB7B7;">
-                <i class="fas fa-sign-out-alt"></i> ÄÄƒng xuáº¥t
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
             </a>
         </div>
     </div>
@@ -326,7 +326,7 @@
     <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div>
-                <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Quáº£n lÃ½ khÃ¡ch hÃ ng</h2>
+                <h2 style="color: var(--navy-dark); margin: 0; font-size: 24px;">Quản lý khách hàng</h2>
                 <p style="color: #A3AED0; margin: 5px 0 0 0; font-size: 14px;">Manage patient profiles and appointment
                     history</p>
             </div>
@@ -434,7 +434,7 @@
 
                     // Update count
                     const rows = document.querySelectorAll('#tableContainer tbody tr:not(.empty-state-row)');
-                    document.getElementById('resultCount').innerHTML = `Showing <span>${rows.length}</span> customers`;
+                    document.getElementById('resultCount').innerHTML = `Hiển thị <span>${rows.length}</span> khách hàng`;
                 })
                 .catch(error => {
                     console.error('Search failed:', error);

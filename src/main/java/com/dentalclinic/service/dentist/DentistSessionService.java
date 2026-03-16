@@ -151,6 +151,10 @@ public class DentistSessionService {
             throw new IllegalStateException("Billing view is not allowed for this status");
         }
 
+        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
+            throw new IllegalStateException("Only EXAMINING appointment can be billed");
+        }
+
         BillingNote bn = billingNoteRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
                         appointmentId, customerUserId
@@ -283,7 +287,7 @@ public class DentistSessionService {
 
     private Appointment mustGetAppointment(Long appointmentId, Long customerUserId) {
         Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn"));
 
         Long ownerUserId = appt.getCustomer().getUser().getId();
         if (!ownerUserId.equals(customerUserId)) {

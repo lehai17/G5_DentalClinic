@@ -69,7 +69,7 @@ public class SupportController {
 
         try {
             supportService.createTicket(currentUser.getId(), form.getAppointmentId(), form.getTitle(), form.getQuestion());
-            redirectAttributes.addFlashAttribute("successMessage", "Gửi phiếu hỗ trợ th� nh công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Gửi phiếu hỗ trợ thành công.");
             return "redirect:/support/my";
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

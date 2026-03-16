@@ -15,7 +15,7 @@ body {
 
 /* Container chính bao bọc to� n bộ trang */
 .app-wrapper {
-    display: flex; /* Sidebar v�  Main nằm cạnh nhau theo chiều ngang */
+    display: flex; /* Sidebar v?  Main nằm cạnh nhau theo chiều ngang */
     width: 100%;
     min-height: 100vh;
 }
@@ -230,7 +230,7 @@ body {
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
 }
 
-/* áº¢nh blog */
+/* Ảnh blog */
 #blog .blog-thumb {
     height: 220px;
     background-size: cover;

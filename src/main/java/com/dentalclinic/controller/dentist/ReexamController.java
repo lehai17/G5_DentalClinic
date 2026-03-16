@@ -45,7 +45,7 @@ public class ReexamController {
             Model model
     ) {
         Appointment original = appointmentRepository.findByIdWithDetails(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
         
         // Check if reexam is available
         if (!reexamService.isReexamAvailable(original.getStatus())) {
@@ -157,7 +157,7 @@ public class ReexamController {
     ) {
         try {
             Appointment original = appointmentRepository.findById(appointmentId)
-                    .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
             
             // Get existing reexam if updating - exclude it from conflict check
             Optional<Appointment> existingReexam = reexamService.getExistingReexam(appointmentId);

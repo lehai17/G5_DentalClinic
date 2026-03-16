@@ -47,7 +47,7 @@ public class ChangePasswordController {
 
         // Check confirm
         if (!newPassword.equals(confirmPassword)) {
-            model.addAttribute("error", "Mật khẩu mới v�  xác nhận mật khẩu không khớp.");
+            model.addAttribute("error", "Mật khẩu mới và xác nhận mật khẩu không khớp.");
             return "customer/change-password";
         }
 
@@ -62,7 +62,7 @@ public class ChangePasswordController {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        model.addAttribute("success", "Đổi mật khẩu th� nh công!");
+        model.addAttribute("success", "Đổi mật khẩu thành công!");
         return "customer/change-password";
     }
 
