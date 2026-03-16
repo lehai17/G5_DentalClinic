@@ -131,84 +131,81 @@
             <div class="hero-background-blob-2"></div>
           </div>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GENZ CLINIC - Chuyên Chăm Sóc Nha Khoa</title>
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
-
-  <!-- Modern Styles -->
-  <link rel="stylesheet" th:href="@{/css/tailwind-animations.css}" />
-  <link rel="stylesheet" th:href="@{/css/homepage/home.css}" />
-  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}" />
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body>
-  <div class="app-wrapper">
-    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-
-    <main class="main-content">
-      <div th:replace="~{fragments/header :: header}"></div>
-
-      <!-- Hero Section -->
-      <section class="hero">
-        <div class="hero-background">
-          <div class="hero-background-blob-1"></div>
-          <div class="hero-background-blob-2"></div>
-        </div>
-
-        <div class="container-max relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-          <div class="lg:w-1/2 text-center lg:text-left">
-            <div class="hero-badge">
-              <i class="bi bi-star-fill" style="color: var(--medical-600)"></i>
-              <span>Phòng Khám Nha Khoa #1</span>
-            </div>
-
-            <h1 class="hero-title">
-              Trải Nghiệm
-              <span class="text-gradient">Chăm Sóc Nha Khoa</span> Hiện Đại
-            </h1>
-
-            <p class="hero-subtitle">
-              Kết hợp công nghệ tiên tiến với chăm sóc tận tình để mang lại nụ
-              cười đẹp cho bạn. Đặt lịch khám trực tuyến trong vài giây.
-            </p>
-
-            <div class="hero-buttons">
-              <a th:href="@{/customer/book}" class="btn-primary">
-                Đặt Lịch Khám Ngay
-              </a>
-              <button class="btn-outline" onclick="scrollToSection('services')">
-                Xem Dịch Vụ
-              </button>
-            </div>
-
-            <div class="hero-stats">
-              <div style="display: flex; align-items: center; gap: 0.5rem">
-                <i class="bi bi-people-fill" style="font-size: 1.25rem; color: var(--medical-600)"></i>
-                <span style="font-weight: 500">10,000+ Bệnh Nhân</span>
+          <div
+            class="container-max relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20"
+          >
+            <div class="lg:w-1/2 text-center lg:text-left">
+              <div class="hero-badge">
+                <i
+                  class="bi bi-star-fill"
+                  style="color: var(--medical-600)"
+                ></i>
+                <span>Phòng Khám Nha Khoa #1</span>
               </div>
-              <div style="width: 1px; height: 3rem; background: var(--slate-300)"></div>
-              <div style="display: flex; align-items: center; gap: 0.5rem">
-                <i class="bi bi-check-circle-fill" style="font-size: 1.25rem; color: var(--medical-600)"></i>
-                <span style="font-weight: 500">Bác Sĩ Chuyên Môn</span>
+
+              <h1 class="hero-title">
+                Trải Nghiệm
+                <span class="text-gradient">Chăm Sóc Nha Khoa</span> Hiện Đại
+              </h1>
+
+              <p class="hero-subtitle">
+                Kết hợp công nghệ tiên tiến với chăm sóc tận tình để mang lại nụ
+                cười đẹp cho bạn. Đặt lịch khám trực tuyến trong vài giây.
+              </p>
+
+              <div class="hero-buttons">
+                <a th:href="@{/customer/book}" class="btn-primary">
+                  Đặt Lịch Khám Ngay
+                </a>
+                <button
+                  class="btn-outline"
+                  onclick="scrollToSection('services')"
+                >
+                  Xem Dịch Vụ
+                </button>
               </div>
-              <div style="width: 1px; height: 3rem; background: var(--slate-300)"></div>
-              <div style="display: flex; align-items: center; gap: 0.5rem">
-                <i class="bi bi-star-fill" style="font-size: 1.25rem; color: var(--medical-600)"></i>
-                <span style="font-weight: 500">4.9/5 Đánh Giá</span>
+
+              <div class="hero-stats">
+                <div style="display: flex; align-items: center; gap: 0.5rem">
+                  <i
+                    class="bi bi-people-fill"
+                    style="font-size: 1.25rem; color: var(--medical-600)"
+                  ></i>
+                  <span style="font-weight: 500">10,000+ Bệnh Nhân</span>
+                </div>
+                <div
+                  style="width: 1px; height: 3rem; background: var(--slate-300)"
+                ></div>
+                <div style="display: flex; align-items: center; gap: 0.5rem">
+                  <i
+                    class="bi bi-check-circle-fill"
+                    style="font-size: 1.25rem; color: var(--medical-600)"
+                  ></i>
+                  <span style="font-weight: 500">Bác Sĩ Chuyên Môn</span>
+                </div>
+                <div
+                  style="width: 1px; height: 3rem; background: var(--slate-300)"
+                ></div>
+                <div style="display: flex; align-items: center; gap: 0.5rem">
+                  <i
+                    class="bi bi-star-fill"
+                    style="font-size: 1.25rem; color: var(--medical-600)"
+                  ></i>
+                  <span style="font-weight: 500">4.9/5 Đánh Giá</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="lg:w-1/2 relative">
-            <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800"
-              alt="Phòng Khám Nha Khoa Hiện Đại" class="hero-image-main" />
+            <div class="lg:w-1/2 relative">
+              <img
+                src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800"
+                alt="Phòng Khám Nha Khoa Hiện Đại"
+                class="hero-image-main"
+              />
 
-            <!-- Floating Card -->
-            <div style="
+              <!-- Floating Card -->
+              <div
+                style="
                   position: absolute;
                   bottom: -1.5rem;
                   left: -1.5rem;
@@ -221,8 +218,10 @@
                   gap: 1rem;
                   max-width: 16rem;
                   animation: fadeInUp 1s ease-out 1s backwards;
-                ">
-              <div style="
+                "
+              >
+                <div
+                  style="
                     width: 3rem;
                     height: 3rem;
                     background: var(--green-100);
@@ -231,105 +230,122 @@
                     align-items: center;
                     justify-content: center;
                     flex-shrink: 0;
-                  ">
-                <i class="bi bi-check-circle-fill" style="color: var(--green-600); font-size: 1.5rem"></i>
-              </div>
-              <div>
-                <p style="
+                  "
+                >
+                  <i
+                    class="bi bi-check-circle-fill"
+                    style="color: var(--green-600); font-size: 1.5rem"
+                  ></i>
+                </div>
+                <div>
+                  <p
+                    style="
                       font-weight: bold;
                       color: var(--slate-900);
                       margin: 0;
-                    ">
-                  100% An Toàn
-                </p>
-                <p style="
+                    "
+                  >
+                    100% An Toàn
+                  </p>
+                  <p
+                    style="
                       font-size: 0.875rem;
                       color: var(--slate-500);
                       margin: 0;
-                    ">
-                  Thiết Bị Tiệt Trùng
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Services Section -->
-      <section class="section" id="services">
-        <div class="section-container">
-          <div class="section-header">
-            <span class="section-badge">DỊCH VỤ NỔI BẬT</span>
-            <h2 class="section-title">Các Dịch Vụ Chăm Sóc Răng Toàn Diện</h2>
-            <p class="section-subtitle">
-              Từ kiểm tra định kỳ đến các thủ thuật phức tạp, chúng tôi cung
-              cấp đầy đủ các dịch vụ nha khoa.
-            </p>
-          </div>
-
-          <div class="grid-services">
-            <div th:if="${services == null or services.isEmpty()}"
-              style="text-align: center; padding: 2rem; grid-column: 1 / -1">
-              <p style="color: var(--slate-500)">Chưa có dịch vụ nào</p>
-            </div>
-
-            <a th:each="service : ${services}" th:href="@{/customer/services/{id}(id=${service.id})}"
-              class="card card-hover-lift"
-              style="text-decoration: none; cursor: pointer; display: flex; flex-direction: column;">
-
-              <div class="card-image" style="height: 200px; overflow: hidden; background: #f1f5f9;">
-                <img th:if="${service?.imageUrl != null}" th:src="${service.imageUrl}"
-                  style="width: 100%; height: 100%; object-fit: cover;" th:alt="${service.name}" />
-
-                <div th:unless="${service?.imageUrl != null}"
-                  style="width: 100%; height: 100%; background: linear-gradient(135deg, #fca5a5, #fc8a8a); display: flex; align-items: center; justify-content: center;">
-                  <i class="bi bi-image" style="font-size: 2rem; color: white;"></i>
+                    "
+                  >
+                    Thiết Bị Tiệt Trùng
+                  </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div class="card-content">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem">
-                  <h3 style="font-size: 1.25rem; font-weight: bold; color: var(--slate-900)"
-                    th:text="${service?.name ?: 'Dịch vụ'}"></h3>
+        <!-- Services Section -->
+        <section class="section" id="services">
+          <div class="section-container">
+            <div class="section-header">
+              <span class="section-badge">DỊCH VỤ NỔI BẬT</span>
+              <h2 class="section-title">Các Dịch Vụ Chăm Sóc Răng Toàn Diện</h2>
+              <p class="section-subtitle">
+                Từ kiểm tra định kỳ đến các thủ thuật phức tạp, chúng tôi cung
+                cấp đầy đủ các dịch vụ nha khoa.
+              </p>
+            </div>
 
-                  <span
-                    style="background: var(--medical-50); color: var(--medical-600); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600">
+              <div class="grid-services">
+                  <div th:if="${services == null or services.isEmpty()}"
+                       style="text-align: center; padding: 2rem; grid-column: 1 / -1">
+                      <p style="color: var(--slate-500)">Chưa có dịch vụ nào</p>
+                  </div>
+
+                  <div th:each="service : ${services}"
+                       class="card card-hover-lift"
+                       th:data-id="${service?.id}"
+                       th:data-name="${service?.name}"
+                       style="cursor: default">
+
+                      <div class="card-image" style="height: 200px; overflow: hidden; background: #f1f5f9;">
+                          <img th:if="${service?.imageUrl != null}"
+                               th:src="${service.imageUrl}"
+                               style="width: 100%; height: 100%; object-fit: cover;"
+                               th:alt="${service.name}" />
+
+                          <div th:unless="${service?.imageUrl != null}"
+                               style="width: 100%; height: 100%; background: linear-gradient(135deg, #fca5a5, #fc8a8a); display: flex; align-items: center; justify-content: center;">
+                              <i class="bi bi-image" style="font-size: 2rem; color: white;"></i>
+                          </div>
+                      </div>
+
+                      <div class="card-content">
+                          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem">
+                              <h3 style="font-size: 1.25rem; font-weight: bold; color: var(--slate-900)"
+                                  th:text="${service?.name ?: 'Dịch vụ'}"></h3>
+
+                              <span style="background: var(--medical-50); color: var(--medical-600); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600">
                     <span th:if="${service?.price != null}"
-                      th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + 'VND'"></span>
+                          th:text="${#numbers.formatDecimal(service.price, 0, 'POINT', 0, 'POINT')} + ' â‚«'"></span>
                     <span th:unless="${service?.price != null}">Liên hệ</span>
-                  </span>
-                </div>
+                </span>
+                          </div>
 
-                <p style="color: var(--slate-600); margin-bottom: 1rem; line-height: 1.6"
-                  th:text="${service?.description ?: 'Mô tả dịch vụ'}"></p>
+                          <p style="color: var(--slate-600); margin-bottom: 1rem; line-height: 1.6"
+                             th:text="${service?.description ?: 'Mô tả dịch vụ'}"></p>
+                      </div>
+                  </div>
               </div>
-            </a>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Dentists Section -->
-      <section class="section" id="dentists" style="background: var(--slate-50)">
-        <div class="section-container">
-          <div class="section-header">
-            <span class="section-badge">ĐỘI NGŨ CHUYÊN NGHIỆP</span>
-            <h2 class="section-title">Gặp Gỡ Các Bác Sĩ Giàu Kinh Nghiệm</h2>
-            <p class="section-subtitle">
-              Các bác sĩ nha khoa có chứng chỉ và tâm huyết với công việc chăm
-              sóc sức khỏe của bạn.
-            </p>
-          </div>
-
-          <div class="grid-dentists">
-            <div th:if="${dentists == null or dentists.isEmpty()}"
-              style="text-align: center; padding: 2rem; grid-column: 1 / -1">
-              <p style="color: var(--slate-500)">Chưa có bác sĩ nào</p>
+        <!-- Dentists Section -->
+        <section
+          class="section"
+          id="dentists"
+          style="background: var(--slate-50)"
+        >
+          <div class="section-container">
+            <div class="section-header">
+              <span class="section-badge">ĐỘI NGÅ¨ CHUYÊN NGHIỆP</span>
+              <h2 class="section-title">Gặp Gỡ Các Bác Sĩ Giàu Kinh Nghiệm</h2>
+              <p class="section-subtitle">
+                Các bác sĩ nha khoa có chứng chỉ và tâm huyết với công việc chăm
+                sóc sức khỏe của bạn.
+              </p>
             </div>
 
-            <a th:each="dentist : ${dentists}" th:href="@{/customer/dentists/{id}(id=${dentist.id})}"
-              class="card card-hover-lift" style="text-decoration: none; cursor: pointer;">
-              <div style="padding: 1.5rem; text-align: center">
-                <div style="
+            <div class="grid-dentists">
+              <div
+                th:if="${dentists == null or dentists.isEmpty()}"
+                style="text-align: center; padding: 2rem; grid-column: 1 / -1"
+              >
+                <p style="color: var(--slate-500)">Chưa có bác sĩ nào</p>
+              </div>
+
+              <div th:each="dentist : ${dentists}" class="card card-hover-lift">
+                <div style="padding: 1.5rem; text-align: center">
+                  <div
+                    style="
                       width: 5rem;
                       height: 5rem;
                       margin: 0 auto 1rem;
@@ -340,172 +356,157 @@
                       justify-content: center;
                       border: 3px solid white;
                       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                    ">
-                  <i class="bi bi-person-fill" style="font-size: 2rem; color: var(--medical-600)"></i>
-                </div>
-                <h3 style="
+                    "
+                  >
+                    <i
+                      class="bi bi-person-fill"
+                      style="font-size: 2rem; color: var(--medical-600)"
+                    ></i>
+                  </div>
+                  <h3
+                    style="
                       font-weight: bold;
                       font-size: 1.125rem;
                       color: var(--slate-900);
-                    " th:text="${dentist?.fullName ?: 'Bác sĩ'}"></h3>
-                <p style="
+                    "
+                    th:text="${dentist?.fullName ?: 'Bác sĩ'}"
+                  ></h3>
+                  <p
+                    style="
                       color: var(--medical-600);
                       font-weight: 500;
                       font-size: 0.875rem;
                       margin: 0.5rem 0;
-                    " th:text="${dentist?.specialization ?: 'Nha sĩ tổng quát'}"></p>
-                <div style="
+                    "
+                    th:text="${dentist?.specialization ?: 'Nha sĩ tổng quát'}"
+                  ></p>
+                  <div
+                    style="
                       display: flex;
                       gap: 0.25rem;
                       justify-content: center;
                       margin-top: 0.5rem;
-                    ">
-                  <i class="bi bi-star-fill" style="color: #fbbf24"></i>
-                  <i class="bi bi-star-fill" style="color: #fbbf24"></i>
-                  <i class="bi bi-star-fill" style="color: #fbbf24"></i>
-                  <i class="bi bi-star-fill" style="color: #fbbf24"></i>
-                  <i class="bi bi-star-fill" style="color: #fbbf24"></i>
+                    "
+                  >
+                    <i class="bi bi-star-fill" style="color: #fbbf24"></i>
+                    <i class="bi bi-star-fill" style="color: #fbbf24"></i>
+                    <i class="bi bi-star-fill" style="color: #fbbf24"></i>
+                    <i class="bi bi-star-fill" style="color: #fbbf24"></i>
+                    <i class="bi bi-star-fill" style="color: #fbbf24"></i>
+                  </div>
                 </div>
               </div>
-          </div>
-        </div>
-  </div>
-  </section>
-
-  <!-- Blog Section -->
-  <div style="
-            background: var(--slate-50);
-            width: 100%;
-            padding: 5rem 0;
-            margin-top: 2.5rem;
-          ">
-    <section class="section" id="blog">
-      <div class="section-container">
-        <div class="section-header">
-          <span class="section-badge">TIN TỨC SỨC KHỎE</span>
-          <h2 class="section-title" style="white-space: nowrap;">Bài Viết & Mẹo Chăm Sóc Mới Nhất</h2>
-          <p class="section-subtitle">
-            Cập nhật thông tin về sức khỏe nha khoa từ các chuyên gia của
-            chúng tôi.
-          </p>
-        </div>
-
-        <!-- Empty state -->
-        <div th:if="${blogs == null or blogs.isEmpty()}" style="text-align: center; padding: 2rem">
-          <p style="color: var(--slate-500)">
-            Hiện chưa có bài viết sức khỏe nào.
-          </p>
-        </div>
-
-        <div class="grid-blog" th:unless="${blogs == null or blogs.isEmpty()}">
-          <article th:each="blog : ${blogs}" class="card card-hover-lift" style="overflow: hidden">
-            <div class="card-image" th:if="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}"
-              th:style="'background-image: url(' + ${blog.imageUrl} + '); background-size: cover; background-position: center;'"
-              style="height: 12rem"></div>
-            <div class="card-image" th:unless="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}" style="
-                      background-image: url(&quot;/images/default-blog.jpg&quot;);
-                      height: 12rem;
-                      background-size: cover;
-                      background-position: center;
-                    "></div>
-            <div class="card-content">
-              <span style="
-                        color: var(--medical-600);
-                        font-weight: 700;
-                        font-size: 0.8rem;
-                      "
-                th:text="${blog.createdAt != null ? #temporals.format(blog.createdAt, 'dd/MM/yyyy') : 'Chưa cập nhật'}"></span>
-              <h3 style="
-                        margin: 0.75rem 0;
-                        font-size: 1.3rem;
-                        color: var(--slate-900);
-                        font-weight: bold;
-                      " th:text="${blog.title}"></h3>
-              <p style="
-                        color: var(--slate-600);
-                        font-size: 0.875rem;
-                        line-height: 1.6;
-                        display: -webkit-box;
-                        -webkit-line-clamp: 2;
-                        -webkit-box-orient: vertical;
-                        overflow: hidden;
-                        margin-bottom: 1rem;
-                      " th:text="${blog.summary}"></p>
-              <a th:href="@{/public/blogs/{id}(id=${blog.id})}" style="
-                        color: var(--medical-600);
-                        text-decoration: none;
-                        font-weight: 700;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 0.25rem;
-                      ">
-                Đọc thêm
-                <i class="bi bi-arrow-right" style="font-size: 0.75rem"></i>
-              </a>
             </div>
-          </article>
-        </div>
-
-        <!-- Pagination -->
-        <div th:if="${totalPages != null and totalPages > 1}" style="margin-top: 2rem">
-          <div style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    gap: 1.25rem;
-                    flex-wrap: wrap;
-                  ">
-            <a href="javascript:void(0)" th:if="${currentPage > 0}"
-              th:onclick="'loadBlogPage(' + (${currentPage - 1}) + ')'" style="
-                      padding: 0.5rem 1.25rem;
-                      background: var(--medical-600);
-                      color: white;
-                      text-decoration: none;
-                      border-radius: 0.375rem;
-                      font-weight: 600;
-                    ">
-              â† Trước
-            </a>
-
-            <div style="display: flex; gap: 0.5rem; align-items: center">
-              <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-                <a href="javascript:void(0)" th:onclick="'loadBlogPage(' + ${i} + ')'" th:text="${i + 1}"
-                  th:class="${i == currentPage} ? 'page-num active' : 'page-num'" style="
-                          padding: 0.5rem 0.875rem;
-                          border: 1px solid var(--medical-600);
-                          border-radius: 0.375rem;
-                          color: var(--medical-600);
-                          text-decoration: none;
-                          font-weight: 600;
-                          transition: all 0.3s;
-                        " th:style="${i == currentPage} ? 'background: var(--medical-600); color: white;' : ''">
-                </a>
-              </th:block>
-            </div>
-
-            <a href="javascript:void(0)" th:if="${currentPage < totalPages - 1}"
-              th:onclick="'loadBlogPage(' + (${currentPage + 1}) + ')'" style="
-                      padding: 0.5rem 1.25rem;
-                      background: var(--medical-600);
-                      color: white;
-                      text-decoration: none;
-                      border-radius: 0.375rem;
-                      font-weight: 600;
-                    ">
-              Sau â†’
-            </a>
           </div>
-        </div>
-      </div>
-    </section>
-  </div>
+        </section>
 
-  <div th:replace="~{fragments/footer :: footer}"></div>
-  </main>
-  </div>
+        <!-- Blog Section -->
+          <!-- Blog Section -->
+          <div
+                  style="
+    background: var(--slate-50);
+    width: 100%;
+    padding: 5rem 0;
+    margin-top: 2.5rem;
+  "
+          >
+              <section class="section" id="blog">
+                  <div class="section-container">
+                      <div class="section-header">
+                          <span class="section-badge">TIN TỨC SỨC KHỎE</span>
+                          <h2 class="section-title" style="white-space: nowrap;">Bài Viết & Mẹo Chăm Sóc Mới Nhất</h2>
+                          <p class="section-subtitle">
+                              Cập nhật thông tin về sức khỏe nha khoa từ các chuyên gia của chúng tôi.
+                          </p>
+                      </div>
 
-  <script th:src="@{/js/user-dropdown.js}" defer></script>
-  <script th:src="@{/js/home.js}"></script>
-</body>
+                      <div
+                              th:if="${blogs == null or blogs.isEmpty()}"
+                              style="text-align: center; padding: 2rem"
+                      >
+                          <p style="color: var(--slate-500)">
+                              Hiện chưa có bài viết sức khỏe nào.
+                          </p>
+                      </div>
 
+                      <div class="news-list" th:unless="${blogs == null or blogs.isEmpty()}">
+                          <article th:each="blog : ${blogs}" class="news-item">
+                              <a class="news-thumb-link" th:href="@{/public/blogs/{id}(id=${blog.id})}">
+                                  <img th:if="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}"
+                                       th:src="${blog.imageUrl}"
+                                       th:alt="${blog.title}"
+                                       class="news-thumb"/>
+
+                                  <img th:unless="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}"
+                                       src="/images/default-blog.jpg"
+                                       alt="default blog"
+                                       class="news-thumb"/>
+                              </a>
+
+                              <div class="news-content">
+                                  <div class="news-date"
+                                       th:text="${blog.createdAt != null ? #temporals.format(blog.createdAt, 'dd/MM/yyyy') : 'Chưa cập nhật'}">
+                                  </div>
+
+                                  <h3 class="news-title">
+                                      <a th:href="@{/public/blogs/{id}(id=${blog.id})}"
+                                         th:text="${blog.title}">
+                                      </a>
+                                  </h3>
+
+                                  <p class="news-summary" th:text="${blog.summary}"></p>
+
+                                  <a class="news-readmore" th:href="@{/public/blogs/{id}(id=${blog.id})}">
+                                      Xem thêm
+                                      <i class="bi bi-arrow-right"></i>
+                                  </a>
+                              </div>
+                          </article>
+                      </div>
+
+                      <div
+                              th:if="${totalPages != null and totalPages > 1}"
+                              style="margin-top: 2rem"
+                      >
+                          <div
+                                  style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+          "
+                          >
+                              <a th:if="${currentPage > 0}"
+                                 th:href="@{/customer/homepage(page=${currentPage - 1})}"
+                                 style="text-decoration:none; padding:10px 16px; border-radius:10px; background:#fff; color:#111827; font-weight:600;">
+                                  ← Trước
+                              </a>
+
+                              <span style="font-weight:700; color:#334155;"
+                                    th:text="'Trang ' + (${currentPage} + 1) + ' / ' + ${totalPages}">
+          </span>
+
+                              <a th:if="${currentPage + 1 < totalPages}"
+                                 th:href="@{/customer/homepage(page=${currentPage + 1})}"
+                                 style="text-decoration:none; padding:10px 16px; border-radius:10px; background:#fff; color:#111827; font-weight:600;">
+                                  Sau →
+                              </a>
+                          </div>
+                      </div>
+                  </div>
+              </section>
+          </div>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+      </main>
+    </div>
+
+    <script th:src="@{/js/user-dropdown.js}" defer></script>
+    <script th:src="@{/js/home.js}"></script>
+  </body>
 </html>
+
+
+
+
