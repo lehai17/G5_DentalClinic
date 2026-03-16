@@ -12,10 +12,10 @@ public class Blog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String title;
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(1000)")
     private String summary;
 
     @Lob
@@ -49,6 +49,9 @@ public class Blog {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "thumbnail_url", length = 500)
+    private String thumbnailUrl;
+
     public Blog() {}
 
     @PrePersist
@@ -64,7 +67,7 @@ public class Blog {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // --- GETTERS & SETTERS (Viáº¿t tay Ä‘á»ƒ fix lá»—i IDE) ---
+    // --- GETTERS & SETTERS (Viết tay để fix lỗi IDE) ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }
@@ -87,4 +90,6 @@ public class Blog {
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public String getThumbnailUrl() { return thumbnailUrl; }
+    public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 }

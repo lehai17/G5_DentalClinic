@@ -31,21 +31,29 @@
             </p>
           </div>
 
-          <div class="cap-hero-actions">
-            <a class="cap-primary-link" th:href="@{/customer/book}">
-              <i class="bi bi-calendar-plus"></i>
-              Đặt lịch mới
-            </a>
-            <button type="button" class="cap-refresh-btn" onclick="window.location.reload()">
-              <i class="bi bi-arrow-clockwise"></i>
-              Tải lại
-            </button>
-          </div>
+	          <div class="cap-hero-actions">
+	            <a class="cap-primary-link" th:href="@{/customer/book}">
+	              <i class="bi bi-calendar-plus"></i>
+	              Đặt lịch mới
+	            </a>
+	            <a class="cap-refresh-btn" th:href="@{/customer/payments}">
+	              <i class="bi bi-receipt"></i>
+	              Lịch sử thanh toán
+	            </a>
+	            <button type="button" class="cap-refresh-btn" onclick="window.location.reload()">
+	              <i class="bi bi-arrow-clockwise"></i>
+	              Tải lại
+	            </button>
+	          </div>
         </div>
 
-        <div class="cap-summary-strip">
-          <div class="cap-summary-chip">
-            <span class="cap-summary-label">Tổng lịch hiển thị</span>
+	        <div class="cap-summary-strip">
+	          <div th:if="${errorMessage}" class="cap-inline-note cap-inline-note-danger" style="grid-column: 1 / -1;">
+	            <i class="bi bi-x-octagon-fill"></i>
+	            <span th:text="${errorMessage}">Không thể đặt lại lịch.</span>
+	          </div>
+	          <div class="cap-summary-chip">
+	            <span class="cap-summary-label">Tổng lịch hiển thị</span>
             <strong id="cap-summary-total">0</strong>
           </div>
           <div class="cap-summary-chip">
@@ -83,14 +91,24 @@
             </button>
           </div>
 
-          <div class="cap-toolbar cap-toolbar-secondary">
-            <label class="cap-sort-box" for="customer-appointments-sort">
-              <span class="cap-sort-label">Sắp xếp theo</span>
-              <select id="customer-appointments-sort" class="cap-sort-select">
-                <option value="newest">Mới đặt gần đây nhất</option>
-                <option value="oldest">Đặt từ lâu đến mới</option>
-                <option value="visit_desc">Lịch khám xa nhất trước</option>
-                <option value="visit_asc">Lịch khám gần nhất trước</option>
+	          <div class="cap-toolbar cap-toolbar-secondary">
+	            <div class="cap-view-switch" aria-label="Chọn danh sách lịch hẹn">
+	              <button type="button" class="cap-view-btn active" id="customer-appointments-view-default">
+	                Lịch đang hiển thị
+	              </button>
+	              <button type="button" class="cap-view-btn" id="customer-appointments-view-cancelled">
+	                Danh sách lịch đã hủy
+	              </button>
+	            </div>
+	            <label class="cap-sort-box" for="customer-appointments-sort">
+	              <span class="cap-sort-label">Sắp xếp theo</span>
+	              <select id="customer-appointments-sort" class="cap-sort-select">
+                <option value="date_desc">Ngày khám gần nhất</option>
+                <option value="date_asc">Ngày khám xa nhất</option>
+                <option value="booked_desc">Thời gian đặt lịch mới nhất</option>
+                <option value="booked_asc">Thời gian đặt lịch cũ nhất</option>
+                <option value="status_asc">Trạng thái A-Z</option>
+                <option value="status_desc">Trạng thái Z-A</option>
               </select>
             </label>
           </div>
@@ -104,9 +122,9 @@
             <ul id="customer-appointments-list" class="customer-appointments-list cap-appointments-list"></ul>
             <div id="customer-appointments-pagination" class="cap-pagination" style="display:none;"></div>
 
-            <div id="customer-appointments-empty" class="customer-empty cap-empty" style="display:none;">
-              <div class="cap-empty-icon"><i class="bi bi-calendar-x"></i></div>
-              <div class="cap-empty-title">Bạn chưa có lịch hẹn nào</div>
+	            <div id="customer-appointments-empty" class="customer-empty cap-empty" style="display:none;">
+	              <div class="cap-empty-icon"><i class="bi bi-calendar-x"></i></div>
+	              <div class="cap-empty-title">Bạn chưa có lịch hẹn nào</div>
               <div class="cap-empty-desc">Hãy đặt lịch khám để phòng khám có thể sắp xếp thời gian hỗ trợ bạn.</div>
               <a class="cap-primary-link" th:href="@{/customer/book}">
                 <i class="bi bi-calendar-plus"></i>
@@ -136,7 +154,7 @@
         <strong id="cap-payment-appointment-id">#0</strong>
       </div>
       <div class="cap-payment-modal__line">
-        <span>Mã hóa đơn</span>
+        <span>Mã thanh toán</span>
         <strong id="cap-payment-invoice-id">#0</strong>
       </div>
       <div class="cap-payment-modal__amount">
@@ -174,6 +192,41 @@
     <h3 id="cap-invoice-title" class="cap-payment-modal__title">Hóa đơn thanh toán</h3>
     <p class="cap-payment-modal__subtitle">Xem trước đầy đủ các hạng mục và số tiền còn lại trước khi thanh toán.</p>
     <div id="cap-invoice-modal-content"></div>
+  </div>
+</div>
+
+<div class="cap-payment-modal" id="cap-review-modal" hidden>
+  <div class="cap-payment-modal__backdrop" data-review-close></div>
+  <div class="cap-payment-modal__dialog cap-payment-modal__dialog--review" role="dialog" aria-modal="true" aria-labelledby="cap-review-title">
+    <button type="button" class="cap-payment-modal__close" id="cap-review-close" aria-label="Đóng">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <div class="cap-payment-modal__eyebrow">Đánh giá sau khám</div>
+    <h3 id="cap-review-title" class="cap-payment-modal__title">Đánh giá bác sĩ</h3>
+    <p class="cap-payment-modal__subtitle">Chia sẻ trải nghiệm của bạn sau khi hoàn thành lịch hẹn.</p>
+
+    <div class="cap-review-stars" id="cap-review-stars">
+      <button type="button" class="cap-review-star" data-rating="1" aria-label="1 sao"><i class="bi bi-star-fill"></i></button>
+      <button type="button" class="cap-review-star" data-rating="2" aria-label="2 sao"><i class="bi bi-star-fill"></i></button>
+      <button type="button" class="cap-review-star" data-rating="3" aria-label="3 sao"><i class="bi bi-star-fill"></i></button>
+      <button type="button" class="cap-review-star" data-rating="4" aria-label="4 sao"><i class="bi bi-star-fill"></i></button>
+      <button type="button" class="cap-review-star" data-rating="5" aria-label="5 sao"><i class="bi bi-star-fill"></i></button>
+    </div>
+
+    <div class="cap-review-hint" id="cap-review-hint">Chọn số sao từ 1 đến 5</div>
+
+    <label class="cap-review-textarea-wrap" for="cap-review-comment">
+      <span>Nội dung đánh giá</span>
+      <textarea id="cap-review-comment" class="cap-review-textarea" rows="5" maxlength="500" placeholder="Ví dụ: Bác sĩ tư vấn kỹ, nhẹ nhàng và đúng giờ..."></textarea>
+    </label>
+
+    <div class="cap-inline-actions">
+      <button type="button" class="cap-btn cap-btn-neutral" data-review-close>Đóng</button>
+      <button type="button" class="cap-btn cap-btn-primary" id="cap-review-submit">
+        <i class="bi bi-send"></i>
+        Gửi đánh giá
+      </button>
+    </div>
   </div>
 </div>
 

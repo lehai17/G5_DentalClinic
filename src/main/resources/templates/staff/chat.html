@@ -46,7 +46,14 @@
                         <div id="staff-chat-messages" class="conversation-messages">
                             <div class="conversation-empty">Chọn một hội thoại để xem nội dung chat.</div>
                         </div>
+                        <div id="staff-chat-attachment-bar" class="conversation-attachment hidden">
+                            <span id="staff-chat-attachment-name" class="conversation-attachment-name"></span>
+                            <button id="staff-chat-attachment-clear" type="button" class="conversation-attachment-clear">Bỏ</button>
+                        </div>
                         <div class="conversation-input">
+                            <button id="staff-chat-attach" type="button" class="conversation-attach" aria-label="Đính kèm tệp">📎</button>
+                            <input id="staff-chat-attachment" type="file" class="hidden"
+                                   accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx,.txt,.csv">
                             <input id="staff-chat-input" type="text" maxlength="1000" placeholder="Nhập phản hồi...">
                             <button id="staff-chat-send" type="button">Gửi</button>
                         </div>

@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Quản lý voucher - Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg:#F4F7FE; --card:#fff; --text:#1B2559; --muted:#707EAE; --border:#E6ECF5; --primary:#1A237E; --danger:#DC2626; --success:#16A34A; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Inter, Arial, sans-serif; background: var(--bg); display: flex; color: var(--text); }
+        .main-content { flex: 1; padding: 24px; }
+        .toolbar, .card { background: var(--card); border-radius: 18px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05); }
+        .toolbar { padding: 20px 24px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .toolbar h1 { margin: 0; font-size: 28px; }
+        .toolbar p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 12px; padding: 10px 16px; text-decoration: none; font-weight: 700; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-light { background: #EEF2FF; color: var(--primary); }
+        .btn-danger { background: #FEE2E2; color: var(--danger); }
+        .flash { border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; font-weight: 600; }
+        .flash-success { background: #ECFDF5; color: #166534; }
+        .flash-error { background: #FEF2F2; color: #991B1B; }
+        .card { padding: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1280px; }
+        th, td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; text-align: left; }
+        td { font-size: 14px; }
+        .code { font-weight: 800; }
+        .muted { color: var(--muted); }
+        .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+        .badge-active { background: #DCFCE7; color: #166534; }
+        .badge-inactive { background: #FEE2E2; color: #991B1B; }
+        .badge-type { background: #EEF2FF; color: var(--primary); }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .inline-form { margin: 0; }
+        .empty-state { padding: 32px 16px; text-align: center; color: var(--muted); }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+
+<div class="main-content">
+    <div class="toolbar">
+        <div>
+            <h1>Quản lý voucher</h1>
+            <p>Tạo và quản lý mã khuyến mãi để sẵn sàng tích hợp vào đặt lịch và thanh toán sau này.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/admin/vouchers/create}">
+            <i class="fa-solid fa-plus"></i>
+            <span>Tạo voucher</span>
+        </a>
+    </div>
+
+    <div th:if="${success}" class="flash flash-success" th:text="${success}">Thao tác thành công.</div>
+    <div th:if="${error}" class="flash flash-error" th:text="${error}">Có lỗi xảy ra.</div>
+
+    <div class="card">
+        <table th:if="${!#lists.isEmpty(vouchers)}">
+            <thead>
+            <tr>
+                <th>Mã</th>
+                <th>Mô tả</th>
+                <th>Loại giảm</th>
+                <th>Giá trị giảm</th>
+                <th>Đơn tối thiểu</th>
+                <th>Giảm tối đa</th>
+                <th>Giới hạn dùng</th>
+                <th>Đã dùng</th>
+                <th>Trạng thái</th>
+                <th>Thời gian áp dụng</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="voucher : ${vouchers}">
+                <td>
+                    <div class="code" th:text="${voucher.code}">SMILE10</div>
+                </td>
+                <td>
+                    <div th:text="${voucher.description != null ? voucher.description : 'Không có mô tả'}">Mô tả voucher</div>
+                </td>
+                <td>
+                    <span class="badge badge-type"
+                          th:text="${voucher.discountType.name() == 'PERCENT' ? 'Phần trăm' : 'Tiền cố định'}">Phần trăm</span>
+                </td>
+                <td th:text="${voucher.discountType.name() == 'PERCENT' ? #numbers.formatDecimal(voucher.discountValue, 0, 'POINT', 0, 'COMMA') + '%' : #numbers.formatDecimal(voucher.discountValue, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">10%</td>
+                <td th:text="${#numbers.formatDecimal(voucher.minOrderAmount, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</td>
+                <td th:text="${voucher.maxDiscount != null ? #numbers.formatDecimal(voucher.maxDiscount, 0, 'POINT', 0, 'COMMA') + ' VNĐ' : 'Không giới hạn'}">Không giới hạn</td>
+                <td th:text="${voucher.usageLimit != null ? voucher.usageLimit : 'Không giới hạn'}">100</td>
+                <td th:text="${voucher.usedCount}">0</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${voucher.active ? ' badge-active' : ' badge-inactive'}"
+                          th:text="${voucher.active ? 'Đang bật' : 'Đang tắt'}">Đang bật</span>
+                </td>
+                <td>
+                    <div th:text="${#temporals.format(voucher.startDateTime, 'dd/MM/yyyy HH:mm')}">14/03/2026 08:00</div>
+                    <div class="muted" th:text="${#temporals.format(voucher.endDateTime, 'dd/MM/yyyy HH:mm')}">20/03/2026 23:59</div>
+                </td>
+                <td th:text="${voucher.createdAt != null ? #temporals.format(voucher.createdAt, 'dd/MM/yyyy HH:mm') : 'Chưa có'}">14/03/2026 08:00</td>
+                <td>
+                    <div class="actions">
+                        <a class="btn btn-light" th:href="@{/admin/vouchers/{id}/edit(id=${voucher.id})}">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Sửa</span>
+                        </a>
+                        <form class="inline-form" th:action="@{/admin/vouchers/{id}/toggle-status(id=${voucher.id})}" method="post">
+                            <input type="hidden" name="active" th:value="${!voucher.active}">
+                            <button class="btn btn-light" type="submit">
+                                <i class="fa-solid" th:classappend="${voucher.active ? ' fa-toggle-off' : ' fa-toggle-on'}"></i>
+                                <span th:text="${voucher.active ? 'Tắt' : 'Bật'}">Tắt</span>
+                            </button>
+                        </form>
+                        <form class="inline-form" th:action="@{/admin/vouchers/{id}/delete(id=${voucher.id})}" method="post"
+                              onsubmit="return confirm('Bạn có chắc muốn xóa voucher này?');">
+                            <button class="btn btn-danger" type="submit">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Xóa</span>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${#lists.isEmpty(vouchers)}" class="empty-state">
+            Chưa có voucher nào. Hãy tạo voucher đầu tiên để bắt đầu quản lý chương trình khuyến mãi.
+        </div>
+    </div>
+</div>
+</body>
+</html>

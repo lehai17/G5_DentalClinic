@@ -2,8 +2,11 @@ package com.dentalclinic.repository;
 
 import com.dentalclinic.model.payment.BillingNote;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,4 +18,11 @@ public interface BillingNoteRepository extends JpaRepository<BillingNote, Long> 
             Long appointmentId,
             Long customerUserId
     );
+
+    @Query("""
+        SELECT DISTINCT bn FROM BillingNote bn
+        LEFT JOIN FETCH bn.prescriptionItems
+        WHERE bn.appointment.id IN :appointmentIds
+    """)
+    List<BillingNote> findByAppointment_IdInWithPrescriptions(@Param("appointmentIds") List<Long> appointmentIds);
 }

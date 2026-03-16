@@ -4,6 +4,7 @@ import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.model.schedule.BusySchedule;
 import com.dentalclinic.repository.DentistBusyScheduleRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
+import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +17,14 @@ public class AdminBusyScheduleService {
 
     private final DentistBusyScheduleRepository repository;
     private final DentistProfileRepository dentistProfileRepository;
+    private final NotificationService notificationService;
 
     public AdminBusyScheduleService(DentistBusyScheduleRepository repository,
-                                    DentistProfileRepository dentistProfileRepository) {
+                                    DentistProfileRepository dentistProfileRepository,
+                                    NotificationService notificationService) {
         this.repository = repository;
         this.dentistProfileRepository = dentistProfileRepository;
+        this.notificationService = notificationService;
     }
 
     public List<BusySchedule> getAllRequests() {
@@ -36,6 +40,16 @@ public class AdminBusyScheduleService {
         // khong duoc khoa slot global vi se anh huong huyl/booking cua customer.
         request.setStatus(status);
         repository.save(request);
+
+        // Dentist inbox notification: approved/rejected busy schedule
+        if (status != null) {
+            String normalized = status.trim().toUpperCase();
+            if ("APPROVED".equals(normalized)) {
+                notificationService.notifyDentistBusyScheduleApproved(request);
+            } else if ("REJECTED".equals(normalized)) {
+                notificationService.notifyDentistBusyScheduleRejected(request);
+            }
+        }
     }
 
     @Transactional

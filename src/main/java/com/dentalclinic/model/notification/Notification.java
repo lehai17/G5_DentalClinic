@@ -154,11 +154,11 @@ public class Notification {
     }
 
     private boolean looksMojibake(String value) {
-        return value.contains("Ãƒ")
-                || value.contains("Ã„")
-                || value.contains("Ã¡Â»")
-                || value.contains("Ã¡Âº")
-                || value.contains("Ã†")
-                || value.contains("Ã‚");
+        return value.contains("Ã")
+                || value.contains("Ä")
+                || value.contains("á»")
+                || value.contains("áº")
+                || value.contains("Æ")
+                || value.contains("Â");
     }
 }

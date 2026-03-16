@@ -81,7 +81,7 @@ public class DentistService {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email n� y dï¿½ được sử dụng trong hệ thống!");
         }
-        // 1. Kiểm tra ng� y sinh v�  tính tuổi
+        // 1. Kiểm tra ng� y sinh v?  tính tuổi
         if (dto.getDateOfBirth() == null) {
             throw new IllegalArgumentException("Ng� y sinh không được để trống.");
         }
@@ -127,7 +127,7 @@ public class DentistService {
         }
 
         dentistProfileRepository.save(profile);
-        // ï¿½ï¿½Y LÀ DÒNG QUAN TRỌNG NHẤT: Lưu dữ liệu v� o bảng users
+        // ï¿½ï¿½Y LÀ DÒNG QUAN TRỌNG NHẤT: Lưu dữ liệu v? o bảng users
         user.setDateOfBirth(dto.getDateOfBirth());
 
         userRepository.save(user);
@@ -199,7 +199,7 @@ public class DentistService {
     // profiles = dentistProfileRepository.findAllOrderByNewest();
     // }
     //
-    // // Đảm bảo h� m convertToDTO dï¿½ tồn tại v�  hoạt động đúng
+    // // Đảm bảo h� m convertToDTO dï¿½ tồn tại v?  hoạt động đúng
     // return profiles.stream()
     // .map(this::convertToDTO)
     // .collect(Collectors.toList());
@@ -227,7 +227,7 @@ public class DentistService {
 
     public void updateDentistStatus(Long userId, UserStatus status) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Kh?ng t?m th?y ng??i d?ng"));
         user.setStatus(status);
         userRepository.save(user);
     }
@@ -401,7 +401,7 @@ public class DentistService {
         DentistProfile profile = dentistProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nha sĩ!"));
 
-        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED);
+        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.DONE, AppointmentStatus.COMPLETED, AppointmentStatus.WAITING_PAYMENT);
         int upcomingCount = appointmentRepository.countUpcomingAppointments(id, LocalDate.now(), excludedStatuses);
 
         if (upcomingCount > 0) {

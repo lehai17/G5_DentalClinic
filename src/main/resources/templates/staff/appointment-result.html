@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Kết quả khám</title>
+    <link rel="stylesheet" th:href="@{/css/staff/staff.css}">
+    <style>
+        .result-page {
+            max-width: 1400px;
+            margin: 24px auto;
+            padding: 0 20px 40px;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #eff6ff, #ffffff);
+            border: 1px solid #dbeafe;
+            border-radius: 24px;
+            padding: 26px 28px;
+            margin-bottom: 22px;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+        }
+
+        .result-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 8px;
+        }
+
+        .result-subtitle {
+            color: #64748b;
+            font-size: 0.98rem;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-badge.status-completed {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .status-badge.status-confirmed {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+
+        .status-badge.status-pending {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .status-badge.status-cancelled,
+        .status-badge.status-no-show {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+        .summary-grid,
+        .patient-grid,
+        .dentist-grid {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .patient-grid,
+        .dentist-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .info-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 16px 18px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+        }
+
+        .info-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 8px;
+            letter-spacing: 0.04em;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .section-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 22px 24px;
+            margin-top: 18px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .section-content,
+        .empty-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px 18px;
+            color: #0f172a;
+            line-height: 1.7;
+            min-height: 58px;
+            white-space: pre-wrap;
+        }
+
+        .empty-text,
+        .empty-box {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .detail-table thead {
+            background: #eff6ff;
+        }
+
+        .detail-table th,
+        .detail-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        .detail-table th {
+            color: #1e3a8a;
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .detail-table td {
+            color: #0f172a;
+            font-size: 0.95rem;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
+
+        .pill small {
+            color: #475569;
+            font-weight: 700;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .image-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .image-type {
+            padding: 10px 12px 0;
+            font-size: 0.8rem;
+            color: #2563eb;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .image-link {
+            display: block;
+            padding: 10px 12px 0;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .image-caption {
+            padding: 10px 12px 14px;
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.5;
+            min-height: 48px;
+        }
+
+        .back-row {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-back,
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 11px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.2s ease;
+        }
+
+        .btn-back {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
+
+        @media (max-width: 1200px) {
+            .summary-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .patient-grid,
+            .dentist-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .section-grid,
+            .summary-grid,
+            .patient-grid,
+            .dentist-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-title {
+                font-size: 1.55rem;
+            }
+
+            .result-header,
+            .section-card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="result-page">
+    <div class="result-header">
+        <div class="result-header-top">
+            <div>
+                <h1 class="result-title">Kết quả khám bệnh</h1>
+                <p class="result-subtitle">
+                    Mã lịch hẹn:
+                    <strong th:text="${appointment.id}">1</strong>
+                    <span th:if="${appointment.date != null}">
+                        • Ngày khám:
+                        <strong th:text="${#temporals.format(appointment.date, 'dd/MM/yyyy')}">16/03/2026</strong>
+                    </span>
+                    <span th:if="${appointment.startTime != null}">
+                        • Giờ bắt đầu:
+                        <strong th:text="${#temporals.format(appointment.startTime, 'HH:mm')}">09:00</strong>
+                    </span>
+                </p>
+            </div>
+
+            <div class="status-badge"
+                 th:classappend="${appointment.status != null ? ' status-' + #strings.toLowerCase(#strings.replace(appointment.status.name(), '_', '-')) : ''}"
+                 th:text="${appointment.status != null ? appointment.status : 'N/A'}">COMPLETED</div>
+        </div>
+
+        <div class="summary-grid">
+            <div class="info-card">
+                <div class="info-label">Khách hàng</div>
+                <div class="info-value" th:text="${customer != null ? customer.fullName : 'Chưa có dữ liệu'}">Nguyễn Văn A</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Bác sĩ phụ trách</div>
+                <div class="info-value" th:text="${dentist != null ? dentist.fullName : 'Chưa có dữ liệu'}">Bác sĩ Demo</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Ngày khám</div>
+                <div class="info-value"
+                     th:text="${appointment.date != null ? #temporals.format(appointment.date, 'dd/MM/yyyy') : 'Chưa có dữ liệu'}">16/03/2026</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Khung giờ</div>
+                <div class="info-value"
+                     th:text="|${appointment.startTime != null ? #temporals.format(appointment.startTime, 'HH:mm') : '--'} - ${appointment.endTime != null ? #temporals.format(appointment.endTime, 'HH:mm') : '--'}|">09:00 - 09:30</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Dịch vụ đặt lịch</div>
+                <div class="info-value" th:text="${service != null ? service.name : 'Chưa có dữ liệu'}">Khám tổng quát</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Tổng thời lượng</div>
+                <div class="info-value" th:text="${appointment.totalDurationMinutes != null ? appointment.totalDurationMinutes + ' phút' : 'Chưa có dữ liệu'}">30 phút</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title">Thông tin khách hàng</div>
+        <div class="patient-grid">
+            <div class="info-card">
+                <div class="info-label">Họ và tên</div>
+                <div class="info-value" th:text="${customer != null ? customer.fullName : 'Chưa có dữ liệu'}">Nguyễn Văn A</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Số điện thoại</div>
+                <div class="info-value" th:text="${customer != null && customer.phone != null && !#strings.isEmpty(customer.phone) ? customer.phone : 'Chưa có dữ liệu'}">0900000000</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Email</div>
+                <div class="info-value" th:text="${customer != null && customer.user != null && customer.user.email != null ? customer.user.email : 'Chưa có dữ liệu'}">demo@gmail.com</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Ngày sinh</div>
+                <div class="info-value" th:text="${customer != null && customer.user != null && customer.user.dateOfBirth != null ? #temporals.format(customer.user.dateOfBirth, 'dd/MM/yyyy') : 'Chưa có dữ liệu'}">01/01/2000</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Giới tính</div>
+                <div class="info-value" th:text="${customer != null && customer.user != null && customer.user.gender != null ? customer.user.gender : 'Chưa có dữ liệu'}">MALE</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Địa chỉ</div>
+                <div class="info-value" th:text="${customer != null && customer.address != null && !#strings.isEmpty(customer.address) ? customer.address : 'Chưa có dữ liệu'}">TP.HCM</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Kênh liên hệ</div>
+                <div class="info-value" th:text="${appointment.contactChannel != null && !#strings.isEmpty(appointment.contactChannel) ? appointment.contactChannel : 'Chưa có dữ liệu'}">PHONE</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Giá trị liên hệ</div>
+                <div class="info-value" th:text="${appointment.contactValue != null && !#strings.isEmpty(appointment.contactValue) ? appointment.contactValue : 'Chưa có dữ liệu'}">0900000000</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card" th:if="${dentist != null}">
+        <div class="section-title">Thông tin bác sĩ</div>
+        <div class="dentist-grid">
+            <div class="info-card">
+                <div class="info-label">Tên bác sĩ</div>
+                <div class="info-value" th:text="${dentist.fullName}">Bác sĩ Demo</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Chuyên môn</div>
+                <div class="info-value" th:text="${dentist.specialization != null && !#strings.isEmpty(dentist.specialization) ? dentist.specialization : 'Chưa có dữ liệu'}">Nha tổng quát</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Số điện thoại</div>
+                <div class="info-value" th:text="${dentist.phone != null && !#strings.isEmpty(dentist.phone) ? dentist.phone : 'Chưa có dữ liệu'}">0900000001</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Kinh nghiệm</div>
+                <div class="info-value" th:text="${dentist.experienceYears > 0 ? dentist.experienceYears + ' năm' : 'Chưa có dữ liệu'}">5 năm</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-grid">
+        <div class="section-card">
+            <div class="section-title">A) Chẩn đoán</div>
+            <div class="section-content"
+                 th:text="${medicalRecord != null && medicalRecord.diagnosis != null && !#strings.isEmpty(medicalRecord.diagnosis) ? medicalRecord.diagnosis : 'Không có chẩn đoán.'}">
+                Sâu răng nhẹ răng 36
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">B) Triệu chứng khách hàng mô tả</div>
+            <div class="section-content"
+                 th:text="${medicalRecord != null && medicalRecord.complaintNote != null && !#strings.isEmpty(medicalRecord.complaintNote) ? medicalRecord.complaintNote : 'Không có mô tả triệu chứng.'}">
+                Đau nhẹ khi ăn đồ lạnh
+            </div>
+        </div>
+    </div>
+
+    <div class="section-grid">
+        <div class="section-card">
+            <div class="section-title">C) Ghi chú lâm sàng</div>
+            <div class="section-content"
+                 th:text="${medicalRecord != null && medicalRecord.clinicalNotes != null && !#strings.isEmpty(medicalRecord.clinicalNotes) ? medicalRecord.clinicalNotes : 'Không có ghi chú lâm sàng.'}">
+                Khuyến nghị vệ sinh răng miệng, tái khám nếu đau tăng
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">D) Ghi chú lịch hẹn</div>
+            <div class="section-content"
+                 th:text="${appointment.notes != null && !#strings.isEmpty(appointment.notes) ? appointment.notes : 'Không có ghi chú lịch hẹn.'}">
+                Không có ghi chú lịch hẹn.
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title">E) Ghi nhận theo răng</div>
+
+        <div class="empty-box"
+             th:if="${medicalRecord == null || medicalRecord.findings == null || medicalRecord.findings.isEmpty()}">
+            Không có dữ liệu findings.
+        </div>
+
+        <table class="detail-table"
+               th:if="${medicalRecord != null && medicalRecord.findings != null && !medicalRecord.findings.isEmpty()}">
+            <thead>
+            <tr>
+                <th>Răng</th>
+                <th>Tình trạng</th>
+                <th>Mức độ</th>
+                <th>Ghi chú</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="f : ${medicalRecord.findings}">
+                <td th:text="${f.toothNo != null && !#strings.isEmpty(f.toothNo) ? f.toothNo : '-'}">36</td>
+                <td th:text="${f.condition != null && !#strings.isEmpty(f.condition) ? f.condition : '-'}">Sâu răng</td>
+                <td th:text="${f.severity != null && !#strings.isEmpty(f.severity) ? f.severity : '-'}">Nhẹ</td>
+                <td th:text="${f.note != null && !#strings.isEmpty(f.note) ? f.note : '-'}">-</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title">F) Dịch vụ đề xuất sau khám</div>
+
+        <div class="empty-box"
+             th:if="${medicalRecord == null || medicalRecord.proposedServices == null || medicalRecord.proposedServices.isEmpty()}">
+            Không có dịch vụ đề xuất.
+        </div>
+
+        <div class="pill-row"
+             th:if="${medicalRecord != null && medicalRecord.proposedServices != null && !medicalRecord.proposedServices.isEmpty()}">
+            <span class="pill" th:each="ps : ${medicalRecord.proposedServices}">
+                <span th:text="${ps.service != null && ps.service.name != null ? ps.service.name : 'Dịch vụ'}">Dịch vụ</span>
+                <small th:text="${ps.qty > 0 ? 'x' + ps.qty : 'x1'}">x1</small>
+            </span>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title">G) Hình ảnh lâm sàng</div>
+
+        <div class="empty-box"
+             th:if="${medicalRecord == null || medicalRecord.images == null || medicalRecord.images.isEmpty()}">
+            Không có hình ảnh.
+        </div>
+
+        <div class="image-grid"
+             th:if="${medicalRecord != null && medicalRecord.images != null && !medicalRecord.images.isEmpty()}">
+            <div class="image-card" th:each="img : ${medicalRecord.images}">
+                <div class="image-type" th:text="${img.type != null && !#strings.isEmpty(img.type) ? img.type : 'Clinical Image'}">X-RAY</div>
+                <a class="image-link"
+                   th:if="${img.url != null && !#strings.isEmpty(img.url)}"
+                   th:href="${img.url}"
+                   target="_blank">
+                    <img th:src="${img.url}" alt="Clinical image">
+                </a>
+                <div class="image-caption"
+                     th:text="${img.note != null && !#strings.isEmpty(img.note) ? img.note : 'Không có ghi chú hình ảnh.'}">
+                    Không có ghi chú hình ảnh.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-row">
+        <a th:href="@{/staff/appointments}" class="btn-back">← Quay lại danh sách lịch hẹn</a>
+    </div>
+</div>
+</body>
+</html>

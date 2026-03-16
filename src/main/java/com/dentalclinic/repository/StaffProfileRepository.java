@@ -13,10 +13,10 @@ import java.util.Optional;
 @Repository
 public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long> {
 
-    // 1. TÃ¬m kiáº¿m há»“ sÆ¡ nhï¿½n viÃªn dá»±a trÃªn ID cá»§a User
+    // 1. Tìm kiếm hồ sơ nh�n viên dựa trên ID của User
     Optional<StaffProfile> findByUserId(Long userId);
 
-    // 2. TÃ¬m nhï¿½n viÃªn theo sá»‘ Ä‘iá»‡n thoáº¡i
+    // 2. Tìm nh�n viên theo số điện thoại
     Optional<StaffProfile> findByPhone(String phone);
 
     /**

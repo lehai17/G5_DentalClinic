@@ -1,6 +1,7 @@
 package com.dentalclinic.service.mail;
 
 import com.dentalclinic.model.appointment.Appointment;
+import com.dentalclinic.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.SimpleMailMessage;
@@ -20,25 +21,25 @@ public class EmailService {
 
         SimpleMailMessage message = new SimpleMailMessage();
 
-        //  FROM PHẢI TRÙNG USERNAME SMTP
+        // FROM phai trung username SMTP
         message.setFrom("lenguyendaihai17@gmail.com");
 
         String toEmail = appointment.getCustomer().getUser().getEmail();
         message.setTo(toEmail);
 
-        message.setSubject("Xï¿½c nhận lịch khï¿½m - GENZ CLINIC");
+        message.setSubject("X?c nh?n l?ch kh?m - GENZ CLINIC");
 
         message.setText("""
-            Xin ch� o %s,
+            Xin ch?o %s,,
 
-            Lịch khï¿½m của bạn dï¿½ được xï¿½c nhận th� nh công.
+            L?ch kh?m c?a b?n ?? ???c x?c nh?n th?nh c?ng.
 
-            ðŸ¦· Dịch vụ: %s
-            👨‍⚕️ Bï¿½c sĩ: %s
-            ðŸ“… Ng� y khï¿½m: %s
-            â° Thời gian: %s - %s
+            Dịch vụ: %s
+            Bác sĩ: %s
+            Ng?y kh?m: %s
+            Th?i gian: %s - %s
 
-            Trï¿½n trọng,
+            Tr?n tr?ng,
             GENZ CLINIC
             """.formatted(
                 appointment.getCustomer().getFullName(),
@@ -48,6 +49,31 @@ public class EmailService {
                 appointment.getStartTime(),
                 appointment.getEndTime()
         ));
+
+        supportMailSender.send(message);
+    }
+
+    @Async
+    public void sendWalletPinOtp(User user, String code) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("lenguyendaihai17@gmail.com");
+        message.setTo(user.getEmail());
+        message.setSubject("Ma xac minh dat lai PIN vi - GENZ CLINIC");
+        message.setText("""
+            Xin chao,
+
+            Ma OTP dat lai PIN vi cua ban la: %s
+
+            Ma co hieu luc trong 10 phut.
+            Neu ban khong thuc hien yeu cau nay, vui long bo qua email.
+
+            Tran trong,
+            GENZ CLINIC
+            """.formatted(code));
 
         supportMailSender.send(message);
     }

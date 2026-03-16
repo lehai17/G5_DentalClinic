@@ -10,7 +10,7 @@
 
         @Override
         public void addViewControllers(ViewControllerRegistry registry) {
-            // Cho phép v� o "/" l�  ra login
+            // Cho phép v? o "/" l�  ra login
             registry.addViewController("/").setViewName("redirect:/login");
         }
 

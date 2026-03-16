@@ -1,119 +1,166 @@
-// --- QUẢN LÝ MODAL ---
 function closeModal() {
-    const modal = document.querySelector('.modal-overlay');
-    if (modal) modal.remove();
+    const modal = document.querySelector(".modal-overlay");
+    if (modal) {
+        modal.remove();
+    }
 }
 
-// --- GÁN BÁC SĨ ---
-function assignDentist(appointmentId) {
+function buildModal(contentHtml) {
+    closeModal();
+    const modalHtml = `
+        <div class="modal-overlay">
+            <div class="modal modal-wide">
+                ${contentHtml}
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+}
+
+function escapeHtml(value) {
+    if (value == null) return "";
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function renderAvailableDentistModal(appointmentId, dentists, title) {
+    const options = dentists.map((dentist) =>
+        `<option value="${dentist.id}">${escapeHtml(dentist.fullName)}</option>`
+    ).join("");
+
+    buildModal(`
+        <h3>${title}</h3>
+        <p class="modal-text">Chi hien thi cac nha si dang co lich lam va trong khung gio nay.</p>
+        <div id="assignError" class="modal-error" style="display:none;"></div>
+        <select id="dentistSelect">
+            ${options}
+        </select>
+        <div class="modal-actions">
+            <button type="button" class="btn-assign" onclick="submitAssign(${appointmentId})">Xac nhan</button>
+            <button type="button" class="btn-secondary" onclick="closeModal()">Dong</button>
+        </div>
+    `);
+}
+
+function renderNoDentistModal(appointmentId) {
+    buildModal(`
+        <h3>Không thể đổi nha sĩ</h3>
+        <p class="modal-text">Không còn nha sĩ có khung giờ trống này.</p>
+        <div class="modal-actions modal-actions-column">
+            <button type="button" class="btn-cancel" onclick="cancelAppointmentBySystem(${appointmentId})">Hủy lịch</button>
+            <button type="button" class="btn-secondary" onclick="closeModal()">Đóng</button>
+        </div>
+    `);
+}
+
+function loadAvailableDentists(appointmentId, title) {
     fetch(`/staff/appointments/available-dentists?appointmentId=${appointmentId}`)
-        .then(res => {
-            if (!res.ok) throw new Error('Không lấy được danh sách bác sĩ rảnh');
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error("Khong lay duoc danh sach nha si trong");
+            }
             return res.json();
         })
-        .then(dentists => {
-            closeModal();
-
-            if (dentists.length === 0) {
-                alert('Không có bác sĩ nào sẵn sàng (tất cả đều nghỉ hoặc bận) vào ngày này!');
+        .then((dentists) => {
+            if (!Array.isArray(dentists) || dentists.length === 0) {
+                renderNoDentistModal(appointmentId);
                 return;
             }
-
-            let options = dentists.map(d =>
-                `<option value="${d.id}">${d.fullName}</option>`
-            ).join('');
-
-            const modalHtml = `
-                <div class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:9999;">
-                    <div class="modal" style="background:white; padding:20px; border-radius:8px; width:350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                        <h3 style="margin-top:0; color:#1A237E;">Gán bác sĩ phụ trách</h3>
-                        <p style="font-size:13px; color:#666;">Danh sách hiển thị các bác sĩ có lịch làm việc và không xin nghỉ vào ngày này.</p>
-                        <div id="assignError" style="display:none; color:red; font-size:12px; margin-bottom:10px; padding:8px; background:#fff5f5; border-radius:4px;"></div>
-                        <select id="dentistSelect" style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #ddd;">
-                            ${options}
-                        </select>
-                        <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-                            <button type="button" onclick="submitAssign(${appointmentId})" style="background:#28a745; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">Xác nhận</button>
-                            <button type="button" onclick="closeModal()" style="background:#6c757d; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer;">Hủy</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            renderAvailableDentistModal(appointmentId, dentists, title);
         })
-        .catch(err => alert('Lỗi: ' + err.message));
+        .catch((err) => alert("Loi: " + err.message));
+}
+
+function assignDentist(appointmentId) {
+    loadAvailableDentists(appointmentId, "Gan nha si phu trach");
+}
+
+function changeDentist(appointmentId) {
+    loadAvailableDentists(appointmentId, "Doi nha si phu trach");
 }
 
 function submitAssign(appointmentId) {
-    const dentistId = document.getElementById('dentistSelect').value;
-    const errorBox = document.getElementById('assignError');
+    const dentistSelect = document.getElementById("dentistSelect");
+    const errorBox = document.getElementById("assignError");
+    const dentistId = dentistSelect ? dentistSelect.value : null;
 
     fetch(`/staff/appointments/assign?appointmentId=${appointmentId}&dentistId=${dentistId}`, {
-        method: 'POST'
+        method: "POST"
     })
-    .then(async res => {
-        if (!res.ok) {
-            const msg = await res.text();
-            errorBox.innerText = msg;
-            errorBox.style.display = 'block';
-        } else {
+        .then(async (res) => {
+            if (!res.ok) {
+                const msg = await res.text();
+                if (errorBox) {
+                    errorBox.innerText = msg || "Khong the doi nha si";
+                    errorBox.style.display = "block";
+                }
+                return;
+            }
             closeModal();
             location.reload();
-        }
-    })
-    .catch(() => {
-        errorBox.innerText = 'Không thể kết nối server';
-        errorBox.style.display = 'block';
-    });
+        })
+        .catch(() => {
+            if (errorBox) {
+                errorBox.innerText = "Khong the ket noi server";
+                errorBox.style.display = "block";
+            }
+        });
 }
 
-// --- CÁC HÀM TRẠNG THÁI KHÁC ---
 function confirmAppointment(id) {
-    fetch(`/staff/appointments/confirm?id=${id}`, { method: 'POST' })
+    fetch(`/staff/appointments/confirm?id=${id}`, { method: "POST" })
         .then(() => location.reload());
 }
 
 function completeAppointment(id) {
-    if (!confirm('Xác nhận hoàn thành lịch khám này?')) return;
-    fetch(`/staff/appointments/complete?id=${id}`, { method: 'POST' })
+    if (!confirm("Xac nhan hoan thanh lich kham nay?")) return;
+    fetch(`/staff/appointments/complete?id=${id}`, { method: "POST" })
         .then(() => location.reload());
 }
 
 function checkin(id) {
-    fetch('/staff/appointments/checkin', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    fetch("/staff/appointments/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ id: id })
     })
-    .then(res => {
-        if (!res.ok) throw new Error('Check-in thất bại');
-        location.reload();
-    })
-    .catch(err => alert(err.message));
+        .then((res) => {
+            if (!res.ok) throw new Error("Check-in that bai");
+            location.reload();
+        })
+        .catch((err) => alert(err.message));
 }
 
 function cancelAppointment(id) {
-    const reason = prompt('Lý do hủy:');
+    const reason = prompt("Ly do huy:");
     if (!reason) return;
-    fetch(`/staff/appointments/cancel?id=${id}&reason=${reason}`, { method: 'POST' })
+    fetch(`/staff/appointments/cancel?id=${id}&reason=${encodeURIComponent(reason)}`, { method: "POST" })
         .then(() => location.reload());
 }
 
+function cancelAppointmentBySystem(id) {
+    const reason = "Không còn nha sĩ có khung giờ trống này. Vui lòng đặt lại lịch khác";
+    fetch(`/staff/appointments/cancel?id=${id}&reason=${encodeURIComponent(reason)}`, { method: "POST" })
+        .then(() => {
+            closeModal();
+            location.reload();
+        });
+}
+
 function goToPayment(id) {
-    if (confirm("Xác nhận chuyển sang trạng thái Chờ thanh toán (Waiting Payment)?")) {
-        fetch('/staff/appointments/process-payment?id=' + id, {
-            method: 'POST'
-        }).then(res => {
+    if (confirm("Xac nhan chuyen sang trang thai Cho thanh toan (Waiting Payment)?")) {
+        fetch("/staff/appointments/process-payment?id=" + id, {
+            method: "POST"
+        }).then((res) => {
             if (res.ok) {
-                // Sau khi chuyển trạng thái thành công, có thể load lại trang hoặc
-                // chuyển hướng đến trang quản lý hóa đơn (nếu có)
                 location.reload();
             } else {
-                res.text().then(text => alert("Lỗi: " + text));
+                res.text().then((text) => alert("Loi: " + text));
             }
         });
     }
 }
-
-
-

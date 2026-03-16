@@ -5,7 +5,11 @@ import com.dentalclinic.dto.chat.ChatThreadDto;
 import com.dentalclinic.dto.chat.SendChatMessageRequest;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.service.chat.ChatService;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +24,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +60,7 @@ public class StaffChatController {
         return ResponseEntity.ok(messages);
     }
 
-    @PostMapping("/{threadId}/reply")
+    @PostMapping(value = "/{threadId}/reply", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ChatMessageDto> reply(@PathVariable Long threadId,
                                                 @RequestBody SendChatMessageRequest request,
@@ -61,6 +68,36 @@ public class StaffChatController {
         User current = chatService.getCurrentUserByEmail(principal.getUsername());
         String content = request != null ? request.getContent() : null;
         return ResponseEntity.ok(chatService.sendStaffMessage(current.getId(), threadId, content));
+    }
+
+    @PostMapping(value = "/{threadId}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseBody
+    public ResponseEntity<ChatMessageDto> replyWithAttachment(@PathVariable Long threadId,
+                                                              @RequestParam(required = false) String content,
+                                                              @RequestParam(value = "attachment", required = false) MultipartFile attachment,
+                                                              @AuthenticationPrincipal UserDetails principal) {
+        User current = chatService.getCurrentUserByEmail(principal.getUsername());
+        return ResponseEntity.ok(chatService.sendStaffMessage(current.getId(), threadId, content, attachment));
+    }
+
+    @GetMapping("/attachments/{messageId}")
+    @ResponseBody
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable Long messageId,
+                                                       @AuthenticationPrincipal UserDetails principal) {
+        User current = chatService.getCurrentUserByEmail(principal.getUsername());
+        var download = chatService.getAttachmentForStaff(current.getId(), messageId);
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (download.getContentType() != null && !download.getContentType().isBlank()) {
+            mediaType = MediaType.parseMediaType(download.getContentType());
+        }
+        ContentDisposition disposition = ContentDisposition.inline()
+                .filename(download.getFileName(), StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .contentLength(download.getSize())
+                .body(download.getResource());
     }
 
     @GetMapping("/inbox/data")
