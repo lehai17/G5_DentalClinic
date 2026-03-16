@@ -6,6 +6,8 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Controller
 public class DentistWebController {
+    private static final Logger log = LoggerFactory.getLogger(DentistWebController.class);
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
@@ -103,6 +106,17 @@ public class DentistWebController {
         DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
 
         for (Appointment a : appts) {
+            if (a == null) {
+                continue;
+            }
+            if (a.getDate() == null || a.getStartTime() == null || a.getEndTime() == null) {
+                log.warn("Skip invalid appointment in work schedule: missing date/time. appointmentId={}", a.getId());
+                continue;
+            }
+            if (!a.getEndTime().isAfter(a.getStartTime())) {
+                log.warn("Skip invalid appointment in work schedule: endTime must be after startTime. appointmentId={}", a.getId());
+                continue;
+            }
 
             String key = a.getDate() + "_" + a.getStartTime().format(tf);
 
@@ -111,17 +125,24 @@ public class DentistWebController {
                     a.getEndTime()
             ).toMinutes();
 
-            int span = (int) Math.ceil(duration / 30.0);
+            int span = Math.max(1, (int) Math.ceil(duration / 30.0));
+            Long customerUserId = (a.getCustomer() != null && a.getCustomer().getUser() != null)
+                    ? a.getCustomer().getUser().getId()
+                    : null;
+            String patientName = (a.getCustomer() != null && a.getCustomer().getFullName() != null)
+                    ? a.getCustomer().getFullName()
+                    : "(Khach hang khong ro)";
+            String status = a.getStatus() != null ? a.getStatus().name() : AppointmentStatus.CONFIRMED.name();
 
             eventMap.put(key, new ScheduleEventResponse(
                     a.getId(),
-                    a.getCustomer().getUser().getId(),
-                    a.getCustomer().getFullName(),
+                    customerUserId,
+                    patientName,
                     buildServiceLabel(a),
                     a.getDate(),
                     a.getStartTime(),
                     a.getEndTime(),
-                    a.getStatus().name(),
+                    status,
                     span
             ));
         }
