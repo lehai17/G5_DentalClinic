@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const endTimeInput = document.getElementById('endTime');
     const deleteBtn = document.getElementById('deleteBtn');
     const deleteForm = document.getElementById('deleteForm');
+    const originalDate = dateInput?.dataset.originalDate || '';
+    const originalStartTime = dateInput?.dataset.originalStartTime || '';
 
     if (!form) return;
 
@@ -96,6 +98,49 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
+    function validateAgainstOriginalAppointment(dateField, startField) {
+        if (!dateField.value || !startField.value || !originalDate || !originalStartTime) {
+            return true;
+        }
+
+        if (dateField.value === originalDate && startField.value < originalStartTime) {
+            showError(
+                startField,
+                'Nếu tái khám cùng ngày, giờ bắt đầu không được sớm hơn giờ của ca khám gốc.'
+            );
+            return false;
+        }
+
+        clearError(startField);
+        return true;
+    }
+
+    function syncSameDayTimeOptions() {
+        if (!dateInput || !startTimeInput || !endTimeInput) {
+            return;
+        }
+
+        const sameDay = dateInput.value && originalDate && dateInput.value === originalDate;
+
+        Array.from(startTimeInput.options).forEach(option => {
+            if (!option.value) return;
+            option.disabled = sameDay && originalStartTime && option.value < originalStartTime;
+        });
+
+        Array.from(endTimeInput.options).forEach(option => {
+            if (!option.value) return;
+            option.disabled = sameDay && originalStartTime && option.value <= originalStartTime;
+        });
+
+        if (startTimeInput.value && startTimeInput.selectedOptions[0]?.disabled) {
+            startTimeInput.value = '';
+        }
+
+        if (endTimeInput.value && endTimeInput.selectedOptions[0]?.disabled) {
+            endTimeInput.value = '';
+        }
+    }
+
     function showError(input, message) {
         clearError(input);
         const errorDiv = document.createElement('div');
@@ -118,6 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
     startTimeInput.addEventListener('blur', function () {
         validateTime(startTimeInput);
         validateCurrentTime(dateInput, startTimeInput);
+        validateAgainstOriginalAppointment(dateInput, startTimeInput);
         validateTimes(startTimeInput, endTimeInput);
     });
     endTimeInput.addEventListener('blur', function () {
@@ -128,10 +174,13 @@ document.addEventListener('DOMContentLoaded', function() {
     dateInput.addEventListener('change', function () {
         validateDate(dateInput);
         validateCurrentTime(dateInput, startTimeInput);
+        syncSameDayTimeOptions();
+        validateAgainstOriginalAppointment(dateInput, startTimeInput);
     });
     startTimeInput.addEventListener('change', function () {
         validateTime(startTimeInput);
         validateCurrentTime(dateInput, startTimeInput);
+        validateAgainstOriginalAppointment(dateInput, startTimeInput);
         validateTimes(startTimeInput, endTimeInput);
     });
     endTimeInput.addEventListener('change', function () {
@@ -155,6 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!validateTime(startTimeInput)) isValid = false;
         if (!validateTime(endTimeInput)) isValid = false;
         if (!validateCurrentTime(dateInput, startTimeInput)) isValid = false;
+        if (!validateAgainstOriginalAppointment(dateInput, startTimeInput)) isValid = false;
         if (!validateTimes(startTimeInput, endTimeInput)) isValid = false;
 
         if (!isValid) {
@@ -165,4 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return true;
     });
+
+    syncSameDayTimeOptions();
 });

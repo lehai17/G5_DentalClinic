@@ -89,7 +89,8 @@
              name="date"
              th:value="${reexam.date != null ? #temporals.format(reexam.date, 'yyyy-MM-dd') : ''}"
              id="appointmentDate"
-             data-original-date="${#temporals.format(originalAppointment.date, 'yyyy-MM-dd')}"
+              data-original-date="${#temporals.format(originalAppointment.date, 'yyyy-MM-dd')}"
+             data-original-start-time="${#temporals.format(originalAppointment.startTime, 'HH:mm')}"
              th:disabled="${isReadOnly}"
              required/>
       <small>Chọn ngày phù hợp.</small>

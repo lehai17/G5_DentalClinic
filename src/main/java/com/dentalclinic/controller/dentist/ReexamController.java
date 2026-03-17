@@ -101,7 +101,7 @@ public class ReexamController {
         try {
             boolean existedBefore = reexamService.getExistingReexam(appointmentId).isPresent();
 
-            Appointment saved = reexamService.createOrUpdateReexam(
+            reexamService.createOrUpdateReexam(
                     appointmentId,
                     date,
                     startTime,
@@ -120,9 +120,8 @@ public class ReexamController {
             return "redirect:/dentist/reexam/" + appointmentId + 
                     (weekStart != null ? "?weekStart=" + weekStart : "");
         }
-        
-        redirect.addAttribute("weekStart", weekStart);
-        return "redirect:/dentist/work-schedule" + 
+
+        return "redirect:/dentist/reexam/" + appointmentId +
                 (weekStart != null ? "?weekStart=" + weekStart : "");
     }
     

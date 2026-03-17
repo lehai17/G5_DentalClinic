@@ -94,7 +94,7 @@ public class ReexamService {
         }
         
         // Validate time
-        validateReexamTime(newDate, newStartTime, newEndTime);
+        validateReexamTime(original, newDate, newStartTime, newEndTime);
         
         // Check schedule conflict (excluding itself if updating)
         Optional<Appointment> existing = getExistingReexam(originalAppointmentId);
@@ -275,7 +275,7 @@ public class ReexamService {
     /**
      * Validate reexam time
      */
-    public void validateReexamTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
+    public void validateReexamTime(Appointment originalAppointment, LocalDate date, LocalTime startTime, LocalTime endTime) {
         // Check if date is in past
         LocalDate today = LocalDate.now();
         DayOfWeek day = date.getDayOfWeek();
@@ -325,6 +325,15 @@ public class ReexamService {
         if (!isValid30MinInterval(endTime)) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
                     "End time must be at 30-minute intervals (e.g., 08:00, 08:30, 09:00)");
+        }
+
+        if (originalAppointment != null
+                && originalAppointment.getDate() != null
+                && originalAppointment.getStartTime() != null
+                && originalAppointment.getDate().isEqual(date)
+                && startTime.isBefore(originalAppointment.getStartTime())) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                    "Reexam start time cannot be earlier than the original appointment start time on the same day");
         }
     }
     
