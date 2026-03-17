@@ -69,6 +69,23 @@ public class ReexamService {
     public Optional<Appointment> getExistingReexam(Long originalAppointmentId) {
         return appointmentRepository.findReexamByOriginalAppointmentId(originalAppointmentId);
     }
+
+    @Transactional(readOnly = true)
+    public Appointment loadOwnedOriginalAppointmentWithDetails(Long originalAppointmentId, Long dentistUserId) {
+        Appointment original = appointmentRepository.findByIdWithDetails(originalAppointmentId)
+                .orElseThrow(() -> new BookingException(
+                        BookingErrorCode.APPOINTMENT_NOT_FOUND,
+                        "Original appointment not found"
+                ));
+        validateDentistOwnership(original, dentistUserId);
+        return original;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Appointment> getExistingReexamForDentist(Long originalAppointmentId, Long dentistUserId) {
+        Appointment original = mustGetOriginalAppointment(originalAppointmentId, dentistUserId);
+        return getExistingReexam(original.getId());
+    }
     
     /**
      * Create or update reexam appointment
@@ -76,6 +93,7 @@ public class ReexamService {
     @Transactional
     public Appointment createOrUpdateReexam(
             Long originalAppointmentId,
+            Long dentistUserId,
             LocalDate newDate,
             LocalTime newStartTime,
             LocalTime newEndTime,
@@ -83,9 +101,7 @@ public class ReexamService {
             Long serviceId
     ) {
         // Load original appointment
-        Appointment original = appointmentRepository.findById(originalAppointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, 
-                    "Original appointment not found"));
+        Appointment original = mustGetOriginalAppointment(originalAppointmentId, dentistUserId);
         
         // Verify reexam is allowed
         if (!isReexamAvailable(original.getStatus())) {
@@ -204,9 +220,12 @@ public class ReexamService {
      */
     @Transactional
     public void deleteReexam(Long appointmentId) {
-        Appointment reexam = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND,
-                    "Reexam appointment not found"));
+        deleteReexam(appointmentId, null);
+    }
+
+    @Transactional
+    public void deleteReexam(Long appointmentId, Long dentistUserId) {
+        Appointment reexam = mustGetReexamAppointment(appointmentId, dentistUserId);
         
         // Verify it's a reexam
         if (reexam.getOriginalAppointment() == null) {
@@ -234,6 +253,47 @@ public class ReexamService {
         
         // Release slots
         releaseSlots(slots);
+    }
+
+    private Appointment mustGetOriginalAppointment(Long originalAppointmentId, Long dentistUserId) {
+        Appointment original = appointmentRepository.findById(originalAppointmentId)
+                .orElseThrow(() -> new BookingException(
+                        BookingErrorCode.APPOINTMENT_NOT_FOUND,
+                        "Original appointment not found"
+                ));
+        validateDentistOwnership(original, dentistUserId);
+        return original;
+    }
+
+    private Appointment mustGetReexamAppointment(Long appointmentId, Long dentistUserId) {
+        Appointment reexam = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BookingException(
+                        BookingErrorCode.APPOINTMENT_NOT_FOUND,
+                        "Reexam appointment not found"
+                ));
+
+        if (reexam.getOriginalAppointment() == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                    "This is not a reexam appointment");
+        }
+
+        validateDentistOwnership(reexam.getOriginalAppointment(), dentistUserId);
+        return reexam;
+    }
+
+    private void validateDentistOwnership(Appointment appointment, Long dentistUserId) {
+        if (dentistUserId == null) {
+            return;
+        }
+
+        if (appointment.getDentist() == null
+                || appointment.getDentist().getUser() == null
+                || !appointment.getDentist().getUser().getId().equals(dentistUserId)) {
+            throw new BookingException(
+                    BookingErrorCode.USER_NOT_ALLOWED,
+                    "You are not allowed to access this appointment"
+            );
+        }
     }
     
     /**
