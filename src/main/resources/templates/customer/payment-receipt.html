@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
@@ -146,27 +146,27 @@
               <h1 class="receipt-title" th:text="${receipt.title}">Biên nhận đặt cọc</h1>
               <p class="receipt-subtitle">Xem lại thông tin giao dịch và chi tiết lịch hẹn liên quan.</p>
             </div>
-            <div class="receipt-status" th:text="${receipt.paymentStatusLabel}">Đã thanh toán</div>
+            <div class="receipt-status" th:text="${receipt.paymentStatusLabel != null ? receipt.paymentStatusLabel : 'Không xác định'}">Đã thanh toán</div>
           </div>
 
           <div class="receipt-grid">
             <div class="receipt-box">
               <h3>Thông tin giao dịch</h3>
-              <div class="receipt-line"><span>Mã tham chiếu</span><strong th:text="${receipt.referenceCode}">APPOINTMENT-1</strong></div>
-              <div class="receipt-line"><span>Loại giao dịch</span><strong th:text="${receipt.recordTypeLabel}">Đặt cọc</strong></div>
-              <div class="receipt-line"><span>Phương thức</span><strong th:text="${receipt.paymentMethodLabel}">Ví của tôi</strong></div>
+              <div class="receipt-line"><span>Mã tham chiếu</span><strong th:text="${receipt.referenceCode != null ? receipt.referenceCode : 'Chưa có dữ liệu'}">APPOINTMENT-1</strong></div>
+              <div class="receipt-line"><span>Loại giao dịch</span><strong th:text="${receipt.recordTypeLabel != null ? receipt.recordTypeLabel : 'Chưa có dữ liệu'}">Đặt cọc</strong></div>
+              <div class="receipt-line"><span>Phương thức</span><strong th:text="${receipt.paymentMethodLabel != null ? receipt.paymentMethodLabel : 'Chưa có dữ liệu'}">Ví của tôi</strong></div>
               <div class="receipt-line"><span>Thời gian ghi nhận</span><strong th:text="${receipt.recordedAt != null ? #temporals.format(receipt.recordedAt, 'dd/MM/yyyy HH:mm') : 'Chưa có dữ liệu'}">14/03/2026 10:20</strong></div>
-              <div class="receipt-line"><span>Số tiền</span><strong class="receipt-amount" th:text="${#numbers.formatDecimal(receipt.amount, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">500,000 VNĐ</strong></div>
+              <div class="receipt-line"><span>Số tiền</span><strong class="receipt-amount" th:text="${#numbers.formatDecimal(receipt.amount != null ? receipt.amount : 0, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">500,000 VNĐ</strong></div>
             </div>
 
             <div class="receipt-box">
               <h3>Thông tin lịch hẹn</h3>
               <div class="receipt-line"><span>Mã lịch hẹn</span><strong th:text="${receipt.appointmentId != null ? '#' + receipt.appointmentId : 'Không có'}">#1</strong></div>
-              <div class="receipt-line"><span>Khách hàng</span><strong th:text="${receipt.customerName}">Nguyễn Văn A</strong></div>
+              <div class="receipt-line"><span>Khách hàng</span><strong th:text="${receipt.customerName != null ? receipt.customerName : 'Chưa có dữ liệu'}">Nguyễn Văn A</strong></div>
               <div class="receipt-line"><span>Ngày khám</span><strong th:text="${receipt.appointmentDate != null ? #temporals.format(receipt.appointmentDate, 'dd/MM/yyyy') : 'Chưa có dữ liệu'}">14/03/2026</strong></div>
               <div class="receipt-line"><span>Khung giờ</span><strong th:text="${receipt.appointmentStartTime != null ? #temporals.format(receipt.appointmentStartTime, 'HH:mm') + (receipt.appointmentEndTime != null ? ' - ' + #temporals.format(receipt.appointmentEndTime, 'HH:mm') : '') : 'Chưa có dữ liệu'}">08:00 - 09:00</strong></div>
-              <div class="receipt-line"><span>Bác sĩ</span><strong th:text="${receipt.dentistName}">Chưa phân công</strong></div>
-              <div class="receipt-line"><span>Dịch vụ</span><strong th:text="${receipt.serviceSummary}">Khám tổng quát</strong></div>
+              <div class="receipt-line"><span>Bác sĩ</span><strong th:text="${receipt.dentistName != null ? receipt.dentistName : 'Chưa phân công'}">Chưa phân công</strong></div>
+              <div class="receipt-line"><span>Dịch vụ</span><strong th:text="${receipt.serviceSummary != null ? receipt.serviceSummary : 'Chưa có dữ liệu'}">Khám tổng quát</strong></div>
             </div>
           </div>
 
@@ -177,10 +177,10 @@
             </ul>
           </div>
 
-          <div class="receipt-note" th:text="${receipt.note}">Hệ thống đã ghi nhận thanh toán cho lịch hẹn này.</div>
+          <div class="receipt-note" th:text="${receipt.note != null ? receipt.note : 'Hệ thống đã ghi nhận giao dịch này.'}">Hệ thống đã ghi nhận thanh toán cho lịch hẹn này.</div>
 
           <div class="receipt-actions">
-            <a class="receipt-btn" th:href="${receipt.backUrl}">
+            <a class="receipt-btn" th:href="${receipt.backUrl != null ? receipt.backUrl : '/customer/payments'}">
               <i class="bi bi-arrow-left"></i>
               <span>Quay lại lịch sử thanh toán</span>
             </a>

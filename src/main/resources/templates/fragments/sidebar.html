@@ -47,6 +47,15 @@
     </a>
 
     <a
+      th:href="@{/customer/vouchers}"
+      th:classappend="${active == 'vouchers'} ? ' active'"
+      class="menu-item"
+    >
+      <i class="bi bi-ticket-perforated"></i>
+      <span>Ví voucher</span>
+    </a>
+
+    <a
       th:href="@{/patient/medical-records}"
       th:classappend="${active == 'records'} ? ' active'"
       class="menu-item"

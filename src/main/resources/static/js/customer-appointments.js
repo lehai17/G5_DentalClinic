@@ -25,6 +25,13 @@
   );
   var paymentInvoiceIdEl = document.getElementById("cap-payment-invoice-id");
   var paymentAmountEl = document.getElementById("cap-payment-amount");
+  var paymentOriginalLineEl = document.getElementById("cap-payment-original-line");
+  var paymentOriginalAmountEl = document.getElementById("cap-payment-original-amount");
+  var paymentDiscountLineEl = document.getElementById("cap-payment-discount-line");
+  var paymentDiscountAmountEl = document.getElementById("cap-payment-discount-amount");
+  var paymentVoucherInputEl = document.getElementById("cap-payment-voucher-code");
+  var paymentVoucherApplyBtn = document.getElementById("cap-payment-voucher-apply");
+  var paymentVoucherFeedbackEl = document.getElementById("cap-payment-voucher-feedback");
   var paymentWalletBtn = document.getElementById("cap-payment-wallet");
   var paymentVnpayBtn = document.getElementById("cap-payment-vnpay");
   var invoiceModalEl = document.getElementById("cap-invoice-modal");
@@ -231,6 +238,11 @@
     remainingPaymentSelection = null;
     if (paymentWalletBtn) paymentWalletBtn.disabled = false;
     if (paymentVnpayBtn) paymentVnpayBtn.disabled = false;
+    if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
+    if (paymentVoucherInputEl) paymentVoucherInputEl.value = "";
+    if (paymentVoucherFeedbackEl) paymentVoucherFeedbackEl.textContent = "";
+    if (paymentOriginalLineEl) paymentOriginalLineEl.hidden = true;
+    if (paymentDiscountLineEl) paymentDiscountLineEl.hidden = true;
   }
 
   function closeInvoiceModal() {
@@ -254,6 +266,12 @@
       appointmentId: appointmentId,
       invoiceId: data.invoiceId,
       amount: data.remainingAmount,
+      originalAmount:
+        data.originalRemainingAmount != null
+          ? data.originalRemainingAmount
+          : data.remainingAmount,
+      discountAmount: data.discountAmount || 0,
+      voucherCode: data.voucherCode || "",
     };
 
     if (paymentAppointmentIdEl)
@@ -264,11 +282,123 @@
         : normalizeText("Chưa có");
     if (paymentAmountEl)
       paymentAmountEl.textContent = formatMoney(data.remainingAmount);
+    if (paymentOriginalAmountEl)
+      paymentOriginalAmountEl.textContent = formatMoney(
+        remainingPaymentSelection.originalAmount,
+      );
+    if (paymentDiscountAmountEl)
+      paymentDiscountAmountEl.textContent = formatMoney(
+        remainingPaymentSelection.discountAmount,
+      );
+    if (paymentOriginalLineEl)
+      paymentOriginalLineEl.hidden =
+        toNumber(remainingPaymentSelection.originalAmount) <=
+        toNumber(data.remainingAmount);
+    if (paymentDiscountLineEl)
+      paymentDiscountLineEl.hidden =
+        toNumber(remainingPaymentSelection.discountAmount) <= 0;
+    if (paymentVoucherInputEl)
+      paymentVoucherInputEl.value = remainingPaymentSelection.voucherCode || "";
+    if (paymentVoucherFeedbackEl) {
+      paymentVoucherFeedbackEl.textContent = data.voucherCode
+        ? "Đã áp dụng voucher " + data.voucherCode + "."
+        : "";
+    }
     if (paymentWalletBtn) paymentWalletBtn.disabled = false;
     if (paymentVnpayBtn) paymentVnpayBtn.disabled = false;
+    if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
 
     paymentModalEl.hidden = false;
     document.body.classList.add("cap-payment-modal-open");
+  }
+
+  function updateRemainingPaymentPreview(preview) {
+    if (!remainingPaymentSelection || !preview) return;
+
+    remainingPaymentSelection.invoiceId = preview.invoiceId;
+    remainingPaymentSelection.amount = preview.payableAmount;
+    remainingPaymentSelection.originalAmount = preview.originalAmount;
+    remainingPaymentSelection.discountAmount = preview.discountAmount || 0;
+    remainingPaymentSelection.voucherCode = preview.voucherCode || "";
+
+    if (paymentInvoiceIdEl)
+      paymentInvoiceIdEl.textContent = preview.invoiceId
+        ? "#" + preview.invoiceId
+        : normalizeText("Chưa có");
+    if (paymentAmountEl)
+      paymentAmountEl.textContent = formatMoney(preview.payableAmount);
+    if (paymentOriginalAmountEl)
+      paymentOriginalAmountEl.textContent = formatMoney(preview.originalAmount);
+    if (paymentDiscountAmountEl)
+      paymentDiscountAmountEl.textContent = formatMoney(preview.discountAmount || 0);
+    if (paymentOriginalLineEl)
+      paymentOriginalLineEl.hidden =
+        toNumber(preview.originalAmount) <= toNumber(preview.payableAmount);
+    if (paymentDiscountLineEl)
+      paymentDiscountLineEl.hidden = toNumber(preview.discountAmount) <= 0;
+    if (paymentVoucherInputEl)
+      paymentVoucherInputEl.value = preview.voucherCode || "";
+    if (paymentVoucherFeedbackEl) {
+      paymentVoucherFeedbackEl.textContent = preview.voucherApplied
+        ? normalizeText(
+            "Áp dụng voucher " +
+              preview.voucherCode +
+              (preview.voucherDescription
+                ? ": " + preview.voucherDescription
+                : "."),
+          )
+        : normalizeText(
+            (paymentVoucherInputEl && paymentVoucherInputEl.value.trim())
+              ? "Đã bỏ voucher khỏi hóa đơn."
+              : "",
+          );
+    }
+  }
+
+  function applyVoucherPreview() {
+    if (!remainingPaymentSelection) return Promise.resolve();
+
+    var voucherCode = paymentVoucherInputEl ? paymentVoucherInputEl.value.trim() : "";
+    if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = true;
+    if (paymentWalletBtn) paymentWalletBtn.disabled = true;
+    if (paymentVnpayBtn) paymentVnpayBtn.disabled = true;
+
+    var url =
+      "/customer/payment/final-payment/" +
+      remainingPaymentSelection.appointmentId +
+      "/preview";
+    if (voucherCode) {
+      url += "?voucherCode=" + encodeURIComponent(voucherCode);
+    }
+
+    return fetch(url, { credentials: "same-origin" })
+      .then(function (res) {
+        if (res.status === 401) {
+          throw new Error("Bạn cần đăng nhập.");
+        }
+        return res.json().then(function (payload) {
+          if (!res.ok || payload.success === false || !payload.data) {
+            throw new Error(
+              extractApiError(payload, "Không thể áp dụng voucher."),
+            );
+          }
+          return payload.data;
+        });
+      })
+      .then(function (preview) {
+        updateRemainingPaymentPreview(preview);
+      })
+      .catch(function (err) {
+        if (paymentVoucherFeedbackEl) {
+          paymentVoucherFeedbackEl.textContent = err.message || "Không thể áp dụng voucher.";
+        }
+        throw err;
+      })
+      .finally(function () {
+        if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
+        if (paymentWalletBtn) paymentWalletBtn.disabled = false;
+        if (paymentVnpayBtn) paymentVnpayBtn.disabled = false;
+      });
   }
 
   function buildInvoiceHtml(data) {
@@ -279,10 +409,17 @@
     var settled = isSettledInvoice(data);
     var billedTotal = toNumber(data.billedTotal);
     var depositAmount = toNumber(data.depositAmount);
+    var originalRemaining = toNumber(
+      data.originalRemainingAmount != null
+        ? data.originalRemainingAmount
+        : data.remainingAmount,
+    );
+    var discountAmount = toNumber(data.discountAmount);
     var remainingAmount = toNumber(data.remainingAmount);
+    var patientTotal = Math.max(billedTotal - discountAmount, 0);
     var paidAmount = settled
-      ? billedTotal
-      : Math.max(billedTotal - remainingAmount, 0);
+      ? patientTotal
+      : Math.max(patientTotal - remainingAmount, 0);
     var statusLabel = settled
       ? "Đã thanh toán"
       : formatInvoiceStatus(data.invoiceStatus);
@@ -399,6 +536,16 @@
       '<div class="cap-invoice-total-line"><span>Đặt cọc ban đầu</span><strong>' +
       escapeHtml(formatMoney(depositAmount)) +
       "</strong></div>" +
+      '<div class="cap-invoice-total-line"><span>Tạm tính sau đặt cọc</span><strong>' +
+      escapeHtml(formatMoney(originalRemaining)) +
+      "</strong></div>" +
+      (discountAmount > 0
+        ? '<div class="cap-invoice-total-line"><span>Voucher giảm giá' +
+          (data.voucherCode ? " (" + escapeHtml(data.voucherCode) + ")" : "") +
+          '</span><strong>-' +
+          escapeHtml(formatMoney(discountAmount)) +
+          "</strong></div>"
+        : "") +
       '<div class="cap-invoice-total-line"><span>Đã thanh toán</span><strong>' +
       escapeHtml(formatMoney(paidAmount)) +
       "</strong></div>" +
@@ -575,13 +722,25 @@
       }
     });
 
+    if (paymentVoucherApplyBtn) {
+      paymentVoucherApplyBtn.addEventListener("click", function () {
+        applyVoucherPreview().catch(function () {});
+      });
+    }
+
     if (paymentVnpayBtn) {
       paymentVnpayBtn.addEventListener("click", function () {
         if (!remainingPaymentSelection) return;
         paymentVnpayBtn.disabled = true;
-        window.location.href =
+        var url =
           "/customer/payment/create-final-payment/" +
           remainingPaymentSelection.appointmentId;
+        if (remainingPaymentSelection.voucherCode) {
+          url +=
+            "?voucherCode=" +
+            encodeURIComponent(remainingPaymentSelection.voucherCode);
+        }
+        window.location.href = url;
       });
     }
 
@@ -596,6 +755,12 @@
         fetch("/customer/payment/final-payment/" + appointmentId + "/wallet", {
           method: "POST",
           credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          },
+          body:
+            "voucherCode=" +
+            encodeURIComponent(remainingPaymentSelection.voucherCode || ""),
         })
           .then(function (res) {
             if (res.status === 401) {
@@ -723,6 +888,7 @@
     var canCancel =
       data.status !== "CANCELLED" &&
       data.status !== "COMPLETED" &&
+      data.status !== "CHECKED_IN" &&
       data.status !== "WAITING_PAYMENT" &&
       data.status !== "DONE" &&
       data.status !== "EXAMINING" &&
@@ -788,6 +954,10 @@
         "<span>Còn lại cần thanh toán: <strong>" +
         escapeHtml(formatMoney(data.remainingAmount)) +
         "</strong>" +
+        (toNumber(data.discountAmount) > 0
+          ? " - Đã áp dụng voucher giảm " +
+            escapeHtml(formatMoney(data.discountAmount))
+          : "") +
         (data.invoiceId ? " - Mã thanh toán #" + escapeHtml(data.invoiceId) : "") +
         "</span></div>"
       : "";

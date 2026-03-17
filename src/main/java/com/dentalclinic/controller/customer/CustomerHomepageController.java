@@ -11,6 +11,7 @@ import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.customer.CustomerProfileService;
+import com.dentalclinic.service.customer.CustomerVoucherWalletService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,19 +35,22 @@ public class CustomerHomepageController {
     private final BlogRepository blogRepo;
     private final UserRepository userRepository;
     private final CustomerAppointmentService customerAppointmentService;
+    private final CustomerVoucherWalletService customerVoucherWalletService;
 
     public CustomerHomepageController(CustomerProfileService profileService,
                                       ServiceRepository serviceRepo,
                                       DentistProfileRepository dentistRepo,
                                       BlogRepository blogRepo,
                                       UserRepository userRepository,
-                                      CustomerAppointmentService customerAppointmentService) {
+                                      CustomerAppointmentService customerAppointmentService,
+                                      CustomerVoucherWalletService customerVoucherWalletService) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
         this.blogRepo = blogRepo;
         this.userRepository = userRepository;
         this.customerAppointmentService = customerAppointmentService;
+        this.customerVoucherWalletService = customerVoucherWalletService;
     }
 
     @GetMapping({"/", "/index", "/home"})
@@ -77,6 +81,8 @@ public class CustomerHomepageController {
 
             model.addAttribute("services", serviceRepo.findByActiveTrue());
             model.addAttribute("dentists", dentistRepo.filterDentists(null, null, UserStatus.ACTIVE));
+            model.addAttribute("voucherBannerVouchers", customerVoucherWalletService.getHomepageBannerVouchers());
+            model.addAttribute("voucherService", customerVoucherWalletService);
 
             int safePage = Math.max(page, 0);
             Pageable pageable = PageRequest.of(safePage, 2);
@@ -91,6 +97,8 @@ public class CustomerHomepageController {
             model.addAttribute("appointments", new ArrayList<>());
             model.addAttribute("services", new ArrayList<>());
             model.addAttribute("dentists", new ArrayList<>());
+            model.addAttribute("voucherBannerVouchers", new ArrayList<>());
+            model.addAttribute("voucherService", customerVoucherWalletService);
             model.addAttribute("blogs", new ArrayList<>());
             model.addAttribute("currentPage", 0);
             model.addAttribute("totalPages", 0);
