@@ -3,7 +3,6 @@ package com.dentalclinic.controller.customer;
 import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.dto.customer.CreateReviewRequest;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
-import com.dentalclinic.dto.customer.RescheduleAppointmentRequest;
 import com.dentalclinic.dto.customer.SlotDto;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
@@ -186,31 +185,6 @@ public class CustomerAppointmentController {
                 "message", "Đã gửi đánh giá bác sĩ thành công.",
                 "rating", review.getRating(),
                 "comment", review.getComment() == null ? "" : review.getComment()
-        ));
-    }
-
-    @PostMapping("/appointments/{id}/reschedule")
-    public ResponseEntity<?> reschedule(@PathVariable Long id,
-                                        @Valid @RequestBody RescheduleAppointmentRequest request,
-                                        HttpSession session) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-
-        AppointmentDto result = customerAppointmentService.rescheduleAppointment(userId, id, request);
-        return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/debug/slots")
-    public ResponseEntity<?> debugGetAllSlots(@RequestParam String date, HttpSession session) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-
-        LocalDate parsedDate = LocalDate.parse(date);
-        List<SlotDto> slots = customerAppointmentService.getAllSlotsForDate(parsedDate);
-        return ResponseEntity.ok(Map.of(
-                "date", parsedDate,
-                "totalSlots", slots.size(),
-                "slots", slots
         ));
     }
 

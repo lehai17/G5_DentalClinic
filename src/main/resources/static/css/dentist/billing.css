@@ -1,4 +1,4 @@
-﻿/* ===============================
+/* ===============================
    BILLING PAGE LAYOUT
 ================================ */
 
@@ -171,7 +171,7 @@
     padding: 10px;
 }
 
-/* bo tròn từng row */
+/* bo trÃ²n tá»«ng row */
 #rxTable tbody tr td:first-child {
     border-top-left-radius: 18px;
     border-bottom-left-radius: 18px;
@@ -329,7 +329,7 @@ textarea:focus {
     padding: 10px;
 }
 
-/* bo tròn từng row giống prescription */
+/* bo trÃ²n tá»«ng row giá»‘ng prescription */
 #performedTable tbody tr td:first-child {
     border-top-left-radius: 18px;
     border-bottom-left-radius: 18px;
@@ -350,13 +350,13 @@ textarea:focus {
     background: #ffffff;
 }
 
-/* chỉnh độ rộng các cột */
+/* chá»‰nh Ä‘á»™ rá»™ng cÃ¡c cá»™t */
 #performedTable td:nth-child(1) { width: 40%; }
 #performedTable td:nth-child(2) { width: 90px; }
 #performedTable td:nth-child(3) { width: 180px; }
 #performedTable td:nth-child(4) { width: 50px; }
 
-/* căn giữa qty */
+/* cÄƒn giá»¯a qty */
 #performedTable td:nth-child(2) {
     text-align: left;
     padding-left: 6px;
@@ -367,13 +367,13 @@ textarea:focus {
     align-items: center;
     justify-content: center;
 
-    width: fit-content;          /* ðŸ”¥ Ã©p rộng theo nội dung */
+    width: fit-content;          /* Ã°Å¸â€Â¥ ÃƒÂ©p rá»™ng theo ná»™i dung */
     height: auto;
 
     margin-top: 18px;
     margin-left: 10px;
 
-    padding: 8px 18px;           /* padding đều hai bên */
+    padding: 8px 18px;           /* padding Ä‘á»u hai bÃªn */
 
     border-radius: 999px;
     border: 1px solid #2563eb;
@@ -383,7 +383,7 @@ textarea:focus {
 
     font-weight: 600;
     font-size: 14px;
-    line-height: 1;              /* ðŸ”¥ tránh cao bất thường */
+    line-height: 1;              /* Ã°Å¸â€Â¥ trÃ¡nh cao báº¥t thÆ°á»ng */
 
     white-space: nowrap;
     cursor: pointer;

@@ -55,7 +55,7 @@ public class DentistAppointmentController {
         if (appt.getStatus() == AppointmentStatus.CONFIRMED) {
             return "redirect:/dentist/work-schedule" + (weekStart != null ? "?weekStart=" + weekStart : "");
         }
-        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT 
+        // Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT
         if (appt.getStatus() != AppointmentStatus.DONE
                 && appt.getStatus() != AppointmentStatus.COMPLETED
                 && appt.getStatus() != AppointmentStatus.WAITING_PAYMENT
@@ -99,7 +99,7 @@ public class DentistAppointmentController {
             @PathVariable Long id,
             @RequestParam Long customerUserId,
             @ModelAttribute MedicalRecord medicalRecord,
-            @RequestParam(required = false) String weekStart, // âœ… THÊM
+            @RequestParam(required = false) String weekStart, // Thêm
             RedirectAttributes redirect
     ) {
         dentistSessionService.saveExam(

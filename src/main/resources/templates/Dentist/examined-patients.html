@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
@@ -302,8 +302,8 @@
         </div>
 
         <div class="pagination">
-          <div class="page-info" th:text="'Showing ' + ${totalChains == 0 ? 0 : ((page - 1) * pageSize + 1)} + '-' + ${T(java.lang.Math).min(page * pageSize, totalChains)} + ' of ' + ${totalChains} + ' records'">
-            Showing 0-0 of 0 records
+          <div class="page-info" th:text="'Hiển thị ' + ${totalChains == 0 ? 0 : ((page - 1) * pageSize + 1)} + '-' + ${T(java.lang.Math).min(page * pageSize, totalChains)} + ' / ' + ${totalChains} + ' bản ghi'">
+            Hiển thị 0-0 / 0 bản ghi
           </div>
           <div class="page-controls">
             <a class="page-btn"

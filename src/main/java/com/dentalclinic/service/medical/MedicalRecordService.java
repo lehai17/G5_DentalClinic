@@ -41,7 +41,7 @@ public class MedicalRecordService {
         this.billingNoteRepository = billingNoteRepository;
     }
 
-    // âœ… DÙNG CHO GET
+    // Dùng cho GET
     public Optional<MedicalRecord> findByAppointmentId(Long appointmentId) {
         return medicalRecordRepository.findByAppointment_Id(appointmentId);
     }
@@ -275,7 +275,7 @@ public class MedicalRecordService {
             String toothNo
     ) {}
 
-    // âœ… UPSERT â€“ KHÔNG T� O RECORD MỚI
+    // UPSERT - không tạo record mới
     @Transactional
     public MedicalRecord saveOrUpdate(
             Long appointmentId,

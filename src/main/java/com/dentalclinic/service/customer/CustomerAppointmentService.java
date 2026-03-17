@@ -8,7 +8,6 @@ import com.dentalclinic.dto.customer.CreateReviewRequest;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
 import com.dentalclinic.dto.customer.FinalPaymentPreviewDto;
 import com.dentalclinic.dto.customer.RebookPrefillDto;
-import com.dentalclinic.dto.customer.RescheduleAppointmentRequest;
 import com.dentalclinic.dto.customer.SlotDto;
 import com.dentalclinic.exception.BookingErrorCode;
 import com.dentalclinic.exception.BookingException;
@@ -19,7 +18,6 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.appointment.Slot;
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.payment.Invoice;
-import com.dentalclinic.model.payment.BillingNote;
 import com.dentalclinic.model.payment.BillingPerformedService;
 import com.dentalclinic.model.payment.BillingPrescriptionItem;
 import com.dentalclinic.model.payment.PaymentStatus;
@@ -138,13 +136,6 @@ public class CustomerAppointmentService {
         return (int) Math.ceil((double) durationMinutes / SLOT_MIN);
     }
 
-    public List<SlotDto> getAvailableSlots(Long userId, Long serviceId, LocalDate date) {
-        if (serviceId == null) {
-            return new ArrayList<>();
-        }
-        return getAvailableSlots(userId, List.of(serviceId), date);
-    }
-
     public List<SlotDto> getAvailableSlots(Long userId, List<Long> serviceIds, LocalDate date) {
         validateBookingUser(userId);
         validateSelectedDate(date);
@@ -215,52 +206,6 @@ public class CustomerAppointmentService {
                 request.getPatientNote()
         );
         return toDto(created);
-    }
-
-    @Transactional
-    public AppointmentDto rescheduleAppointment(Long userId, Long appointmentId, RescheduleAppointmentRequest request) {
-        if (request == null || request.getSelectedDate() == null || request.getSelectedTime() == null) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ngày và giờ đổi lịch là bắt buộc.");
-        }
-
-        Appointment appointment = appointmentRepository.findByIdWithSlotsAndCustomerUserId(appointmentId, userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
-
-        ensureRescheduleAllowed(appointment);
-
-        int totalDuration = resolveAppointmentDuration(appointment);
-        int slotsNeeded = calculateSlotsNeeded(totalDuration);
-
-        LocalDateTime newStart = LocalDateTime.of(request.getSelectedDate(), request.getSelectedTime());
-        LocalDateTime newEnd = calculateAppointmentEndDateTime(newStart, slotsNeeded);
-
-        validateNotInPast(newStart);
-        validateWorkingWindow(newStart, newEnd);
-        validateNoCustomerOverlap(userId, newStart.toLocalDate(), newStart.toLocalTime(), newEnd.toLocalTime(), appointment.getId());
-        validateNoDuplicateServiceInSameDay(userId, newStart.toLocalDate(), resolveAppointmentServiceIds(appointment), appointment.getId());
-
-        List<Slot> oldSlots = appointment.getAppointmentSlots().stream()
-                .map(AppointmentSlot::getSlot)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        List<Slot> newSlots = reserveSlots(newStart, slotsNeeded);
-        if (newSlots.isEmpty()) {
-            throw new BookingException(BookingErrorCode.SLOT_FULL, "Khung giờ đã hết chỗ.");
-        }
-
-        appointment.setDate(newStart.toLocalDate());
-        appointment.setStartTime(newStart.toLocalTime());
-        appointment.setEndTime(newEnd.toLocalTime());
-        appointment.clearAppointmentSlots();
-        for (int i = 0; i < newSlots.size(); i++) {
-            appointment.addAppointmentSlot(new AppointmentSlot(appointment, newSlots.get(i), i));
-        }
-
-        Appointment saved = appointmentRepository.save(appointment);
-        releaseSlots(oldSlots);
-
-        notificationService.notifyBookingUpdated(saved, "Thay đổi thời gian khám");
-        return toDto(saved);
     }
 
     @Transactional
@@ -470,10 +415,6 @@ public class CustomerAppointmentService {
         return appointment;
     }
 
-    public List<AppointmentDto> getMyAppointments(Long userId) {
-        return getMyAppointments(userId, "default");
-    }
-
     public List<AppointmentDto> getMyAppointments(Long userId, String view) {
         return findAppointmentsForView(userId, view).stream()
                 .map(this::toDto)
@@ -528,18 +469,6 @@ public class CustomerAppointmentService {
         }
 
         return dto;
-    }
-
-    public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size) {
-        return getMyAppointmentsPage(userId, page, size, null, "date_desc", "default");
-    }
-
-    public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword) {
-        return getMyAppointmentsPage(userId, page, size, keyword, "date_desc", "default");
-    }
-
-    public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword, String sort) {
-        return getMyAppointmentsPage(userId, page, size, keyword, sort, "default");
     }
 
     public Page<AppointmentDto> getMyAppointmentsPage(Long userId, int page, int size, String keyword, String sort, String view) {
@@ -817,7 +746,7 @@ public class CustomerAppointmentService {
 
         LocalDateTime endDateTime = calculateAppointmentEndDateTime(startDateTime, slotsNeeded);
         if (!isInsideWorkingWindow(startDateTime, endDateTime)) {
-            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Th\u1eddi gian n\u1eb1m ngo\u00e0i gi\u1edd l\u00e0m vi\u1ec7c.");
+            throw new BookingException(BookingErrorCode.OUTSIDE_WORKING_HOURS, "Thời gian nằm ngoài giờ làm việc.");
         }
 
         List<LocalDateTime> requiredSlotTimes = buildRequiredSlotTimes(startDateTime, slotsNeeded);
@@ -846,7 +775,7 @@ public class CustomerAppointmentService {
     private void releaseSlots(List<Slot> slots) {
         for (Slot slot : slots) {
             Slot locked = slotRepository.findBySlotTimeForUpdateRegardlessActive(slot.getSlotTime())
-                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung gi\u1edd kh\u00f4ng t\u1ed3n t\u1ea1i."));
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
 
             if (locked.getBookedCount() > 0) {
                 locked.setBookedCount(locked.getBookedCount() - 1);
@@ -1026,7 +955,7 @@ public class CustomerAppointmentService {
         }
 
         if (request.getPatientNote() != null && request.getPatientNote().length() > 500) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ghi ch\u00fa t\u1ed1i \u0111a 500 k\u00fd t\u1ef1.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Ghi chú tối đa 500 ký tự.");
         }
 
         if (request.getContactChannel() == null || request.getContactChannel().isBlank()) {
@@ -1043,7 +972,7 @@ public class CustomerAppointmentService {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số điện thoại/Zalo không hợp lệ.");
         }
         if ("EMAIL".equals(channel) && !EMAIL_PATTERN.matcher(value).matches()) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Email kh\u00f4ng h\u1ee3p l\u1ec7.");
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Email không hợp lệ.");
         }
         if (!List.of("PHONE", "ZALO", "EMAIL").contains(channel)) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Kênh liên hệ chỉ được: PHONE, ZALO, EMAIL.");
@@ -1110,7 +1039,7 @@ public class CustomerAppointmentService {
 
     private List<Services> validateServices(List<Long> serviceIds) {
         if (serviceIds == null || serviceIds.isEmpty()) {
-            throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Danh s\u00e1ch d\u1ecbch v\u1ee5 kh\u00f4ng h\u1ee3p l\u1ec7.");
+            throw new BookingException(BookingErrorCode.SERVICE_NOT_FOUND, "Danh sách dịch vụ không hợp lệ.");
         }
 
         Map<Long, Services> serviceMap = serviceRepository.findAllById(serviceIds)
@@ -1222,7 +1151,7 @@ public class CustomerAppointmentService {
     private LocalDateTime resolveStartDateTime(CreateAppointmentRequest request) {
         if (request.isOldFormat()) {
             Slot slot = slotRepository.findById(request.getSlotId())
-                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung gi\u1edd kh\u00f4ng t\u1ed3n t\u1ea1i."));
+                    .orElseThrow(() -> new BookingException(BookingErrorCode.SLOT_NOT_FOUND, "Khung giờ không tồn tại."));
             return slot.getSlotTime();
         }
         return LocalDateTime.of(request.getSelectedDate(), request.getSelectedTime());

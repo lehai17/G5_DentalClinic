@@ -13,17 +13,15 @@ import java.util.Optional;
 @Repository
 public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long> {
 
-    // 1. Tìm kiếm hồ sơ nh�n viên dựa trên ID của User
+    // 1. Tìm kiếm hồ sơ nhân viên dựa trên ID của User
     Optional<StaffProfile> findByUserId(Long userId);
 
-    // 2. Tìm nh�n viên theo số điện thoại
+    // 2. Tìm nhân viên theo số điện thoại
     Optional<StaffProfile> findByPhone(String phone);
 
     /**
-     * Lá»c danh sï¿½ch nhï¿½n viÃªn theo Tráº¡ng thï¿½i tÃ i khoáº£n vÃ  Vá»‹ trÃ­
-     * cÃ´ng viá»‡c
-     * Sá»­ dá»¥ng JOIN Ä‘á»ƒ truy cáº­p thuá»™c tÃ­nh status náº±m trong thá»±c
-     * thá»ƒ User
+     * Lọc danh sách nhân viên theo trạng thái tài khoản và vị trí công việc.
+     * Sử dụng JOIN để truy cập thuộc tính status nằm trong thực thể User.
      */
     // @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
     // "(:status IS NULL OR u.status = :status) AND " +
@@ -31,33 +29,31 @@ public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long
     // List<StaffProfile> filterStaffs(@Param("status") UserStatus status,
     // @Param("position") String position);
     // @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
-    // "(:status IS NULL OR u.status = :status) AND (" + // Bá»• sung lá»c status
+    // "(:status IS NULL OR u.status = :status) AND (" +
     // "(:position = 'Other' AND s.position != 'Receptionist') OR " +
     // "(:position != 'Other' AND s.position = :position) OR " +
     // "(:position IS NULL OR :position = '')" +
     // ")")
     // List<StaffProfile> filterStaffs(@Param("status") UserStatus status,
     // @Param("position") String position);
+
     /**
-     * Lọc danh sách nhân viên theo Từ khóa, Trạng thái tài khoản và Vị trí công
-     * việc.
-     * Hỗ trợ tìm kiếm theo Họ tên hoặc Số điện thoại.
+     * Lọc danh sách nhân viên theo từ khóa, trạng thái tài khoản và vị trí công việc.
+     * Hỗ trợ tìm kiếm theo họ tên hoặc số điện thoại.
      */
     @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
-            "(:keyword IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR s.phone LIKE CONCAT('%', :keyword, '%')) AND "
-            +
+            "(:keyword IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR s.phone LIKE CONCAT('%', :keyword, '%')) AND " +
             "(:status IS NULL OR u.status = :status) AND (" +
             "(:position = 'Other' AND s.position != 'Receptionist') OR " +
             "(:position != 'Other' AND s.position = :position) OR " +
             "(:position IS NULL OR :position = '')" +
             ")")
     List<StaffProfile> searchStaffs(@Param("keyword") String keyword,
-            @Param("status") UserStatus status,
-            @Param("position") String position);
+                                    @Param("status") UserStatus status,
+                                    @Param("position") String position);
 
     /**
-     * Äáº¿m sá»‘ lÆ°á»£ng nhï¿½n viÃªn dá»±a trÃªn tráº¡ng thï¿½i (DÃ¹ng cho cï¿½c
-     * Stat Cards)
+     * Đếm số lượng nhân viên dựa trên trạng thái (dùng cho các Stat Cards).
      */
     @Query("SELECT COUNT(s) FROM StaffProfile s WHERE s.user.status = :status")
     long countByUserStatus(@Param("status") UserStatus status);

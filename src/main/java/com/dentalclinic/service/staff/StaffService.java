@@ -22,10 +22,10 @@ public class StaffService {
     @Autowired
     private StaffProfileRepository staffProfileRepository;
 
-    // 1. Lưu nhï¿½n viên mới
+    // 1. Lưu nhân viên mới
     @Transactional
     public void saveStaff(StaffDTO dto) {
-        // KIỂM TRA EMAIL TỒN T� I TRƯỚC
+        // KIỂM TRA EMAIL TỒN TẠI TRƯỚC
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email n\u00e0y \u0111\u00e3 \u0111\u01b0\u1ee3c s\u1eed d\u1ee5ng trong h\u1ec7 th\u1ed1ng!");
         }
@@ -36,7 +36,7 @@ public class StaffService {
         user.setStatus(UserStatus.ACTIVE);
         user.setDateOfBirth(dto.getDateOfBirth());
 
-        // Ã‰p kiểu String từ DTO sang Enum Gender của User Entity
+        // Ép kiểu String từ DTO sang Enum Gender của User Entity
         if (dto.getGender() != null) {
             user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
         }
@@ -52,7 +52,7 @@ public class StaffService {
         staffProfileRepository.save(profile);
     }
 
-    // 2. Khóa t� i khoản nhï¿½n viên
+    // 2. Khóa tài khoản nhân viên
     @Transactional
     public void deactivateStaff(Long userId) {
         userRepository.findById(userId).ifPresent(user -> {
@@ -80,7 +80,7 @@ public class StaffService {
         return staffProfileRepository.searchStaffs(kwParam, status, posParam);
     }
 
-    // 4. Cï¿½c phương thức bổ trợ cho Stat Cards
+    // 4. Các phương thức bổ trợ cho Stat Cards
     public long countTotal() {
         return staffProfileRepository.count();
     }
@@ -101,7 +101,7 @@ public class StaffService {
         userRepository.save(user);
     }
 
-    // 5. Lấy thông tin nhï¿½n viên để cập nhật
+    // 5. Lấy thông tin nhân viên để cập nhật
     public com.dentalclinic.dto.admin.UpdateStaffDTO getStaffForUpdate(Long id) {
         StaffProfile profile = staffProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Kh\u00f4ng t\u00ecm th\u1ea5y nh\u00e2n vi\u00ean"));
@@ -125,11 +125,11 @@ public class StaffService {
         return dto;
     }
 
-    // 6. Cập nhật nhï¿½n viên
+    // 6. Cập nhật nhân viên
     @Transactional
     public void updateStaff(Long id, com.dentalclinic.dto.admin.UpdateStaffDTO dto) {
         StaffProfile profile = staffProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhï¿½n viên"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
         User user = profile.getUser();
         if (user == null) {
