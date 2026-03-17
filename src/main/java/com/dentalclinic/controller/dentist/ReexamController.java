@@ -99,7 +99,9 @@ public class ReexamController {
             RedirectAttributes redirect
     ) {
         try {
-            Appointment saved = reexamService.createOrUpdateReexam(
+            boolean existedBefore = reexamService.getExistingReexam(appointmentId).isPresent();
+
+            reexamService.createOrUpdateReexam(
                     appointmentId,
                     date,
                     startTime,
@@ -108,7 +110,7 @@ public class ReexamController {
                     serviceId
             );
             
-            String msg = reexamService.getExistingReexam(appointmentId).isPresent() 
+            String msg = existedBefore
                     ? "Reexam updated successfully"
                     : "Reexam created successfully";
             redirect.addFlashAttribute("successMessage", msg);
@@ -118,9 +120,8 @@ public class ReexamController {
             return "redirect:/dentist/reexam/" + appointmentId + 
                     (weekStart != null ? "?weekStart=" + weekStart : "");
         }
-        
-        redirect.addAttribute("weekStart", weekStart);
-        return "redirect:/dentist/work-schedule" + 
+
+        return "redirect:/dentist/reexam/" + appointmentId +
                 (weekStart != null ? "?weekStart=" + weekStart : "");
     }
     
