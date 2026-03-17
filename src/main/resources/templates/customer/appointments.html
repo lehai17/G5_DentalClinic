@@ -161,6 +161,22 @@
         <span>Số tiền cần thanh toán</span>
         <strong id="cap-payment-amount">0 VND</strong>
       </div>
+      <div class="cap-payment-modal__line" id="cap-payment-original-line" hidden>
+        <span>Tạm tính trước voucher</span>
+        <strong id="cap-payment-original-amount">0 VND</strong>
+      </div>
+      <div class="cap-payment-modal__line" id="cap-payment-discount-line" hidden>
+        <span>Giảm giá voucher</span>
+        <strong id="cap-payment-discount-amount">0 VND</strong>
+      </div>
+      <div class="cap-payment-voucher">
+        <label class="cap-payment-voucher__label" for="cap-payment-voucher-code">Mã voucher</label>
+        <div class="cap-payment-voucher__row">
+          <input type="text" id="cap-payment-voucher-code" maxlength="50" placeholder="Nhập mã voucher nếu có">
+          <button type="button" id="cap-payment-voucher-apply">Áp dụng</button>
+        </div>
+        <div class="cap-payment-voucher__hint" id="cap-payment-voucher-feedback"></div>
+      </div>
     </div>
 
     <div class="cap-payment-modal__methods">

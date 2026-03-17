@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ví voucher - GENZ CLINIC</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .voucher-wallet-shell {
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+    .voucher-wallet-hero,
+    .voucher-wallet-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.06);
+    }
+    .voucher-wallet-hero {
+      padding: 28px 32px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .voucher-wallet-hero h1 {
+      margin: 6px 0 10px;
+      font-size: 32px;
+      color: #1b2559;
+      font-weight: 800;
+    }
+    .voucher-wallet-hero p {
+      margin: 0;
+      color: #64748b;
+      max-width: 760px;
+      line-height: 1.7;
+    }
+    .voucher-wallet-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .voucher-wallet-count {
+      min-width: 140px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+      color: #fff;
+      text-align: center;
+    }
+    .voucher-wallet-count strong {
+      display: block;
+      font-size: 32px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .voucher-wallet-card {
+      padding: 24px;
+    }
+    .voucher-wallet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .voucher-wallet-item {
+      border-radius: 22px;
+      padding: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .voucher-wallet-item__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .voucher-wallet-code {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: .03em;
+    }
+    .voucher-wallet-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .voucher-wallet-item__title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+    }
+    .voucher-wallet-item__desc {
+      color: #475569;
+      line-height: 1.7;
+      min-height: 52px;
+    }
+    .voucher-wallet-meta {
+      display: grid;
+      gap: 10px;
+      margin-top: auto;
+    }
+    .voucher-wallet-meta__row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      font-size: 14px;
+      color: #334155;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.28);
+    }
+    .voucher-wallet-meta__row strong {
+      color: #0f172a;
+      font-weight: 800;
+      text-align: right;
+    }
+    .voucher-wallet-empty {
+      padding: 56px 20px;
+      text-align: center;
+      color: #64748b;
+    }
+    .voucher-wallet-empty i {
+      display: block;
+      font-size: 42px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 900px) {
+      .voucher-wallet-hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .voucher-wallet-count {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="customer-page-section">
+      <div class="voucher-wallet-shell">
+        <div class="voucher-wallet-hero">
+          <div>
+            <span class="voucher-wallet-eyebrow"><i class="bi bi-ticket-perforated"></i> Ưu đãi của bạn</span>
+            <h1>Ví voucher</h1>
+            <p>
+              Tất cả voucher đang hoạt động từ hệ thống sẽ được hiển thị tại đây để bạn dễ theo dõi
+              và sử dụng khi thanh toán phần còn lại của lịch hẹn.
+            </p>
+          </div>
+
+          <div class="voucher-wallet-count">
+            <strong th:text="${voucherWalletCount}">0</strong>
+            <span>voucher khả dụng</span>
+          </div>
+        </div>
+
+        <div class="voucher-wallet-card">
+          <div class="voucher-wallet-grid" th:if="${!#lists.isEmpty(vouchers)}">
+            <article class="voucher-wallet-item" th:each="voucher : ${vouchers}">
+              <div class="voucher-wallet-item__head">
+                <span class="voucher-wallet-code" th:text="${voucher.code}">GENZ50K</span>
+                <span class="voucher-wallet-chip">
+                  <i class="bi bi-patch-check-fill"></i>
+                  <span>Đang hoạt động</span>
+                </span>
+              </div>
+
+              <h2 class="voucher-wallet-item__title" th:text="${voucherService.buildDiscountLabel(voucher)}">Giảm 50.000 VND</h2>
+              <div class="voucher-wallet-item__desc"
+                   th:text="${#strings.isEmpty(voucher.description) ? 'Voucher ưu đãi đang sẵn sàng để dùng khi thanh toán.' : voucher.description}">
+                Mô tả voucher
+              </div>
+
+              <div class="voucher-wallet-meta">
+                <div class="voucher-wallet-meta__row">
+                  <span>Đơn tối thiểu</span>
+                  <strong th:text="${#numbers.formatDecimal(voucher.minOrderAmount, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</strong>
+                </div>
+                <div class="voucher-wallet-meta__row">
+                  <span>Thời gian hiệu lực</span>
+                  <strong th:text="${#temporals.format(voucher.startDateTime, 'dd/MM HH:mm') + ' - ' + #temporals.format(voucher.endDateTime, 'dd/MM HH:mm')}">17/03 08:00 - 30/03 23:59</strong>
+                </div>
+                <div class="voucher-wallet-meta__row">
+                  <span>Lượt sử dụng</span>
+                  <strong th:text="${voucherService.buildUsageLabel(voucher)}">Không giới hạn lượt dùng</strong>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="voucher-wallet-empty" th:if="${#lists.isEmpty(vouchers)}">
+            <i class="bi bi-ticket-perforated"></i>
+            <div>Hiện tại chưa có voucher nào đang hoạt động để hiển thị trong ví voucher.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
