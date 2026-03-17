@@ -33,7 +33,7 @@ public class DentistProfileController {
         model.addAttribute("age",
                 profileService.calculateAge(profile.getUser()));
 
-        return "dentist/profile";
+        return "Dentist/profile";
     }
 
     // ================= EDIT FORM =================
@@ -42,7 +42,7 @@ public class DentistProfileController {
         String email = authentication.getName();
         DentistProfileEditDTO dto = profileService.getEditDTO(email);
         model.addAttribute("editDTO", dto);
-        return "dentist/profile-edit";
+        return "Dentist/profile-edit";
     }
 
     // ================= SAVE =================
@@ -75,7 +75,7 @@ public class DentistProfileController {
         }
 
         if (result.hasErrors()) {
-            return "dentist/profile-edit";
+            return "Dentist/profile-edit";
         }
 
         String email = authentication.getName();

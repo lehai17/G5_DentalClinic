@@ -24,7 +24,9 @@ import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +80,34 @@ public class SupportService {
         }
         return userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy người dùng hiện tại."));
+    }
+
+    @Transactional(readOnly = true)
+    public User getCurrentUser(Authentication authentication) {
+        String email = extractEmail(authentication);
+        if (email == null || email.isBlank()) {
+            throw new SupportAccessDeniedException("Unable to identify current account.");
+        }
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new SupportAccessDeniedException("Current user not found."));
+    }
+
+    private String extractEmail(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        }
+        if (principal instanceof OAuth2User oauth2User) {
+            Object email = oauth2User.getAttributes().get("email");
+            return email != null ? String.valueOf(email) : null;
+        }
+
+        String name = authentication.getName();
+        return (name == null || name.isBlank()) ? null : name;
     }
 
     @Transactional
