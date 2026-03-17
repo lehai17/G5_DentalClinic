@@ -99,6 +99,8 @@ public class ReexamController {
             RedirectAttributes redirect
     ) {
         try {
+            boolean existedBefore = reexamService.getExistingReexam(appointmentId).isPresent();
+
             Appointment saved = reexamService.createOrUpdateReexam(
                     appointmentId,
                     date,
@@ -108,7 +110,7 @@ public class ReexamController {
                     serviceId
             );
             
-            String msg = reexamService.getExistingReexam(appointmentId).isPresent() 
+            String msg = existedBefore
                     ? "Reexam updated successfully"
                     : "Reexam created successfully";
             redirect.addFlashAttribute("successMessage", msg);
