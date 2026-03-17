@@ -1,24 +1,24 @@
 ﻿<aside
   th:fragment="sidebar"
   id="sidebar"
-  class="patient-sidebar d-flex flex-column"
+  class="patient-sidebar"
   xmlns:th="http://www.w3.org/1999/xhtml"
 >
-  <div
-    class="d-flex align-items-center justify-content-between p-4 border-bottom sidebar-header"
-  >
-    <div class="d-flex align-items-center gap-3 logo-wrapper">
-      <div class="logo-icon"></div>
-      <span class="logo-text fw-bold" style="color: #667eea; font-size: 1.25rem"
-        >GENZ CLINIC</span
-      >
-    </div>
-    <button type="button" class="toggle-btn" onclick="toggleSidebar()">
+  <div class="sidebar-header">
+    <a th:href="@{/homepage}" class="logo-link" aria-label="Về trang chủ">
+      <div class="logo-wrapper">
+        <div class="logo-icon"></div>
+        <span class="logo-text"
+          >GENZ CLINIC</span
+        >
+      </div>
+    </a>
+    <button type="button" class="toggle-btn" id="customer-sidebar-toggle" onclick="toggleSidebar()">
       <i class="bi bi-list"></i>
     </button>
   </div>
 
-  <nav class="flex-grow-1 px-3 py-4 d-flex flex-column gap-1 sidebar-nav">
+  <nav class="sidebar-nav">
     <a
       th:href="@{/customer/book}"
       th:classappend="${active == 'booking'} ? ' active'"
@@ -75,7 +75,7 @@
   </nav>
 
 
-  <div class="p-3 border-top">
+  <div class="sidebar-footer">
     <a th:href="@{/logout}" class="menu-item logout">
       <i class="bi bi-box-arrow-right"></i>
       <span>Đăng xuất</span>
