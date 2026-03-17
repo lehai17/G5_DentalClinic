@@ -11,6 +11,7 @@ import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.customer.CustomerProfileService;
+import com.dentalclinic.service.review.ReviewMarketingService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,19 +35,22 @@ public class CustomerHomepageController {
     private final BlogRepository blogRepo;
     private final UserRepository userRepository;
     private final CustomerAppointmentService customerAppointmentService;
+    private final ReviewMarketingService reviewMarketingService;
 
     public CustomerHomepageController(CustomerProfileService profileService,
                                       ServiceRepository serviceRepo,
                                       DentistProfileRepository dentistRepo,
                                       BlogRepository blogRepo,
                                       UserRepository userRepository,
-                                      CustomerAppointmentService customerAppointmentService) {
+                                      CustomerAppointmentService customerAppointmentService,
+                                      ReviewMarketingService reviewMarketingService) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
         this.blogRepo = blogRepo;
         this.userRepository = userRepository;
         this.customerAppointmentService = customerAppointmentService;
+        this.reviewMarketingService = reviewMarketingService;
     }
 
     @GetMapping({"/", "/index", "/home"})
@@ -59,6 +63,7 @@ public class CustomerHomepageController {
                                Authentication authentication,
                                Model model) {
         model.addAttribute("active", "homepage");
+        model.addAttribute("featuredReviews", reviewMarketingService.getHomepageFeaturedReviews());
         Long currentCustomerId = resolveCurrentUserId(authentication);
         if (currentCustomerId == null) {
             return "redirect:/login";
@@ -74,7 +79,6 @@ public class CustomerHomepageController {
                 model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
             }
             model.addAttribute("customer", profile);
-
             model.addAttribute("services", serviceRepo.findByActiveTrue());
             model.addAttribute("dentists", dentistRepo.filterDentists(null, null, UserStatus.ACTIVE));
 

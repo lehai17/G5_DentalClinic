@@ -903,72 +903,46 @@
         applySuggestion: function (payload) {
             if (!payload) return;
 
-            var selectedDateInput = document.getElementById('selected-date');
-            var selectedTimeInput = document.getElementById('selected-time');
+            var slotIdInput = document.getElementById('customer-booking-slot-id');
+
+            if (payload.serviceId) {
+                document.querySelectorAll('.customer-service-checkbox').forEach(function (cb) {
+                    cb.checked = String(cb.value) === String(payload.serviceId);
+                });
+            }
 
             if (payload.date) {
                 state.selectedDate = payload.date;
-                if (selectedDateInput) {
-                    selectedDateInput.value = payload.date;
-                }
             }
 
             if (payload.startTime) {
                 state.selectedSlot = {
-                    id: 'ai-selected-slot',
+                    id: payload.slotId || 'ai-selected-slot',
                     startTime: payload.startTime,
-                    endTime: payload.endTime || null
+                    endTime: payload.endTime || null,
+                    available: true,
+                    disabled: false,
+                    availableSpots: 1
                 };
+            } else {
+                state.selectedSlot = null;
+            }
 
-                if (selectedTimeInput) {
-                    selectedTimeInput.value = payload.startTime;
-                }
+            if (slotIdInput) {
+                slotIdInput.value = payload.slotId || '';
             }
 
             renderCalendar();
             updateSummary();
 
-            if (payload.date) {
-                setStep(2);
-                loadSlotsForDate(payload.date).then(function () {
-                    if (!payload.startTime || !Array.isArray(state.renderedSlots)) return;
+            setStep(3);
 
-                    var matched = state.renderedSlots.find(function (slot) {
-                        var hasSpotsValue = slot.availableSpots !== undefined && slot.availableSpots !== null;
-                        var availableSpots = hasSpotsValue ? Number(slot.availableSpots) : null;
-                        var isDisabled = slot.disabled === true;
-                        var isFull = hasSpotsValue ? availableSpots <= 0 : slot.available === false;
-                        var isAvailable = !isDisabled && !isFull;
-
-                        return String(slot.startTime) === String(payload.startTime) && isAvailable;
-                    });
-
-                    if (matched) {
-                        state.selectedSlot = matched;
-
-                        if (selectedTimeInput) {
-                            selectedTimeInput.value = matched.startTime;
-                        }
-
-                        var slotGrid = document.getElementById('time-slots-grid');
-                        if (slotGrid) {
-                            applySelectedSlotVisualState(slotGrid);
-                        }
-
-                        updateSummary();
-                    } else {
-                        state.selectedSlot = null;
-
-                        if (selectedTimeInput) {
-                            selectedTimeInput.value = '';
-                        }
-
-                        updateSummary();
-                    }
-                });
+            var summaryCol = document.getElementById('booking-summary');
+            if (summaryCol) {
+                summaryCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
-            showAlert('Đã áp dụng gợi ý AI vào form đặt lịch.', 'success', 'Thành công');
+            showAlert('Đã áp dụng gợi ý AI. Bạn hãy điền thông tin liên hệ để tiếp tục.', 'success', 'Thành công');
         }
     };
 

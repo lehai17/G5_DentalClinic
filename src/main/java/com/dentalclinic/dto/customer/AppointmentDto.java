@@ -44,6 +44,8 @@ public class AppointmentDto {
     private List<AppointmentPrescriptionItemDto> prescriptionItems;
     private String cancellationReason;
     private boolean depositRefunded;
+    private Integer dentistReviewRating;
+    private Integer serviceReviewRating;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -119,4 +121,8 @@ public class AppointmentDto {
     public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
     public boolean isDepositRefunded() { return depositRefunded; }
     public void setDepositRefunded(boolean depositRefunded) { this.depositRefunded = depositRefunded; }
+    public Integer getDentistReviewRating() {return dentistReviewRating;}
+    public void setDentistReviewRating(Integer dentistReviewRating) {this.dentistReviewRating = dentistReviewRating;}
+    public Integer getServiceReviewRating() {return serviceReviewRating;}
+    public void setServiceReviewRating(Integer serviceReviewRating) {this.serviceReviewRating = serviceReviewRating;}
 }

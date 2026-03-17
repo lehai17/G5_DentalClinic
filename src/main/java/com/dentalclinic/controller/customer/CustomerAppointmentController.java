@@ -178,13 +178,18 @@ public class CustomerAppointmentController {
                                           @Valid @RequestBody CreateReviewRequest request,
                                           HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
 
         var review = customerAppointmentService.createReview(userId, id, request);
+
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Đã gửi đánh giá bác sĩ thành công.",
-                "rating", review.getRating(),
+                "message", "Đã gửi đánh giá bác sĩ và dịch vụ thành công.",
+                "dentistRating", review.getDentistRating(),
+                "serviceRating", review.getServiceRating(),
                 "comment", review.getComment() == null ? "" : review.getComment()
         ));
     }

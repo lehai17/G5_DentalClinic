@@ -593,31 +593,65 @@ public class CustomerAppointmentService {
         appointmentRepository.save(appointment);
     }
 
+
     @Transactional
     public Review createReview(Long userId, Long appointmentId, CreateReviewRequest request) {
         validateBookingUser(userId);
-        if (request == null || request.getRating() == null) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn số sao đánh giá.");
+
+        if (request == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Dữ liệu đánh giá không hợp lệ.");
+        }
+
+        if (request.getDentistRating() == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn số sao đánh giá bác sĩ.");
+        }
+
+        if (request.getServiceRating() == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Vui lòng chọn số sao đánh giá dịch vụ.");
         }
 
         Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy lịch hẹn để đánh giá."));
+                .orElseThrow(() -> new BookingException(
+                        BookingErrorCode.APPOINTMENT_NOT_FOUND,
+                        "Không tìm thấy lịch hẹn để đánh giá."
+                ));
 
         if (!(appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.DONE)) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ có thể đánh giá sau khi lịch hẹn đã hoàn thành.");
+            throw new BookingException(
+                    BookingErrorCode.APPOINTMENT_STATUS_INVALID,
+                    "Chỉ có thể đánh giá sau khi lịch hẹn đã hoàn thành."
+            );
         }
 
         if (appointment.getDentist() == null) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Lịch hẹn này chưa có thông tin bác sĩ để đánh giá.");
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Lịch hẹn này chưa có thông tin bác sĩ để đánh giá."
+            );
         }
 
         if (reviewRepository.existsByAppointment_Id(appointmentId)) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Lịch hẹn này đã được đánh giá trước đó.");
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Lịch hẹn này đã được đánh giá trước đó."
+            );
         }
 
-        int rating = request.getRating();
-        if (rating < 1 || rating > 5) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Số sao đánh giá phải từ 1 đến 5.");
+        int dentistRating = request.getDentistRating();
+        int serviceRating = request.getServiceRating();
+
+        if (dentistRating < 1 || dentistRating > 5) {
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Số sao đánh giá bác sĩ phải từ 1 đến 5."
+            );
+        }
+
+        if (serviceRating < 1 || serviceRating > 5) {
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Số sao đánh giá dịch vụ phải từ 1 đến 5."
+            );
         }
 
         String comment = request.getComment() == null ? null : request.getComment().trim();
@@ -625,15 +659,36 @@ public class CustomerAppointmentService {
             comment = null;
         }
         if (comment != null && comment.length() > 500) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Nội dung đánh giá tối đa 500 ký tự.");
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Nội dung đánh giá tối đa 500 ký tự."
+            );
+        }
+
+        Services reviewedService = appointment.getService();
+        if (reviewedService == null
+                && appointment.getAppointmentDetails() != null
+                && !appointment.getAppointmentDetails().isEmpty()
+                && appointment.getAppointmentDetails().get(0).getService() != null) {
+            reviewedService = appointment.getAppointmentDetails().get(0).getService();
+        }
+
+        if (reviewedService == null) {
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Lịch hẹn này chưa có thông tin dịch vụ để đánh giá."
+            );
         }
 
         Review review = new Review();
         review.setAppointment(appointment);
         review.setCustomer(appointment.getCustomer());
         review.setDentist(appointment.getDentist());
-        review.setRating(rating);
+        review.setService(reviewedService);
+        review.setDentistRating(dentistRating);
+        review.setServiceRating(serviceRating);
         review.setComment(comment);
+
         return reviewRepository.save(review);
     }
 
@@ -717,7 +772,7 @@ public class CustomerAppointmentService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
+
     private List<Slot> reserveSlots(LocalDateTime startDateTime, int slotsNeeded) {
         if (!startDateTime.isAfter(nowDateTime())) {
             throw new BookingException(BookingErrorCode.BOOKING_IN_PAST, "Không thể đặt lịch trong quá khứ.");
@@ -753,7 +808,7 @@ public class CustomerAppointmentService {
         return locked;
     }
 
-    @Transactional
+
     private void releaseSlots(List<Slot> slots) {
         for (Slot slot : slots) {
             Slot locked = slotRepository.findBySlotTimeForUpdateRegardlessActive(slot.getSlotTime())
@@ -770,7 +825,7 @@ public class CustomerAppointmentService {
         }
     }
 
-    @Transactional
+
     private Appointment createPendingAppointment(CustomerProfile customer,
                                                  List<Services> selectedServices,
                                                  BookingTotals totals,
@@ -845,7 +900,7 @@ public class CustomerAppointmentService {
         return appointment;
     }
 
-    @Transactional
+
     private Appointment confirmAppointmentEntity(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
@@ -858,7 +913,7 @@ public class CustomerAppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    @Transactional
+
     private Appointment cancelAppointmentEntity(Long appointmentId, String reason, boolean refundIfEligible) {
         Appointment appointment = appointmentRepository.findByIdWithSlots(appointmentId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
@@ -1487,7 +1542,8 @@ public class CustomerAppointmentService {
 
         reviewRepository.findByAppointment_Id(appointment.getId()).ifPresent(review -> {
             dto.setReviewed(true);
-            dto.setReviewRating(review.getRating());
+            dto.setDentistReviewRating(review.getDentistRating());
+            dto.setServiceReviewRating(review.getServiceRating());
             dto.setReviewComment(review.getComment());
             dto.setReviewCreatedAt(review.getCreatedAt());
         });
