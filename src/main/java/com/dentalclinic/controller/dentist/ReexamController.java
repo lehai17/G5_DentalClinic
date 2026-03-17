@@ -66,7 +66,6 @@ public class ReexamController {
 
         Optional<Appointment> existingReexam =
                 reexamService.getExistingReexamForDentist(appointmentId, dentistUserId);
-        boolean isReadOnly = reexamService.isReadOnlyMode(original.getStatus());
         boolean isUpdate = existingReexam.isPresent();
 
         Appointment reexam = existingReexam.orElse(new Appointment());
@@ -83,7 +82,6 @@ public class ReexamController {
         model.addAttribute("originalAppointmentStatus", original.getStatus().name());
         model.addAttribute("reexam", reexam);
         model.addAttribute("isUpdate", isUpdate);
-        model.addAttribute("isReadOnly", isReadOnly);
         model.addAttribute("originalAppointment", original);
         model.addAttribute("originalServiceLabel", originalServiceLabel);
         model.addAttribute("preferServicePlaceholder", preferPlaceholder);

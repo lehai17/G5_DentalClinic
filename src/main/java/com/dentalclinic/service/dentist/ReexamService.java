@@ -54,13 +54,16 @@ public class ReexamService {
                status == AppointmentStatus.WAITING_PAYMENT;
     }
     
-    /**
-     * Check if page should be in read-only mode
-     */
-    public boolean isReadOnlyMode(AppointmentStatus status) {
-        return status == AppointmentStatus.DONE ||
-               status == AppointmentStatus.COMPLETED ||
-               status == AppointmentStatus.WAITING_PAYMENT;
+    private AppointmentStatus resolveNewReexamStatus(AppointmentStatus originalStatus) {
+        return shouldActivateReexamImmediately(originalStatus)
+                ? AppointmentStatus.CONFIRMED
+                : AppointmentStatus.REEXAM;
+    }
+
+    private boolean shouldActivateReexamImmediately(AppointmentStatus status) {
+        return status == AppointmentStatus.DONE
+                || status == AppointmentStatus.COMPLETED
+                || status == AppointmentStatus.WAITING_PAYMENT;
     }
     
     /**
@@ -149,6 +152,10 @@ public class ReexamService {
             reexam.setStartTime(newStartTime);
             reexam.setEndTime(newEndTime);
             reexam.setNotes(notes);
+            if (shouldActivateReexamImmediately(original.getStatus())
+                    && reexam.getStatus() == AppointmentStatus.REEXAM) {
+                reexam.setStatus(AppointmentStatus.CONFIRMED);
+            }
             
             // Update service if provided
             if (serviceId != null) {
@@ -202,7 +209,7 @@ public class ReexamService {
             reexam.setStartTime(newStartTime);
             reexam.setEndTime(newEndTime);
             reexam.setNotes(notes);
-            reexam.setStatus(AppointmentStatus.REEXAM);
+            reexam.setStatus(resolveNewReexamStatus(original.getStatus()));
             reexam.setOriginalAppointment(original);
             reexam.setContactChannel(original.getContactChannel());
             reexam.setContactValue(original.getContactValue());
@@ -233,11 +240,11 @@ public class ReexamService {
                     "This is not a reexam appointment");
         }
         
-        // Verify original appointment status allows deletion
+        // Allow deleting reexam for any status that is allowed to manage reexam
         Appointment original = reexam.getOriginalAppointment();
-        if (original.getStatus() != AppointmentStatus.EXAMINING) {
+        if (!isReexamAvailable(original.getStatus())) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
-                    "Can only delete reexam when original appointment status is EXAMINING");
+                    "Cannot delete reexam for appointment with status: " + original.getStatus());
         }
         
         // Collect slots to release
