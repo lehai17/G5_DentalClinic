@@ -151,10 +151,6 @@ public class DentistSessionService {
             throw new IllegalStateException("Billing view is not allowed for this status");
         }
 
-        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
-            throw new IllegalStateException("Only EXAMINING appointment can be billed");
-        }
-
         BillingNote bn = billingNoteRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
                         appointmentId, customerUserId

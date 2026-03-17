@@ -12,6 +12,7 @@ import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.NotificationRepository;
+import com.dentalclinic.repository.SupportTicketRepository;
 import com.dentalclinic.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,13 +48,16 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
+    private final SupportTicketRepository supportTicketRepository;
 
     public NotificationService(NotificationRepository notificationRepository,
                                UserRepository userRepository,
-                               AppointmentRepository appointmentRepository) {
+                               AppointmentRepository appointmentRepository,
+                               SupportTicketRepository supportTicketRepository) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
+        this.supportTicketRepository = supportTicketRepository;
     }
 
     @Transactional
@@ -248,13 +252,16 @@ public class NotificationService {
      * - filter: all | unread | read
      * - category: ALL | APPOINTMENT | BUSY | SUPPORT
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<Notification> getDentistNotifications(Long recipientId,
                                                       Pageable pageable,
                                                       String filter,
                                                       String category,
                                                       String keyword) {
-        List<Notification> all = notificationRepository.findByUser_IdOrderByCreatedAtDesc(recipientId);
+        List<Notification> all = sanitizeDentistNotifications(
+                notificationRepository.findByUser_IdOrderByCreatedAtDesc(recipientId),
+                recipientId
+        );
 
         String safeFilter = filter == null ? "all" : filter.trim().toLowerCase(Locale.ROOT);
         String safeCategory = category == null ? "ALL" : category.trim().toUpperCase(Locale.ROOT);
@@ -285,6 +292,48 @@ public class NotificationService {
                 pageable,
                 filtered.size()
         );
+    }
+
+    private List<Notification> sanitizeDentistNotifications(List<Notification> notifications, Long recipientId) {
+        List<Notification> sanitized = new ArrayList<>();
+        for (Notification notification : notifications) {
+            if (notification == null) {
+                continue;
+            }
+
+            boolean relatedAvailable = isRelatedTargetAvailable(notification);
+            notification.setRelatedAvailable(relatedAvailable);
+
+            if (!relatedAvailable && isSupportNotification(notification)) {
+                notificationRepository.deleteOwned(notification.getId(), recipientId);
+                continue;
+            }
+
+            sanitized.add(notification);
+        }
+        return sanitized;
+    }
+
+    private boolean isRelatedTargetAvailable(Notification notification) {
+        if (notification == null || !isSupportNotification(notification)) {
+            return true;
+        }
+        Long referenceId = notification.getReferenceId();
+        if (referenceId == null) {
+            return false;
+        }
+        return supportTicketRepository.existsById(referenceId);
+    }
+
+    private boolean isSupportNotification(Notification notification) {
+        if (notification == null) {
+            return false;
+        }
+        if (notification.getReferenceType() == NotificationReferenceType.TICKET) {
+            return true;
+        }
+        String url = notification.getUrl();
+        return url != null && url.startsWith("/dentist/support");
     }
 
     private boolean matchesReadFilter(Notification n, String filter) {
@@ -396,6 +445,7 @@ public class NotificationService {
         if (!notification.getUser().getId().equals(recipientId)) {
             throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo này.");
         }
+        notification.setRelatedAvailable(isRelatedTargetAvailable(notification));
         return notification;
     }
 

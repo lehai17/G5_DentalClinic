@@ -51,16 +51,23 @@
             <div class="detail-card">
                 <div class="detail-header">
                     <div>
-                        <div class="detail-name" th:text="${ticket.customer.customerProfile.fullName}"></div>
-                        <div class="detail-meta">Mã phiếu: <span th:text="${ticket.id}"></span></div>
+                        <div class="detail-name"
+                             th:text="${ticket.customerDisplayName != null and !#strings.isEmpty(ticket.customerDisplayName) ? ticket.customerDisplayName : 'Bệnh nhân'}">
+                            Bệnh nhân
+                        </div>
+                        <div class="detail-meta">Mã phiếu: <span th:text="${ticket.id}">0</span></div>
                     </div>
 
                     <span th:class="'badge ' + (${ticket.displayStatus} == 'OPEN' ? 'open' : 'closed')"
-                          th:text="${ticket.displayStatus}"></span>
+                          th:text="${ticket.displayStatus}">OPEN</span>
                 </div>
 
-                <div th:if="${successMessage}" style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:#dcfce7;color:#166534;" th:text="${successMessage}"></div>
-                <div th:if="${errorMessage}" style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:#fee2e2;color:#991b1b;" th:text="${errorMessage}"></div>
+                <div th:if="${successMessage}"
+                     style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:#dcfce7;color:#166534;"
+                     th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}"
+                     style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:#fee2e2;color:#991b1b;"
+                     th:text="${errorMessage}"></div>
 
                 <div class="detail-section">
                     <div class="detail-section-title">Tiêu đề</div>
@@ -71,10 +78,10 @@
                     <div class="detail-section-title">Lịch sử trao đổi</div>
                     <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
                         <div th:each="entry : ${ticket.conversationEntries}"
-                             th:style="${entry.customerSide} ? 'margin-left:auto;max-width:80%;padding:14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;' : 'margin-right:auto;max-width:80%;padding:14px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;'">
+                             th:style="${entry.customer} ? 'margin-left:auto;max-width:80%;padding:14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;' : 'margin-right:auto;max-width:80%;padding:14px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;'">
                             <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:8px;font-size:12px;color:#64748b;">
-                                <strong style="color:#0f172a;" th:text="${entry.customerSide} ? 'Bệnh nhân' : entry.senderLabel"></strong>
-                                <span th:text="${entry.createdAt != null ? #temporals.format(entry.createdAt, 'dd/MM/yyyy HH:mm') : ''}"></span>
+                                <strong style="color:#0f172a;" th:text="${entry.customer} ? 'Bệnh nhân' : entry.senderLabel">Bệnh nhân</strong>
+                                <span th:text="${entry.timestamp != null ? #temporals.format(entry.timestamp, 'dd/MM/yyyy HH:mm') : ''}"></span>
                             </div>
                             <div style="white-space:pre-wrap;color:#1e293b;line-height:1.6;" th:text="${entry.content}"></div>
                         </div>

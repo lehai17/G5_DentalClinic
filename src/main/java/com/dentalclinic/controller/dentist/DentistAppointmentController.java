@@ -89,8 +89,7 @@ public class DentistAppointmentController {
                         .map(ps -> ps.getService().getId())
                         .toList()
         );
-        // history records for past exams
-        model.addAttribute("historyRecords", java.util.Collections.emptyList());
+        model.addAttribute("historySteps", medicalRecordService.findReexamHistorySteps(id));
 
         return "Dentist/examination";
     }
