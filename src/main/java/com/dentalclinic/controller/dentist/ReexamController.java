@@ -82,6 +82,8 @@ public class ReexamController {
         model.addAttribute("originalAppointmentStatus", original.getStatus().name());
         model.addAttribute("reexam", reexam);
         model.addAttribute("isUpdate", isUpdate);
+        model.addAttribute("canEditReexam", !isUpdate || reexamService.canEditReexam(reexam.getStatus()));
+        model.addAttribute("canDeleteReexam", isUpdate && reexamService.canDeleteReexam(reexam.getStatus()));
         model.addAttribute("originalAppointment", original);
         model.addAttribute("originalServiceLabel", originalServiceLabel);
         model.addAttribute("preferServicePlaceholder", preferPlaceholder);

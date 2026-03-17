@@ -53,6 +53,16 @@ public class ReexamService {
                status == AppointmentStatus.COMPLETED ||
                status == AppointmentStatus.WAITING_PAYMENT;
     }
+
+    public boolean canDeleteReexam(AppointmentStatus status) {
+        return status == AppointmentStatus.CONFIRMED
+                || status == AppointmentStatus.REEXAM;
+    }
+
+    public boolean canEditReexam(AppointmentStatus status) {
+        return status == AppointmentStatus.CONFIRMED
+                || status == AppointmentStatus.REEXAM;
+    }
     
     private AppointmentStatus resolveNewReexamStatus(AppointmentStatus originalStatus) {
         return shouldActivateReexamImmediately(originalStatus)
@@ -140,7 +150,11 @@ public class ReexamService {
         if (existing.isPresent()) {
             // Update existing reexam
             Appointment reexam = existing.get();
-            
+            if (!canEditReexam(reexam.getStatus())) {
+                throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                        "Cannot update reexam with status: " + reexam.getStatus());
+            }
+             
             // Clear old slots
             List<Slot> oldSlots = reexam.getAppointmentSlots().stream()
                     .map(AppointmentSlot::getSlot)
@@ -240,11 +254,10 @@ public class ReexamService {
                     "This is not a reexam appointment");
         }
         
-        // Allow deleting reexam for any status that is allowed to manage reexam
-        Appointment original = reexam.getOriginalAppointment();
-        if (!isReexamAvailable(original.getStatus())) {
+        // Only allow deleting reexam before it has started
+        if (!canDeleteReexam(reexam.getStatus())) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
-                    "Cannot delete reexam for appointment with status: " + original.getStatus());
+                    "Cannot delete reexam with status: " + reexam.getStatus());
         }
         
         // Collect slots to release
