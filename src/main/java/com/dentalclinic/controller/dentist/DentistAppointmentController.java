@@ -68,7 +68,7 @@ public class DentistAppointmentController {
         if (appt.getStatus() == AppointmentStatus.CONFIRMED) {
             return buildWorkScheduleRedirect(weekStart);
         }
-        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT 
+        // Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT
         if (appt.getStatus() != AppointmentStatus.DONE
                 && appt.getStatus() != AppointmentStatus.COMPLETED
                 && appt.getStatus() != AppointmentStatus.WAITING_PAYMENT
@@ -107,32 +107,32 @@ public class DentistAppointmentController {
         return "Dentist/examination";
     }
 
-    @PostMapping("/{id}/examination")
-    public String saveExamination(
-            @PathVariable Long id,
-            @RequestParam Long customerUserId,
-            @ModelAttribute MedicalRecord medicalRecord,
-            @RequestParam(required = false) String weekStart, // âœ… THÊM
-            RedirectAttributes redirect,
-            Authentication authentication
-    ) {
-        try {
-            dentistSessionService.saveExam(
-                    id,
-                    customerUserId,
-                    resolveCurrentDentistUserId(authentication),
-                    medicalRecord
-            );
-        } catch (IllegalArgumentException ex) {
-            redirect.addFlashAttribute("errorMessage", ex.getMessage());
-            return buildWorkScheduleRedirect(weekStart);
-        }
-        redirect.addFlashAttribute("successMessage", "Examination saved");
-
-        return "redirect:/dentist/appointments/" + id +
-                "/examination?customerUserId=" + customerUserId +
-                "&weekStart=" + weekStart;
+@PostMapping("/{id}/examination")
+public String saveExamination(
+        @PathVariable Long id,
+        @RequestParam Long customerUserId,
+        @ModelAttribute MedicalRecord medicalRecord,
+        @RequestParam(required = false) String weekStart,
+        RedirectAttributes redirect,
+        Authentication authentication
+) {
+    try {
+        dentistSessionService.saveExam(
+                id,
+                customerUserId,
+                resolveCurrentDentistUserId(authentication),
+                medicalRecord
+        );
+    } catch (IllegalArgumentException ex) {
+        redirect.addFlashAttribute("errorMessage", ex.getMessage());
+        return buildWorkScheduleRedirect(weekStart);
     }
+    redirect.addFlashAttribute("successMessage", "Examination saved");
+
+    return "redirect:/dentist/appointments/" + id +
+            "/examination?customerUserId=" + customerUserId +
+            "&weekStart=" + weekStart;
+}
 
     /* ================= BILLING ================= */
 

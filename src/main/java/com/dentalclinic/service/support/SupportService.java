@@ -111,11 +111,6 @@ public class SupportService {
     }
 
     @Transactional
-    public SupportTicket createTicket(Long customerUserId, String question) {
-        return createTicket(customerUserId, null, "Hỗ trợ chuyên môn", question);
-    }
-
-    @Transactional
     public SupportTicket createTicket(Long customerUserId, Long appointmentId, String title, String question) {
         User customer = requireCustomer(customerUserId);
         String safeTitle = normalizeTitle(title);
@@ -167,25 +162,6 @@ public class SupportService {
                 .stream()
                 .filter(this::isEligibleSupportAppointment)
                 .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<SupportTicket> getMyTickets(Long customerUserId) {
-        requireCustomer(customerUserId);
-        return supportTicketRepository.findByCustomer_IdOrderByCreatedAtDesc(customerUserId)
-                .stream()
-                .map(this::hydrateTicket)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public Page<SupportTicket> getMyTicketsPage(Long customerUserId, int page, int size) {
-        return getMyTicketsPage(customerUserId, page, size, null, "newest");
-    }
-
-    @Transactional(readOnly = true)
-    public Page<SupportTicket> getMyTicketsPage(Long customerUserId, int page, int size, String keyword) {
-        return getMyTicketsPage(customerUserId, page, size, keyword, "newest");
     }
 
     @Transactional(readOnly = true)
@@ -650,15 +626,48 @@ public class SupportService {
         if (responder == null) {
             return "Phòng khám";
         }
-        String fullName = resolveUserFullName(responder);
+        String fullName = stripRolePrefix(resolveUserFullName(responder));
         if (responder.getRole() == Role.DENTIST) {
             return "Bác sĩ " + fullName;
         }
         if (responder.getRole() == Role.ADMIN) {
-            return "Qu?n tr? vi?n " + fullName;
+            return "Quản trị viên " + fullName;
         }
-        return "L? t?n " + fullName;
+        return "Lễ tân " + fullName;
     }
+
+    private String stripRolePrefix(String fullName) {
+        if (fullName == null) {
+            return "";
+        }
+
+        String normalized = fullName.trim();
+        if (normalized.isEmpty()) {
+            return normalized;
+        }
+
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("bác sĩ ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("bac si ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("lễ tân ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("le tan ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("quản trị viên ")) {
+            return normalized.substring(13).trim();
+        }
+        if (lower.startsWith("quan tri vien ")) {
+            return normalized.substring(14).trim();
+        }
+        return normalized;
+    }
+
 
     private String resolveTicketResponderDisplayName(SupportTicket ticket) {
         if (ticket.getDentist() != null) {

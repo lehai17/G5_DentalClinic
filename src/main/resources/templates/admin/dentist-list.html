@@ -1,16 +1,16 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý bác sĩ - GENZ CLINIC</title>
+    <title>QuÃ¡ÂºÂ£n lÃƒÂ½ bÃƒÂ¡c sÃ„Â© - GENZ CLINIC</title>
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* CSS nội bộ để định hình khung Dashboard theo máº«u cá»§a báº¡n */
+        /* CSS nÃ¡Â»â„¢i bÃ¡Â»â„¢ Ã„â€˜Ã¡Â»Æ’ Ã„â€˜Ã¡Â»â€¹nh hÃƒÂ¬nh khung Dashboard theo mÃƒÂ¡Ã‚ÂºÃ‚Â«u cÃƒÂ¡Ã‚Â»Ã‚Â§a bÃƒÂ¡Ã‚ÂºÃ‚Â¡n */
         :root {
             --sidebar-color: #1A237E;
-            /* Màu Navy Blue tá»« máº«u GENZ CLINIC */
+            /* MÃƒÂ u Navy Blue tÃƒÂ¡Ã‚Â»Ã‚Â« mÃƒÂ¡Ã‚ÂºÃ‚Â«u GENZ CLINIC */
             --bg-light: #F4F7FE;
             --navy-dark: #1B2559;
         }
@@ -23,7 +23,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Navigation - GIỮ NGUYÊN THEO CODE CỦA BẠN */
+        /* Sidebar Navigation - GIÃ¡Â»Â® NGUYÃƒÅ N THEO CODE CÃ¡Â»Â¦A BÃ¡ÂºÂ N */
         .sidebar {
             width: 250px;
             background: var(--sidebar-color);
@@ -71,7 +71,7 @@
             border-left: 4px solid #fff;
         }
 
-        /* Main Content & Header - CẬP NHẬT KHOẢNG TRỐNG */
+        /* Main Content & Header - CÃ¡ÂºÂ¬P NHÃ¡ÂºÂ¬T KHOÃ¡ÂºÂ¢NG TRÃ¡Â»ÂNG */
         .main-content {
             flex: 1;
             padding: 30px;
@@ -207,7 +207,7 @@
             border-bottom: 1px solid #F4F7FE;
         }
 
-        /* Badges & Thao t?c */
+        /* Badges v? thao t?c */
         .status-badge {
             padding: 6px 14px;
             border-radius: 10px;
@@ -425,35 +425,35 @@
 
 <body>
 
-    <!-- DÙNG SIDEBAR FRAGMENT -->
+    <!-- DÃƒâ„¢NG SIDEBAR FRAGMENT -->
     <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
     <div class="main-content">
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 20px;">
 
-            <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">Bác sĩ</h2>
+            <h2 style="color: var(--navy-dark); margin: 0; min-width: fit-content;">BÃƒÂ¡c sÃ„Â©</h2>
 
             <!-- Search wrapper removed from here -->
 
             <a th:href="@{/admin/dentists/add}"
                 style="background: #1A237E; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 12px rgba(26,35,126,0.2); min-width: fit-content;">
-                <i class="fas fa-plus"></i> Thêm bác sĩ
+                <i class="fas fa-plus"></i> ThÃƒÂªm bÃƒÂ¡c sÃ„Â©
             </a>
         </div>
 
         <div class="stats-container">
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TỔNG BÁC SĨ
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TÃ¡Â»â€NG BÃƒÂC SÃ„Â¨
                 </div>
                 <div class="stat-value" th:text="${totalDentists}">0</div>
             </div>
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TRỰC HÔM NAY</div>
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">TRÃ¡Â»Â°C HÃƒâ€M NAY</div>
                 <div class="stat-value" th:text="${onDutyCount}">0</div>
             </div>
             <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">ĐÁNH GIÁ TRUNG BÌNH
+                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">Ã„ÂÃƒÂNH GIÃƒÂ TRUNG BÃƒÅ’NH
                 </div>
                 <div class="stat-value">4.8/5.0</div>
             </div>
@@ -465,34 +465,34 @@
                     <i class="fas fa-search"
                         style="color: #A3AED0; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"></i>
                     <input type="text" id="searchInput" class="search-input"
-                        style="padding-left: 40px; min-width: 250px;" placeholder="Tìm theo tên hoặc chuyên khoa..."
+                        style="padding-left: 40px; min-width: 250px;" placeholder="TÃƒÂ¬m theo tÃƒÂªn hoÃ¡ÂºÂ·c chuyÃƒÂªn khoa..."
                         th:value="${keyword}">
                 </div>
                 <div class="filter-item">
-                    <span class="filter-label">CHUYÊN KHOA:</span>
+                    <span class="filter-label">CHUYÃƒÅ N KHOA:</span>
                     <select id="specialtyFilter">
-                        <option value="">Tất cả chuyên khoa</option>
+                        <option value="">TÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ chuyÃƒÂªn khoa</option>
                         <option value="Orthodontics" th:selected="${selectedSpecialty == 'Orthodontics'}">
-                            Chỉnh nha (Niềng răng)</option>
-                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">Nội nha</option>
+                            ChÃ¡Â»â€°nh nha (NiÃ¡Â»Âng rÃ„Æ’ng)</option>
+                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">NÃ¡Â»â„¢i nha</option>
                         <option value="Periodontics" th:selected="${selectedSpecialty == 'Periodontics'}">Chu nha
                         </option>
-                        <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">Phục hình
+                        <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">PhÃ¡Â»Â¥c hÃƒÂ¬nh
                         </option>
-                        <option value="Oral Surgery" th:selected="${selectedSpecialty == 'Oral Surgery'}">Phẫu thuật
-                            miệng</option>
+                        <option value="Oral Surgery" th:selected="${selectedSpecialty == 'Oral Surgery'}">PhÃ¡ÂºÂ«u thuÃ¡ÂºÂ­t
+                            miÃ¡Â»â€¡ng</option>
                         <option value="General Dentistry" th:selected="${selectedSpecialty == 'General Dentistry'}">Nha
-                            khoa tổng quát</option>
+                            khoa tÃ¡Â»â€¢ng quÃƒÂ¡t</option>
                         <option value="Pediatric Dentistry" th:selected="${selectedSpecialty == 'Pediatric Dentistry'}">
-                            Nha khoa trẻ em</option>
+                            Nha khoa trÃ¡ÂºÂ» em</option>
                     </select>
                 </div>
                 <div class="filter-item">
-                    <span class="filter-label">TRẠNG THÁI:</span>
+                    <span class="filter-label">TRÃ¡ÂºÂ NG THÃƒÂI:</span>
                     <select id="statusFilter">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Hoạt động</option>
-                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Đã khóa</option>
+                        <option value="">TÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ trÃ¡ÂºÂ¡ng thÃƒÂ¡i</option>
+                        <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">HoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng</option>
+                        <option value="LOCKED" th:selected="${selectedStatus == 'LOCKED'}">Ã„ÂÃƒÂ£ khÃƒÂ³a</option>
                     </select>
                 </div>
             </div>
@@ -501,7 +501,7 @@
                     style="display: none; border: 3px solid #f3f3f3; border-top: 3px solid #1A237E; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-right: 10px;">
                 </div>
                 <div style="color: #A3AED0; font-size: 12px; font-weight: 700;" id="resultCount">
-                    Hiển thị <span th:text="${#lists.size(dentists)}">0</span> bác sĩ
+                    HiÃ¡Â»Æ’n thÃ¡Â»â€¹ <span th:text="${#lists.size(dentists)}">0</span> bÃƒÂ¡c sÃ„Â©
                 </div>
             </div>
         </div>
@@ -516,7 +516,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content" style="border-radius: 15px; border: none;">
                 <div class="modal-header" style="background: #1A237E; color: white;">
-                    <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi tiết hồ sơ bác sĩ</h5>
+                    <h5 class="modal-title"><i class="fas fa-id-card me-2"></i>Chi tiÃ¡ÂºÂ¿t hÃ¡Â»â€œ sÃ†Â¡ bÃƒÂ¡c sÃ„Â©</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -539,31 +539,31 @@
                         <div class="col-md-8">
                             <div class="row g-3">
                                 <div class="col-6">
-                                    <label class="text-muted small">Địa chỉ email</label>
+                                    <label class="text-muted small">Ã„ÂÃ¡Â»â€¹a chÃ¡Â»â€° email</label>
                                     <p id="viewEmail" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Số điện thoại</label>
+                                    <label class="text-muted small">SÃ¡Â»â€˜ Ã„â€˜iÃ¡Â»â€¡n thoÃ¡ÂºÂ¡i</label>
                                     <p id="viewPhone" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Ngày sinh</label>
+                                    <label class="text-muted small">NgÃƒÂ y sinh</label>
                                     <p id="viewDob" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Giới tính</label>
+                                    <label class="text-muted small">GiÃ¡Â»â€ºi tÃƒÂ­nh</label>
                                     <p id="viewGender" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Số năm kinh nghiệm</label>
+                                    <label class="text-muted small">SÃ¡Â»â€˜ nÃ„Æ’m kinh nghiÃ¡Â»â€¡m</label>
                                     <p id="viewExp" class="fw-bold">--</p>
                                 </div>
                                 <div class="col-12">
-                                    <label class="text-muted small">Bằng cấp và chứng chỉ</label>
+                                    <label class="text-muted small">BÃ¡ÂºÂ±ng cÃ¡ÂºÂ¥p vÃƒÂ  chÃ¡Â»Â©ng chÃ¡Â»â€°</label>
                                     <p id="viewQuals" class="p-2 bg-light rounded" style="font-size: 0.9rem;">--</p>
                                 </div>
                                 <div class="col-12">
-                                    <label class="text-muted small">Lịch làm việc</label>
+                                    <label class="text-muted small">LÃ¡Â»â€¹ch lÃƒÂ m viÃ¡Â»â€¡c</label>
                                     <div id="viewSchedule" class="mt-1">
                                     </div>
                                 </div>
@@ -585,22 +585,22 @@
         <div class="modal-content" style="width: 450px;">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #F44336; font-size: 18px;">
-                    <i class="fas fa-exclamation-triangle me-2" style="margin-right: 10px;"></i>Xác nhận xóa
+                    <i class="fas fa-exclamation-triangle me-2" style="margin-right: 10px;"></i>XÃƒÂ¡c nhÃ¡ÂºÂ­n xÃƒÂ³a
                 </h5>
                 <span class="close-btn" onclick="closeDeleteModal()">&times;</span>
             </div>
             <div class="modal-body" style="text-align: center;">
                 <p style="color: #1B2559; font-size: 15px; margin-bottom: 20px;">
-                    Bạn có chắc chắn muốn xóa bác sĩ <strong id="deleteDentistName"></strong> không? <br>
-                    <span style="color: #F44336; font-size: 13px;">Hành động này không thể hoàn tác.</span>
+                    BÃ¡ÂºÂ¡n cÃƒÂ³ chÃ¡ÂºÂ¯c chÃ¡ÂºÂ¯n muÃ¡Â»â€˜n xÃƒÂ³a bÃƒÂ¡c sÃ„Â© <strong id="deleteDentistName"></strong> khÃƒÂ´ng? <br>
+                    <span style="color: #F44336; font-size: 13px;">HÃƒÂ nh Ã„â€˜Ã¡Â»â„¢ng nÃƒÂ y khÃƒÂ´ng thÃ¡Â»Æ’ hoÃƒÂ n tÃƒÂ¡c.</span>
                 </p>
                 <div style="display: flex; justify-content: center; gap: 15px;">
                     <button type="button" onclick="closeDeleteModal()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Hủy</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">HÃ¡Â»Â§y</button>
                     <button type="button" onclick="confirmDeleteDentist()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa
-                        bác sĩ
-                        Nha Sĩ</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">XÃƒÂ³a
+                        bÃƒÂ¡c sÃ„Â©
+                        Nha SÃ„Â©</button>
                 </div>
             </div>
         </div>
@@ -611,14 +611,14 @@
         <div class="modal-content" style="width: 800px;">
             <div class="modal-header">
                 <h5 style="margin: 0; color: #1B2559; font-size: 18px;"><i class="fas fa-user-md me-2"
-                        style="color: #1A237E; margin-right: 10px;"></i>Chỉnh sửa hồ sơ bác sĩ</h5>
+                        style="color: #1A237E; margin-right: 10px;"></i>ChÃ¡Â»â€°nh sÃ¡Â»Â­a hÃ¡Â»â€œ sÃ†Â¡ bÃƒÂ¡c sÃ„Â©</h5>
                 <span class="close-btn" onclick="closeEditModal()">&times;</span>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <form id="editDentistForm" method="POST" enctype="multipart/form-data">
                     <input type="hidden" id="editDentistId" name="id">
 
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Thông tin cá nhân</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">ThÃƒÂ´ng tin cÃƒÂ¡ nhÃƒÂ¢n</h6>
                     <div class="info-grid">
                         <div style="grid-row: span 3; text-align: center;">
                             <div class="avatar-circle"
@@ -638,7 +638,7 @@
                             </div>
                             <input type="file" id="editAvatarInput" name="avatarFile" accept="image/*"
                                 style="display: none;" onchange="previewEditAvatar(this)">
-                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">ĐỔI ẢNH</small>
+                            <small style="color: #A3AED0; font-weight: 700; font-size: 10px;">Ã„ÂÃ¡Â»â€I Ã¡ÂºÂ¢NH</small>
                         </div>
                         <script>
                             function previewEditAvatar(input) {
@@ -655,110 +655,110 @@
                         </script>
 
                         <div class="input-group">
-                            <label>Họ và tên</label>
+                            <label>HÃ¡Â»Â vÃƒÂ  tÃƒÂªn</label>
                             <div class="input-wrapper"><input type="text" id="editFullName" name="fullName" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Địa chỉ email</label>
+                            <label>Ã„ÂÃ¡Â»â€¹a chÃ¡Â»â€° email</label>
                             <div class="input-wrapper"><input type="email" id="editEmail" name="email" required></div>
                         </div>
                         <div class="input-group">
-                            <label>Số điện thoại</label>
+                            <label>SÃ¡Â»â€˜ Ã„â€˜iÃ¡Â»â€¡n thoÃ¡ÂºÂ¡i</label>
                             <div class="input-wrapper"><input type="text" id="editPhone" name="phone" required
-                                    pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
+                                    pattern="^(0|\+84)[0-9]{9}$" title="SÃ¡Â»â€˜ Ã„â€˜iÃ¡Â»â€¡n thoÃ¡ÂºÂ¡i khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡"></div>
                         </div>
                         <div class="input-group">
-                            <label>Ngày sinh</label>
+                            <label>NgÃƒÂ y sinh</label>
                             <div class="input-wrapper"><input type="date" id="editDob" name="dateOfBirth" required>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Giới tính</label>
+                            <label>GiÃ¡Â»â€ºi tÃƒÂ­nh</label>
                             <div class="input-wrapper">
                                 <select id="editGender" name="gender" required>
                                     <option value="MALE">Nam</option>
-                                    <option value="FEMALE">Nữ</option>
-                                    <option value="OTHER">Khác</option>
+                                    <option value="FEMALE">NÃ¡Â»Â¯</option>
+                                    <option value="OTHER">KhÃƒÂ¡c</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Trạng thái</label>
+                            <label>TrÃ¡ÂºÂ¡ng thÃƒÂ¡i</label>
                             <div class="input-wrapper">
                                 <select id="editStatus" name="status" required>
-                                    <option value="ACTIVE">Hoạt động</option>
-                                    <option value="LOCKED">Đã khóa</option>
+                                    <option value="ACTIVE">HoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng</option>
+                                    <option value="LOCKED">Ã„ÂÃƒÂ£ khÃƒÂ³a</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Thông tin chuyên môn</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">ThÃƒÂ´ng tin chuyÃƒÂªn mÃƒÂ´n</h6>
                     <div class="info-grid">
                         <div class="input-group">
-                            <label>Chuyên khoa</label>
+                            <label>ChuyÃƒÂªn khoa</label>
                             <div class="input-wrapper">
                                 <select id="editSpecialty" name="specialization" required>
-                                    <option value="Orthodontics">Chỉnh nha (Niềng răng)</option>
-                                    <option value="Endodontics">Nội nha</option>
+                                    <option value="Orthodontics">ChÃ¡Â»â€°nh nha (NiÃ¡Â»Âng rÃ„Æ’ng)</option>
+                                    <option value="Endodontics">NÃ¡Â»â„¢i nha</option>
                                     <option value="Periodontics">Chu nha</option>
-                                    <option value="Prosthodontics">Phục hình</option>
-                                    <option value="Oral Surgery">Phẫu thuật miệng</option>
-                                    <option value="General Dentistry">Nha khoa tổng quát</option>
-                                    <option value="Pediatric Dentistry">Nha khoa trẻ em</option>
+                                    <option value="Prosthodontics">PhÃ¡Â»Â¥c hÃƒÂ¬nh</option>
+                                    <option value="Oral Surgery">PhÃ¡ÂºÂ«u thuÃ¡ÂºÂ­t miÃ¡Â»â€¡ng</option>
+                                    <option value="General Dentistry">Nha khoa tÃ¡Â»â€¢ng quÃƒÂ¡t</option>
+                                    <option value="Pediatric Dentistry">Nha khoa trÃ¡ÂºÂ» em</option>
                                 </select>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Số năm kinh nghiệm</label>
+                            <label>SÃ¡Â»â€˜ nÃ„Æ’m kinh nghiÃ¡Â»â€¡m</label>
                             <div class="input-wrapper"><input type="number" id="editExperienceYears"
                                     name="experienceYears" min="0" required></div>
                         </div>
                         <div class="input-group" style="grid-column: span 2;">
-                            <label>Tiểu sử</label>
+                            <label>TiÃ¡Â»Æ’u sÃ¡Â»Â­</label>
                             <div class="input-wrapper"><textarea id="editBio" name="bio" rows="3"
                                     style="resize: vertical;"></textarea></div>
                         </div>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #E0E5F2; margin: 20px 0;">
-                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">Lịch làm việc</h6>
+                    <h6 style="color: #1B2559; font-size: 14px; margin-bottom: 15px;">LÃ¡Â»â€¹ch lÃƒÂ m viÃ¡Â»â€¡c</h6>
                     <div class="info-grid">
                         <div class="input-group" style="grid-column: span 2;">
-                            <label>Ngày làm việc</label>
+                            <label>NgÃƒÂ y lÃƒÂ m viÃ¡Â»â€¡c</label>
                             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="MONDAY"> Thứ Hai</label>
+                                        type="checkbox" name="availableDays" value="MONDAY"> ThÃ¡Â»Â© Hai</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="TUESDAY"> Thứ Ba</label>
+                                        type="checkbox" name="availableDays" value="TUESDAY"> ThÃ¡Â»Â© Ba</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="WEDNESDAY"> Thứ Tư</label>
+                                        type="checkbox" name="availableDays" value="WEDNESDAY"> ThÃ¡Â»Â© TÃ†Â°</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="THURSDAY"> Thứ Năm</label>
+                                        type="checkbox" name="availableDays" value="THURSDAY"> ThÃ¡Â»Â© NÃ„Æ’m</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="FRIDAY"> Thứ Sáu</label>
+                                        type="checkbox" name="availableDays" value="FRIDAY"> ThÃ¡Â»Â© SÃƒÂ¡u</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="SATURDAY"> Thứ Bảy</label>
+                                        type="checkbox" name="availableDays" value="SATURDAY"> ThÃ¡Â»Â© BÃ¡ÂºÂ£y</label>
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; text-transform: none; font-size: 13px; color: #1B2559;"><input
-                                        type="checkbox" name="availableDays" value="SUNDAY"> Chủ nhật</label>
+                                        type="checkbox" name="availableDays" value="SUNDAY"> ChÃ¡Â»Â§ nhÃ¡ÂºÂ­t</label>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Giờ bắt đầu ca</label>
+                            <label>GiÃ¡Â»Â bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u ca</label>
                             <div class="input-wrapper"><input type="time" id="editShiftStartTime" name="shiftStartTime">
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>Giờ kết thúc ca</label>
+                            <label>GiÃ¡Â»Â kÃ¡ÂºÂ¿t thÃƒÂºc ca</label>
                             <div class="input-wrapper"><input type="time" id="editShiftEndTime" name="shiftEndTime">
                             </div>
                         </div>
@@ -766,10 +766,10 @@
 
                     <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
                         <button type="button" onclick="closeEditModal()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">Hủy</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #A3AED0; font-weight: 700; cursor: pointer;">HÃ¡Â»Â§y</button>
                         <button type="submit"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">Lưu
-                            thay đổi</button>
+                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #1A237E; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(26,35,126,0.2);">LÃ†Â°u
+                            thay Ã„â€˜Ã¡Â»â€¢i</button>
                     </div>
                 </form>
             </div>
@@ -781,7 +781,7 @@
         var successMsg = /*[[${success}]]*/ null;
         var errorMsg = /*[[${error}]]*/ null;
 
-        // Xử lý Delete Logic
+        // XÃ¡Â»Â­ lÃƒÂ½ Delete Logic
         let dentistToDelete = null;
 
         function openDeleteModal(id, name) {
@@ -808,7 +808,7 @@
                     closeDeleteModal();
                     if (data.success) {
                         showToast(data.message, 'success');
-                        // XÃ³a dÃ²ng tÆ°Æ¡ng Ã¡Â»Â©ng khá»i DOM
+                        // XÃƒÆ’Ã‚Â³a dÃƒÆ’Ã‚Â²ng tÃƒâ€ Ã‚Â°Ãƒâ€ Ã‚Â¡ng ÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â©ng khÃƒÂ¡Ã‚Â»Ã‚Âi DOM
                         const row = document.getElementById('dentist-row-' + idToDelete);
                         if (row) {
                             row.remove();
@@ -819,7 +819,7 @@
                 })
                 .catch(error => {
                     closeDeleteModal();
-                    showToast("Lỗi kết nối máy chủ", "error");
+                    showToast("LÃ¡Â»â€”i kÃ¡ÂºÂ¿t nÃ¡Â»â€˜i mÃƒÂ¡y chÃ¡Â»Â§", "error");
                 });
         }
 
@@ -875,7 +875,7 @@
                     document.getElementById('editDentistModal').style.display = 'block';
                 })
                 .catch(error => {
-                    showToast("Không thể tải dữ liệu", "error");
+                    showToast("KhÃƒÂ´ng thÃ¡Â»Æ’ tÃ¡ÂºÂ£i dÃ¡Â»Â¯ liÃ¡Â»â€¡u", "error");
                 });
         }
 
@@ -883,7 +883,7 @@
             document.getElementById('editDentistModal').style.display = 'none';
         }
 
-        // Đóng Edit Modal khi click bên ngo� i
+        // Ã„ÂÃƒÂ³ng Edit Modal khi click bÃƒÂªn ngoÃ¯Â¿Â½Ã‚Â i
         window.addEventListener('click', function (event) {
             let editModal = document.getElementById('editDentistModal');
             if (event.target == editModal) {
@@ -931,7 +931,7 @@
                     const rows = doc.querySelectorAll('tbody tr');
                     const countElem = document.getElementById('resultCount');
                     if (countElem) {
-                        countElem.innerHTML = `Hiển thị <span>${rows.length}</span> bác sĩ`;
+                        countElem.innerHTML = `HiÃ¡Â»Æ’n thÃ¡Â»â€¹ <span>${rows.length}</span> bÃƒÂ¡c sÃ„Â©`;
                     }
                 })
                 .catch(error => {

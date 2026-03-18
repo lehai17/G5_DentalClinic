@@ -33,7 +33,7 @@ public class StaffAppointmentController {
         LocalDate startDate = today;
         LocalDate endDate = today;
 
-        // Xï¿½c định khoảng thời gian
+        // Xác định khoảng thời gian
         switch (view) {
             case "week" -> {
                 startDate = today.with(DayOfWeek.MONDAY);
@@ -166,7 +166,7 @@ public class StaffAppointmentController {
         }
     }
 
-    @GetMapping("/appointments/available-dentists") // Thêm /appointments v? o dï¿½y
+    @GetMapping("/appointments/available-dentists") // Thêm /appointments vào đây
     @ResponseBody
     public ResponseEntity<List<DentistProfile>> getAvailableDentists(@RequestParam Long appointmentId) {
         List<DentistProfile> availableDentists = staffAppointmentService.getAvailableDentistsForAppointment(appointmentId);

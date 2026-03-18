@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
@@ -146,7 +146,7 @@
         startDateInput.setAttribute('min', todayStr);
         endDateInput.setAttribute('min', todayStr);
 
-        // 2. LẤY DỮ LIỆU ĐÃ ĐĂNG KÝ TỪ BẢNG (Để check trùng)
+        // 2. LẤY DỮ LIỆU ĐÃ ĐĂNG KÝ TỪ BẢNG (để kiểm tra trùng)
         function getBookedRanges() {
             const historyRows = document.querySelectorAll('.history-row');
             return Array.from(historyRows)
@@ -178,14 +178,14 @@
 
             // Kiểm tra 1: Ngày quá khứ
             if (startVal < todayVal) {
-                showError("Không được chọn ngày trong quá khứ.");
+                showError('Không được chọn ngày trong quá khứ.');
                 startDateInput.classList.add('input-error');
                 return false;
             }
 
             // Kiểm tra 2: Thứ tự ngày
             if (endVal < startVal) {
-                showError("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+                showError('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.');
                 endDateInput.classList.add('input-error');
                 return false;
             }
@@ -193,7 +193,7 @@
             // Kiểm tra 3: Tối đa 2 ngày (dayDiff > 1)
             const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
             if (dayDiff > 1) {
-                showError("Thời gian nghỉ mỗi đơn không được quá 2 ngày liên tiếp.");
+                showError('Thời gian nghỉ mỗi đơn không được quá 2 ngày liên tiếp.');
                 endDateInput.classList.add('input-error');
                 return false;
             }
@@ -205,7 +205,7 @@
             });
 
             if (isOverlapping) {
-                showError("Thời gian này trùng với một yêu cầu nghỉ khác đã đăng ký.");
+                showError('Thời gian này trùng với một yêu cầu nghỉ khác đã đăng ký.');
                 startDateInput.classList.add('input-error');
                 endDateInput.classList.add('input-error');
                 return false;
