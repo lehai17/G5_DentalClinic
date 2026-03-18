@@ -95,7 +95,7 @@ public class DentistService {
         }
 
         // ĐIỀU KIỆN 2: Kiểm tra năm kinh nghiệm (không quá tuổi trừ đi 22 năm học
-        // đại học)
+        // đại
         // học)
         int experienceYears = dto.getExperienceYears();
         int maxAllowedExperience = age - 22;
@@ -127,7 +127,7 @@ public class DentistService {
         }
 
         dentistProfileRepository.save(profile);
-        // Đây là dòng quan trọng nhất: lưu dữ liệu vào bảng users
+        // ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT: Lưu dữ liệu vào bảng users
         user.setDateOfBirth(dto.getDateOfBirth());
 
         userRepository.save(user);
@@ -227,7 +227,7 @@ public class DentistService {
 
     public void updateDentistStatus(Long userId, UserStatus status) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Kh?ng t?m th?y ng??i d?ng"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         user.setStatus(status);
         userRepository.save(user);
     }
@@ -250,7 +250,7 @@ public class DentistService {
         dto.setExperienceYears(profile.getExperienceYears());
         dto.setBio(profile.getBio() != null ? profile.getBio() : "Chưa có tiểu sử.");
         dto.setAvatarPath(profile.getAvatar());
-        // 2. Dữ liệu từ User (phải dùng đúng tên hàm trong User.java)
+        // 2. Dữ liệu từ User (Phải dùng đúng tên hàm trong User.java)
         if (profile.getUser() != null) {
             dto.setEmail(profile.getUser().getEmail());
             // Đảm bảo tên hàm này khớp với User.java (getDateOfBirth hoặc getDob)
@@ -260,7 +260,7 @@ public class DentistService {
             }
         }
 
-        // 3. Xử lý lịch trực an toàn
+        // 3. Xử lý Lịch trực an toàn
         if (profile.getSchedules() != null) {
             dto.setSchedules(profile.getSchedules());
         } else {
@@ -372,7 +372,7 @@ public class DentistService {
 
         dentistProfileRepository.save(profile);
 
-        // Cập nhật lịch làm việc
+        // Cập nhật Lịch làm việc
         dentistScheduleRepository.deleteAll(profile.getSchedules());
         profile.getSchedules().clear();
 
@@ -401,7 +401,7 @@ public class DentistService {
         DentistProfile profile = dentistProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nha sĩ!"));
 
-        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.DONE, AppointmentStatus.COMPLETED, AppointmentStatus.WAITING_PAYMENT);
+        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED);
         int upcomingCount = appointmentRepository.countUpcomingAppointments(id, LocalDate.now(), excludedStatuses);
 
         if (upcomingCount > 0) {
@@ -421,7 +421,7 @@ public class DentistService {
     }
 
     public List<DentistProfile> getAvailableDentistsForDate(LocalDate date) {
-        // Lấy ra thứ trong tuần từ ngày chọn (ví dụ: MONDAY, TUESDAY...)
+        // Lấy ra thứ trong tuần từ ngày chọn (Ví dụ: MONDAY, TUESDAY...)
         java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
 
         // Gọi hàm Repository mới đã sửa

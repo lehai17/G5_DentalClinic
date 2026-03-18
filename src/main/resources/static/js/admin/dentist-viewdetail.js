@@ -1,7 +1,7 @@
 ﻿// File: static/js/admin/dentist-viewdetail.js
 function showDentistDetail(element) {
     try {
-        // 1. Lấy dữ liệu an to� n
+        // 1. Lấy dữ liệu an toàn
         const name = element.getAttribute('data-fullname') || 'N/A';
         const email = element.getAttribute('data-email') || 'N/A';
         // ... lấy các trường khác tương tự ...
@@ -18,4 +18,3 @@ function showDentistDetail(element) {
         console.error("Lỗi hiển thị Modal:", error);
     }
 }
-

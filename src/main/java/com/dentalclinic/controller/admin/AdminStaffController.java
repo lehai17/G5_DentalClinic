@@ -96,7 +96,7 @@ public class AdminStaffController {
         try {
             // Gọi hàm dùng chung để đưa trạng thái về ACTIVE
             staffService.updateStaffStatus(id, UserStatus.ACTIVE);
-            ra.addFlashAttribute("success", "\u0110\u00e3 m\u1edf kh\u00f3a nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
+            ra.addFlashAttribute("success", "Đã mở khóa nhân viên thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -122,7 +122,7 @@ public class AdminStaffController {
             @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
             org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
-            ra.addFlashAttribute("error", "Ki\u1ec3m tra l\u1ea1i th\u00f4ng tin c\u1eadp nh\u1eadt (c\u00f3 th\u1ec3 do l\u1ed7i \u0111\u1ecbnh d\u1ea1ng).");
+            ra.addFlashAttribute("error", "Kiểm tra lại thông tin cập nhật (có thể do lỗi định dạng).");
             return "redirect:/admin/staff";
         }
         try {

@@ -36,9 +36,9 @@ public class AdminUserController {
 
         model.addAttribute("dentists", dentists);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thái dropdown
+        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thái Dropdown
         model.addAttribute("selectedStatus", status);
-        model.addAttribute("activePage", "dentists"); // Làm sáng menu sidebar
+        model.addAttribute("activePage", "dentists"); // Làm sáng Menu Sidebar
 
         // Cập nhật số liệu thực tế cho Stat Cards
         model.addAttribute("totalDentists", dentistProfileRepository.count());
@@ -97,7 +97,7 @@ public class AdminUserController {
     @GetMapping("/detail/{id}")
     public String showDentistDetail(@PathVariable("id") Long id, Model model) {
         // Log ra để kiểm tra xem request đã vào tới đây chưa
-        System.out.println("Xem chi tiết bác sĩ có ID: " + id);
+        System.out.println(" xem chi tiết bác sĩ có ID: " + id);
 
         DentistDTO dentist = dentistService.getDentistById(id);
         model.addAttribute("dentist", dentist);

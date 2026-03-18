@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.DayOfWeek;
 import java.util.List;
 
-
 @Controller
 @RequestMapping("/staff")
 public class StaffAppointmentController {
@@ -22,10 +21,12 @@ public class StaffAppointmentController {
     @Autowired
     private StaffAppointmentService staffAppointmentService;
 
+    @Autowired
+    private EmailService emailService;
 
     @GetMapping("/dashboard")
     public String dashboard(@RequestParam(required = false, defaultValue = "today") String view,
-                            Model model) {
+            Model model) {
 
         var appointments = staffAppointmentService.getAllAppointments();
 
@@ -54,10 +55,8 @@ public class StaffAppointmentController {
         final LocalDate toDate = endDate;
 
         var filtered = appointments.stream()
-                .filter(a ->
-                        !a.getDate().isBefore(fromDate)
-                                && !a.getDate().isAfter(toDate)
-                )
+                .filter(a -> !a.getDate().isBefore(fromDate)
+                        && !a.getDate().isAfter(toDate))
                 .toList();
 
         model.addAttribute("pageTitle", "Dashboard");
@@ -70,40 +69,34 @@ public class StaffAppointmentController {
                 "pendingCount",
                 filtered.stream()
                         .filter(a -> a.getStatus() == AppointmentStatus.PENDING)
-                        .count()
-        );
+                        .count());
         model.addAttribute(
                 "completedCount",
                 filtered.stream()
                         .filter(a -> a.getStatus() == AppointmentStatus.COMPLETED)
-                        .count()
-        );
+                        .count());
         model.addAttribute(
                 "cancelledCount",
                 filtered.stream()
                         .filter(a -> a.getStatus() == AppointmentStatus.CANCELLED)
-                        .count()
-        );
+                        .count());
 
         return "staff/dashboard";
     }
 
     @GetMapping("/appointments")
     public String appointments(@RequestParam(required = false) String keyword,
-                               @RequestParam(defaultValue = "") String serviceKeyword,
-                               @RequestParam(required = false) String sort,
-                               @RequestParam(defaultValue = "0") int page,
-                               Model model) {
+            @RequestParam(defaultValue = "") String serviceKeyword,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
 
         model.addAttribute("pageTitle", "Appointment Management");
         model.addAttribute("staffName", "Staff");
 
-        Page<Appointment> appointmentPage =
-                staffAppointmentService.searchAndSort(keyword, serviceKeyword, sort, page);
+        Page<Appointment> appointmentPage = staffAppointmentService.searchAndSort(keyword, serviceKeyword, sort, page);
 
         model.addAttribute("appointments", appointmentPage.getContent());
-        model.addAttribute("dentistLeaveFlags",
-                staffAppointmentService.buildDentistLeaveFlags(appointmentPage.getContent()));
 
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", appointmentPage.getTotalPages());
@@ -135,18 +128,11 @@ public class StaffAppointmentController {
         }
     }
 
-
     @PostMapping("/appointments/complete")
     @ResponseBody
-    public ResponseEntity<?> complete(@RequestParam Long id) {
-        try {
-            staffAppointmentService.completeAppointment(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public void complete(@RequestParam Long id) {
+        staffAppointmentService.completeAppointment(id);
     }
-
 
     @PostMapping("/appointments/cancel")
     @ResponseBody
@@ -155,21 +141,18 @@ public class StaffAppointmentController {
             @RequestParam String reason) {
         staffAppointmentService.cancelAppointment(id, reason);
     }
+
     @PostMapping("/appointments/checkin")
     @ResponseBody
-    public ResponseEntity<?> checkin(@RequestParam Long id) {
-        try {
-            staffAppointmentService.checkInAppointment(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public void checkin(@RequestParam Long id) {
+        staffAppointmentService.checkInAppointment(id);
     }
 
     @GetMapping("/appointments/available-dentists") // Thêm /appointments vào đây
     @ResponseBody
     public ResponseEntity<List<DentistProfile>> getAvailableDentists(@RequestParam Long appointmentId) {
-        List<DentistProfile> availableDentists = staffAppointmentService.getAvailableDentistsForAppointment(appointmentId);
+        List<DentistProfile> availableDentists = staffAppointmentService
+                .getAvailableDentistsForAppointment(appointmentId);
         return ResponseEntity.ok(availableDentists);
     }
 
@@ -184,5 +167,3 @@ public class StaffAppointmentController {
         }
     }
 }
-
-

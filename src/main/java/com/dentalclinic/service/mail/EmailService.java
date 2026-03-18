@@ -1,6 +1,7 @@
 package com.dentalclinic.service.mail;
 
 import com.dentalclinic.model.appointment.Appointment;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.dentalclinic.model.appointment.AppointmentDetail;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.payment.BillingNote;
@@ -107,6 +108,27 @@ public class EmailService {
             return false;
         }
 
+        message.setSubject("Xác nhận lịch khám - GENZ CLINIC");
+
+        message.setText("""
+                Xin chào %s,
+
+                Lịch khám của bạn đã được xác nhận thành công.
+
+                🦷 Dịch vụ: %s
+                👨‍⚕️ Bác sĩ: %s
+                📅 Ngày khám: %s
+                ⏰ Thời gian: %s - %s
+
+                Trân trọng,
+                GENZ CLINIC
+                """.formatted(
+                appointment.getCustomer().getFullName(),
+                appointment.getService().getName(),
+                appointment.getDentist().getFullName(),
+                appointment.getDate(),
+                appointment.getStartTime(),
+                appointment.getEndTime()));
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             log.info("Skip appointment confirmation email for cancelled appointment {}", appointmentId);
             return false;
@@ -384,6 +406,7 @@ public class EmailService {
         helper.setText(htmlContent, true);
         supportMailSender.send(message);
     }
+}
 
     private String resolveRecipientEmail(Appointment appointment) {
         if (appointment.getCustomer() == null || appointment.getCustomer().getUser() == null) {
