@@ -950,7 +950,7 @@ public class CustomerAppointmentService {
                 walletService.refund(
                         appointment.getCustomer(),
                         refundAmount,
-                        "Ho?n ti?n ??t c?c l?ch h?n #" + appointment.getId(),
+                        "Hoàn tiền đặt cọc lịch hẹn #" + appointment.getId(),
                         appointment.getId()
                 );
             }
@@ -1544,13 +1544,15 @@ public class CustomerAppointmentService {
         });
 
         invoiceRepository.findByAppointment_Id(appointment.getId()).ifPresent(invoice -> {
+            BigDecimal invoiceBaseAmount = calculateInvoiceBaseAmount(appointment);
             BigDecimal remainingAmount = resolveRemainingInvoiceAmount(appointment, invoice);
             dto.setInvoiceId(invoice.getId());
             dto.setInvoiceStatus(invoice.getStatus().name());
             dto.setOriginalRemainingAmount(
-                    invoice.getOriginalAmount() != null
-                            ? invoice.getOriginalAmount().setScale(2, RoundingMode.HALF_UP)
-                            : remainingAmount
+                    sanitizeInvoiceRemainingAmount(
+                            invoice.getOriginalAmount(),
+                            invoiceBaseAmount
+                    )
             );
             dto.setDiscountAmount(
                     invoice.getDiscountAmount() != null
@@ -1592,38 +1594,31 @@ public class CustomerAppointmentService {
 
     public BigDecimal resolveRemainingInvoiceAmount(Appointment appointment, Invoice invoice) {
         BigDecimal zero = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-        BigDecimal invoiceAmount = invoice != null && invoice.getTotalAmount() != null
-                ? invoice.getTotalAmount().setScale(2, RoundingMode.HALF_UP)
-                : zero;
+        BigDecimal invoiceBaseAmount = calculateInvoiceBaseAmount(appointment);
 
         if (invoice != null && invoice.getTotalAmount() != null) {
-            return invoiceAmount;
+            return sanitizeInvoiceRemainingAmount(invoice.getTotalAmount(), invoiceBaseAmount);
         }
 
-        return billingNoteRepository.findByAppointment_Id(appointment.getId())
-                .map(billingNote -> {
-                    BigDecimal billedTotal = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-                    if (billingNote.getPerformedServices() != null) {
-                        for (BillingPerformedService item : billingNote.getPerformedServices()) {
-                            if (item.getService() == null) {
-                                continue;
-                            }
-                            int qty = Math.max(1, item.getQty());
-                            BigDecimal unitPrice = BigDecimal.valueOf(item.getService().getPrice()).setScale(2, RoundingMode.HALF_UP);
-                            billedTotal = billedTotal.add(unitPrice.multiply(BigDecimal.valueOf(qty)).setScale(2, RoundingMode.HALF_UP));
-                        }
-                    }
+        return invoiceBaseAmount.max(zero).setScale(2, RoundingMode.HALF_UP);
+    }
 
-                    BigDecimal depositAmount = resolveAppointmentDepositAmount(appointment);
-                    if (depositAmount == null) {
-                        depositAmount = zero;
-                    }
+    private BigDecimal sanitizeInvoiceRemainingAmount(BigDecimal rawAmount, BigDecimal invoiceBaseAmount) {
+        BigDecimal zero = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal normalizedBase = invoiceBaseAmount == null
+                ? zero
+                : invoiceBaseAmount.max(zero).setScale(2, RoundingMode.HALF_UP);
 
-                    return billedTotal.subtract(depositAmount)
-                            .max(BigDecimal.ZERO)
-                            .setScale(2, RoundingMode.HALF_UP);
-                })
-                .orElse(invoiceAmount);
+        if (rawAmount == null) {
+            return normalizedBase;
+        }
+
+        BigDecimal normalizedRaw = rawAmount.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+        if (normalizedBase.compareTo(BigDecimal.ZERO) > 0 && normalizedRaw.compareTo(normalizedBase) > 0) {
+            return normalizedBase;
+        }
+
+        return normalizedRaw;
     }
 
     private BigDecimal calculateInvoiceBaseAmount(Appointment appointment) {

@@ -265,7 +265,7 @@ public class CustomerPaymentController {
 
             if (vnp_SecureHash == null || !checkHash.equalsIgnoreCase(vnp_SecureHash)) {
                 return isWalletTopupOrder(orderInfo)
-                        ? "redirect:/customer/wallet?topup=fail"
+                        ? "redirect:/customer/wallet?topup=fail" + buildWalletTxnRefQuery(orderInfo)
                         : (isFinalPaymentOrder(orderInfo)
                         ? "redirect:/customer/my-appointments?payment=fail"
                         : "redirect:/customer/book?status=fail");
@@ -335,7 +335,7 @@ public class CustomerPaymentController {
         String txnRef = parts[3];
 
         if (!"00".equals(responseCode)) {
-            return "redirect:/customer/wallet?topup=fail";
+            return "redirect:/customer/wallet?topup=fail&txnRef=" + txnRef;
         }
 
         CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
@@ -349,7 +349,20 @@ public class CustomerPaymentController {
             walletService.deposit(customer, amount, description, null);
         }
 
-        return "redirect:/customer/wallet?topup=success";
+        return "redirect:/customer/wallet?topup=success&txnRef=" + txnRef;
+    }
+
+    private String buildWalletTxnRefQuery(String orderInfo) {
+        if (!isWalletTopupOrder(orderInfo)) {
+            return "";
+        }
+
+        String[] parts = orderInfo.split("_", 4);
+        if (parts.length < 4 || parts[3] == null || parts[3].isBlank()) {
+            return "";
+        }
+
+        return "&txnRef=" + parts[3];
     }
 
     private String handleFinalPaymentReturn(String responseCode, String orderInfo) {

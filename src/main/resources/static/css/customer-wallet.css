@@ -321,6 +321,12 @@
         border: 1px solid #fecaca;
       }
 
+      .wallet-status-banner.info {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+      }
+
       .wallet-withdraw-mode-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);

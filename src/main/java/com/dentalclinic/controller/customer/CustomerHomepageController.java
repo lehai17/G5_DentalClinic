@@ -1,6 +1,7 @@
 package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.dto.customer.RebookPrefillDto;
+import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.blog.BlogStatus;
 import com.dentalclinic.model.profile.CustomerProfile;
@@ -111,8 +112,12 @@ public class CustomerHomepageController {
     }
 
     @GetMapping("/customer/book")
-    public String bookingPage(Model model) {
+    public String bookingPage(@RequestParam(required = false) String status,
+                              @RequestParam(required = false) Long id,
+                              Authentication authentication,
+                              Model model) {
         prepareBookingPage(model, null);
+        applyBookingReturnStatus(model, resolveCurrentUserId(authentication), status, id);
         return "customer/booking";
     }
 
@@ -150,6 +155,43 @@ public class CustomerHomepageController {
         model.addAttribute("services", serviceRepo.findByActiveTrue());
         model.addAttribute("active", "booking");
         model.addAttribute("rebookPrefill", rebookPrefill != null ? rebookPrefill : new RebookPrefillDto());
+    }
+
+    private void applyBookingReturnStatus(Model model, Long userId, String status, Long appointmentId) {
+        if (status == null || status.isBlank()) {
+            return;
+        }
+
+        String normalizedStatus = status.trim().toLowerCase();
+        AppointmentDto appointment = null;
+        if (userId != null && appointmentId != null) {
+            appointment = customerAppointmentService.getAppointmentDetail(userId, appointmentId).orElse(null);
+        }
+
+        boolean verifiedSuccess = "success".equals(normalizedStatus)
+                && appointment != null
+                && "PENDING".equalsIgnoreCase(appointment.getStatus());
+
+        if (verifiedSuccess) {
+            model.addAttribute("bookingReturnType", "success");
+            model.addAttribute("bookingReturnTitle", "Đặt lịch thành công");
+            model.addAttribute("bookingReturnMessage", "Lịch hẹn của bạn đã được tạo và ghi nhận tiền cọc thành công.");
+            model.addAttribute("bookingReturnAppointmentId", appointmentId);
+            return;
+        }
+
+        if ("fail".equals(normalizedStatus) && appointmentId != null) {
+            model.addAttribute("bookingReturnType", "warning");
+            model.addAttribute("bookingReturnTitle", "Thanh toán chưa hoàn tất");
+            model.addAttribute("bookingReturnMessage", "Thanh toán không thành công hoặc giao dịch không làm thay đổi lịch hẹn.");
+            model.addAttribute("bookingReturnAppointmentId", appointmentId);
+            return;
+        }
+
+        model.addAttribute("bookingReturnType", "info");
+        model.addAttribute("bookingReturnTitle", "Không ghi nhận thay đổi");
+        model.addAttribute("bookingReturnMessage", "Không ghi nhận kết quả đặt lịch hợp lệ từ liên kết này. Có thể bạn đã mở lại liên kết cũ hoặc đường dẫn không hợp lệ.");
+        model.addAttribute("bookingReturnAppointmentId", appointmentId);
     }
 
     private Long resolveCurrentUserId(Authentication authentication) {

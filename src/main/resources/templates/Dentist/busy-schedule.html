@@ -192,8 +192,8 @@
 
             // Kiểm tra 3: Tối đa 2 ngày (dayDiff > 1)
             const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
-            if (dayDiff > 1) {
-                showError('Thời gian nghỉ mỗi đơn không được quá 2 ngày liên tiếp.');
+            if (dayDiff > 2) {
+                showError('Thời gian nghỉ mỗi đơn không được 3 ngày liên tiếp.');
                 endDateInput.classList.add('input-error');
                 return false;
             }

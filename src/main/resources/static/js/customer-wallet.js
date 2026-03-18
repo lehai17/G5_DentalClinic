@@ -357,26 +357,28 @@
       }
 
       function showWalletStatusFromQuery() {
-        const params = new URLSearchParams(window.location.search);
-        const status = params.get("topup");
         const banner = document.getElementById("wallet-status-banner");
-        if (!banner || !status) return;
+        if (!banner) return;
 
-        if (status === "success") {
-          banner.className = "wallet-status-banner success";
-          banner.textContent = "Nạp tiền vào ví thành công.";
-          banner.style.display = "";
-          showToast("Nạp tiền vào ví thành công.", "success", "Nạp tiền thành công");
-        } else if (status === "fail") {
-          banner.className = "wallet-status-banner fail";
-          banner.textContent =
-            "Giao dịch nạp tiền chưa hoàn tất hoặc đã bị hủy.";
-          banner.style.display = "";
-          showAlert(
-            "Giao dịch nạp tiền chưa hoàn tất hoặc đã bị hủy.",
-            "warning",
-            "Nạp tiền chưa hoàn tất",
-          );
+        const type = (banner.dataset.statusType || "").trim().toLowerCase();
+        const title = (banner.dataset.statusTitle || "").trim();
+        const message = (banner.dataset.statusMessage || "").trim();
+        if (!type || !message) return;
+
+        banner.className = "wallet-status-banner " + (type === "warning" ? "fail" : type);
+        banner.textContent = message;
+        banner.style.display = "";
+
+        if (type === "success") {
+          showToast(message, "success", title || "Nạp tiền thành công");
+        } else if (type === "warning") {
+          showAlert(message, "warning", title || "Nạp tiền chưa hoàn tất");
+        } else {
+          showToast(message, "info", title || "Thông báo");
+        }
+
+        if (window.history && typeof window.history.replaceState === "function") {
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
 
