@@ -62,8 +62,15 @@
     sort: "date_desc",
     view: queryParams.get("view") === "cancelled" ? "cancelled" : "default",
   };
+  var appointmentsLoadedOnce = false;
+  var appointmentsRequestInFlight = false;
+  var initialLoadRecoveryTimer = null;
   var remainingPaymentSelection = null;
-  var reviewSelection = { appointmentId: null, rating: 0 };
+  var reviewSelection = {
+    appointmentId: null,
+    dentistRating: 0,
+    serviceRating: 0,
+  };
 
   var currentOpen = {
     appointmentId: null,
@@ -639,6 +646,34 @@
         reviewModalEl.hidden = false;
         document.body.classList.add("cap-payment-modal-open");
         if (reviewCommentEl) reviewCommentEl.focus();
+    }
+
+    function bindReviewModal() {
+        if (!reviewModalEl) return;
+
+        if (reviewModalCloseEl) {
+            reviewModalCloseEl.addEventListener("click", function () {
+                closeReviewModal();
+            });
+        }
+
+        reviewModalEl.querySelectorAll("[data-review-close]").forEach(function (el) {
+            el.addEventListener("click", function () {
+                closeReviewModal();
+            });
+        });
+
+        reviewModalEl.addEventListener("click", function (e) {
+            if (e.target === reviewModalEl) {
+                closeReviewModal();
+            }
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && reviewModalEl && !reviewModalEl.hidden) {
+                closeReviewModal();
+            }
+        });
     }
 
     reviewDentistStarEls.forEach(function (starEl) {
@@ -1287,6 +1322,33 @@
     }
   }
 
+  function clearInitialLoadRecoveryTimer() {
+    if (initialLoadRecoveryTimer) {
+      window.clearTimeout(initialLoadRecoveryTimer);
+      initialLoadRecoveryTimer = null;
+    }
+  }
+
+  function scheduleInitialLoadRecovery() {
+    clearInitialLoadRecoveryTimer();
+    initialLoadRecoveryTimer = window.setTimeout(function () {
+      var loading = document.getElementById("customer-appointments-loading");
+      if (appointmentsLoadedOnce || appointmentsRequestInFlight) return;
+      if (!loading || loading.style.display === "none") return;
+      loadAppointments(null, 0);
+    }, 1200);
+  }
+
+  function ensureAppointmentsHydrated() {
+    var loading = document.getElementById("customer-appointments-loading");
+    var listHasItems = !!listEl.querySelector("li[data-appointment-id]");
+    if (appointmentsRequestInFlight) return;
+    if (appointmentsLoadedOnce && (listHasItems || (loading && loading.style.display === "none"))) {
+      return;
+    }
+    loadAppointments(null, 0);
+  }
+
   function loadAppointments(doneCb, targetPage) {
     var listWrap = document.getElementById("customer-appointments-list-wrap");
     var empty = document.getElementById("customer-appointments-empty");
@@ -1301,6 +1363,7 @@
     if (paginationEl) paginationEl.style.display = "none";
     listEl.innerHTML = "";
     if (loading) loading.style.display = "";
+    appointmentsRequestInFlight = true;
 
     closeCurrentDetail();
 
@@ -1332,6 +1395,8 @@
         return r.json();
       })
       .then(function (data) {
+        appointmentsRequestInFlight = false;
+        clearInitialLoadRecoveryTimer();
         if (!data) return;
         if (!Array.isArray(data.content)) {
           data = {
@@ -1359,6 +1424,7 @@
         if (summaryPageEl)
           summaryPageEl.textContent = String((state.page || 0) + 1);
 
+        appointmentsLoadedOnce = true;
         if (loading) loading.style.display = "none";
         if (listWrap) listWrap.style.display = "";
 
@@ -1391,6 +1457,8 @@
         if (typeof doneCb === "function") doneCb();
       })
       .catch(function () {
+        appointmentsRequestInFlight = false;
+        clearInitialLoadRecoveryTimer();
         if (loading) loading.style.display = "none";
         if (listWrap) listWrap.style.display = "";
         showAlert(
@@ -1536,6 +1604,7 @@
   bindInvoiceModal();
   bindReviewModal();
   updateViewSwitch();
+  scheduleInitialLoadRecovery();
 
   loadAppointments(function () {
     if (!openFromNotificationId) return;
@@ -1546,5 +1615,11 @@
       openInlineDetail(openFromNotificationId, false);
       history.replaceState(null, "", window.location.pathname);
     }
+  });
+
+  window.addEventListener("pageshow", function () {
+    window.setTimeout(function () {
+      ensureAppointmentsHydrated();
+    }, 0);
   });
 })();
