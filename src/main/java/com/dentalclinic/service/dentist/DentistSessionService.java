@@ -47,8 +47,18 @@ public class DentistSessionService {
     ) {}
 
     @Transactional(readOnly = true)
-    public ExamForm loadExam(Long appointmentId, Long customerUserId) {
-        Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+    public Appointment loadOwnedAppointmentWithDetails(Long appointmentId,
+                                                       Long customerUserId,
+                                                       Long dentistUserId) {
+        Appointment appt = appointmentRepository.findByIdWithDetails(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay lich hen"));
+        validateAppointmentOwnership(appt, customerUserId, dentistUserId);
+        return appt;
+    }
+
+    @Transactional(readOnly = true)
+    public ExamForm loadExam(Long appointmentId, Long customerUserId, Long dentistUserId) {
+        Appointment appt = mustGetAppointment(appointmentId, customerUserId, dentistUserId);
 
         MedicalRecord mr = medicalRecordRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -67,9 +77,10 @@ public class DentistSessionService {
     @Transactional
     public void saveExam(Long appointmentId,
                          Long customerUserId,
+                         Long dentistUserId,
                          MedicalRecord form) {
 
-        Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+        Appointment appt = mustGetAppointment(appointmentId, customerUserId, dentistUserId);
 
         validateAppointmentNotFinalized(appt);
 
@@ -145,14 +156,10 @@ public class DentistSessionService {
     ) {}
 
     @Transactional(readOnly = true)
-    public BillingForm loadBilling(Long appointmentId, Long customerUserId) {
-        Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+    public BillingForm loadBilling(Long appointmentId, Long customerUserId, Long dentistUserId) {
+        Appointment appt = mustGetAppointment(appointmentId, customerUserId, dentistUserId);
         if (!isBillingViewAllowed(appt.getStatus())) {
             throw new IllegalStateException("Billing view is not allowed for this status");
-        }
-
-        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
-            throw new IllegalStateException("Only EXAMINING appointment can be billed");
         }
 
         BillingNote bn = billingNoteRepository
@@ -193,9 +200,10 @@ public class DentistSessionService {
     @Transactional
     public void saveBilling(Long appointmentId,
                             Long customerUserId,
+                            Long dentistUserId,
                             BillingNote form) {
 
-        Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+        Appointment appt = mustGetAppointment(appointmentId, customerUserId, dentistUserId);
         if (appt.getStatus() != AppointmentStatus.EXAMINING) {
             throw new IllegalStateException("Only allowed when appointment is EXAMINING");
         }
@@ -285,15 +293,25 @@ public class DentistSessionService {
        INTERNAL
        ========================================================= */
 
-    private Appointment mustGetAppointment(Long appointmentId, Long customerUserId) {
+    private Appointment mustGetAppointment(Long appointmentId, Long customerUserId, Long dentistUserId) {
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn"));
 
+        validateAppointmentOwnership(appt, customerUserId, dentistUserId);
+        return appt;
+    }
+
+    private void validateAppointmentOwnership(Appointment appt, Long customerUserId, Long dentistUserId) {
         Long ownerUserId = appt.getCustomer().getUser().getId();
         if (!ownerUserId.equals(customerUserId)) {
             throw new IllegalArgumentException("Appointment does not belong to this customer");
         }
-        return appt;
+
+        if (appt.getDentist() == null
+                || appt.getDentist().getUser() == null
+                || !appt.getDentist().getUser().getId().equals(dentistUserId)) {
+            throw new IllegalArgumentException("Ban khong co quyen truy cap lich hen nay");
+        }
     }
 
     /**

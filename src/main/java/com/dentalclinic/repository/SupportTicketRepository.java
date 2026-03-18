@@ -49,7 +49,8 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
-        WHERE a.dentist.user.id = :dentistId
+        WHERE s.staff.id = :dentistId
+           OR a.dentist.user.id = :dentistId
         ORDER BY s.createdAt DESC
     """)
     List<SupportTicket> findByDentistWithAppointment(@Param("dentistId") Long dentistId);
@@ -66,7 +67,8 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
-        WHERE a.dentist.user.id = :dentistUserId
+        WHERE s.staff.id = :dentistUserId
+           OR a.dentist.user.id = :dentistUserId
         ORDER BY s.createdAt DESC
     """)
     List<SupportTicket> findVisibleToDentist(@Param("dentistUserId") Long dentistUserId);
@@ -83,7 +85,8 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
         LEFT JOIN FETCH s.customer c
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
-        WHERE a.dentist.user.id = :dentistUserId
+        WHERE (s.staff.id = :dentistUserId
+          OR a.dentist.user.id = :dentistUserId)
           AND s.status = :status
         ORDER BY s.createdAt DESC
     """)
@@ -105,7 +108,8 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
         LEFT JOIN FETCH c.customerProfile
         LEFT JOIN FETCH s.staff
         WHERE s.id = :ticketId
-          AND a.dentist.user.id = :dentistUserId
+          AND (s.staff.id = :dentistUserId
+            OR a.dentist.user.id = :dentistUserId)
     """)
     Optional<SupportTicket> findVisibleToDentistById(
             @Param("ticketId") Long ticketId,

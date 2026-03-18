@@ -2,10 +2,12 @@ package com.dentalclinic.repository;
 
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -191,6 +193,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     Optional<Appointment> findByIdAndCustomer_User_Id(Long appointmentId, Long customerUserId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Appointment a WHERE a.id = :appointmentId")
+    Optional<Appointment> findByIdForUpdate(@Param("appointmentId") Long appointmentId);
+
     // =========================================================
     // 3. DENTIST DASHBOARD & STATS
     // =========================================================
@@ -302,7 +308,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByDentist_IdAndStatusIn(Long dentistId, List<AppointmentStatus> statuses);
 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
-    List<Appointment> findByCustomer_User_IdAndCustomerHiddenFalseOrderByDateDesc(Long customerUserId);
+    @Query("""
+            SELECT a
+            FROM Appointment a
+            WHERE a.customer.user.id = :customerUserId
+              AND (a.customerHidden = false OR a.customerHidden IS NULL)
+            ORDER BY a.date DESC, a.startTime DESC, a.id DESC
+            """)
+    List<Appointment> findVisibleHistoryByCustomerUserId(@Param("customerUserId") Long customerUserId);
 
     @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service"})
     List<Appointment> findByCustomer_User_IdAndStatusOrderByDateDescStartTimeDesc(Long customerUserId,

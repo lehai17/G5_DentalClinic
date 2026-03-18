@@ -60,10 +60,10 @@
 
           <tbody>
           <tr th:each="t : ${tickets}">
-            <td th:text="${t.customer.customerProfile.fullName}"></td>
-            <td th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${t.customerDisplayName != null and !#strings.isEmpty(t.customerDisplayName) ? t.customerDisplayName : 'Bệnh nhân'}"></td>
+            <td th:text="${t.createdAt != null ? #temporals.format(t.createdAt,'dd/MM/yyyy HH:mm') : '-'}"></td>
             <td th:text="${t.serviceLabel}"></td>
-            <td th:text="${#strings.abbreviate(t.title, 60)}"></td>
+            <td th:text="${t.title != null and !#strings.isEmpty(t.title) ? #strings.abbreviate(t.title, 60) : '(Không có tiêu đề)'}"></td>
             <td>
               <span th:class="'badge ' + (${t.displayStatus} == 'OPEN' ? 'open' : 'closed')"
                     th:text="${t.displayStatus}"></span>

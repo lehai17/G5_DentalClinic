@@ -102,6 +102,18 @@ public class Appointment {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "confirmation_email_sent", nullable = false, columnDefinition = "bit default 0")
+    private boolean confirmationEmailSent = false;
+
+    @Column(name = "confirmation_email_sent_at")
+    private LocalDateTime confirmationEmailSentAt;
+
+    @Column(name = "completion_email_sent", nullable = false, columnDefinition = "bit default 0")
+    private boolean completionEmailSent = false;
+
+    @Column(name = "completion_email_sent_at")
+    private LocalDateTime completionEmailSentAt;
+
     // Tự động gán thời gian lúc insert vào DB
     @PrePersist
     protected void onCreate() {
@@ -117,6 +129,38 @@ public class Appointment {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isConfirmationEmailSent() {
+        return confirmationEmailSent;
+    }
+
+    public void setConfirmationEmailSent(boolean confirmationEmailSent) {
+        this.confirmationEmailSent = confirmationEmailSent;
+    }
+
+    public LocalDateTime getConfirmationEmailSentAt() {
+        return confirmationEmailSentAt;
+    }
+
+    public void setConfirmationEmailSentAt(LocalDateTime confirmationEmailSentAt) {
+        this.confirmationEmailSentAt = confirmationEmailSentAt;
+    }
+
+    public boolean isCompletionEmailSent() {
+        return completionEmailSent;
+    }
+
+    public void setCompletionEmailSent(boolean completionEmailSent) {
+        this.completionEmailSent = completionEmailSent;
+    }
+
+    public LocalDateTime getCompletionEmailSentAt() {
+        return completionEmailSentAt;
+    }
+
+    public void setCompletionEmailSentAt(LocalDateTime completionEmailSentAt) {
+        this.completionEmailSentAt = completionEmailSentAt;
     }
 
     public Long getId() { return id; }

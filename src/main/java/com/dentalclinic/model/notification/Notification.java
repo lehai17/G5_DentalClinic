@@ -50,6 +50,9 @@ public class Notification {
     @Column(name = "read_at")
     private LocalDateTime readAt;
 
+    @Transient
+    private boolean relatedAvailable = true;
+
     // =========================
     // Getter & Setter
     // =========================
@@ -140,6 +143,14 @@ public class Notification {
 
     public void setReadAt(LocalDateTime readAt) {
         this.readAt = readAt;
+    }
+
+    public boolean isRelatedAvailable() {
+        return relatedAvailable;
+    }
+
+    public void setRelatedAvailable(boolean relatedAvailable) {
+        this.relatedAvailable = relatedAvailable;
     }
 
     private String normalizeDisplayText(String value) {

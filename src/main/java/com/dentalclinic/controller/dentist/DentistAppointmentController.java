@@ -5,8 +5,10 @@ import com.dentalclinic.model.appointment.AppointmentDetail;
 import com.dentalclinic.model.medical.MedicalRecord;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.ServicesRepository;
+import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.dentist.DentistSessionService;
 import com.dentalclinic.service.medical.MedicalRecordService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,17 +28,20 @@ public class DentistAppointmentController {
     private final MedicalRecordService medicalRecordService;
     private final AppointmentRepository appointmentRepository;
     private final DentistSessionService dentistSessionService;
+    private final UserRepository userRepository;
 
     public DentistAppointmentController(
             ServicesRepository servicesRepository,
             MedicalRecordService medicalRecordService,
             AppointmentRepository appointmentRepository,
-            DentistSessionService dentistSessionService
+            DentistSessionService dentistSessionService,
+            UserRepository userRepository
     ) {
         this.servicesRepository = servicesRepository;
         this.medicalRecordService = medicalRecordService;
         this.appointmentRepository = appointmentRepository;
         this.dentistSessionService = dentistSessionService;
+        this.userRepository = userRepository;
     }
 
     /* ================= EXAMINATION ================= */
@@ -46,14 +51,22 @@ public class DentistAppointmentController {
             @PathVariable Long id,
             @RequestParam Long customerUserId,
             @RequestParam(required = false) String weekStart,
-            Model model
+            Model model,
+            RedirectAttributes redirect,
+            Authentication authentication
     ) {
         model.addAttribute("services", servicesRepository.findAll());
+        Long dentistUserId = resolveCurrentDentistUserId(authentication);
 
-
-        Appointment appt = appointmentRepository.findByIdWithDetails(id).orElseThrow();
+        Appointment appt;
+        try {
+            appt = dentistSessionService.loadOwnedAppointmentWithDetails(id, customerUserId, dentistUserId);
+        } catch (IllegalArgumentException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+            return buildWorkScheduleRedirect(weekStart);
+        }
         if (appt.getStatus() == AppointmentStatus.CONFIRMED) {
-            return "redirect:/dentist/work-schedule" + (weekStart != null ? "?weekStart=" + weekStart : "");
+            return buildWorkScheduleRedirect(weekStart);
         }
         // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT 
         if (appt.getStatus() != AppointmentStatus.DONE
@@ -68,7 +81,7 @@ public class DentistAppointmentController {
         model.addAttribute("weekStart", weekStart);
         model.addAttribute("appointmentId", id);
         model.addAttribute("customerUserId", customerUserId);
-        model.addAttribute("dentistUserId", appt.getDentist() != null ? appt.getDentist().getUser().getId() : "");
+        model.addAttribute("dentistUserId", dentistUserId);
         model.addAttribute("patientName", appt.getCustomer().getFullName());
         model.addAttribute("apptDate", appt.getDate());
         model.addAttribute("startTime", appt.getStartTime());
@@ -89,8 +102,7 @@ public class DentistAppointmentController {
                         .map(ps -> ps.getService().getId())
                         .toList()
         );
-        // history records for past exams
-        model.addAttribute("historyRecords", java.util.Collections.emptyList());
+        model.addAttribute("historySteps", medicalRecordService.findReexamHistorySteps(id));
 
         return "Dentist/examination";
     }
@@ -101,13 +113,20 @@ public class DentistAppointmentController {
             @RequestParam Long customerUserId,
             @ModelAttribute MedicalRecord medicalRecord,
             @RequestParam(required = false) String weekStart, // âœ… THÊM
-            RedirectAttributes redirect
+            RedirectAttributes redirect,
+            Authentication authentication
     ) {
-        dentistSessionService.saveExam(
-                id,
-                customerUserId,
-                medicalRecord
-        );
+        try {
+            dentistSessionService.saveExam(
+                    id,
+                    customerUserId,
+                    resolveCurrentDentistUserId(authentication),
+                    medicalRecord
+            );
+        } catch (IllegalArgumentException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+            return buildWorkScheduleRedirect(weekStart);
+        }
         redirect.addFlashAttribute("successMessage", "Examination saved");
 
         return "redirect:/dentist/appointments/" + id +
@@ -122,12 +141,20 @@ public class DentistAppointmentController {
             @PathVariable Long id,
             @RequestParam Long customerUserId,
             @RequestParam(required = false) String weekStart,
-            Model model
+            Model model,
+            RedirectAttributes redirect,
+            Authentication authentication
     ) {
-        Appointment appt = appointmentRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        Long dentistUserId = resolveCurrentDentistUserId(authentication);
+        Appointment appt;
+        try {
+            appt = dentistSessionService.loadOwnedAppointmentWithDetails(id, customerUserId, dentistUserId);
+        } catch (IllegalArgumentException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+            return buildWorkScheduleRedirect(weekStart);
+        }
         if (!isBillingViewAllowed(appt.getStatus())) {
-            return "redirect:/dentist/work-schedule" + (weekStart != null ? "?weekStart=" + weekStart : "");
+            return buildWorkScheduleRedirect(weekStart);
         }
 
         model.addAttribute("services", servicesRepository.findAll());
@@ -141,7 +168,7 @@ public class DentistAppointmentController {
         model.addAttribute("appointmentStatus", appt.getStatus().name());
         model.addAttribute("weekStart", weekStart);
 
-        var billing = dentistSessionService.loadBilling(id, customerUserId);
+        var billing = dentistSessionService.loadBilling(id, customerUserId, dentistUserId);
         model.addAttribute("billingNote", billing.billingNote());
         model.addAttribute("patientName", billing.patientName());
 
@@ -154,21 +181,39 @@ public class DentistAppointmentController {
             @RequestParam Long customerUserId,
             @ModelAttribute BillingNote billingNote,
             @RequestParam String weekStart,
-            RedirectAttributes redirect
+            RedirectAttributes redirect,
+            Authentication authentication
     ) {
-        Appointment appt = appointmentRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        Long dentistUserId = resolveCurrentDentistUserId(authentication);
+        Appointment appt;
+        try {
+            appt = dentistSessionService.loadOwnedAppointmentWithDetails(id, customerUserId, dentistUserId);
+        } catch (IllegalArgumentException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+            return buildWorkScheduleRedirect(weekStart);
+        }
         if (appt.getStatus() != AppointmentStatus.EXAMINING) {
             redirect.addFlashAttribute("errorMessage", "Chỉ được lưu khi đang khám.");
-            return "redirect:/dentist/work-schedule" + (weekStart != null ? "?weekStart=" + weekStart : "");
+            return buildWorkScheduleRedirect(weekStart);
         }
         dentistSessionService.saveBilling(
                 id,
                 customerUserId,
+                dentistUserId,
                 billingNote
         );
         redirect.addFlashAttribute("successMessage", "Billing saved");
         return "redirect:/dentist/work-schedule?weekStart=" + weekStart;
+    }
+
+    private Long resolveCurrentDentistUserId(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay tai khoan hien tai"))
+                .getId();
+    }
+
+    private String buildWorkScheduleRedirect(String weekStart) {
+        return "redirect:/dentist/work-schedule" + (weekStart != null ? "?weekStart=" + weekStart : "");
     }
 
     private boolean isBillingViewAllowed(AppointmentStatus status) {

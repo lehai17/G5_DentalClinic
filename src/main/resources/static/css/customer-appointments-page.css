@@ -2201,6 +2201,59 @@
     margin-top: 16px;
 }
 
+.cap-payment-voucher {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.cap-payment-voucher__label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.cap-payment-voucher__row {
+    display: flex;
+    gap: 10px;
+}
+
+.cap-payment-voucher__row input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 11px 13px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #0f172a;
+    background: #fff;
+}
+
+.cap-payment-voucher__row button {
+    flex: 0 0 auto;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 12px;
+    background: #1d4ed8;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cap-payment-voucher__row button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.cap-payment-voucher__hint {
+    min-height: 1.25rem;
+    color: #475569;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
 .cap-payment-method {
     display: flex;
     align-items: center;
