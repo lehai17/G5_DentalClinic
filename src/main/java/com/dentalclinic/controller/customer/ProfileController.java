@@ -43,14 +43,14 @@ public class ProfileController {
         @NotBlank(message = "Họ tên không được để trống")
         @Pattern(
                 regexp = "^[A-Za-zÀ-ỹ\\s]+$",
-                message = "Họ tên chỉ được chứa chữ cái v�  khoảng trắng"
+                message = "H? t?n ch? ???c ch?a ch? c?i v? kho?ng tr?ng"
         )
         private String fullName;
 
         // cho phép trống (user chưa muốn cập nhật), nhưng nếu nhập thì phải đúng định dạng
         @Pattern(
                 regexp = "^$|^0\\d{8,9}$",
-                message = "Số điện thoại phải bắt đầu bằng 0 v�  có 9–10 chữ số"
+                message = "S? ?i?n tho?i ph?i b?t ??u b?ng 0 v? c? 9-10 ch? s?"
         )
         private String phone;
 
@@ -89,7 +89,7 @@ public class ProfileController {
         return "customer/profile";
     }
 
-    //  mở trang edit + lấy dữ liệu v� o form
+    //  mở trang edit + lấy dữ liệu v? o form
     @GetMapping("/profile/edit")
     public String editProfilePage(Model model, Authentication authentication) {
         String email = extractEmail(authentication);
@@ -100,7 +100,7 @@ public class ProfileController {
 
         CustomerProfile profile = profileService.getCurrentCustomerProfile(user.getId());
 
-        // tạo form v�  fill dữ liệu hiện tại
+        // tạo form v?  fill dữ liệu hiện tại
         EditProfileForm form = new EditProfileForm();
         form.setDateOfBirth(user.getDateOfBirth());
 
@@ -165,7 +165,7 @@ public class ProfileController {
 
             customerProfileRepository.save(profile);
 
-            model.addAttribute("success", "Cập nhật thông tin th� nh công!");
+            model.addAttribute("success", "C?p nh?t th?ng tin th?nh c?ng!");
 
         } catch (Exception ex) {
             model.addAttribute("error", "Có lỗi khi cập nhật, vui lòng thử lại.");

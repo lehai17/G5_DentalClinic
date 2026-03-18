@@ -71,7 +71,7 @@
             border-left: 4px solid #fff;
         }
 
-        /* Main Content & Header - Cáº¬P NHáº¬T KHOáº¢NG TRá»NG */
+        /* Main Content & Header - CẬP NHẬT KHOẢNG TRỐNG */
         .main-content {
             flex: 1;
             padding: 30px;
@@ -207,7 +207,7 @@
             border-bottom: 1px solid #F4F7FE;
         }
 
-        /* Badges & Actions */
+        /* Badges & Thao t?c */
         .status-badge {
             padding: 6px 14px;
             border-radius: 10px;
@@ -781,7 +781,7 @@
         var successMsg = /*[[${success}]]*/ null;
         var errorMsg = /*[[${error}]]*/ null;
 
-        // Xá»­ lÃ½ Delete Logic
+        // Xử lý Delete Logic
         let dentistToDelete = null;
 
         function openDeleteModal(id, name) {
@@ -819,7 +819,7 @@
                 })
                 .catch(error => {
                     closeDeleteModal();
-                    showToast("Lá»—i káº¿t ná»‘i mÃ¡y chá»§", "error");
+                    showToast("Lỗi kết nối máy chủ", "error");
                 });
         }
 
@@ -875,7 +875,7 @@
                     document.getElementById('editDentistModal').style.display = 'block';
                 })
                 .catch(error => {
-                    showToast("Cannot fetch data", "error");
+                    showToast("Không thể tải dữ liệu", "error");
                 });
         }
 
@@ -883,7 +883,7 @@
             document.getElementById('editDentistModal').style.display = 'none';
         }
 
-        // ÄÃ³ng Edit Modal khi click bÃªn ngoï¿½Â i
+        // Đóng Edit Modal khi click bên ngo� i
         window.addEventListener('click', function (event) {
             let editModal = document.getElementById('editDentistModal');
             if (event.target == editModal) {

@@ -44,6 +44,13 @@
             <span>Dịch vụ</span>
         </a>
 
+        <a th:href="@{/admin/vouchers}"
+           class="nav-item"
+           th:classappend="${activePage == 'vouchers' ? ' active' : ''}">
+            <i class="fas fa-ticket-alt"></i>
+            <span>Voucher</span>
+        </a>
+
         <a th:href="@{/admin/slots}"
            class="nav-item"
            th:classappend="${activePage == 'slots' ? ' active' : ''}">

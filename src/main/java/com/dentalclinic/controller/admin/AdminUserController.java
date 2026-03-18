@@ -129,7 +129,7 @@ public class AdminUserController {
             @jakarta.validation.Valid @ModelAttribute("updateDentistDTO") com.dentalclinic.dto.admin.UpdateDentistDTO dto,
             org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
-            ra.addFlashAttribute("error", "Vui lòng kiểm tra lại thông tin điền, sai định dạng!");
+            ra.addFlashAttribute("error", "Vui l\u00f2ng ki\u1ec3m tra l\u1ea1i th\u00f4ng tin \u0111i\u1ec1n, sai \u0111\u1ecbnh d\u1ea1ng!");
             return "redirect:/admin/dentists";
         }
         try {

@@ -5,7 +5,11 @@ import com.dentalclinic.dto.chat.ChatThreadDto;
 import com.dentalclinic.dto.chat.SendChatMessageRequest;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.service.chat.ChatService;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,12 +17,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +55,7 @@ public class CustomerChatController {
         return ResponseEntity.ok(messages);
     }
 
-    @PostMapping("/send")
+    @PostMapping(value = "/send", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ChatMessageDto> sendMessage(@RequestBody SendChatMessageRequest request,
                                                       @AuthenticationPrincipal UserDetails principal) {
         User current = chatService.getCurrentUserByEmail(principal.getUsername());
@@ -56,6 +63,34 @@ public class CustomerChatController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(chatService.sendCustomerMessage(current.getId(), request.getThreadId(), request.getContent()));
+    }
+
+    @PostMapping(value = "/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ChatMessageDto> sendMessageWithAttachment(@RequestParam Long threadId,
+                                                                    @RequestParam(required = false) String content,
+                                                                    @RequestParam(value = "attachment", required = false) MultipartFile attachment,
+                                                                    @AuthenticationPrincipal UserDetails principal) {
+        User current = chatService.getCurrentUserByEmail(principal.getUsername());
+        return ResponseEntity.ok(chatService.sendCustomerMessage(current.getId(), threadId, content, attachment));
+    }
+
+    @GetMapping("/attachments/{messageId}")
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable Long messageId,
+                                                       @AuthenticationPrincipal UserDetails principal) {
+        User current = chatService.getCurrentUserByEmail(principal.getUsername());
+        var download = chatService.getAttachmentForCustomer(current.getId(), messageId);
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (download.getContentType() != null && !download.getContentType().isBlank()) {
+            mediaType = MediaType.parseMediaType(download.getContentType());
+        }
+        ContentDisposition disposition = ContentDisposition.inline()
+                .filename(download.getFileName(), StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .contentLength(download.getSize())
+                .body(download.getResource());
     }
 
     @GetMapping("/unread-count")

@@ -71,10 +71,7 @@ public class DentistSessionService {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
 
-        if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new IllegalStateException("Appointment already finalized");
-        }
+        validateAppointmentNotFinalized(appt);
 
         MedicalRecord mr = medicalRecordRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -111,6 +108,11 @@ public class DentistSessionService {
         if (form.getImages() != null) {
             for (MedicalImage i : form.getImages()) {
 
+                // URL is required for persistence (medical_image.url is NOT NULL).
+                if (i.getUrl() == null || i.getUrl().isBlank()) {
+                    continue;
+                }
+
                 boolean isEmpty =
                         (i.getUrl() == null || i.getUrl().isBlank()) &&
                                 (i.getType() == null || i.getType().isBlank()) &&
@@ -145,6 +147,13 @@ public class DentistSessionService {
     @Transactional(readOnly = true)
     public BillingForm loadBilling(Long appointmentId, Long customerUserId) {
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
+        if (!isBillingViewAllowed(appt.getStatus())) {
+            throw new IllegalStateException("Billing view is not allowed for this status");
+        }
+
+        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
+            throw new IllegalStateException("Only EXAMINING appointment can be billed");
+        }
 
         BillingNote bn = billingNoteRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -155,8 +164,20 @@ public class DentistSessionService {
         if (bn == null) {
             bn = new BillingNote();
             bn.setAppointment(appt);
-            // default performed service based on appointment
-            if (appt.getService() != null) {
+            // default performed services based on appointment details
+            if (appt.getAppointmentDetails() != null && !appt.getAppointmentDetails().isEmpty()) {
+                for (var detail : appt.getAppointmentDetails()) {
+                    if (detail.getService() == null) {
+                        continue;
+                    }
+                    BillingPerformedService ps = new BillingPerformedService();
+                    ps.setBillingNote(bn);
+                    ps.setService(detail.getService());
+                    ps.setQty(1);
+                    ps.setToothNo("");
+                    bn.getPerformedServices().add(ps);
+                }
+            } else if (appt.getService() != null) {
                 BillingPerformedService ps = new BillingPerformedService();
                 ps.setBillingNote(bn);
                 ps.setService(appt.getService());
@@ -175,11 +196,11 @@ public class DentistSessionService {
                             BillingNote form) {
 
         Appointment appt = mustGetAppointment(appointmentId, customerUserId);
-
-        if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new IllegalStateException("Appointment already finalized");
+        if (appt.getStatus() != AppointmentStatus.EXAMINING) {
+            throw new IllegalStateException("Only allowed when appointment is EXAMINING");
         }
+
+        validateAppointmentNotFinalized(appt);
 
         BillingNote bn = billingNoteRepository
                 .findByAppointment_IdAndAppointment_Customer_User_Id(
@@ -266,13 +287,34 @@ public class DentistSessionService {
 
     private Appointment mustGetAppointment(Long appointmentId, Long customerUserId) {
         Appointment appt = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn"));
 
         Long ownerUserId = appt.getCustomer().getUser().getId();
         if (!ownerUserId.equals(customerUserId)) {
             throw new IllegalArgumentException("Appointment does not belong to this customer");
         }
         return appt;
+    }
+
+    /**
+     * Validate that appointment is not in finalized state (DONE, COMPLETED, WAITING_PAYMENT)
+     */
+    private void validateAppointmentNotFinalized(Appointment appt) {
+        if (appt.getStatus() == AppointmentStatus.DONE
+                || appt.getStatus() == AppointmentStatus.COMPLETED
+                || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
+            throw new IllegalStateException("Appointment already finalized");
+        }
+    }
+
+    private boolean isBillingViewAllowed(AppointmentStatus status) {
+        if (status == null) {
+            return false;
+        }
+        return status == AppointmentStatus.EXAMINING
+                || status == AppointmentStatus.DONE
+                || status == AppointmentStatus.WAITING_PAYMENT
+                || status == AppointmentStatus.COMPLETED;
     }
 
     // no more JSON helpers; all handling is via relational entities

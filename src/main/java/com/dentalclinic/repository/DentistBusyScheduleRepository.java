@@ -12,7 +12,7 @@ import java.util.List;
 public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedule, Long> {
     List<BusySchedule> findAllByOrderByCreatedAtDesc();
 
-    // ThÃªm hÃ m nÃ y Ä‘á»ƒ Ä‘áº¿m sá»‘ yÃªu cáº§u nghá»‰ trong thÃ¡ng (khÃ´ng tÃ­nh nhá»¯ng cÃ¡i bá»‹ REJECTED)
+    // Thêm hàm này để đếm số yêu cầu nghỉ trong tháng (không tính những cái bị REJECTED)
     @Query("SELECT COUNT(b) FROM BusySchedule b WHERE b.dentist.id = :dentistId " +
             "AND b.status <> 'REJECTED' " +
             "AND b.startDate >= :startOfMonth AND b.startDate <= :endOfMonth")
@@ -38,4 +38,14 @@ public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedul
     List<BusySchedule> findByDentistName(@Param("name") String name, Sort sort);
 
     List<BusySchedule> findByDentistFullNameContainingIgnoreCase(String name, Sort sort);
+
+    @Query("""
+            SELECT COUNT(b) > 0
+            FROM BusySchedule b
+            WHERE b.dentist.id = :dentistId
+              AND UPPER(COALESCE(b.status, '')) = 'APPROVED'
+              AND :targetDate BETWEEN b.startDate AND b.endDate
+            """)
+    boolean existsApprovedLeaveByDentistAndDate(@Param("dentistId") Long dentistId,
+                                                @Param("targetDate") LocalDate targetDate);
 }

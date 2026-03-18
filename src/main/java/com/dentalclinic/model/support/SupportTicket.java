@@ -41,6 +41,27 @@ public class SupportTicket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Transient
+    private String latestCustomerMessage;
+
+    @Transient
+    private String latestStaffReply;
+
+    @Transient
+    private String displayStatus;
+
+    @Transient
+    private List<ConversationEntry> conversationEntries = new ArrayList<>();
+
+    @Transient
+    private String customerDisplayName;
+
+    @Transient
+    private String responderDisplayName;
+
+    @Transient
+    private String serviceLabel;
+
     public SupportTicket() {
     }
 
@@ -188,8 +209,36 @@ public class SupportTicket {
         return conversationEntries;
     }
 
-    public void setConversationEntries(java.util.List<ConversationEntry> conversationEntries) {
-        this.conversationEntries = conversationEntries;
+    public void setConversationEntries(List<ConversationEntry> conversationEntries) {
+        this.conversationEntries = conversationEntries == null ? new ArrayList<>() : conversationEntries;
+    }
+
+    public String getCustomerDisplayName() {
+        return customerDisplayName;
+    }
+
+    public void setCustomerDisplayName(String customerDisplayName) {
+        this.customerDisplayName = customerDisplayName;
+    }
+
+    public String getResponderDisplayName() {
+        return responderDisplayName;
+    }
+
+    public void setResponderDisplayName(String responderDisplayName) {
+        this.responderDisplayName = responderDisplayName;
+    }
+
+    public String getServiceLabel() {
+        return serviceLabel;
+    }
+
+    public void setServiceLabel(String serviceLabel) {
+        this.serviceLabel = serviceLabel;
+    }
+
+    public boolean isClosed() {
+        return "CLOSED".equalsIgnoreCase(displayStatus);
     }
 
     public static class ConversationEntry {

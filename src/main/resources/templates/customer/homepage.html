@@ -1,5 +1,135 @@
 ﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GENZ CLINIC - Chuyên Chăm Sóc Nha Khoa</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+
+    <!-- Modern Styles -->
+    <link rel="stylesheet" th:href="@{/css/tailwind-animations.css}" />
+    <link rel="stylesheet" th:href="@{/css/homepage/home.css}" />
+    <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+      <style>
+          .news-list {
+              display: flex;
+              flex-direction: column;
+              gap: 28px;
+          }
+
+          .news-item {
+              display: grid;
+              grid-template-columns: 520px 1fr;
+              gap: 20px;
+              background: #fff;
+              border-radius: 18px;
+              overflow: hidden;
+              box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+              transition: transform .2s ease, box-shadow .2s ease;
+          }
+
+          .news-item:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
+          }
+
+          .news-thumb-link {
+              display: block;
+              height: 100%;
+              min-height: 280px;
+              background: #e5e7eb;
+          }
+
+          .news-thumb {
+              width: 100%;
+              height: 100%;
+              min-height: 280px;
+              object-fit: cover;
+              display: block;
+          }
+
+          .news-content {
+              padding: 24px 24px 24px 6px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+          }
+
+          .news-date {
+              color: #2563eb;
+              font-weight: 700;
+              font-size: 14px;
+              margin-bottom: 10px;
+          }
+
+          .news-title {
+              margin: 0 0 14px;
+              font-size: 24px;
+              line-height: 1.35;
+              font-weight: 800;
+              color: #0f172a;
+          }
+
+          .news-title a {
+              color: inherit;
+              text-decoration: none;
+          }
+
+          .news-title a:hover {
+              color: #1d4ed8;
+          }
+
+          .news-summary {
+              margin: 0 0 18px;
+              color: #475569;
+              font-size: 17px;
+              line-height: 1.75;
+          }
+
+          .news-readmore {
+              color: #1d4ed8;
+              text-decoration: none;
+              font-weight: 700;
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+          }
+
+          @media (max-width: 992px) {
+              .news-item {
+                  grid-template-columns: 1fr;
+              }
+
+              .news-content {
+                  padding: 20px;
+              }
+
+              .news-thumb-link,
+              .news-thumb {
+                  min-height: 220px;
+              }
+          }
+      </style>
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+      <main class="main-content">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <!-- Hero Section -->
+        <section class="hero">
+          <div class="hero-background">
+            <div class="hero-background-blob-1"></div>
+            <div class="hero-background-blob-2"></div>
+          </div>
 
 <head>
   <meta charset="UTF-8" />

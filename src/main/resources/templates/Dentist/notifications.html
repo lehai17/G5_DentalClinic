@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Thông báo</title>
+
+  <link rel="stylesheet" th:href="@{/css/dentist/app.css}"/>
+  <link rel="stylesheet" th:href="@{/css/dentist/notifications.css}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" style="display:flex;flex-direction:column;height:100vh;">
+    <div class="sidebar-top">
+      <div class="brand-mini">
+        <div class="brand-badge">D+</div>
+        <div style="font-weight:800">DentalPlus</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item" href="/dentist/dashboard">Tổng quan</a>
+      <a class="nav-item active" href="/dentist/notifications">
+        <span>Thông báo</span>
+        <span class="nav-badge" th:if="${unreadCount != null and unreadCount > 0}" th:text="${unreadCount}">0</span>
+      </a>
+      <a class="nav-item" href="/dentist/work-schedule">Lịch làm việc</a>
+      <a class="nav-item" href="/dentist/examined-patients">Bệnh nhân của tôi</a>
+      <a class="nav-item" href="/dentist/busy-schedule">Lịch bận</a>
+      <a class="nav-item" href="/dentist/support">Phiếu hỗ trợ</a>
+      <a class="nav-item" href="/dentist/profile">Hồ sơ</a>
+    </nav>
+
+    <div style="margin-top:auto;">
+      <a class="nav-item danger" href="/logout">Đăng xuất</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="color:var(--muted);font-size:12px;">Chuyên mục › Thông báo</div>
+    </div>
+
+    <div class="content">
+      <div class="notif-shell">
+        <div class="notif-left">
+          <div class="notif-left-head">
+            <div>
+              <div class="notif-title">Thông báo</div>
+              <div class="notif-sub">Tất cả thông báo của bạn (giống hộp thư đến)</div>
+            </div>
+
+            <form th:action="@{/dentist/notifications/read-all}" method="post">
+              <input type="hidden" name="returnTo" th:value="${returnTo}"/>
+              <button class="btn ghost" type="submit">
+                <i class="fa-regular fa-circle-check"></i>
+                Đánh dấu tất cả đã đọc
+              </button>
+            </form>
+          </div>
+
+          <form class="notif-filters" th:action="@{/dentist/notifications}" method="get">
+            <div class="search-row">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input name="q" placeholder="Tìm kiếm thông báo..." th:value="${keyword}"/>
+            </div>
+
+            <div class="filter-row">
+              <div class="tabs">
+                <a class="tab" th:classappend="${#strings.equalsIgnoreCase(selectedFilter,'all')} ? ' active' : ''"
+                   th:href="@{/dentist/notifications(page=0,filter='all',category=${selectedCategory},q=${keyword})}">Tất cả</a>
+                <a class="tab" th:classappend="${#strings.equalsIgnoreCase(selectedFilter,'unread')} ? ' active' : ''"
+                   th:href="@{/dentist/notifications(page=0,filter='unread',category=${selectedCategory},q=${keyword})}">Chưa đọc</a>
+                <a class="tab" th:classappend="${#strings.equalsIgnoreCase(selectedFilter,'read')} ? ' active' : ''"
+                   th:href="@{/dentist/notifications(page=0,filter='read',category=${selectedCategory},q=${keyword})}">Đã đọc</a>
+              </div>
+
+              <div class="type-filter">
+                <select name="category">
+                  <option value="ALL" th:selected="${#strings.equalsIgnoreCase(selectedCategory,'ALL')}">Loại</option>
+                  <option value="APPOINTMENT" th:selected="${#strings.equalsIgnoreCase(selectedCategory,'APPOINTMENT')}">Lịch hẹn</option>
+                  <option value="BUSY" th:selected="${#strings.equalsIgnoreCase(selectedCategory,'BUSY')}">Lịch bận</option>
+                  <option value="SUPPORT" th:selected="${#strings.equalsIgnoreCase(selectedCategory,'SUPPORT')}">Hỗ trợ</option>
+                </select>
+
+                <input type="hidden" name="filter" th:value="${selectedFilter}"/>
+                <input type="hidden" name="page" value="0"/>
+                <button class="btn" type="submit">Lọc</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="notif-list">
+            <a class="notif-item"
+               th:each="n : ${notifications}"
+               th:href="@{/dentist/notifications(page=${currentPage},filter=${selectedFilter},category=${selectedCategory},q=${keyword},open=${n.id})}"
+               th:classappend="${openNotification != null and openNotification.id == n.id} ? ' selected' : ''">
+              <div class="notif-item-top">
+                <div class="notif-item-title">
+                  <span class="unread-dot" th:if="${!n.read}"></span>
+                  <span th:text="${n.title}">Tiêu đề</span>
+                </div>
+                <div class="notif-item-time" th:text="${#temporals.format(n.createdAt,'HH:mm')}">--:--</div>
+              </div>
+
+              <div class="notif-item-snippet" th:text="${#strings.abbreviate(n.content, 90)}">Nội dung...</div>
+
+              <div class="notif-item-badges">
+                <span class="badge appointment"
+                      th:if="${n.referenceType != null and n.referenceType.name() == 'APPOINTMENT'}"
+                >LỊCH HẸN</span>
+                <span class="badge busy"
+                      th:if="${n.url != null and #strings.startsWith(n.url,'/dentist/busy-schedule')}"
+                >LỊCH BẬN</span>
+                <span class="badge support"
+                      th:if="${(n.referenceType != null and n.referenceType.name() == 'TICKET') or (n.url != null and #strings.startsWith(n.url,'/dentist/support'))}"
+                >HỖ TRỢ</span>
+              </div>
+            </a>
+
+            <div class="empty" th:if="${notifications == null or notifications.isEmpty()}">
+              Chưa có thông báo nào.
+            </div>
+          </div>
+
+          <div class="pager" th:if="${totalPages > 1}">
+            <a class="pg"
+               th:classappend="${currentPage == 0} ? ' disabled' : ''"
+               th:href="@{/dentist/notifications(page=${currentPage-1},filter=${selectedFilter},category=${selectedCategory},q=${keyword})}">Trước</a>
+            <span class="pg-num" th:text="${currentPage + 1} + ' / ' + ${totalPages}">1 / 1</span>
+            <a class="pg"
+               th:classappend="${currentPage + 1 >= totalPages} ? ' disabled' : ''"
+               th:href="@{/dentist/notifications(page=${currentPage+1},filter=${selectedFilter},category=${selectedCategory},q=${keyword})}">Sau</a>
+          </div>
+        </div>
+
+        <div class="notif-right">
+          <div class="detail" th:if="${openNotification != null}">
+            <div class="detail-head">
+              <div>
+                <div class="detail-title" th:text="${openNotification.title}">Tiêu đề</div>
+                <div class="detail-meta">
+                  <span th:text="${#temporals.format(openNotification.createdAt,'HH:mm dd/MM/yyyy')}">--</span>
+                  <span class="dot">•</span>
+                  <span class="meta-type"
+                        th:text="${openNotification.type != null ? openNotification.type.name() : ''}">TYPE</span>
+                </div>
+              </div>
+
+              <div class="detail-actions">
+                <form th:action="@{'/dentist/notifications/' + ${openNotification.id} + '/unread'}" method="post">
+                  <input type="hidden" name="returnTo" th:value="${returnTo}"/>
+                  <button class="icon-btn" type="submit" title="Đánh dấu chưa đọc">
+                    <i class="fa-regular fa-envelope"></i>
+                  </button>
+                </form>
+
+                <form th:action="@{'/dentist/notifications/' + ${openNotification.id} + '/delete'}" method="post">
+                  <input type="hidden" name="returnTo" th:value="${returnTo}"/>
+                  <button class="icon-btn danger" type="submit" title="Xóa thông báo"
+                          onclick="return confirm('Xóa thông báo này?');">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="detail-body" th:text="${openNotification.content}">
+              Nội dung
+            </div>
+
+            <div class="detail-cta" th:if="${openNotification.url != null and #strings.startsWith(openNotification.url,'/')}">
+              <a class="btn primary" th:href="${openNotification.url}">
+                Mở liên quan
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="detail empty-detail" th:if="${openNotification == null}">
+            Chọn một thông báo ở bên trái để xem chi tiết.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/dentist/notifications.js}"></script>
+</body>
+</html>
