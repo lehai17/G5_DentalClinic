@@ -89,11 +89,25 @@ Catalog dịch vụ hiện có trong hệ thống:
 %s
 
 Quy tắc suy luận:
-1. Nếu khách mô tả hô, vẩu, móm, răng chìa, răng nhô, răng lệch, chen chúc, khấp khểnh, khớp cắn lệch:
-   - Nếu không nói rõ loại niềng -> ưu tiên cả METAL_BRACES và INVISALIGN.
-   - Nếu nói mắc cài, kim loại -> METAL_BRACES.
-   - Nếu nói niềng trong suốt, khay trong, invisalign -> INVISALIGN.
-2. Nếu khách mô tả sâu răng, lỗ răng, mẻ răng nhỏ, sứt răng, vỡ nhỏ -> FILLING.
+1. Nếu khách mô tả các vấn đề chỉnh nha / niềng răng như:
+   - sai khớp cắn, khớp cắn lệch, khớp cắn không chuẩn
+   - răng mọc lệch, răng lệch, chen chúc, khấp khểnh, răng xoay, răng chồng chéo, răng không đều, răng lộn xộn
+   - thiếu chỗ trên cung hàm, cung hàm hẹp
+   - răng thưa, khe thưa giữa các răng, thưa răng cửa
+   - hô răng, vẩu, răng chìa, răng cửa chìa ra trước, overjet tăng, hô hàm
+   - móm, khớp cắn ngược, underbite
+   - cắn sâu, overbite quá mức, cắn phủ quá nhiều
+   - cắn hở, open bite
+   - cắn chéo, crossbite, cắn đối đầu, lệch đường giữa
+   - răng mọc ngầm, mọc kẹt, mọc sai vị trí, mọc lạc chỗ
+   - muốn chỉnh khớp cắn, kéo đều răng, sắp đều răng, đóng khe thưa, chỉnh hô, chỉnh móm, chỉnh cắn sâu, chỉnh cắn hở, chỉnh cắn chéo
+
+2. Quy tắc chọn dịch vụ chỉnh nha:
+   - Nếu người dùng nói rõ niềng răng kim loại / mắc cài / mắc cài kim loại -> chỉ trả về ["METAL_BRACES"].
+   - Nếu người dùng nói rõ niềng trong suốt / khay trong / khay trong suốt / Invisalign -> chỉ trả về ["INVISALIGN"].
+   - Nếu người dùng chỉ mô tả triệu chứng chỉnh nha nhưng chưa chốt phương pháp -> trả về 2 nhóm ["METAL_BRACES", "INVISALIGN"].
+   - Nếu ca nặng / phức tạp như móm, cắn sâu, cắn hở, cắn chéo, lệch hàm, chen chúc nặng, sai khớp cắn rõ, răng mọc ngầm / mọc kẹt / lệch nhiều -> xếp METAL_BRACES trước INVISALIGN.
+   - Nếu người dùng ưu tiên thẩm mỹ, ít lộ, tháo lắp được, giao tiếp nhiều -> xếp INVISALIGN trước METAL_BRACES.
 3. Nếu khách mô tả đau nhức dữ dội, đau sâu bên trong răng, viêm tủy, đau buốt kéo dài, đau về đêm -> ROOT_CANAL.
 4. Nếu khách mô tả mất răng, rụng răng, gãy răng mất chân, muốn trồng răng, cấy implant -> IMPLANT.
    - Nếu chỉ nói lung lay, sắp rụng, chưa chắc đã mất răng -> ưu tiên GENERAL_EXAM.
@@ -301,7 +315,8 @@ Tin nhắn khách hàng:
         }
 
         addScore(scores, KEY_WISDOM_TOOTH, lower,
-                "rang khon", "nho rang khon", "rang so 8", "moc lech", "moc ngam", "dau rang khon", "sung rang khon");
+                "rang khon", "nho rang khon", "rang so 8",
+                "moc lech", "moc ngam", "dau rang khon", "sung rang khon", "nho rang");
         addScore(scores, KEY_FILLING, lower,
                 "sau rang", "lo rang", "me rang", "sut rang", "vo rang nho", "tram rang", "rang bi thung");
         addScore(scores, KEY_ROOT_CANAL, lower,
@@ -315,30 +330,57 @@ Tin nhắn khách hàng:
         addScore(scores, KEY_CERCON_CROWN, lower,
                 "boc su", "rang su", "cercon", "rang vo lon", "rang be lon", "phuc hinh rang");
         addScore(scores, KEY_TOOTH_JEWELRY, lower,
-                "dinh da rang", "gan da rang", "dinh da", "gan da");
-
+                "dinh da rang", "gan da rang", "dinh da", "gan da", "da rang", "gan da quy");
         addScore(scores, KEY_METAL_BRACES, lower,
                 "nieng rang kim loai", "mac cai", "kim loai");
         addScore(scores, KEY_INVISALIGN, lower,
                 "invisalign", "nieng trong suot", "khay trong", "khay trong suot");
+        addScore(scores, KEY_WHITENING, lower,
+                "lam dep rang", "tham my rang", "lam dep cho rang");
 
-        boolean bracesSymptom = containsAny(lower,
-                "nieng", "chinh nha", "ho", "vau", "mom",
-                "rang nho", "rang nho ra", "rang chìa", "rang chia",
-                "rang lech", "khap khenh", "chen chuc", "khop can");
-        boolean explicitMetal = containsAny(lower, "kim loai", "mac cai");
-        boolean explicitInvis = containsAny(lower, "invisalign", "trong suot", "khay trong");
+        addScore(scores, KEY_CERCON_CROWN, lower,
+                "tham my rang su", "boc su tham my", "rang su tham my");
 
-        if (bracesSymptom) {
-            if (explicitMetal) {
-                increaseScore(scores, KEY_METAL_BRACES, 6);
-            } else if (explicitInvis) {
-                increaseScore(scores, KEY_INVISALIGN, 6);
-            } else {
-                increaseScore(scores, KEY_METAL_BRACES, 4);
-                increaseScore(scores, KEY_INVISALIGN, 4);
-            }
+        addScore(scores, KEY_TOOTH_JEWELRY, lower,
+                "lam dep rang bang da", "dinh da rang", "gan da rang", "da rang");
+
+        boolean extractionSymptom = containsAny(lower,
+                "nho rang", "rang khon", "nho rang khon",
+                "rang so 8", "dau rang khon", "moc ngam", "moc lech", "sung rang khon");
+
+        if (extractionSymptom) {
+            increaseScore(scores, KEY_WISDOM_TOOTH, 10);
         }
+
+        boolean orthoSymptom = isOrthodonticSymptom(lower);
+        boolean severeOrtho = isSevereOrthodonticCase(lower);
+        boolean preferInvisalign = isInvisalignPreference(lower);
+        boolean preferMetal = isMetalPreference(lower);
+
+        if (!extractionSymptom && orthoSymptom) {
+            List<String> orthoResult = new ArrayList<>();
+
+            if (preferMetal && !preferInvisalign) {
+                orthoResult.add(KEY_METAL_BRACES);
+                return orthoResult;
+            }
+
+            if (preferInvisalign && !preferMetal && !severeOrtho) {
+                orthoResult.add(KEY_INVISALIGN);
+                return orthoResult;
+            }
+
+            if (preferInvisalign && !severeOrtho) {
+                orthoResult.add(KEY_INVISALIGN);
+                orthoResult.add(KEY_METAL_BRACES);
+            } else {
+                orthoResult.add(KEY_METAL_BRACES);
+                orthoResult.add(KEY_INVISALIGN);
+            }
+
+            return orthoResult;
+        }
+
 
         addScore(scores, KEY_GENERAL_EXAM, lower,
                 "kham", "kham rang", "kham tong quat", "kiem tra rang", "tu van",
@@ -550,17 +592,17 @@ Tin nhắn khách hàng:
         if (containsAny(keyword, "cercon_crown", "cercon", "boc su", "rang su", "phuc hinh")) {
             return KEY_CERCON_CROWN;
         }
-        if (containsAny(keyword, "metal_braces", "mac cai", "kim loai")) {
+        if (containsAny(keyword,
+                "nieng rang kim loai", "mac cai", "kim loai", "mac cai kim loai")) {
             return KEY_METAL_BRACES;
         }
-        if (containsAny(keyword, "invisalign", "nieng trong suot", "khay trong")) {
+
+        if (containsAny(keyword,
+                "invisalign", "nieng trong suot", "khay trong", "khay trong suot")) {
             return KEY_INVISALIGN;
         }
-        if (containsAny(keyword, "tooth_jewelry", "dinh da", "gan da")) {
+        if (containsAny(keyword, "tooth_jewelry", "dinh da", "gan da", "da rang", "gan da rang")) {
             return KEY_TOOTH_JEWELRY;
-        }
-        if (containsAny(keyword, "nieng", "chinh nha", "ho", "vau", "mom", "chen chuc", "khap khenh")) {
-            return KEY_METAL_BRACES;
         }
         return null;
     }
@@ -579,8 +621,68 @@ Tin nhắn khách hàng:
         if (input == null) {
             return "";
         }
+
         String noAccent = Normalizer.normalize(input, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "");
-        return noAccent.toLowerCase(Locale.ROOT).trim();
+                .replaceAll("\\p{M}", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D');
+
+        return noAccent
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private boolean isOrthodonticSymptom(String lower) {
+        return containsAny(lower,
+                "nieng rang", "chinh nha",
+                "sai khop can", "khop can lech", "khop can khong chuan",
+                "rang lech", "rang em bi lech", "rang moc lech", "rang moc chen chuc", "chen chuc", "rang em chen chuc", "khap khenh", "rang em bi khap khenh",
+                "rang xoay", "rang chong cheo", "rang khong deu", "rang lon xon",
+                "thieu cho tren cung ham", "cung ham hep",
+                "rang thua", "ke rang thua", "khe thua", "thua rang cua", "rang co khe ho",
+                "rang ho", "mieng em bi ho", "mieng bi ho", "bi ho", "ho rang", "ho ham",
+                "rang vau", "bi vau", "rang chia", "rang cua dua ra ngoai", "rang tren chia ra nhieu", "ham tren nho ra", "overjet",
+                "rang mom", "bi mom", "ham duoi dua ra truoc", "khop can nguoc", "underbite",
+                "can sau", "khop can sau", "overbite", "can phu qua nhieu", "rang tren phu het rang duoi",
+                "can ho", "open bite", "rang truoc khong cham nhau", "rang sau khong cham nhau", "can lai van ho",
+                "can cheo", "crossbite", "can cheo truoc", "can cheo sau", "can doi dau",
+                "lech duong giua", "duong giua rang bi lech", "lech ham", "lech ham chuc nang", "sai lech tuong quan 2 ham",
+                "ham tren hep", "ham duoi lech", "mat can doi xuong ham",
+                "rang moc ngam", "rang moc ket", "rang moc sai vi tri", "rang moc lac cho",
+                "rang moc chen ra ngoai cung", "rang moc cup vao trong", "rang vinh vien moc lech",
+                "rang sua ton tai lau gay lech rang", "mat rang sua som gay xo lech rang", "rang bi xo lech sau nho rang", "rang di chuyen", "xe dich",
+                "rang cua khong khep duoc", "moi khong khep kin", "moi khong khep kin do rang ho",
+                "roi loan khop can do thoi quen xau", "sai khop can do mut tay", "sai khop can do day luoi", "ngam ti gia lau", "sai khop can do nghien rang", "lech khop can do chan thuong",
+                "thieu rang bam sinh", "thua rang", "rang nanh moc ngam", "rang nanh moc lech",
+                "nhai bi lech mot ben", "nhai kho vi rang khong khop", "kho can thuc an", "can do an khong dut", "nhai khong deu", "khop can la",
+                "muon chinh khop can", "muon keo deu rang", "muon sap deu rang", "muon dong khe thua", "muon chinh ho", "muon chinh mom", "muon chinh can sau", "muon chinh can ho", "muon chinh can cheo",
+                "lam dep rang bang nieng");
+    }
+
+    private boolean isSevereOrthodonticCase(String lower) {
+        return containsAny(lower,
+                "mom", "khop can nguoc", "underbite",
+                "can sau", "khop can sau", "overbite",
+                "can ho", "open bite",
+                "can cheo", "crossbite",
+                "lech ham", "sai khop can", "khop can lech",
+                "chen chuc nang", "rang moc ngam", "rang moc ket",
+                "rang moc lac cho", "rang nanh moc ngam", "rang nanh moc lech",
+                "mat can doi xuong ham", "khe ho moi vom mieng"
+        );
+    }
+
+    private boolean isInvisalignPreference(String lower) {
+        return containsAny(lower,
+                "invisalign", "khay trong", "khay trong suot",
+                "nieng trong suot", "tham my", "it lo", "de thao lap",
+                "de thao ra", "giao tiep nhieu", "muon dep"
+        );
+    }
+
+    private boolean isMetalPreference(String lower) {
+        return containsAny(lower,
+                "kim loai", "mac cai", "nieng kim loai", "mac cai kim loai");
     }
 }
