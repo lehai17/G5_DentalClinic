@@ -111,11 +111,29 @@ public class AdminSlotController {
             gridStart = gridStart.minusDays(1);
         }
         LocalDate gridEnd = gridStart.plusDays(41);
+
         List<SlotDayBadgeDto> badges = adminSlotService.getBadgesInRange(gridStart, gridEnd);
         Map<String, SlotDayBadgeDto> badgeMap = new HashMap<>();
+
         if (badges != null) {
             for (SlotDayBadgeDto b : badges) {
                 if (b != null && b.getDate() != null) {
+
+                    // ==========================================
+                    // THÊM LOGIC: MẶC ĐỊNH KHÓA NGÀY CHỦ NHẬT
+                    // ==========================================
+                    if (b.getDate().getDayOfWeek() == DayOfWeek.SUNDAY) {
+                        /* * Nếu là Chủ Nhật VÀ sức chứa (capacity) = 0
+                         * (tức là Admin chưa tạo ca khám nào cho ngày này)
+                         * thì ép trạng thái thành CLOSED (ĐÓNG/NGHỈ).
+                         */
+                        if (b.getCapacity() == 0) {
+                            b.setDensityStatus("CLOSED");
+                            // b.setLocked(true); // Mở comment dòng này nếu DTO của bạn có thuộc tính isLocked
+                        }
+                    }
+                    // ==========================================
+
                     badgeMap.put(b.getDate().toString(), b);
                 }
             }

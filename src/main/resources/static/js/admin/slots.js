@@ -58,7 +58,20 @@ const AdminSlots = {
           dotsHtml = `<div class="dots-container"><div class="dot ${colorClass}"></div></div>`;
         }
 
-        const isActive = !badge || badge.active !== false;
+        // Lấy trạng thái mặc định từ DB
+        let isActive = !badge || badge.active !== false;
+
+        // ==========================================
+        // THÊM LOGIC: KHÓA TỰ ĐỘNG CHỦ NHẬT TẠI ĐÂY
+        // ==========================================
+        // Nếu là Chủ Nhật (getDay() === 0) VÀ chưa có ca khám nào (totalCapacity = 0 hoặc trống)
+        if (date.getDay() === 0) {
+            if (!badge || !badge.totalCapacity || badge.totalCapacity === 0) {
+                isActive = false; // Ép trạng thái thành ĐÓNG
+            }
+        }
+        // ==========================================
+
         const lockIcon = isActive ? 'fa-lock-open' : 'fa-lock';
         const lockClass = isActive ? 'unlocked' : 'locked';
         const lockTitle = isActive ? 'Khóa ngày này' : 'Mở khóa ngày này';

@@ -41,6 +41,7 @@
     var reviewModalCloseEl = document.getElementById("cap-review-close");
     var reviewSubmitEl = document.getElementById("cap-review-submit");
     var reviewCommentEl = document.getElementById("cap-review-comment");
+    var reviewModalBound = false;
 
     var reviewDentistHintEl = document.getElementById("cap-review-dentist-hint");
     var reviewServiceHintEl = document.getElementById("cap-review-service-hint");
@@ -591,12 +592,20 @@
 
     function closeReviewModal() {
         if (!reviewModalEl) return;
+
         reviewModalEl.hidden = true;
-        reviewSelection = { appointmentId: null, dentistRating: 0, serviceRating: 0 };
+        reviewSelection = {
+            appointmentId: null,
+            dentistRating: 0,
+            serviceRating: 0
+        };
+
         if (reviewCommentEl) reviewCommentEl.value = "";
         updateDentistReviewStars(0);
         updateServiceReviewStars(0);
+
         document.body.classList.remove("cap-payment-modal-open");
+
         if (reviewSubmitEl) reviewSubmitEl.disabled = false;
     }
 
@@ -1548,6 +1557,48 @@
       loadAppointments(null, 0);
     });
   }
+    function bindReviewModal() {
+        if (!reviewModalEl || reviewModalBound) return;
+        reviewModalBound = true;
+
+        if (reviewModalCloseEl) {
+            reviewModalCloseEl.addEventListener("click", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeReviewModal();
+            });
+        }
+
+        document.querySelectorAll("[data-review-close]").forEach(function (el) {
+            el.addEventListener("click", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeReviewModal();
+            });
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && reviewModalEl && !reviewModalEl.hidden) {
+                closeReviewModal();
+            }
+        });
+
+        reviewDentistStarEls.forEach(function (starEl) {
+            starEl.addEventListener("click", function () {
+                updateDentistReviewStars(Number(starEl.dataset.rating || 0));
+            });
+        });
+
+        reviewServiceStarEls.forEach(function (starEl) {
+            starEl.addEventListener("click", function () {
+                updateServiceReviewStars(Number(starEl.dataset.rating || 0));
+            });
+        });
+
+        if (reviewSubmitEl) {
+            reviewSubmitEl.addEventListener("click", handleReviewSubmit);
+        }
+    }
 
   bindRemainingPaymentModal();
   bindInvoiceModal();

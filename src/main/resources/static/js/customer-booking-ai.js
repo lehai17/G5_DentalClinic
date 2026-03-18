@@ -56,6 +56,9 @@
                     if (s.durationMinutes) {
                         html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Thời lượng: ' + escapeHtml(String(s.durationMinutes)) + ' phút</div>';
                     }
+                    if (s.price) {
+                        html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Giá tham khảo: ' + escapeHtml(Number(s.price).toLocaleString("vi-VN")) + ' VNĐ</div>';
+                    }
                     html += '</span>';
                     html += '</label>';
                 });
