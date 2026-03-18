@@ -11,6 +11,7 @@ import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.customer.CustomerProfileService;
+import com.dentalclinic.service.review.ReviewMarketingService;
 import com.dentalclinic.service.customer.CustomerVoucherWalletService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +36,7 @@ public class CustomerHomepageController {
     private final BlogRepository blogRepo;
     private final UserRepository userRepository;
     private final CustomerAppointmentService customerAppointmentService;
+    private final ReviewMarketingService reviewMarketingService;
     private final CustomerVoucherWalletService customerVoucherWalletService;
 
     public CustomerHomepageController(CustomerProfileService profileService,
@@ -43,6 +45,7 @@ public class CustomerHomepageController {
                                       BlogRepository blogRepo,
                                       UserRepository userRepository,
                                       CustomerAppointmentService customerAppointmentService,
+                                      ReviewMarketingService reviewMarketingService,
                                       CustomerVoucherWalletService customerVoucherWalletService) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
@@ -50,6 +53,7 @@ public class CustomerHomepageController {
         this.blogRepo = blogRepo;
         this.userRepository = userRepository;
         this.customerAppointmentService = customerAppointmentService;
+        this.reviewMarketingService = reviewMarketingService;
         this.customerVoucherWalletService = customerVoucherWalletService;
     }
 
@@ -63,6 +67,7 @@ public class CustomerHomepageController {
                                Authentication authentication,
                                Model model) {
         model.addAttribute("active", "homepage");
+        model.addAttribute("featuredReviews", reviewMarketingService.getHomepageFeaturedReviews());
         Long currentCustomerId = resolveCurrentUserId(authentication);
         if (currentCustomerId == null) {
             return "redirect:/login";
@@ -78,7 +83,6 @@ public class CustomerHomepageController {
                 model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
             }
             model.addAttribute("customer", profile);
-
             model.addAttribute("services", serviceRepo.findByActiveTrue());
             model.addAttribute("dentists", dentistRepo.filterDentists(null, null, UserStatus.ACTIVE));
             model.addAttribute("voucherBannerVouchers", customerVoucherWalletService.getHomepageBannerVouchers());

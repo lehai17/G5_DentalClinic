@@ -509,7 +509,61 @@
           </div>
         </section>
 
-        <!-- Blog Section -->
+          <section class="homepage-testimonials">
+              <div class="container">
+                  <div class="section-heading">
+                      <p class="section-subtitle">CẢM NHẬN KHÁCH HÀNG</p>
+                      <h2>Khách hàng nói gì về chúng tôi</h2>
+                      <p>Những phản hồi chân thực sau khi trải nghiệm dịch vụ tại phòng khám.</p>
+                  </div>
+
+                  <div class="testimonial-grid"
+                       th:if="${featuredReviews != null and !#lists.isEmpty(featuredReviews)}">
+                      <div class="testimonial-card" th:each="review : ${featuredReviews}">
+                          <div class="quote-icon">“</div>
+
+                          <p class="testimonial-comment" th:text="${review.comment}"></p>
+
+                          <div class="testimonial-meta">
+                              <div><strong th:text="${review.customerName}"></strong></div>
+                              <div class="testimonial-service" th:text="${review.serviceName}"></div>
+                              <div class="testimonial-dentist">
+                                  Bác sĩ: <span th:text="${review.dentistName}"></span>
+                              </div>
+                          </div>
+
+                          <div class="testimonial-ratings">
+                              <div class="testimonial-rating-group">
+                                  <span class="rating-label">Bác sĩ:</span>
+                                  <div class="stars">
+                                      <i class="bi bi-star-fill" th:each="i : ${#numbers.sequence(1, review.dentistRating)}"></i>
+                                  </div>
+                              </div>
+
+                              <div class="testimonial-rating-group">
+                                  <span class="rating-label">Dịch vụ:</span>
+                                  <div class="stars">
+                                      <i class="bi bi-star-fill" th:each="i : ${#numbers.sequence(1, review.serviceRating)}"></i>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="testimonial-empty"
+                       th:if="${featuredReviews == null or #lists.isEmpty(featuredReviews)}">
+                      <div class="testimonial-empty-card">
+                          <div class="quote-icon">“</div>
+                          <h3>Phản hồi của khách hàng sẽ sớm xuất hiện tại đây</h3>
+                          <p>
+                              Chúng tôi luôn lắng nghe trải nghiệm của khách hàng để không ngừng
+                              nâng cao chất lượng dịch vụ và chăm sóc tốt hơn mỗi ngày.
+                          </p>
+                      </div>
+                  </div>
+              </div>
+          </section>
+
           <!-- Blog Section -->
           <div
                   style="

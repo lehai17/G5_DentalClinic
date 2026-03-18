@@ -1,21 +1,44 @@
 package com.dentalclinic.service.ai;
 
 import com.dentalclinic.dto.ai.LLMBookingInterpretation;
+import com.dentalclinic.model.service.Services;
+import com.dentalclinic.repository.ServiceRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class OpenAILLMService implements LLMService {
 
+    private static final String KEY_GENERAL_EXAM = "GENERAL_EXAM";
+    private static final String KEY_SCALING = "SCALING";
+    private static final String KEY_WISDOM_TOOTH = "WISDOM_TOOTH_EXTRACTION";
+    private static final String KEY_WHITENING = "WHITENING";
+    private static final String KEY_FILLING = "FILLING";
+    private static final String KEY_ROOT_CANAL = "ROOT_CANAL";
+    private static final String KEY_IMPLANT = "IMPLANT";
+    private static final String KEY_CERCON_CROWN = "CERCON_CROWN";
+    private static final String KEY_METAL_BRACES = "METAL_BRACES";
+    private static final String KEY_INVISALIGN = "INVISALIGN";
+    private static final String KEY_TOOTH_JEWELRY = "TOOTH_JEWELRY";
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final ServiceRepository serviceRepository;
 
     @Value("${ai.openai.api-key}")
     private String apiKey;
@@ -26,129 +49,94 @@ public class OpenAILLMService implements LLMService {
     @Value("${ai.openai.model}")
     private String model;
 
-    private String resolveRelativeDate(String lower) {
-        LocalDate today = LocalDate.now();
-
-        if (lower == null || lower.isBlank()) {
-            return "";
-        }
-
-        if (lower.contains("hôm nay")) {
-            return today.toString();
-        }
-
-        if (lower.contains("ngày mai") || lower.contains("mai")) {
-            return today.plusDays(1).toString();
-        }
-
-        if (lower.contains("ngày kia")) {
-            return today.plusDays(2).toString();
-        }
-
-        java.util.regex.Matcher matcher = java.util.regex.Pattern
-                .compile("sau\\s+(\\d+)\\s+ngày")
-                .matcher(lower);
-        if (matcher.find()) {
-            int days = Integer.parseInt(matcher.group(1));
-            return today.plusDays(days).toString();
-        }
-
-        if (lower.contains("tuần sau")) {
-            return today.plusWeeks(1).toString();
-        }
-
-        if (lower.contains("cuối tuần")) {
-            int currentDow = today.getDayOfWeek().getValue(); // Mon=1 ... Sun=7
-            int daysUntilSaturday = 6 - currentDow;
-            if (daysUntilSaturday < 0) {
-                daysUntilSaturday += 7;
-            }
-            return today.plusDays(daysUntilSaturday).toString();
-        }
-
-        return "";
-    }
-
-    private String resolvePreferredTime(String lower) {
-        if (lower == null || lower.isBlank()) {
-            return "";
-        }
-
-        java.util.regex.Matcher hhmmMatcher = java.util.regex.Pattern
-                .compile("(\\d{1,2}):(\\d{2})")
-                .matcher(lower);
-        if (hhmmMatcher.find()) {
-            int hour = Integer.parseInt(hhmmMatcher.group(1));
-            int minute = Integer.parseInt(hhmmMatcher.group(2));
-            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-                return String.format("%02d:%02d", hour, minute);
-            }
-        }
-
-        java.util.regex.Matcher hourMatcher = java.util.regex.Pattern
-                .compile("(\\d{1,2})\\s*giờ")
-                .matcher(lower);
-        if (hourMatcher.find()) {
-            int hour = Integer.parseInt(hourMatcher.group(1));
-
-            if (lower.contains("chiều") && hour < 12) {
-                hour += 12;
-            } else if (lower.contains("tối") && hour < 12) {
-                hour += 12;
-            }
-
-            if (hour >= 0 && hour <= 23) {
-                return String.format("%02d:00", hour);
-            }
-        }
-
-        return "";
-    }
-
-    public OpenAILLMService(RestTemplate restTemplate) {
+    public OpenAILLMService(RestTemplate restTemplate, ServiceRepository serviceRepository) {
         this.restTemplate = restTemplate;
         this.objectMapper = new ObjectMapper();
+        this.serviceRepository = serviceRepository;
     }
 
     @Override
     public LLMBookingInterpretation interpretBookingRequest(String userMessage) {
         try {
             String today = LocalDate.now().toString();
+            String serviceCatalog = buildServiceCatalogPrompt();
 
             String prompt = """
-    Bạn là trợ lý đặt lịch cho nha khoa.
-    Nhiệm vụ:
-    1. Phân tích nhu cầu đặt lịch của khách hàng.
-    2. Không chẩn đoán bệnh.
-    3. Trả về đúng JSON, không thêm markdown.
-    4. Nếu người dùng nói "mai", "ngày kia", "sau 3 ngày nữa", "tuần sau", "cuối tuần", hãy quy đổi thành ngày cụ thể theo định dạng yyyy-MM-dd.
-    5. Nếu người dùng nói "14 giờ", "2 giờ chiều", "14:30", hãy quy đổi thành preferredTime theo định dạng HH:mm.
+Bạn là trợ lý AI đặt lịch cho nha khoa.
 
-    Ngày hiện tại: %s
+Mục tiêu:
+- Chỉ suy luận NHU CẦU DỊCH VỤ để đặt lịch.
+- Không chẩn đoán bệnh.
+- Chỉ trả về đúng JSON, không thêm markdown, không giải thích.
+- Chỉ chọn các nhóm dịch vụ phù hợp nhất với câu người dùng.
+- Nếu câu người dùng mô tả rất rõ triệu chứng thì ưu tiên nhóm dịch vụ chuyên biệt, không ưu tiên GENERAL_EXAM.
+- Chỉ dùng GENERAL_EXAM khi mô tả quá chung chung, mơ hồ hoặc chưa đủ cơ sở chọn nhóm cụ thể.
 
-    JSON schema:
-    {
-      "intent": "BOOK_APPOINTMENT",
-      "serviceKeywords": ["..."],
-      "preferredDate": "yyyy-MM-dd hoặc rỗng",
-      "preferredTime": "HH:mm hoặc rỗng",
-      "timePreference": "morning|afternoon|evening|any",
-      "urgency": "low|medium|high",
-      "normalizedMessage": "..."
-    }
+Danh sách nhóm dịch vụ hợp lệ cho serviceKeywords:
+- GENERAL_EXAM
+- SCALING
+- WISDOM_TOOTH_EXTRACTION
+- WHITENING
+- FILLING
+- ROOT_CANAL
+- IMPLANT
+- CERCON_CROWN
+- METAL_BRACES
+- INVISALIGN
+- TOOTH_JEWELRY
 
-    Tin nhắn khách hàng:
-    %s
-    """.formatted(today, userMessage);
+Catalog dịch vụ hiện có trong hệ thống:
+%s
+
+Quy tắc suy luận:
+1. Nếu khách mô tả hô, vẩu, móm, răng chìa, răng nhô, răng lệch, chen chúc, khấp khểnh, khớp cắn lệch:
+   - Nếu không nói rõ loại niềng -> ưu tiên cả METAL_BRACES và INVISALIGN.
+   - Nếu nói mắc cài, kim loại -> METAL_BRACES.
+   - Nếu nói niềng trong suốt, khay trong, invisalign -> INVISALIGN.
+2. Nếu khách mô tả sâu răng, lỗ răng, mẻ răng nhỏ, sứt răng, vỡ nhỏ -> FILLING.
+3. Nếu khách mô tả đau nhức dữ dội, đau sâu bên trong răng, viêm tủy, đau buốt kéo dài, đau về đêm -> ROOT_CANAL.
+4. Nếu khách mô tả mất răng, rụng răng, gãy răng mất chân, muốn trồng răng, cấy implant -> IMPLANT.
+   - Nếu chỉ nói lung lay, sắp rụng, chưa chắc đã mất răng -> ưu tiên GENERAL_EXAM.
+5. Nếu khách mô tả bọc sứ, răng vỡ lớn, răng bể lớn, muốn phục hình răng sứ -> CERCON_CROWN.
+6. Nếu khách mô tả cao răng, vôi răng, lấy cao, chảy máu chân răng, hôi miệng, vệ sinh răng -> SCALING.
+7. Nếu khách mô tả đau răng khôn, răng khôn mọc lệch, mọc ngầm, sưng vùng răng khôn, nhổ răng khôn -> WISDOM_TOOTH_EXTRACTION.
+8. Nếu khách mô tả răng ố vàng, xỉn màu, muốn làm trắng -> WHITENING.
+9. Nếu khách mô tả đính đá răng, gắn đá răng -> TOOTH_JEWELRY.
+10. Nếu mô tả chung chung, mơ hồ, hoặc không chắc -> GENERAL_EXAM.
+11. Nếu câu nói hợp nhiều nhóm, có thể trả về tối đa 3 serviceKeywords, sắp theo mức độ phù hợp giảm dần.
+12. Nếu người dùng nói "mai", "ngày kia", "sau 3 ngày nữa", "tuần sau", "cuối tuần", hãy quy đổi preferredDate thành yyyy-MM-dd.
+13. Nếu người dùng nói "14 giờ", "2 giờ chiều", "14:30", hãy quy đổi preferredTime thành HH:mm.
+14. timePreference chỉ nhận: morning, afternoon, evening, any.
+15. urgency chỉ nhận: low, medium, high.
+
+Ngày hiện tại: %s
+
+JSON schema:
+{
+  "intent": "BOOK_APPOINTMENT",
+  "serviceKeywords": ["GENERAL_EXAM"],
+  "preferredDate": "yyyy-MM-dd hoặc rỗng",
+  "preferredTime": "HH:mm hoặc rỗng",
+  "timePreference": "morning|afternoon|evening|any",
+  "urgency": "low|medium|high",
+  "normalizedMessage": "..."
+}
+
+Tin nhắn khách hàng:
+%s
+""".formatted(serviceCatalog, today, userMessage == null ? "" : userMessage);
 
             Map<String, Object> body = new HashMap<>();
             body.put("model", model);
 
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", "Bạn là trợ lý AI đặt lịch nha khoa."));
+            messages.add(Map.of(
+                    "role", "system",
+                    "content", "Bạn là trợ lý AI đặt lịch nha khoa, chuyên suy luận nhu cầu dịch vụ từ mô tả của khách hàng."
+            ));
             messages.add(Map.of("role", "user", "content", prompt));
             body.put("messages", messages);
-            body.put("temperature", 0.2);
+            body.put("temperature", 0.1);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -164,11 +152,29 @@ public class OpenAILLMService implements LLMService {
             );
 
             String content = extractContent(response.getBody());
-            return objectMapper.readValue(content, LLMBookingInterpretation.class);
+            LLMBookingInterpretation parsed = objectMapper.readValue(content, LLMBookingInterpretation.class);
+            sanitizeInterpretation(parsed, userMessage);
+            return parsed;
 
         } catch (Exception ex) {
             return fallbackInterpretation(userMessage);
         }
+    }
+
+    private String buildServiceCatalogPrompt() {
+        List<Services> services = serviceRepository.findByActiveTrue();
+        if (services == null || services.isEmpty()) {
+            return "- Không có dữ liệu catalog dịch vụ.";
+        }
+
+        return services.stream()
+                .map(s -> "- " + safeText(s.getName()) +
+                        (safeText(s.getDescription()).isBlank() ? "" : " | " + safeText(s.getDescription())))
+                .collect(Collectors.joining("\n"));
+    }
+
+    private String safeText(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private String extractContent(String rawResponse) throws Exception {
@@ -180,46 +186,401 @@ public class OpenAILLMService implements LLMService {
         return contentNode.asText();
     }
 
+    private void sanitizeInterpretation(LLMBookingInterpretation interpretation, String originalMessage) {
+        if (interpretation == null) {
+            return;
+        }
+
+        if (interpretation.getIntent() == null || interpretation.getIntent().isBlank()) {
+            interpretation.setIntent("BOOK_APPOINTMENT");
+        }
+
+        if (interpretation.getNormalizedMessage() == null || interpretation.getNormalizedMessage().isBlank()) {
+            interpretation.setNormalizedMessage(originalMessage == null ? "" : originalMessage);
+        }
+
+        interpretation.setPreferredDate(safeDate(interpretation.getPreferredDate(), originalMessage));
+        interpretation.setPreferredTime(safeTime(interpretation.getPreferredTime(), originalMessage));
+        interpretation.setTimePreference(safeTimePreference(interpretation.getTimePreference(), originalMessage));
+        interpretation.setUrgency(safeUrgency(interpretation.getUrgency(), originalMessage));
+
+        List<String> normalizedKeywords = sanitizeKeywords(interpretation.getServiceKeywords(), originalMessage);
+        interpretation.setServiceKeywords(refineKeywordsBySymptoms(normalizedKeywords, originalMessage));
+    }
+
+    private String safeDate(String preferredDate, String originalMessage) {
+        if (preferredDate != null && preferredDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            return preferredDate;
+        }
+        return resolveRelativeDate(normalize(originalMessage));
+    }
+
+    private String safeTime(String preferredTime, String originalMessage) {
+        if (preferredTime != null && preferredTime.matches("([01]\\d|2[0-3]):[0-5]\\d")) {
+            return preferredTime;
+        }
+        return resolvePreferredTime(normalize(originalMessage));
+    }
+
+    private String safeTimePreference(String timePreference, String originalMessage) {
+        if (timePreference != null) {
+            String value = timePreference.trim().toLowerCase(Locale.ROOT);
+            if (value.equals("morning") || value.equals("afternoon") || value.equals("evening") || value.equals("any")) {
+                return value;
+            }
+        }
+        return inferTimePreference(normalize(originalMessage));
+    }
+
+    private String safeUrgency(String urgency, String originalMessage) {
+        if (urgency != null) {
+            String value = urgency.trim().toLowerCase(Locale.ROOT);
+            if (value.equals("low") || value.equals("medium") || value.equals("high")) {
+                return value;
+            }
+        }
+
+        String lower = normalize(originalMessage);
+        if (containsAny(lower, "rat dau", "dau du doi", "sung to", "chay mau nhieu", "khan cap", "cap cuu", "mat ngu vi dau")) {
+            return "high";
+        }
+        if (containsAny(lower, "dau rang", "e buot", "nhuc", "kho chiu", "viem")) {
+            return "medium";
+        }
+        return "low";
+    }
+
+    private List<String> sanitizeKeywords(List<String> serviceKeywords, String originalMessage) {
+        List<String> cleaned = new ArrayList<>();
+        if (serviceKeywords != null) {
+            for (String keyword : serviceKeywords) {
+                String canonical = canonicalKeyword(keyword);
+                if (canonical != null && !cleaned.contains(canonical)) {
+                    cleaned.add(canonical);
+                }
+            }
+        }
+
+        if (cleaned.isEmpty()) {
+            return fallbackInterpretation(originalMessage).getServiceKeywords();
+        }
+
+        if (cleaned.size() > 3) {
+            return new ArrayList<>(cleaned.subList(0, 3));
+        }
+        return cleaned;
+    }
+
+    private List<String> refineKeywordsBySymptoms(List<String> llmKeywords, String originalMessage) {
+        String lower = normalize(originalMessage);
+        Map<String, Integer> scores = new LinkedHashMap<>();
+
+        for (String key : List.of(
+                KEY_GENERAL_EXAM,
+                KEY_SCALING,
+                KEY_WISDOM_TOOTH,
+                KEY_WHITENING,
+                KEY_FILLING,
+                KEY_ROOT_CANAL,
+                KEY_IMPLANT,
+                KEY_CERCON_CROWN,
+                KEY_METAL_BRACES,
+                KEY_INVISALIGN,
+                KEY_TOOTH_JEWELRY
+        )) {
+            scores.put(key, 0);
+        }
+
+        if (llmKeywords != null) {
+            for (String key : llmKeywords) {
+                String canonical = canonicalKeyword(key);
+                if (canonical != null) {
+                    increaseScore(scores, canonical, canonical.equals(KEY_GENERAL_EXAM) ? 2 : 5);
+                }
+            }
+        }
+
+        addScore(scores, KEY_WISDOM_TOOTH, lower,
+                "rang khon", "nho rang khon", "rang so 8", "moc lech", "moc ngam", "dau rang khon", "sung rang khon");
+        addScore(scores, KEY_FILLING, lower,
+                "sau rang", "lo rang", "me rang", "sut rang", "vo rang nho", "tram rang", "rang bi thung");
+        addScore(scores, KEY_ROOT_CANAL, lower,
+                "viem tuy", "tuy rang", "dau tuy", "dau ve dem", "e buot keo dai", "dau sau trong rang");
+        addScore(scores, KEY_SCALING, lower,
+                "cao voi", "voi rang", "lay cao", "chay mau chan rang", "hoi mieng", "ve sinh rang");
+        addScore(scores, KEY_WHITENING, lower,
+                "tay trang", "lam trang rang", "rang o vang", "rang xi mau", "xiin mau");
+        addScore(scores, KEY_IMPLANT, lower,
+                "implant", "trong rang", "mat rang", "rung rang", "gay rang mat chan");
+        addScore(scores, KEY_CERCON_CROWN, lower,
+                "boc su", "rang su", "cercon", "rang vo lon", "rang be lon", "phuc hinh rang");
+        addScore(scores, KEY_TOOTH_JEWELRY, lower,
+                "dinh da rang", "gan da rang", "dinh da", "gan da");
+
+        addScore(scores, KEY_METAL_BRACES, lower,
+                "nieng rang kim loai", "mac cai", "kim loai");
+        addScore(scores, KEY_INVISALIGN, lower,
+                "invisalign", "nieng trong suot", "khay trong", "khay trong suot");
+
+        boolean bracesSymptom = containsAny(lower,
+                "nieng", "chinh nha", "ho", "vau", "mom",
+                "rang nho", "rang nho ra", "rang chìa", "rang chia",
+                "rang lech", "khap khenh", "chen chuc", "khop can");
+        boolean explicitMetal = containsAny(lower, "kim loai", "mac cai");
+        boolean explicitInvis = containsAny(lower, "invisalign", "trong suot", "khay trong");
+
+        if (bracesSymptom) {
+            if (explicitMetal) {
+                increaseScore(scores, KEY_METAL_BRACES, 6);
+            } else if (explicitInvis) {
+                increaseScore(scores, KEY_INVISALIGN, 6);
+            } else {
+                increaseScore(scores, KEY_METAL_BRACES, 4);
+                increaseScore(scores, KEY_INVISALIGN, 4);
+            }
+        }
+
+        addScore(scores, KEY_GENERAL_EXAM, lower,
+                "kham", "kham rang", "kham tong quat", "kiem tra rang", "tu van",
+                "lung lay", "sap rung", "viem nuou");
+
+        List<String> result = buildKeywordsByScore(scores);
+
+        boolean hasSpecific = result.stream().anyMatch(k -> !KEY_GENERAL_EXAM.equals(k));
+        if (hasSpecific) {
+            result.remove(KEY_GENERAL_EXAM);
+        }
+
+        if (result.isEmpty()) {
+            result.add(KEY_GENERAL_EXAM);
+        }
+
+        if (result.size() > 3) {
+            return new ArrayList<>(result.subList(0, 3));
+        }
+        return result;
+    }
+
     private LLMBookingInterpretation fallbackInterpretation(String userMessage) {
         LLMBookingInterpretation fallback = new LLMBookingInterpretation();
         fallback.setIntent("BOOK_APPOINTMENT");
-        fallback.setUrgency("medium");
-        fallback.setNormalizedMessage(userMessage);
+        fallback.setNormalizedMessage(userMessage == null ? "" : userMessage);
 
-        String lower = userMessage == null ? "" : userMessage.toLowerCase(Locale.ROOT);
+        String lower = normalize(userMessage);
 
         fallback.setPreferredTime(resolvePreferredTime(lower));
-
-        List<String> keywords = new ArrayList<>();
-
-        if (lower.contains("cạo vôi răng") || lower.contains("cạo vôi") || lower.contains("cao răng") || lower.contains("lấy cao")) {
-            keywords.add("cạo vôi răng");
-        } else if (lower.contains("nhổ răng khôn")) {
-            keywords.add("nhổ răng khôn");
-        } else if (lower.contains("niềng") || lower.contains("chỉnh nha")) {
-            keywords.add("chỉnh nha");
-        } else if (lower.contains("tẩy trắng")) {
-            keywords.add("tẩy trắng");
-        } else if (lower.contains("trám")) {
-            keywords.add("trám răng");
-        } else if (lower.contains("đau răng") || lower.contains("ê buốt") || lower.contains("khám")) {
-            keywords.add("khám tổng quát");
-        } else {
-            keywords.add("khám tổng quát");
-        }
-
-        if (lower.contains("chiều")) {
-            fallback.setTimePreference("afternoon");
-        } else if (lower.contains("sáng")) {
-            fallback.setTimePreference("morning");
-        } else if (lower.contains("tối")) {
-            fallback.setTimePreference("evening");
-        } else {
-            fallback.setTimePreference("any");
-        }
-
         fallback.setPreferredDate(resolveRelativeDate(lower));
-        fallback.setServiceKeywords(keywords);
+        fallback.setTimePreference(inferTimePreference(lower));
+        fallback.setUrgency(safeUrgency(null, userMessage));
+        fallback.setServiceKeywords(refineKeywordsBySymptoms(List.of(KEY_GENERAL_EXAM), userMessage));
         return fallback;
+    }
+
+    private void addScore(Map<String, Integer> scores, String serviceGroup, String lower, String... phrases) {
+        int score = scores.getOrDefault(serviceGroup, 0);
+        for (String phrase : phrases) {
+            String normalizedPhrase = normalize(phrase);
+            if (!normalizedPhrase.isBlank() && lower.contains(normalizedPhrase)) {
+                score += normalizedPhrase.split("\\s+").length >= 2 ? 3 : 2;
+            }
+        }
+        scores.put(serviceGroup, score);
+    }
+
+    private void increaseScore(Map<String, Integer> scores, String key, int delta) {
+        scores.put(key, scores.getOrDefault(key, 0) + delta);
+    }
+
+    private List<String> buildKeywordsByScore(Map<String, Integer> scores) {
+        List<Map.Entry<String, Integer>> ranked = scores.entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .toList();
+
+        if (ranked.isEmpty() || ranked.get(0).getValue() <= 0) {
+            return new ArrayList<>();
+        }
+
+        int topScore = ranked.get(0).getValue();
+        List<String> result = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> entry : ranked) {
+            if (entry.getValue() <= 0) {
+                continue;
+            }
+            if (entry.getValue() >= topScore - 2) {
+                result.add(entry.getKey());
+            }
+            if (result.size() == 3) {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    private String resolveRelativeDate(String lower) {
+        LocalDate today = LocalDate.now();
+
+        if (lower == null || lower.isBlank()) {
+            return "";
+        }
+
+        if (lower.contains("hom nay")) {
+            return today.toString();
+        }
+
+        if (lower.contains("ngay kia")) {
+            return today.plusDays(2).toString();
+        }
+
+        if (lower.contains("ngay mai") || lower.contains("mai")) {
+            return today.plusDays(1).toString();
+        }
+
+        Matcher afterDaysMatcher = Pattern.compile("sau\\s+(\\d+)\\s+ngay").matcher(lower);
+        if (afterDaysMatcher.find()) {
+            int days = Integer.parseInt(afterDaysMatcher.group(1));
+            return today.plusDays(days).toString();
+        }
+
+        Matcher onDayMatcher = Pattern.compile("ngay\\s+(\\d+)\\s*/\\s*(\\d+)(?:\\s*/\\s*(\\d{4}))?").matcher(lower);
+        if (onDayMatcher.find()) {
+            int day = Integer.parseInt(onDayMatcher.group(1));
+            int month = Integer.parseInt(onDayMatcher.group(2));
+            int year = onDayMatcher.group(3) != null ? Integer.parseInt(onDayMatcher.group(3)) : today.getYear();
+            try {
+                return LocalDate.of(year, month, day).toString();
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (lower.contains("tuan sau")) {
+            return today.plusWeeks(1).toString();
+        }
+
+        if (lower.contains("cuoi tuan")) {
+            int currentDow = today.getDayOfWeek().getValue();
+            int daysUntilSaturday = 6 - currentDow;
+            if (daysUntilSaturday < 0) {
+                daysUntilSaturday += 7;
+            }
+            return today.plusDays(daysUntilSaturday).toString();
+        }
+
+        return "";
+    }
+
+    private String resolvePreferredTime(String lower) {
+        if (lower == null || lower.isBlank()) {
+            return "";
+        }
+
+        Matcher hhmmMatcher = Pattern.compile("(\\d{1,2})[:h](\\d{2})").matcher(lower);
+        if (hhmmMatcher.find()) {
+            int hour = Integer.parseInt(hhmmMatcher.group(1));
+            int minute = Integer.parseInt(hhmmMatcher.group(2));
+            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+                return String.format("%02d:%02d", hour, minute);
+            }
+        }
+
+        Matcher hourMatcher = Pattern.compile("(\\d{1,2})\\s*(gio|h)").matcher(lower);
+        if (hourMatcher.find()) {
+            int hour = Integer.parseInt(hourMatcher.group(1));
+
+            if ((lower.contains("chieu") || lower.contains("toi")) && hour < 12) {
+                hour += 12;
+            }
+            if (lower.contains("sang") && hour == 12) {
+                hour = 0;
+            }
+
+            if (hour >= 0 && hour <= 23) {
+                return String.format("%02d:00", hour);
+            }
+        }
+
+        return "";
+    }
+
+    private String inferTimePreference(String lower) {
+        if (lower == null || lower.isBlank()) {
+            return "any";
+        }
+
+        if (containsAny(lower, "buoi sang", "sang")) {
+            return "morning";
+        }
+        if (containsAny(lower, "buoi chieu", "chieu")) {
+            return "afternoon";
+        }
+        if (containsAny(lower, "buoi toi", "toi")) {
+            return "evening";
+        }
+        return "any";
+    }
+
+    private String canonicalKeyword(String rawKeyword) {
+        String keyword = normalize(rawKeyword);
+        if (keyword.isBlank()) {
+            return null;
+        }
+
+        if (containsAny(keyword, "general_exam", "general exam", "kham tong quat", "kham", "tu van")) {
+            return KEY_GENERAL_EXAM;
+        }
+        if (containsAny(keyword, "scaling", "cao voi", "cao rang", "lay cao", "ve sinh rang")) {
+            return KEY_SCALING;
+        }
+        if (containsAny(keyword, "wisdom_tooth_extraction", "nho rang khon", "rang khon", "rang so 8")) {
+            return KEY_WISDOM_TOOTH;
+        }
+        if (containsAny(keyword, "whitening", "tay trang", "lam trang")) {
+            return KEY_WHITENING;
+        }
+        if (containsAny(keyword, "filling", "tram", "sau rang", "lo rang")) {
+            return KEY_FILLING;
+        }
+        if (containsAny(keyword, "root_canal", "tuy", "dieu tri tuy", "viem tuy")) {
+            return KEY_ROOT_CANAL;
+        }
+        if (containsAny(keyword, "implant", "cay ghep", "trong rang", "mat rang", "rung rang")) {
+            return KEY_IMPLANT;
+        }
+        if (containsAny(keyword, "cercon_crown", "cercon", "boc su", "rang su", "phuc hinh")) {
+            return KEY_CERCON_CROWN;
+        }
+        if (containsAny(keyword, "metal_braces", "mac cai", "kim loai")) {
+            return KEY_METAL_BRACES;
+        }
+        if (containsAny(keyword, "invisalign", "nieng trong suot", "khay trong")) {
+            return KEY_INVISALIGN;
+        }
+        if (containsAny(keyword, "tooth_jewelry", "dinh da", "gan da")) {
+            return KEY_TOOTH_JEWELRY;
+        }
+        if (containsAny(keyword, "nieng", "chinh nha", "ho", "vau", "mom", "chen chuc", "khap khenh")) {
+            return KEY_METAL_BRACES;
+        }
+        return null;
+    }
+
+    private boolean containsAny(String text, String... tokens) {
+        String normalizedText = normalize(text);
+        for (String token : tokens) {
+            if (normalizedText.contains(normalize(token))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String normalize(String input) {
+        if (input == null) {
+            return "";
+        }
+        String noAccent = Normalizer.normalize(input, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return noAccent.toLowerCase(Locale.ROOT).trim();
     }
 }

@@ -556,7 +556,172 @@ body {
 .notification-view-all {
     font-size: 13px;
 }
+.homepage-testimonials {
+    padding: 56px 0;
+    background: #f8fbff;
+}
 
+.homepage-testimonials .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.homepage-testimonials .section-heading {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.homepage-testimonials .section-subtitle {
+    color: #5b6cff;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.homepage-testimonials .section-heading h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #0f172a;
+}
+
+.homepage-testimonials .section-heading p {
+    color: #64748b;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.testimonial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(280px, 360px));
+    justify-content: center;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.testimonial-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 220px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.quote-icon {
+    font-size: 34px;
+    line-height: 1;
+    color: #5b6cff;
+    font-weight: 700;
+}
+
+.testimonial-comment {
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 96px;
+    word-break: break-word;
+}
+
+.testimonial-meta strong {
+    color: #111827;
+    font-size: 16px;
+}
+
+.testimonial-service,
+.testimonial-dentist {
+    color: #64748b;
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.testimonial-ratings {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+.testimonial-rating-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rating-label {
+    font-size: 14px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.stars {
+    display: flex;
+    gap: 4px;
+}
+
+.stars i {
+    color: #fbbf24;
+    font-size: 14px;
+}
+
+@media (max-width: 992px) {
+    .testimonial-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .testimonial-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .homepage-testimonials .section-heading h2 {
+        font-size: 24px;
+    }
+}
+.testimonial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(280px, 360px));
+    justify-content: center;
+    gap: 20px;
+}
+.testimonial-empty {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.testimonial-empty-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+}
+
+.testimonial-empty-card h3 {
+    font-size: 22px;
+    margin: 8px 0 12px;
+    color: #0f172a;
+}
+
+.testimonial-empty-card p {
+    color: #64748b;
+    line-height: 1.7;
+    margin: 0;
+}
 
 
 
