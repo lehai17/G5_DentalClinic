@@ -20,37 +20,34 @@ public class EmailService {
 
         SimpleMailMessage message = new SimpleMailMessage();
 
-        //  FROM PHẢI TRÙNG USERNAME SMTP
+        // FROM PHẢI TRÙNG USERNAME SMTP
         message.setFrom("lenguyendaihai17@gmail.com");
 
         String toEmail = appointment.getCustomer().getUser().getEmail();
         message.setTo(toEmail);
 
-        message.setSubject("Xï¿½c nhận lịch khï¿½m - GENZ CLINIC");
+        message.setSubject("Xác nhận lịch khám - GENZ CLINIC");
 
         message.setText("""
-            Xin ch� o %s,
+                Xin chào %s,
 
-            Lịch khï¿½m của bạn dï¿½ được xï¿½c nhận th� nh công.
+                Lịch khám của bạn đã được xác nhận thành công.
 
-            ðŸ¦· Dịch vụ: %s
-            👨‍⚕️ Bï¿½c sĩ: %s
-            ðŸ“… Ng� y khï¿½m: %s
-            â° Thời gian: %s - %s
+                🦷 Dịch vụ: %s
+                👨‍⚕️ Bác sĩ: %s
+                📅 Ngày khám: %s
+                ⏰ Thời gian: %s - %s
 
-            Trï¿½n trọng,
-            GENZ CLINIC
-            """.formatted(
+                Trân trọng,
+                GENZ CLINIC
+                """.formatted(
                 appointment.getCustomer().getFullName(),
                 appointment.getService().getName(),
                 appointment.getDentist().getFullName(),
                 appointment.getDate(),
                 appointment.getStartTime(),
-                appointment.getEndTime()
-        ));
+                appointment.getEndTime()));
 
         supportMailSender.send(message);
     }
 }
-
-

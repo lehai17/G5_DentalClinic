@@ -22,12 +22,12 @@ public class StaffService {
     @Autowired
     private StaffProfileRepository staffProfileRepository;
 
-    // 1. Lưu nhï¿½n viên mới
+    // 1. Lưu nhân viên mới
     @Transactional
     public void saveStaff(StaffDTO dto) {
-        // KIỂM TRA EMAIL TỒN T� I TRƯỚC
+        // KIỂM TRA EMAIL TỒN TẠI TRƯỚC
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email n� y dï¿½ được sử dụng trong hệ thống!");
+            throw new RuntimeException("Email này đã được sử dụng trong hệ thống!");
         }
         User user = new User();
         user.setEmail(dto.getEmail());
@@ -36,12 +36,11 @@ public class StaffService {
         user.setStatus(UserStatus.ACTIVE);
         user.setDateOfBirth(dto.getDateOfBirth());
 
-        // Ã‰p kiểu String từ DTO sang Enum Gender của User Entity
+        // Ép kiểu String từ DTO sang Enum Gender của User Entity
         if (dto.getGender() != null) {
             user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
         }
 
-        userRepository.save(user);
         userRepository.save(user);
 
         StaffProfile profile = new StaffProfile();
@@ -53,7 +52,7 @@ public class StaffService {
         staffProfileRepository.save(profile);
     }
 
-    // 2. Khóa t� i khoản nhï¿½n viên
+    // 2. Khóa tài khoản nhân viên
     @Transactional
     public void deactivateStaff(Long userId) {
         userRepository.findById(userId).ifPresent(user -> {
@@ -81,7 +80,7 @@ public class StaffService {
         return staffProfileRepository.searchStaffs(kwParam, status, posParam);
     }
 
-    // 4. Cï¿½c phương thức bổ trợ cho Stat Cards
+    // 4. Các phương thức bổ trợ cho Stat Cards
     public long countTotal() {
         return staffProfileRepository.count();
     }
@@ -102,10 +101,10 @@ public class StaffService {
         userRepository.save(user);
     }
 
-    // 5. Lấy thông tin nhï¿½n viên để cập nhật
+    // 5. Lấy thông tin nhân viên để cập nhật
     public com.dentalclinic.dto.admin.UpdateStaffDTO getStaffForUpdate(Long id) {
         StaffProfile profile = staffProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhï¿½n viên"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
         com.dentalclinic.dto.admin.UpdateStaffDTO dto = new com.dentalclinic.dto.admin.UpdateStaffDTO();
         dto.setId(profile.getId());
@@ -126,20 +125,20 @@ public class StaffService {
         return dto;
     }
 
-    // 6. Cập nhật nhï¿½n viên
+    // 6. Cập nhật nhân viên
     @Transactional
     public void updateStaff(Long id, com.dentalclinic.dto.admin.UpdateStaffDTO dto) {
         StaffProfile profile = staffProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhï¿½n viên"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
         User user = profile.getUser();
         if (user == null) {
-            throw new RuntimeException("Lỗi dữ liệu: Nhï¿½n viên không có t� i khoản user");
+            throw new RuntimeException("Lỗi dữ liệu: Nhân viên không có tài khoản user");
         }
 
         // Kiểm tra trùng email (nếu email bị thay đổi)
         if (!user.getEmail().equals(dto.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email n� y dï¿½ được sử dụng trong hệ thống!");
+            throw new RuntimeException("Email này đã được sử dụng trong hệ thống!");
         }
 
         // Cập nhật User
@@ -163,11 +162,11 @@ public class StaffService {
     @Transactional
     public void deleteStaff(Long id) {
         StaffProfile profile = staffProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhï¿½n viên"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
         User user = profile.getUser();
         if (user == null) {
-            throw new RuntimeException("Lỗi dữ liệu: Nhï¿½n viên không có t� i khoản user");
+            throw new RuntimeException("Lỗi dữ liệu: Nhân viên không có tài khoản user");
         }
 
         try {
@@ -175,7 +174,7 @@ public class StaffService {
             userRepository.delete(user);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             throw new RuntimeException(
-                    "Không thể xóa do tồn tại dữ liệu lịch sử liên kết với nhï¿½n viên n� y. Vui lòng dùng tính năng 'Khóa'.");
+                    "Không thể xóa do tồn tại dữ liệu lịch sử liên kết với nhân viên này. Vui lòng dùng tính năng 'Khóa'.");
         }
     }
 }

@@ -25,9 +25,9 @@ public class PasswordResetService {
     private final SecureRandom random = new SecureRandom();
 
     public PasswordResetService(UserRepository userRepository,
-                                PasswordResetRepository passwordResetRepository,
-                                JavaMailSender mailSender,
-                                PasswordEncoder passwordEncoder) {
+            PasswordResetRepository passwordResetRepository,
+            JavaMailSender mailSender,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordResetRepository = passwordResetRepository;
         this.mailSender = mailSender;
@@ -37,7 +37,8 @@ public class PasswordResetService {
     public void requestReset(String email) {
         // Không tiết lộ email có tồn tại hay không (best practice)
         Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isEmpty()) return;
+        if (userOpt.isEmpty())
+            return;
 
         String code = generate6DigitCode();
         String token = generateToken();
@@ -59,15 +60,17 @@ public class PasswordResetService {
                 .findTopByEmailOrderByCreatedAtDesc(email)
                 .orElseThrow(() -> new RuntimeException("No reset request"));
 
-        if (pr.isUsed()) throw new RuntimeException("Code already used");
-        if (pr.getExpiresAt().isBefore(LocalDateTime.now())) throw new RuntimeException("Code expired");
+        if (pr.isUsed())
+            throw new RuntimeException("Code already used");
+        if (pr.getExpiresAt().isBefore(LocalDateTime.now()))
+            throw new RuntimeException("Code expired");
 
-        // so sï¿½nh code người dùng nhập với code_hash
+        // so sánh code người dùng nhập với code_hash
         if (!passwordEncoder.matches(code, pr.getCodeHash())) {
             throw new RuntimeException("Invalid code");
         }
 
-        // mark used? (tuỳ bạn). á»ž dï¿½y mark "used = true" để code chỉ dùng 1 lần
+        // mark used? (tuỳ bạn). Ở đây mark "used = true" để code chỉ dùng 1 lần
         pr.setUsed(true);
         passwordResetRepository.save(pr);
 
@@ -79,9 +82,11 @@ public class PasswordResetService {
                 .findByToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
 
-        // token n� y phải dï¿½ verify code (used=true) v�  chưa hết hạn
-        if (!pr.isUsed()) throw new RuntimeException("Not verified");
-        if (pr.getExpiresAt().isBefore(LocalDateTime.now())) throw new RuntimeException("Expired");
+        // token này phải đã verify code (used=true) và chưa hết hạn
+        if (!pr.isUsed())
+            throw new RuntimeException("Not verified");
+        if (pr.getExpiresAt().isBefore(LocalDateTime.now()))
+            throw new RuntimeException("Expired");
 
         User user = userRepository.findByEmail(pr.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -108,9 +113,7 @@ public class PasswordResetService {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(to);
         msg.setSubject("GENZ CLINIC - Password Reset Code");
-        msg.setText("Mï¿½ xï¿½c thực của bạn l� : " + code + "\nMï¿½ có hiệu lực trong 10 phút.");
+        msg.setText("Mã xác thực của bạn là: " + code + "\nMã có hiệu lực trong 10 phút.");
         mailSender.send(msg);
     }
 }
-
-
