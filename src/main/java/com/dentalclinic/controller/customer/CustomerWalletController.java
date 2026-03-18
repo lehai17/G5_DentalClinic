@@ -11,6 +11,8 @@ import com.dentalclinic.repository.WalletTransactionRepository;
 import com.dentalclinic.service.wallet.WalletService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,8 +53,19 @@ public class CustomerWalletController {
         Long userId = null;
         if (uid instanceof Long) userId = (Long) uid;
         else if (uid instanceof Number) userId = ((Number) uid).longValue();
-        if (userId == null || !userRepository.existsById(userId)) return null;
-        return userId;
+        if (userId != null && userRepository.existsById(userId)) return userId;
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            return null;
+        }
+
+        return userRepository.findByEmail(authentication.getName())
+                .map(user -> {
+                    session.setAttribute(SESSION_USER_ID, user.getId());
+                    return user.getId();
+                })
+                .orElse(null);
     }
 
     @GetMapping

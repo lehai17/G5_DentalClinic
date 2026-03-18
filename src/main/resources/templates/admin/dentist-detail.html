@@ -193,12 +193,12 @@
                                         style="width: 180px; height: 180px;">
                                         <div class="avatar-wrapper rounded-circle border border-4 border-white shadow-sm overflow-hidden"
                                             style="width: 100%; height: 100%; position: relative; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
-                                            <img th:if="${dentist?.avatar != null}" th:src="@{${dentist.avatar}}"
+                                            <img th:if="${dentist != null and dentist.avatarPath != null}" th:src="@{${dentist.avatarPath}}"
                                                 class="rounded-circle"
                                                 style="width: 100%; height: 100%; object-fit: cover;"
                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                             <div class="fallback-avatar"
-                                                th:style="${dentist.avatar == null ? 'display: flex;' : 'display: none;'}"
+                                                th:style="${dentist != null and dentist.avatarPath != null ? 'display: none;' : 'display: flex;'}"
                                                 style="width: 100%; height: 100%; align-items: center; justify-content: center; background: #e2e8f0; color: #64748b;">
                                                 <i class="fas fa-user-md" style="font-size: 80px;"></i>
                                             </div>

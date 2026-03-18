@@ -38,6 +38,9 @@ public class Review {
     @Column(name = "service_rating", nullable = false)
     private int serviceRating;
 
+    @Column(name = "rating", nullable = false)
+    private int rating;
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String comment;
 
@@ -93,6 +96,12 @@ public class Review {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        syncLegacyRating();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        syncLegacyRating();
     }
 
     public Long getId() {
@@ -141,6 +150,7 @@ public class Review {
 
     public void setDentistRating(int dentistRating) {
         this.dentistRating = dentistRating;
+        syncLegacyRating();
     }
 
     public int getServiceRating() {
@@ -149,6 +159,7 @@ public class Review {
 
     public void setServiceRating(int serviceRating) {
         this.serviceRating = serviceRating;
+        syncLegacyRating();
     }
 
     public String getComment() {
@@ -165,5 +176,27 @@ public class Review {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    private void syncLegacyRating() {
+        if (dentistRating > 0 && serviceRating > 0) {
+            this.rating = (int) Math.round((dentistRating + serviceRating) / 2.0d);
+            return;
+        }
+        if (dentistRating > 0) {
+            this.rating = dentistRating;
+            return;
+        }
+        if (serviceRating > 0) {
+            this.rating = serviceRating;
+        }
     }
 }

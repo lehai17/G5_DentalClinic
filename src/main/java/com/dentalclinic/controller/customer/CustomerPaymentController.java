@@ -21,6 +21,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -244,6 +246,7 @@ public class CustomerPaymentController {
             }
 
             String vnp_SecureHash = fields.remove("vnp_SecureHash");
+            fields.remove("vnp_SecureHashType");
             List<String> fieldNames = new ArrayList<>(fields.keySet());
             Collections.sort(fieldNames);
 
@@ -452,9 +455,20 @@ public class CustomerPaymentController {
         } else if (uid instanceof Number) {
             userId = ((Number) uid).longValue();
         }
-        if (userId == null || !userRepository.existsById(userId)) {
+        if (userId != null && userRepository.existsById(userId)) {
+            return userId;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
             return null;
         }
-        return userId;
+
+        return userRepository.findByEmail(authentication.getName())
+                .map(user -> {
+                    session.setAttribute(SESSION_USER_ID, user.getId());
+                    return user.getId();
+                })
+                .orElse(null);
     }
 }
