@@ -3,6 +3,7 @@ package com.dentalclinic.controller.staff;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.service.mail.EmailService;
 import com.dentalclinic.service.staff.StaffAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
