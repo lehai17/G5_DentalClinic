@@ -45,7 +45,7 @@ public class CustomerHomepageController {
                                       BlogRepository blogRepo,
                                       UserRepository userRepository,
                                       CustomerAppointmentService customerAppointmentService,
-                                      ReviewMarketingService reviewMarketingService) {
+                                      ReviewMarketingService reviewMarketingService,
                                       CustomerVoucherWalletService customerVoucherWalletService) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
