@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.hibernate.Hibernate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -178,7 +179,8 @@ public class EmailService {
 
         try {
             Invoice invoice = invoiceRepository.findByAppointment_Id(appointmentId).orElse(null);
-            BillingNote billingNote = billingNoteRepository.findByAppointment_IdWithPerformedServices(appointmentId).orElse(null);
+            BillingNote billingNote = billingNoteRepository.findByAppointment_Id(appointmentId).orElse(null);
+            initializeBillingNoteRelations(billingNote);
 
             sendHtmlMail(
                     recipientEmail,
@@ -199,6 +201,19 @@ public class EmailService {
         } catch (Exception ex) {
             log.error("Unexpected error while sending appointment completion email for appointment {}", appointmentId, ex);
             return false;
+        }
+    }
+
+    private void initializeBillingNoteRelations(BillingNote billingNote) {
+        if (billingNote == null) {
+            return;
+        }
+
+        Hibernate.initialize(billingNote.getPerformedServices());
+        for (BillingPerformedService performedService : billingNote.getPerformedServices()) {
+            if (performedService != null && performedService.getService() != null) {
+                Hibernate.initialize(performedService.getService());
+            }
         }
     }
 
