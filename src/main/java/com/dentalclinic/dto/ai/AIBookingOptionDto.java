@@ -2,6 +2,7 @@ package com.dentalclinic.dto.ai;
 
 public class AIBookingOptionDto {
 
+    private Long slotId;
     private String date;
     private String startTime;
     private String endTime;
@@ -10,11 +11,20 @@ public class AIBookingOptionDto {
     public AIBookingOptionDto() {
     }
 
-    public AIBookingOptionDto(String date, String startTime, String endTime, String displayText) {
+    public AIBookingOptionDto(Long slotId, String date, String startTime, String endTime, String displayText) {
+        this.slotId = slotId;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.displayText = displayText;
+    }
+
+    public Long getSlotId() {
+        return slotId;
+    }
+
+    public void setSlotId(Long slotId) {
+        this.slotId = slotId;
     }
 
     public String getDate() {

@@ -212,38 +212,54 @@
 </div>
 
 <div class="cap-payment-modal" id="cap-review-modal" hidden>
-  <div class="cap-payment-modal__backdrop" data-review-close></div>
-  <div class="cap-payment-modal__dialog cap-payment-modal__dialog--review" role="dialog" aria-modal="true" aria-labelledby="cap-review-title">
-    <button type="button" class="cap-payment-modal__close" id="cap-review-close" aria-label="Đóng">
-      <i class="bi bi-x-lg"></i>
-    </button>
-    <div class="cap-payment-modal__eyebrow">Đánh giá sau khám</div>
-    <h3 id="cap-review-title" class="cap-payment-modal__title">Đánh giá bác sĩ</h3>
-    <p class="cap-payment-modal__subtitle">Chia sẻ trải nghiệm của bạn sau khi hoàn thành lịch hẹn.</p>
+    <div class="cap-payment-modal__backdrop" data-review-close></div>
+    <div class="cap-payment-modal__dialog cap-payment-modal__dialog--review" role="dialog" aria-modal="true" aria-labelledby="cap-review-title">
+        <button type="button" class="cap-payment-modal__close" id="cap-review-close" aria-label="Đóng">
+            <i class="bi bi-x-lg"></i>
+        </button>
 
-    <div class="cap-review-stars" id="cap-review-stars">
-      <button type="button" class="cap-review-star" data-rating="1" aria-label="1 sao"><i class="bi bi-star-fill"></i></button>
-      <button type="button" class="cap-review-star" data-rating="2" aria-label="2 sao"><i class="bi bi-star-fill"></i></button>
-      <button type="button" class="cap-review-star" data-rating="3" aria-label="3 sao"><i class="bi bi-star-fill"></i></button>
-      <button type="button" class="cap-review-star" data-rating="4" aria-label="4 sao"><i class="bi bi-star-fill"></i></button>
-      <button type="button" class="cap-review-star" data-rating="5" aria-label="5 sao"><i class="bi bi-star-fill"></i></button>
+        <div class="cap-payment-modal__eyebrow">Đánh giá sau khám</div>
+        <h3 id="cap-review-title" class="cap-payment-modal__title">Đánh giá bác sĩ và dịch vụ</h3>
+        <p class="cap-payment-modal__subtitle">Chia sẻ trải nghiệm của bạn sau khi hoàn thành lịch hẹn.</p>
+
+        <div class="cap-review-section">
+            <div class="cap-review-label">Đánh giá bác sĩ</div>
+            <div class="cap-review-stars" id="cap-review-dentist-stars">
+                <button type="button" class="cap-review-star dentist-star" data-rating="1"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star dentist-star" data-rating="2"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star dentist-star" data-rating="3"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star dentist-star" data-rating="4"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star dentist-star" data-rating="5"><i class="bi bi-star-fill"></i></button>
+            </div>
+            <div class="cap-review-hint" id="cap-review-dentist-hint">Chọn số sao cho bác sĩ</div>
+        </div>
+
+        <div class="cap-review-section" style="margin-top:16px;">
+            <div class="cap-review-label">Đánh giá dịch vụ</div>
+            <div class="cap-review-stars" id="cap-review-service-stars">
+                <button type="button" class="cap-review-star service-star" data-rating="1"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star service-star" data-rating="2"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star service-star" data-rating="3"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star service-star" data-rating="4"><i class="bi bi-star-fill"></i></button>
+                <button type="button" class="cap-review-star service-star" data-rating="5"><i class="bi bi-star-fill"></i></button>
+            </div>
+            <div class="cap-review-hint" id="cap-review-service-hint">Chọn số sao cho dịch vụ</div>
+        </div>
+
+        <label class="cap-review-textarea-wrap" for="cap-review-comment">
+            <span>Nội dung đánh giá</span>
+            <textarea id="cap-review-comment" class="cap-review-textarea" rows="5" maxlength="500"
+                      placeholder="Ví dụ: Bác sĩ tư vấn kỹ, dịch vụ tốt, nhân viên hỗ trợ nhiệt tình..."></textarea>
+        </label>
+
+        <div class="cap-inline-actions">
+            <button type="button" class="cap-btn cap-btn-neutral" data-review-close>Đóng</button>
+            <button type="button" class="cap-btn cap-btn-primary" id="cap-review-submit">
+                <i class="bi bi-send"></i>
+                Gửi đánh giá
+            </button>
+        </div>
     </div>
-
-    <div class="cap-review-hint" id="cap-review-hint">Chọn số sao từ 1 đến 5</div>
-
-    <label class="cap-review-textarea-wrap" for="cap-review-comment">
-      <span>Nội dung đánh giá</span>
-      <textarea id="cap-review-comment" class="cap-review-textarea" rows="5" maxlength="500" placeholder="Ví dụ: Bác sĩ tư vấn kỹ, nhẹ nhàng và đúng giờ..."></textarea>
-    </label>
-
-    <div class="cap-inline-actions">
-      <button type="button" class="cap-btn cap-btn-neutral" data-review-close>Đóng</button>
-      <button type="button" class="cap-btn cap-btn-primary" id="cap-review-submit">
-        <i class="bi bi-send"></i>
-        Gửi đánh giá
-      </button>
-    </div>
-  </div>
 </div>
 
 <script th:src="@{/js/customer-feedback.js}"></script>
