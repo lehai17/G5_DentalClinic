@@ -55,8 +55,8 @@
     setStep(1);
     updateSummary();
 
-    var urlParams = new URLSearchParams(window.location.search);
-    var status = urlParams.get('status');
+    var returnState = getVerifiedReturnState();
+    var status = returnState.type;
     var pendingId = sessionStorage.getItem('pendingAppointmentId');
 
     if (status === 'success') {
@@ -89,9 +89,9 @@
   }
 
   function checkReturnStatus() {
-    var urlParams = new URLSearchParams(window.location.search);
-    var status = urlParams.get('status');
-    var appointmentId = urlParams.get('id');
+    var returnState = getVerifiedReturnState();
+    var status = returnState.type;
+    var appointmentId = returnState.appointmentId;
 
     if (status === 'success') {
       setStep(4);
@@ -122,9 +122,33 @@
           .then(function (res) { return res.json(); })
           .then(function (data) { updateSuccessSummary(data); });
       }
-    } else if (status === 'fail') {
-      showAlert('Thanh toán không thành công hoặc bạn đã hủy giao dịch.', 'error', 'Thanh toán thất bại');
+    } else if (status === 'warning') {
+      showAlert(returnState.message || 'Thanh toán không thành công hoặc bạn đã hủy giao dịch.', 'warning', returnState.title || 'Thanh toán chưa hoàn tất');
       setStep(1);
+    } else if (status === 'info') {
+      showToast(returnState.message || 'Không ghi nhận thay đổi từ liên kết này.', 'info', returnState.title || 'Thông báo');
+      setStep(1);
+    }
+
+    clearReturnQueryParams();
+  }
+
+  function getVerifiedReturnState() {
+    var node = document.getElementById('booking-return-status');
+    if (!node) {
+      return { type: '', title: '', message: '', appointmentId: '' };
+    }
+    return {
+      type: (node.dataset.statusType || '').trim().toLowerCase(),
+      title: normalizeText(node.dataset.statusTitle || ''),
+      message: normalizeText(node.dataset.statusMessage || ''),
+      appointmentId: (node.dataset.appointmentId || '').trim()
+    };
+  }
+
+  function clearReturnQueryParams() {
+    if (window.history && typeof window.history.replaceState === 'function') {
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 

@@ -4,8 +4,10 @@ import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.wallet.DemoBankAccount;
 import com.dentalclinic.model.wallet.Wallet;
 import com.dentalclinic.model.wallet.WalletTransaction;
+import com.dentalclinic.model.wallet.WalletTransactionType;
 import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.repository.WalletTransactionRepository;
 import com.dentalclinic.service.wallet.WalletService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,13 +34,16 @@ public class CustomerWalletController {
     private final WalletService walletService;
     private final UserRepository userRepository;
     private final CustomerProfileRepository customerProfileRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
 
     public CustomerWalletController(WalletService walletService,
                                     UserRepository userRepository,
-                                    CustomerProfileRepository customerProfileRepository) {
+                                    CustomerProfileRepository customerProfileRepository,
+                                    WalletTransactionRepository walletTransactionRepository) {
         this.walletService = walletService;
         this.userRepository = userRepository;
         this.customerProfileRepository = customerProfileRepository;
+        this.walletTransactionRepository = walletTransactionRepository;
     }
 
     private Long getCurrentUserId(HttpSession session) {
@@ -51,7 +56,10 @@ public class CustomerWalletController {
     }
 
     @GetMapping
-    public String walletPage(HttpSession session, Model model) {
+    public String walletPage(HttpSession session,
+                             Model model,
+                             @RequestParam(required = false) String topup,
+                             @RequestParam(required = false) String txnRef) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return "redirect:/login";
@@ -59,6 +67,7 @@ public class CustomerWalletController {
 
         Optional<Wallet> wallet = walletService.getWalletByUserId(userId);
         model.addAttribute("wallet", wallet.orElse(null));
+        applyTopupStatusMessage(model, userId, topup, txnRef);
         return "customer/wallet";
     }
 
@@ -343,5 +352,39 @@ public class CustomerWalletController {
         data.put("remainingDailyLimit", securityState.remainingDailyLimit().doubleValue());
         data.put("pinRequiredThreshold", securityState.pinRequiredThreshold().doubleValue());
         return data;
+    }
+
+    private void applyTopupStatusMessage(Model model, Long userId, String topup, String txnRef) {
+        if (topup == null || topup.isBlank()) {
+            return;
+        }
+
+        String normalizedStatus = topup.trim().toLowerCase();
+        String normalizedTxnRef = txnRef == null ? "" : txnRef.trim();
+        boolean hasTransactionReference = !normalizedTxnRef.isBlank();
+        boolean verifiedSuccess = hasTransactionReference && walletTransactionRepository
+                .existsByWallet_Customer_User_IdAndTypeAndDescription(
+                        userId,
+                        WalletTransactionType.DEPOSIT,
+                        "Nap tien vi qua VNPay [" + normalizedTxnRef + "]"
+                );
+
+        if ("success".equals(normalizedStatus) && verifiedSuccess) {
+            model.addAttribute("walletStatusType", "success");
+            model.addAttribute("walletStatusTitle", "Nạp tiền thành công");
+            model.addAttribute("walletStatusMessage", "Nạp tiền vào ví thành công.");
+            return;
+        }
+
+        if ("fail".equals(normalizedStatus) && hasTransactionReference) {
+            model.addAttribute("walletStatusType", "warning");
+            model.addAttribute("walletStatusTitle", "Nạp tiền chưa hoàn tất");
+            model.addAttribute("walletStatusMessage", "Giao dịch nạp tiền chưa hoàn tất hoặc không làm thay đổi số dư ví.");
+            return;
+        }
+
+        model.addAttribute("walletStatusType", "info");
+        model.addAttribute("walletStatusTitle", "Không ghi nhận giao dịch mới");
+        model.addAttribute("walletStatusMessage", "Không ghi nhận thay đổi số dư cho liên kết này. Có thể bạn đã mở lại liên kết cũ hoặc giao dịch không hợp lệ.");
     }
 }

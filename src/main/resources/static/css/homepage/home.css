@@ -144,6 +144,14 @@ body {
     font-weight: 700 !important;
     display: block !important;
     color: #1a202c !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+    font-kerning: normal;
+    text-transform: none !important;
+}
+
+.homepage-blog-title {
+    white-space: normal !important;
 }
 
 .section-subtitle {

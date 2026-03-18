@@ -19,10 +19,10 @@ public class Notification {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "title")
+    @Column(name = "title", columnDefinition = "NVARCHAR(255)")
     private String title;
 
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
     @Enumerated(EnumType.STRING)
@@ -74,7 +74,7 @@ public class Notification {
     }
 
     public String getTitle() {
-        return normalizeDisplayText(title);
+        return fallbackQuestionMarkTitle(normalizeDisplayText(title));
     }
 
     public void setTitle(String title) {
@@ -82,7 +82,7 @@ public class Notification {
     }
 
     public String getContent() {
-        return normalizeDisplayText(content);
+        return fallbackQuestionMarkContent(normalizeDisplayText(content));
     }
 
     public void setContent(String content) {
@@ -165,11 +165,51 @@ public class Notification {
     }
 
     private boolean looksMojibake(String value) {
-        return value.contains("Ã")
-                || value.contains("Ä")
-                || value.contains("á»")
-                || value.contains("áº")
-                || value.contains("Æ")
-                || value.contains("Â");
+        return value.contains("Ãƒ")
+                || value.contains("Ã„")
+                || value.contains("Ã¡Â»")
+                || value.contains("Ã¡Âº")
+                || value.contains("Ã†")
+                || value.contains("Ã‚");
+    }
+    private String fallbackQuestionMarkTitle(String value) {
+        if (value == null || !value.contains("?")) {
+            return value;
+        }
+
+        if (type == NotificationType.BOOKING_UPDATED) {
+            return "Lịch hẹn được cập nhật";
+        }
+        if (type == NotificationType.BOOKING_CANCELLED) {
+            return "Lịch hẹn đã bị hủy";
+        }
+        if (type == NotificationType.BOOKING_CREATED) {
+            return "Lịch hẹn đã được tạo";
+        }
+        if (type == NotificationType.APPOINTMENT_REMINDER) {
+            return "Nhắc lịch hẹn";
+        }
+        return value;
+    }
+
+    private String fallbackQuestionMarkContent(String value) {
+        if (value == null || !value.contains("?")) {
+            return value;
+        }
+
+        String appointmentRef = referenceId != null ? " #" + referenceId : "";
+        if (type == NotificationType.BOOKING_UPDATED) {
+            return "Lịch hẹn" + appointmentRef + " đã được cập nhật.";
+        }
+        if (type == NotificationType.BOOKING_CANCELLED) {
+            return "Lịch hẹn" + appointmentRef + " đã bị hủy.";
+        }
+        if (type == NotificationType.BOOKING_CREATED) {
+            return "Lịch hẹn" + appointmentRef + " đã được tạo thành công.";
+        }
+        if (type == NotificationType.APPOINTMENT_REMINDER) {
+            return "Bạn có lịch hẹn sắp tới. Vui lòng kiểm tra lại thời gian khám.";
+        }
+        return value;
     }
 }

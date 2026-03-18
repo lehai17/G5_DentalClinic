@@ -36,6 +36,11 @@
 	            <i class="bi bi-x-octagon-fill"></i>
 	            <span th:text="${errorMessage}">Không thể tải dữ liệu đặt lại lịch.</span>
 	          </div>
+          <div
+            id="booking-return-status"
+            th:attr="data-status-type=${bookingReturnType},data-status-title=${bookingReturnTitle},data-status-message=${bookingReturnMessage},data-appointment-id=${bookingReturnAppointmentId}"
+            hidden
+          ></div>
 
 	          <!-- Header -->
 	          <div class="booking-header">

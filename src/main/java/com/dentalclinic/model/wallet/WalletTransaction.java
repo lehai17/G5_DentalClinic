@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Entity
@@ -88,7 +89,7 @@ public class WalletTransaction {
     }
 
     public String getDescription() {
-        return description;
+        return fallbackQuestionMarkDescription(normalizeDisplayText(description));
     }
 
     public void setDescription(String description) {
@@ -164,5 +165,43 @@ public class WalletTransaction {
             transaction.setAppointmentId(this.appointmentId);
             return transaction;
         }
+    }
+
+    private String normalizeDisplayText(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        if (!looksMojibake(value)) {
+            return value;
+        }
+        String repaired = new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        return repaired.isBlank() ? value : repaired;
+    }
+
+    private boolean looksMojibake(String value) {
+        return value.contains("Ã")
+                || value.contains("Â")
+                || value.contains("Ä");
+    }
+
+    private String fallbackQuestionMarkDescription(String value) {
+        if (value == null || !value.contains("?")) {
+            return value;
+        }
+
+        String appointmentRef = appointmentId != null ? " #" + appointmentId : "";
+        if (type == WalletTransactionType.REFUND) {
+            return "Hoàn tiền đặt cọc lịch hẹn" + appointmentRef;
+        }
+        if (type == WalletTransactionType.PAYMENT) {
+            return "Thanh toán lịch hẹn" + appointmentRef;
+        }
+        if (type == WalletTransactionType.DEPOSIT) {
+            return "Nạp tiền vào ví" + appointmentRef;
+        }
+        if (type == WalletTransactionType.WITHDRAW) {
+            return "Rút tiền từ ví" + appointmentRef;
+        }
+        return value;
     }
 }
