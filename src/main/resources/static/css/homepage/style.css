@@ -38,3 +38,4 @@ body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; margin: 0; c
 .CONFIRMED { background: #d4edda; color: #155724; }
 
 .btn-book { background: var(--accent); color: white; padding: 12px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; float: right; }
+

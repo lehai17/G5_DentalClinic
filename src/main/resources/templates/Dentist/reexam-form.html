@@ -10,11 +10,6 @@
 <div class="reexam-container">
   <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
   <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
-
-  <div th:if="${isReadOnly}" class="read-only-notice">
-    Lịch hẹn này đang ở chế độ chỉ đọc. Bạn chỉ có thể xem chi tiết và không thể chỉnh sửa.
-  </div>
-
   <div class="reexam-header">
     <div class="reexam-title">Lịch tái khám</div>
     <div class="reexam-sub">
@@ -60,7 +55,7 @@
 
     <div class="form-group">
       <label class="form-label">Dịch vụ *</label>
-      <select class="form-control" name="serviceId" id="serviceId" th:disabled="${isReadOnly}" required>
+      <select class="form-control" name="serviceId" id="serviceId" th:disabled="${!canEditReexam}" required>
         <option value="">-- Chọn dịch vụ --</option>
         <option th:each="s : ${services}" 
                 th:value="${s.id}" 
@@ -77,7 +72,7 @@
                 name="notes"
                 rows="3"
                 placeholder="Nhập ghi chú thêm cho lịch tái khám này"
-                th:disabled="${isReadOnly}"
+                th:disabled="${!canEditReexam}"
                 th:text="${reexam.notes}"></textarea>
       <small>Ghi chú tùy chọn sẽ hiển thị bên dưới thông tin dịch vụ.</small>
     </div>
@@ -89,8 +84,9 @@
              name="date"
              th:value="${reexam.date != null ? #temporals.format(reexam.date, 'yyyy-MM-dd') : ''}"
              id="appointmentDate"
-             data-original-date="${#temporals.format(originalAppointment.date, 'yyyy-MM-dd')}"
-             th:disabled="${isReadOnly}"
+              data-original-date="${#temporals.format(originalAppointment.date, 'yyyy-MM-dd')}"
+             data-original-start-time="${#temporals.format(originalAppointment.startTime, 'HH:mm')}"
+             th:disabled="${!canEditReexam}"
              required/>
       <small>Chọn ngày phù hợp.</small>
     </div>
@@ -98,7 +94,7 @@
     <div class="two-col">
       <div class="form-group">
         <label class="form-label">Giờ bắt đầu *</label>
-        <select class="form-control" name="startTime" id="startTime" th:disabled="${isReadOnly}" required
+        <select class="form-control" name="startTime" id="startTime" th:disabled="${!canEditReexam}" required
                 th:with="reexamStart=${reexam.startTime != null ? #temporals.format(reexam.startTime, 'HH:mm') : ''}">
           <option value="">-- Chọn giờ bắt đầu --</option>
           <option value="08:00" th:selected="${reexamStart == '08:00'}">08:00</option>
@@ -124,7 +120,7 @@
 
       <div class="form-group">
         <label class="form-label">Giờ kết thúc *</label>
-        <select class="form-control" name="endTime" id="endTime" th:disabled="${isReadOnly}" required
+        <select class="form-control" name="endTime" id="endTime" th:disabled="${!canEditReexam}" required
                 th:with="reexamEnd=${reexam.endTime != null ? #temporals.format(reexam.endTime, 'HH:mm') : ''}">
           <option value="">-- Chọn giờ kết thúc --</option>
           <option value="08:30" th:selected="${reexamEnd == '08:30'}">08:30</option>
@@ -162,12 +158,12 @@
         Quay lại lịch làm việc
       </a>
 
-      <button type="submit" class="btn btn-primary" th:disabled="${isReadOnly}" id="submitBtn">
+      <button type="submit" class="btn btn-primary" th:disabled="${!canEditReexam}" id="submitBtn">
         <span th:if="${isUpdate}">Cập nhật lịch tái khám</span>
         <span th:if="${!isUpdate}">Tạo lịch tái khám</span>
       </button>
 
-      <button type="button" class="btn btn-danger" th:disabled="${isReadOnly}" id="deleteBtn" th:if="${isUpdate}">
+      <button type="button" class="btn btn-danger" th:disabled="${!canDeleteReexam}" id="deleteBtn" th:if="${isUpdate}">
         Xóa lịch tái khám
       </button>
     </div>

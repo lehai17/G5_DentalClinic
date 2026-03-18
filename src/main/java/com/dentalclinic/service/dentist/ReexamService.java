@@ -53,14 +53,27 @@ public class ReexamService {
                status == AppointmentStatus.COMPLETED ||
                status == AppointmentStatus.WAITING_PAYMENT;
     }
+
+    public boolean canDeleteReexam(AppointmentStatus status) {
+        return status == AppointmentStatus.CONFIRMED
+                || status == AppointmentStatus.REEXAM;
+    }
+
+    public boolean canEditReexam(AppointmentStatus status) {
+        return status == AppointmentStatus.CONFIRMED
+                || status == AppointmentStatus.REEXAM;
+    }
     
-    /**
-     * Check if page should be in read-only mode
-     */
-    public boolean isReadOnlyMode(AppointmentStatus status) {
-        return status == AppointmentStatus.DONE ||
-               status == AppointmentStatus.COMPLETED ||
-               status == AppointmentStatus.WAITING_PAYMENT;
+    private AppointmentStatus resolveNewReexamStatus(AppointmentStatus originalStatus) {
+        return shouldActivateReexamImmediately(originalStatus)
+                ? AppointmentStatus.CONFIRMED
+                : AppointmentStatus.REEXAM;
+    }
+
+    private boolean shouldActivateReexamImmediately(AppointmentStatus status) {
+        return status == AppointmentStatus.DONE
+                || status == AppointmentStatus.COMPLETED
+                || status == AppointmentStatus.WAITING_PAYMENT;
     }
     
     /**
@@ -69,6 +82,30 @@ public class ReexamService {
     public Optional<Appointment> getExistingReexam(Long originalAppointmentId) {
         return appointmentRepository.findReexamByOriginalAppointmentId(originalAppointmentId);
     }
+
+    @Transactional(readOnly = true)
+    public Appointment loadOwnedOriginalAppointmentWithDetails(Long originalAppointmentId, Long dentistUserId) {
+        Appointment original = appointmentRepository.findByIdWithDetails(originalAppointmentId)
+                .orElseThrow(() -> new BookingException(
+                        BookingErrorCode.APPOINTMENT_NOT_FOUND,
+                        "Original appointment not found"
+                ));
+        if (original.getAppointmentDetails() != null) {
+            original.getAppointmentDetails().forEach(detail -> {
+                if (detail.getService() != null) {
+                    detail.getService().getId();
+                }
+            });
+        }
+        validateDentistOwnership(original, dentistUserId);
+        return original;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Appointment> getExistingReexamForDentist(Long originalAppointmentId, Long dentistUserId) {
+        Appointment original = mustGetOriginalAppointment(originalAppointmentId, dentistUserId);
+        return getExistingReexam(original.getId());
+    }
     
     /**
      * Create or update reexam appointment
@@ -76,6 +113,7 @@ public class ReexamService {
     @Transactional
     public Appointment createOrUpdateReexam(
             Long originalAppointmentId,
+            Long dentistUserId,
             LocalDate newDate,
             LocalTime newStartTime,
             LocalTime newEndTime,
@@ -83,9 +121,7 @@ public class ReexamService {
             Long serviceId
     ) {
         // Load original appointment
-        Appointment original = appointmentRepository.findById(originalAppointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, 
-                    "Original appointment not found"));
+        Appointment original = mustGetOriginalAppointment(originalAppointmentId, dentistUserId);
         
         // Verify reexam is allowed
         if (!isReexamAvailable(original.getStatus())) {
@@ -94,7 +130,7 @@ public class ReexamService {
         }
         
         // Validate time
-        validateReexamTime(newDate, newStartTime, newEndTime);
+        validateReexamTime(original, newDate, newStartTime, newEndTime);
         
         // Check schedule conflict (excluding itself if updating)
         Optional<Appointment> existing = getExistingReexam(originalAppointmentId);
@@ -121,7 +157,11 @@ public class ReexamService {
         if (existing.isPresent()) {
             // Update existing reexam
             Appointment reexam = existing.get();
-            
+            if (!canEditReexam(reexam.getStatus())) {
+                throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                        "Cannot update reexam with status: " + reexam.getStatus());
+            }
+             
             // Clear old slots
             List<Slot> oldSlots = reexam.getAppointmentSlots().stream()
                     .map(AppointmentSlot::getSlot)
@@ -133,6 +173,10 @@ public class ReexamService {
             reexam.setStartTime(newStartTime);
             reexam.setEndTime(newEndTime);
             reexam.setNotes(notes);
+            if (shouldActivateReexamImmediately(original.getStatus())
+                    && reexam.getStatus() == AppointmentStatus.REEXAM) {
+                reexam.setStatus(AppointmentStatus.CONFIRMED);
+            }
             
             // Update service if provided
             if (serviceId != null) {
@@ -186,7 +230,7 @@ public class ReexamService {
             reexam.setStartTime(newStartTime);
             reexam.setEndTime(newEndTime);
             reexam.setNotes(notes);
-            reexam.setStatus(AppointmentStatus.REEXAM);
+            reexam.setStatus(resolveNewReexamStatus(original.getStatus()));
             reexam.setOriginalAppointment(original);
             reexam.setContactChannel(original.getContactChannel());
             reexam.setContactValue(original.getContactValue());
@@ -204,9 +248,12 @@ public class ReexamService {
      */
     @Transactional
     public void deleteReexam(Long appointmentId) {
-        Appointment reexam = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND,
-                    "Reexam appointment not found"));
+        deleteReexam(appointmentId, null);
+    }
+
+    @Transactional
+    public void deleteReexam(Long appointmentId, Long dentistUserId) {
+        Appointment reexam = mustGetReexamAppointment(appointmentId, dentistUserId);
         
         // Verify it's a reexam
         if (reexam.getOriginalAppointment() == null) {
@@ -214,11 +261,10 @@ public class ReexamService {
                     "This is not a reexam appointment");
         }
         
-        // Verify original appointment status allows deletion
-        Appointment original = reexam.getOriginalAppointment();
-        if (original.getStatus() != AppointmentStatus.EXAMINING) {
+        // Only allow deleting reexam before it has started
+        if (!canDeleteReexam(reexam.getStatus())) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
-                    "Can only delete reexam when original appointment status is EXAMINING");
+                    "Cannot delete reexam with status: " + reexam.getStatus());
         }
         
         // Collect slots to release
@@ -234,6 +280,47 @@ public class ReexamService {
         
         // Release slots
         releaseSlots(slots);
+    }
+
+    private Appointment mustGetOriginalAppointment(Long originalAppointmentId, Long dentistUserId) {
+        Appointment original = appointmentRepository.findById(originalAppointmentId)
+                .orElseThrow(() -> new BookingException(
+                        BookingErrorCode.APPOINTMENT_NOT_FOUND,
+                        "Original appointment not found"
+                ));
+        validateDentistOwnership(original, dentistUserId);
+        return original;
+    }
+
+    private Appointment mustGetReexamAppointment(Long appointmentId, Long dentistUserId) {
+        Appointment reexam = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BookingException(
+                        BookingErrorCode.APPOINTMENT_NOT_FOUND,
+                        "Reexam appointment not found"
+                ));
+
+        if (reexam.getOriginalAppointment() == null) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                    "This is not a reexam appointment");
+        }
+
+        validateDentistOwnership(reexam.getOriginalAppointment(), dentistUserId);
+        return reexam;
+    }
+
+    private void validateDentistOwnership(Appointment appointment, Long dentistUserId) {
+        if (dentistUserId == null) {
+            return;
+        }
+
+        if (appointment.getDentist() == null
+                || appointment.getDentist().getUser() == null
+                || !appointment.getDentist().getUser().getId().equals(dentistUserId)) {
+            throw new BookingException(
+                    BookingErrorCode.USER_NOT_ALLOWED,
+                    "You are not allowed to access this appointment"
+            );
+        }
     }
     
     /**
@@ -275,7 +362,7 @@ public class ReexamService {
     /**
      * Validate reexam time
      */
-    public void validateReexamTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
+    public void validateReexamTime(Appointment originalAppointment, LocalDate date, LocalTime startTime, LocalTime endTime) {
         // Check if date is in past
         LocalDate today = LocalDate.now();
         DayOfWeek day = date.getDayOfWeek();
@@ -325,6 +412,15 @@ public class ReexamService {
         if (!isValid30MinInterval(endTime)) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
                     "End time must be at 30-minute intervals (e.g., 08:00, 08:30, 09:00)");
+        }
+
+        if (originalAppointment != null
+                && originalAppointment.getDate() != null
+                && originalAppointment.getStartTime() != null
+                && originalAppointment.getDate().isEqual(date)
+                && startTime.isBefore(originalAppointment.getStartTime())) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
+                    "Reexam start time cannot be earlier than the original appointment start time on the same day");
         }
     }
     

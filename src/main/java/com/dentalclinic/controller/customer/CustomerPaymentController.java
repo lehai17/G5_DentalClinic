@@ -1,6 +1,7 @@
 package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.config.VNPayConfig;
+import com.dentalclinic.dto.customer.FinalPaymentPreviewDto;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.payment.Invoice;
@@ -155,47 +156,68 @@ public class CustomerPaymentController {
     }
 
     @GetMapping("/create-final-payment/{id}")
-    public String createFinalPayment(@PathVariable Long id, HttpServletRequest request, HttpSession session) throws Exception {
+    public String createFinalPayment(@PathVariable Long id,
+                                     @RequestParam(required = false) String voucherCode,
+                                     HttpServletRequest request,
+                                     HttpSession session) throws Exception {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return "redirect:/login";
         }
 
-        Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(id, userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen ID: " + id));
+        try {
+            FinalPaymentPreviewDto preview = customerAppointmentService.applyVoucherForFinalPayment(userId, id, voucherCode);
+            if (preview.getPayableAmount() == null || preview.getPayableAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                customerAppointmentService.completeFinalPayment(id, preview.getInvoiceId());
+                return "redirect:/customer/my-appointments?payment=success#highlight=" + id;
+            }
 
-        if (appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT) {
+            long amount = preview.getPayableAmount().multiply(BigDecimal.valueOf(100L)).longValue();
+            String txnRef = "FINAL" + System.currentTimeMillis();
+            String orderInfo = "FINAL_PAYMENT_" + id + "_" + preview.getInvoiceId() + "_" + txnRef;
+            String paymentUrl = buildPaymentUrl(buildVnpayParams(amount, txnRef, orderInfo, request));
+            return "redirect:" + paymentUrl;
+        } catch (RuntimeException ex) {
             return "redirect:/customer/my-appointments?payment=fail#highlight=" + id;
         }
-
-        Invoice invoice = invoiceRepository.findByAppointment_IdAndAppointment_Customer_User_Id(id, userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
-
-        BigDecimal remainingAmount = customerAppointmentService.resolveRemainingInvoiceAmount(appointment, invoice);
-        invoice.setTotalAmount(remainingAmount);
-        invoiceRepository.save(invoice);
-
-        if (invoice.getStatus() != PaymentStatus.UNPAID || remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            return "redirect:/customer/my-appointments?payment=fail#highlight=" + id;
-        }
-
-        long amount = remainingAmount.multiply(BigDecimal.valueOf(100L)).longValue();
-        String txnRef = "FINAL" + System.currentTimeMillis();
-        String orderInfo = "FINAL_PAYMENT_" + id + "_" + invoice.getId() + "_" + txnRef;
-        String paymentUrl = buildPaymentUrl(buildVnpayParams(amount, txnRef, orderInfo, request));
-        return "redirect:" + paymentUrl;
     }
 
-    @PostMapping("/final-payment/{id}/wallet")
+    @GetMapping("/final-payment/{id}/preview")
     @ResponseBody
-    public ResponseEntity<?> payFinalPaymentWithWallet(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> previewFinalPayment(@PathVariable Long id,
+                                                 @RequestParam(required = false) String voucherCode,
+                                                 HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
 
         try {
-            Appointment appointment = customerAppointmentService.payRemainingWithWallet(userId, id);
+            FinalPaymentPreviewDto preview = customerAppointmentService.previewFinalPayment(userId, id, voucherCode);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "data", preview
+            ));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", ex.getMessage() != null ? ex.getMessage() : "Không thể áp dụng voucher."
+            ));
+        }
+    }
+
+    @PostMapping("/final-payment/{id}/wallet")
+    @ResponseBody
+    public ResponseEntity<?> payFinalPaymentWithWallet(@PathVariable Long id,
+                                                       @RequestParam(required = false) String voucherCode,
+                                                       HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+
+        try {
+            Appointment appointment = customerAppointmentService.payRemainingWithWallet(userId, id, voucherCode);
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "appointmentId", appointment.getId(),
@@ -243,7 +265,7 @@ public class CustomerPaymentController {
 
             if (vnp_SecureHash == null || !checkHash.equalsIgnoreCase(vnp_SecureHash)) {
                 return isWalletTopupOrder(orderInfo)
-                        ? "redirect:/customer/wallet?topup=fail"
+                        ? "redirect:/customer/wallet?topup=fail" + buildWalletTxnRefQuery(orderInfo)
                         : (isFinalPaymentOrder(orderInfo)
                         ? "redirect:/customer/my-appointments?payment=fail"
                         : "redirect:/customer/book?status=fail");
@@ -313,7 +335,7 @@ public class CustomerPaymentController {
         String txnRef = parts[3];
 
         if (!"00".equals(responseCode)) {
-            return "redirect:/customer/wallet?topup=fail";
+            return "redirect:/customer/wallet?topup=fail&txnRef=" + txnRef;
         }
 
         CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
@@ -327,7 +349,20 @@ public class CustomerPaymentController {
             walletService.deposit(customer, amount, description, null);
         }
 
-        return "redirect:/customer/wallet?topup=success";
+        return "redirect:/customer/wallet?topup=success&txnRef=" + txnRef;
+    }
+
+    private String buildWalletTxnRefQuery(String orderInfo) {
+        if (!isWalletTopupOrder(orderInfo)) {
+            return "";
+        }
+
+        String[] parts = orderInfo.split("_", 4);
+        if (parts.length < 4 || parts[3] == null || parts[3].isBlank()) {
+            return "";
+        }
+
+        return "&txnRef=" + parts[3];
     }
 
     private String handleFinalPaymentReturn(String responseCode, String orderInfo) {
@@ -352,16 +387,7 @@ public class CustomerPaymentController {
             return "redirect:/customer/my-appointments?payment=fail#highlight=" + appointmentId;
         }
 
-        if (invoice.getStatus() != PaymentStatus.PAID) {
-            invoice.setStatus(PaymentStatus.PAID);
-            invoiceRepository.save(invoice);
-        }
-
-        if (appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
-            appointment.setStatus(AppointmentStatus.COMPLETED);
-            appointmentRepository.save(appointment);
-            notificationService.notifyBookingUpdated(appointment, "Da thanh toan hoa don thanh cong");
-        }
+        customerAppointmentService.completeFinalPayment(appointmentId, invoiceId);
 
         return "redirect:/customer/my-appointments?payment=success#highlight=" + appointmentId;
     }

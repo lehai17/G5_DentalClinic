@@ -47,10 +47,11 @@ public class SecurityConfig {
                                                 .failureUrl("/login?error=true")
                                                 .permitAll())
 
-                                // ✅ BẬT GOOGLE LOGIN Ở ĐÂY
-                                .oauth2Login(oauth -> oauth
-                                                .loginPage("/login")
-                                                .successHandler(googleOAuth2SuccessHandler))
+                // Bật Google Login ở đây
+                .oauth2Login(oauth -> oauth
+                        .loginPage("/login")
+                        .successHandler(googleOAuth2SuccessHandler) //
+                )
 
                                 .logout(logout -> logout
                                                 .logoutSuccessUrl("/login?logout=true")

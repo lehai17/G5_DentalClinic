@@ -23,7 +23,7 @@ public class AdminUserController {
     @Autowired
     private DentistService dentistService;
 
-    // 1. Hiển thị danh sách kèm bộ lọc Tìm kiếm
+    // 1. Hiển thị danh sách kèm bộ lọc tìm kiếm
     @GetMapping
     public String showDentistList(
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -31,7 +31,7 @@ public class AdminUserController {
             @RequestParam(value = "status", required = false) String status,
             Model model) {
 
-        // Gọi Service xử lý lọc dữ liệu an toàn
+        // Gọi service xử lý lọc dữ liệu an toàn
         List<DentistProfile> dentists = dentistService.searchDentists(keyword, specialty, status);
 
         model.addAttribute("dentists", dentists);
@@ -47,7 +47,7 @@ public class AdminUserController {
         return "admin/dentist-list";
     }
 
-    // 2. Hiển thị Form thêm mới
+    // 2. Hiển thị form thêm mới
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("dentistDTO", new DentistDTO());

@@ -58,11 +58,12 @@
     </div>
   </div>
 
-  <div class="visit-history">
-    <div class="visit-item" th:each="r : ${historyRecords}">
+  <div class="visit-history visit-history-panel" th:if="${false}">
+    <div class="visit-item" th:each="r,stat : ${historyRecords}">
       <div class="visit-header">
         <div class="visit-date" th:text="${#temporals.format(r.appointment.date,'dd/MM/yyyy')}"></div>
-        <div class="visit-diagnosis" th:text="${r.diagnosis}"></div>
+        <div class="visit-diagnosis"
+             th:text="${r.diagnosis != null && !#strings.isEmpty(#strings.trim(r.diagnosis)) ? r.diagnosis : 'Chưa có chẩn đoán được lưu'}"></div>
         <div class="visit-toggle">
           <span class="toggle-text">Xem chi tiết</span>
           <span class="toggle-icon">⌄</span>
@@ -77,6 +78,144 @@
       </div>
     </div>
   </div>
+
+  <section class="visit-history-shell" th:if="${historySteps != null and !historySteps.isEmpty()}">
+    <div class="visit-history-panel visit-history-rich">
+      <div class="visit-history-head">
+        <div>
+          <div class="visit-history-title">Lich su cac ca truoc trong chuoi tai kham</div>
+          <div class="visit-history-sub">Xem nhanh cac lan kham truoc de nam chan doan, trieu chung, ghi nhan theo rang, ghi chu lam sang va hinh anh nha khoa.</div>
+        </div>
+      </div>
+
+      <div class="visit-history-nav" th:if="${historySteps.size() > 1}">
+        <button type="button"
+                class="visit-nav-btn"
+                th:each="step,stat : ${historySteps}"
+                th:attr="data-step-id=${step.appointmentId}"
+                th:text="${stat.index + 1}">1</button>
+      </div>
+
+      <div class="visit-history-scroll">
+        <div class="visit-history">
+      <article class="visit-item"
+               th:each="step,stat : ${historySteps}"
+               th:attr="data-step-id=${step.appointmentId}">
+        <div class="visit-header" role="button" tabindex="0">
+          <div class="visit-header-main">
+            <div class="visit-date-group">
+              <span class="visit-step-badge" th:text="'Lan ' + ${stat.index + 1}">Lan 1</span>
+              <span class="visit-date" th:text="${#temporals.format(step.date,'dd/MM/yyyy')}">17/03/2026</span>
+              <span class="visit-time"
+                    th:text="${step.startTime != null && step.endTime != null ? #temporals.format(step.startTime,'HH:mm') + ' - ' + #temporals.format(step.endTime,'HH:mm') : 'Chua co gio kham'}">08:00 - 08:30</span>
+            </div>
+          </div>
+          <div class="visit-toggle">
+            <span class="toggle-text">Xem chi tiet</span>
+          </div>
+        </div>
+
+        <div class="visit-body">
+          <div class="visit-body-content">
+            <div class="visit-detail-grid visit-detail-grid-compact">
+              <div class="visit-info-box">
+                <div class="visit-info-label">Ma lich hen</div>
+                <div class="visit-info-value" th:text="'#' + ${step.appointmentId}">#95</div>
+              </div>
+              <div class="visit-info-box">
+                <div class="visit-info-label">Trang thai</div>
+                <div class="visit-info-value" th:text="${step.status != null ? step.status : 'N/A'}">DONE</div>
+              </div>
+              <div class="visit-info-box">
+                <div class="visit-info-label">Dich vu</div>
+                <div class="visit-info-value"
+                     th:text="${step.serviceLabel != null && !#strings.isEmpty(#strings.trim(step.serviceLabel)) ? step.serviceLabel : 'Chua co du lieu'}">
+                  Nho rang khon
+                </div>
+              </div>
+            </div>
+
+            <div class="visit-section">
+              <div class="visit-section-title">Chan doan</div>
+              <div class="visit-box"
+                   th:text="${step.diagnosis != null && !#strings.isEmpty(#strings.trim(step.diagnosis)) ? step.diagnosis : 'Chua co du lieu'}">
+                Chua co du lieu
+              </div>
+            </div>
+
+            <div class="visit-detail-grid">
+              <div class="visit-section">
+                <div class="visit-section-title">Trieu chung</div>
+                <div class="visit-box"
+                     th:text="${step.complaintNote != null && !#strings.isEmpty(#strings.trim(step.complaintNote)) ? step.complaintNote : 'Chua co du lieu'}">
+                  Chua co du lieu
+                </div>
+              </div>
+              <div class="visit-section">
+                <div class="visit-section-title">Ghi chu lam sang</div>
+                <div class="visit-box"
+                     th:text="${step.clinicalNotes != null && !#strings.isEmpty(#strings.trim(step.clinicalNotes)) ? step.clinicalNotes : 'Chua co du lieu'}">
+                  Chua co du lieu
+                </div>
+              </div>
+            </div>
+
+            <div class="visit-section">
+              <div class="visit-section-title">Ghi nhan theo rang</div>
+              <div class="visit-box" th:if="${step.findings == null || step.findings.isEmpty()}">Chua co du lieu</div>
+              <table class="visit-table" th:if="${step.findings != null && !step.findings.isEmpty()}">
+                <thead>
+                <tr>
+                  <th>Rang</th>
+                  <th>Tinh trang</th>
+                  <th>Muc do</th>
+                  <th>Ghi chu</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="finding : ${step.findings}">
+                  <td th:text="${finding.toothNo != null && !#strings.isEmpty(#strings.trim(finding.toothNo)) ? finding.toothNo : '-'}">36</td>
+                  <td th:text="${finding.condition != null && !#strings.isEmpty(#strings.trim(finding.condition)) ? finding.condition : '-'}">Sau rang</td>
+                  <td th:text="${finding.severity != null && !#strings.isEmpty(#strings.trim(finding.severity)) ? finding.severity : '-'}">Nhe</td>
+                  <td th:text="${finding.note != null && !#strings.isEmpty(#strings.trim(finding.note)) ? finding.note : '-'}">-</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="visit-section">
+              <div class="visit-section-title">Hinh anh nha khoa</div>
+              <div class="visit-box" th:if="${step.images == null || step.images.isEmpty()}">Chua co du lieu</div>
+              <div class="visit-image-grid" th:if="${step.images != null && !step.images.isEmpty()}">
+                <div class="visit-image-card" th:each="image : ${step.images}">
+                  <div class="visit-image-top">
+                    <div><strong>Loai:</strong> <span th:text="${image.type != null && !#strings.isEmpty(#strings.trim(image.type)) ? image.type : 'Anh nha khoa'}">X-RAY</span></div>
+                    <a th:if="${image.url != null && !#strings.isEmpty(image.url)}"
+                       th:href="${image.url}"
+                       target="_blank"
+                       class="visit-link">Mo anh</a>
+                  </div>
+                  <a th:if="${image.url != null && !#strings.isEmpty(image.url)}"
+                     th:href="${image.url}"
+                     target="_blank"
+                     class="visit-image-preview">
+                    <img th:src="${image.url}" alt="Anh nha khoa"/>
+                  </a>
+                  <div class="visit-image-note"
+                       th:text="${image.note != null && !#strings.isEmpty(#strings.trim(image.note)) ? image.note : 'Khong co ghi chu hinh anh'}">
+                    Khong co ghi chu hinh anh
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </article>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <form id="examForm" method="post" th:object="${medicalRecord}"
         th:action="@{/dentist/appointments/{id}/examination(id=${appointmentId})}">

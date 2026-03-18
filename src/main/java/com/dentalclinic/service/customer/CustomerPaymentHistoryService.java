@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -108,9 +107,7 @@ public class CustomerPaymentHistoryService {
             throw new BusinessException("Lịch hẹn này chưa có biên nhận đặt cọc.");
         }
 
-        WalletTransaction transaction = findDepositTransaction(
-                walletTransactionRepository.findByAppointmentId(appointmentId)
-        );
+        WalletTransaction transaction = findDepositTransaction(walletTransactionRepository.findByAppointmentId(appointmentId));
 
         CustomerPaymentReceiptDto receipt = buildBaseReceipt(customer, appointment);
         receipt.setRecordType(DEPOSIT_RECORD);
@@ -142,9 +139,7 @@ public class CustomerPaymentHistoryService {
             throw new BusinessException("Hóa đơn này không còn liên kết lịch hẹn hợp lệ.");
         }
 
-        WalletTransaction transaction = findFinalPaymentTransaction(
-                walletTransactionRepository.findByAppointmentId(appointment.getId())
-        );
+        WalletTransaction transaction = findFinalPaymentTransaction(walletTransactionRepository.findByAppointmentId(appointment.getId()));
 
         CustomerPaymentReceiptDto receipt = buildBaseReceipt(customer, appointment);
         receipt.setRecordType(INVOICE_RECORD);
@@ -262,6 +257,9 @@ public class CustomerPaymentHistoryService {
             item.setAppointmentStartTime(appointment.getStartTime());
             item.setServiceSummary(resolveServiceSummary(appointment));
             item.setDentistName(appointment.getDentist() != null ? appointment.getDentist().getFullName() : "Chưa phân công");
+        } else {
+            item.setServiceSummary("Chưa có dịch vụ");
+            item.setDentistName("Chưa phân công");
         }
         return item;
     }

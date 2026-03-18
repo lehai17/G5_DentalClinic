@@ -27,7 +27,7 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
     );
 
     @Query("""
-        SELECT DISTINCT mr FROM MedicalRecord mr
+        SELECT mr FROM MedicalRecord mr
         LEFT JOIN FETCH mr.proposedServices ps
         LEFT JOIN FETCH ps.service
         WHERE mr.appointment.id IN :appointmentIds

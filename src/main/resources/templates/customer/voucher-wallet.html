@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ví voucher - GENZ CLINIC</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
+  <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" th:href="@{/css/customer-voucher-wallet.css}">
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+  <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <section class="customer-page-section">
+      <div class="voucher-wallet-shell">
+        <div class="voucher-wallet-hero">
+          <div>
+            <span class="voucher-wallet-eyebrow"><i class="bi bi-ticket-perforated"></i> Ưu đãi của bạn</span>
+            <h1>Ví voucher</h1>
+            <p>
+              Tất cả voucher đang hoạt động từ hệ thống sẽ được hiển thị tại đây để bạn dễ theo dõi
+              và sử dụng khi thanh toán phần còn lại của lịch hẹn.
+            </p>
+          </div>
+
+          <div class="voucher-wallet-count">
+            <strong th:text="${voucherWalletCount}">0</strong>
+            <span>voucher khả dụng</span>
+          </div>
+        </div>
+
+        <div class="voucher-wallet-card">
+          <div class="voucher-wallet-grid" th:if="${!#lists.isEmpty(vouchers)}">
+            <article class="voucher-wallet-item" th:each="voucher : ${vouchers}">
+              <div class="voucher-wallet-item__head">
+                <span class="voucher-wallet-code" th:text="${voucher.code}">GENZ50K</span>
+                <span class="voucher-wallet-chip">
+                  <i class="bi bi-patch-check-fill"></i>
+                  <span>Đang hoạt động</span>
+                </span>
+              </div>
+
+              <h2 class="voucher-wallet-item__title" th:text="${voucherService.buildDiscountLabel(voucher)}">Giảm 50.000 VND</h2>
+              <div class="voucher-wallet-item__desc"
+                   th:text="${#strings.isEmpty(voucher.description) ? 'Voucher ưu đãi đang sẵn sàng để dùng khi thanh toán.' : voucher.description}">
+                Mô tả voucher
+              </div>
+
+              <div class="voucher-wallet-meta">
+                <div class="voucher-wallet-meta__row">
+                  <span>Đơn tối thiểu</span>
+                  <strong th:text="${#numbers.formatDecimal(voucher.minOrderAmount, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</strong>
+                </div>
+                <div class="voucher-wallet-meta__row">
+                  <span>Thời gian hiệu lực</span>
+                  <strong th:text="${#temporals.format(voucher.startDateTime, 'dd/MM HH:mm') + ' - ' + #temporals.format(voucher.endDateTime, 'dd/MM HH:mm')}">17/03 08:00 - 30/03 23:59</strong>
+                </div>
+                <div class="voucher-wallet-meta__row">
+                  <span>Lượt sử dụng</span>
+                  <strong th:text="${voucherService.buildUsageLabel(voucher)}">Không giới hạn lượt dùng</strong>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="voucher-wallet-empty" th:if="${#lists.isEmpty(vouchers)}">
+            <i class="bi bi-ticket-perforated"></i>
+            <div>Hiện tại chưa có voucher nào đang hoạt động để hiển thị trong ví voucher.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

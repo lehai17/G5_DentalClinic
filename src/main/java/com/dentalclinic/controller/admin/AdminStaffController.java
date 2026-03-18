@@ -27,7 +27,7 @@ public class AdminStaffController {
             @RequestParam(value = "position", required = false) String position,
             Model model) {
 
-        // Gọi hàm lọc an toàn từ Service đã xử lý Enum
+        // Gọi hàm lọc an toàn từ service đã xử lý enum
         List<StaffProfile> staffs = staffService.searchStaffs(keyword, status, position);
 
         model.addAttribute("staffs", staffs);
@@ -55,7 +55,7 @@ public class AdminStaffController {
         return "admin/fragments/staff-table :: staff-list";
     }
 
-    // 2. Hiển thị Form thêm mới nhân viên
+    // 2. Hiển thị form thêm mới nhân viên
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("staffDTO", new StaffDTO());
@@ -85,7 +85,7 @@ public class AdminStaffController {
 
     @PostMapping("/lock/{id}")
     public String lockStaff(@PathVariable("id") Long userId, RedirectAttributes ra) {
-        // userId này là ID của bảng User để khớp với hàm trong Service của bạn
+        // userId này là ID của bảng User để khớp với hàm trong service
         staffService.deactivateStaff(userId);
         ra.addFlashAttribute("success", "Khóa nhân viên thành công!");
         return "redirect:/admin/staff";

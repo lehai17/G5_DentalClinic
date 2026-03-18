@@ -12,6 +12,7 @@ import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.NotificationRepository;
+import com.dentalclinic.repository.SupportTicketRepository;
 import com.dentalclinic.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,13 +49,16 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
+    private final SupportTicketRepository supportTicketRepository;
 
     public NotificationService(NotificationRepository notificationRepository,
                                UserRepository userRepository,
-                               AppointmentRepository appointmentRepository) {
+                               AppointmentRepository appointmentRepository,
+                               SupportTicketRepository supportTicketRepository) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.appointmentRepository = appointmentRepository;
+        this.supportTicketRepository = supportTicketRepository;
     }
 
     @Transactional
@@ -84,8 +89,8 @@ public class NotificationService {
             Notification notification = new Notification();
             notification.setUser(recipient);
             notification.setType(type);
-            notification.setTitle(title);
-            notification.setContent(message);
+            notification.setTitle(sanitizeNotificationText(title));
+            notification.setContent(sanitizeNotificationText(message));
             notification.setUrl(url);
             notification.setReferenceType(referenceType);
             notification.setReferenceId(referenceId);
@@ -139,8 +144,8 @@ public class NotificationService {
             Notification notification = new Notification();
             notification.setUser(recipient);
             notification.setType(type);
-            notification.setTitle(title);
-            notification.setContent(message);
+            notification.setTitle(sanitizeNotificationText(title));
+            notification.setContent(sanitizeNotificationText(message));
             notification.setUrl(url);
             notification.setReferenceType(referenceType);
             notification.setReferenceId(referenceId);
@@ -166,9 +171,9 @@ public class NotificationService {
         }
         // Merged duplicate block removed.
         /*
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người nhận thông báo."));
+                .orElseThrow(() -> new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i nháº­n thÃ´ng bÃ¡o."));
         if (recipient.getRole() != Role.CUSTOMER) {
-            throw new IllegalArgumentException("Người nhận thông báo phải là khách hàng.");
+            throw new IllegalArgumentException("NgÆ°á»i nháº­n thÃ´ng bÃ¡o pháº£i lÃ  khÃ¡ch hÃ ng.");
         }
 
         Notification notification = new Notification();
@@ -184,6 +189,21 @@ public class NotificationService {
         notification.setReadAt(null);
         return notificationRepository.save(notification);
         */
+    }
+
+    private String sanitizeNotificationText(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+
+        if (value.contains("Ã") || value.contains("Â") || value.contains("Ä")) {
+            String repaired = new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+            if (!repaired.isBlank()) {
+                return repaired;
+            }
+        }
+
+        return value;
     }
 
     @Transactional(readOnly = true)
@@ -217,7 +237,7 @@ public class NotificationService {
     public void markRead(Long notificationId, Long recipientId) {
         int updated = notificationRepository.markAsRead(notificationId, recipientId);
         if (updated == 0) {
-            throw new IllegalArgumentException("Không tìm thấy thông báo hoặc bạn không có quyền truy cập.");
+            throw new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y thÃ´ng bÃ¡o hoáº·c báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p.");
         }
     }
 
@@ -230,7 +250,7 @@ public class NotificationService {
     public void markUnread(Long notificationId, Long recipientId) {
         int updated = notificationRepository.markAsUnread(notificationId, recipientId);
         if (updated == 0) {
-            throw new IllegalArgumentException("Không tìm thấy thông báo hoặc bạn không có quyền truy cập.");
+            throw new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y thÃ´ng bÃ¡o hoáº·c báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p.");
         }
     }
 
@@ -238,7 +258,7 @@ public class NotificationService {
     public void deleteOwned(Long notificationId, Long recipientId) {
         int deleted = notificationRepository.deleteOwned(notificationId, recipientId);
         if (deleted == 0) {
-            throw new IllegalArgumentException("Không tìm thấy thông báo hoặc bạn không có quyền truy cập.");
+            throw new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y thÃ´ng bÃ¡o hoáº·c báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p.");
         }
     }
 
@@ -248,13 +268,16 @@ public class NotificationService {
      * - filter: all | unread | read
      * - category: ALL | APPOINTMENT | BUSY | SUPPORT
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<Notification> getDentistNotifications(Long recipientId,
                                                       Pageable pageable,
                                                       String filter,
                                                       String category,
                                                       String keyword) {
-        List<Notification> all = notificationRepository.findByUser_IdOrderByCreatedAtDesc(recipientId);
+        List<Notification> all = sanitizeDentistNotifications(
+                notificationRepository.findByUser_IdOrderByCreatedAtDesc(recipientId),
+                recipientId
+        );
 
         String safeFilter = filter == null ? "all" : filter.trim().toLowerCase(Locale.ROOT);
         String safeCategory = category == null ? "ALL" : category.trim().toUpperCase(Locale.ROOT);
@@ -285,6 +308,48 @@ public class NotificationService {
                 pageable,
                 filtered.size()
         );
+    }
+
+    private List<Notification> sanitizeDentistNotifications(List<Notification> notifications, Long recipientId) {
+        List<Notification> sanitized = new ArrayList<>();
+        for (Notification notification : notifications) {
+            if (notification == null) {
+                continue;
+            }
+
+            boolean relatedAvailable = isRelatedTargetAvailable(notification);
+            notification.setRelatedAvailable(relatedAvailable);
+
+            if (!relatedAvailable && isSupportNotification(notification)) {
+                notificationRepository.deleteOwned(notification.getId(), recipientId);
+                continue;
+            }
+
+            sanitized.add(notification);
+        }
+        return sanitized;
+    }
+
+    private boolean isRelatedTargetAvailable(Notification notification) {
+        if (notification == null || !isSupportNotification(notification)) {
+            return true;
+        }
+        Long referenceId = notification.getReferenceId();
+        if (referenceId == null) {
+            return false;
+        }
+        return supportTicketRepository.existsById(referenceId);
+    }
+
+    private boolean isSupportNotification(Notification notification) {
+        if (notification == null) {
+            return false;
+        }
+        if (notification.getReferenceType() == NotificationReferenceType.TICKET) {
+            return true;
+        }
+        String url = notification.getUrl();
+        return url != null && url.startsWith("/dentist/support");
     }
 
     private boolean matchesReadFilter(Notification n, String filter) {
@@ -392,10 +457,11 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public Notification getOwnedNotification(Long notificationId, Long recipientId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông báo."));
+                .orElseThrow(() -> new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y thÃ´ng bÃ¡o."));
         if (!notification.getUser().getId().equals(recipientId)) {
-            throw new IllegalArgumentException("Bạn không có quyền truy cập thông báo này.");
+            throw new IllegalArgumentException("Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p thÃ´ng bÃ¡o nÃ y.");
         }
+        notification.setRelatedAvailable(isRelatedTargetAvailable(notification));
         return notification;
     }
 
@@ -411,8 +477,8 @@ public class NotificationService {
         notifyDentistAppointmentEvent(
                 appointment,
                 NotificationType.BOOKING_CREATED,
-                "Lịch hẹn #" + safeId(appointment) + " đã được xác nhận",
-                "Lịch hẹn #" + safeId(appointment) + " đã được xác nhận. " + buildAppointmentContext(appointment),
+                "Lá»‹ch háº¹n #" + safeId(appointment) + " Ä‘Ã£ Ä‘Æ°á»£c xÃ¡c nháº­n",
+                "Lá»‹ch háº¹n #" + safeId(appointment) + " Ä‘Ã£ Ä‘Æ°á»£c xÃ¡c nháº­n. " + buildAppointmentContext(appointment),
                 resolveWorkScheduleUrl(appointment)
         );
     }
@@ -425,8 +491,8 @@ public class NotificationService {
         notifyDentistAppointmentEvent(
                 appointment,
                 NotificationType.BOOKING_UPDATED,
-                "Lịch hẹn #" + safeId(appointment) + " đã check-in",
-                "Bệnh nhân đã check-in cho lịch hẹn #" + safeId(appointment) + ". " + buildAppointmentContext(appointment),
+                "Lá»‹ch háº¹n #" + safeId(appointment) + " Ä‘Ã£ check-in",
+                "Bá»‡nh nhÃ¢n Ä‘Ã£ check-in cho lá»‹ch háº¹n #" + safeId(appointment) + ". " + buildAppointmentContext(appointment),
                 resolveWorkScheduleUrl(appointment)
         );
     }
@@ -436,12 +502,12 @@ public class NotificationService {
         if (appointment == null || appointment.getStatus() != AppointmentStatus.CANCELLED) {
             return;
         }
-        String suffix = (reason == null || reason.isBlank()) ? "" : (" Lý do: " + reason.trim() + ".");
+        String suffix = (reason == null || reason.isBlank()) ? "" : (" LÃ½ do: " + reason.trim() + ".");
         notifyDentistAppointmentEvent(
                 appointment,
                 NotificationType.BOOKING_CANCELLED,
-                "Lịch hẹn #" + safeId(appointment) + " đã bị hủy",
-                "Lịch hẹn #" + safeId(appointment) + " đã bị hủy." + suffix + " " + buildAppointmentContext(appointment),
+                "Lá»‹ch háº¹n #" + safeId(appointment) + " Ä‘Ã£ bá»‹ há»§y",
+                "Lá»‹ch háº¹n #" + safeId(appointment) + " Ä‘Ã£ bá»‹ há»§y." + suffix + " " + buildAppointmentContext(appointment),
                 resolveWorkScheduleUrl(appointment)
         );
     }
@@ -451,8 +517,8 @@ public class NotificationService {
         notifyDentistBusyScheduleEvent(
                 request,
                 NotificationType.BOOKING_UPDATED,
-                "Lịch bận đã được duyệt",
-                buildBusyScheduleContext(request, "Yêu cầu lịch bận của bạn đã được duyệt."),
+                "Lá»‹ch báº­n Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t",
+                buildBusyScheduleContext(request, "YÃªu cáº§u lá»‹ch báº­n cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t."),
                 "/dentist/busy-schedule"
         );
     }
@@ -462,8 +528,8 @@ public class NotificationService {
         notifyDentistBusyScheduleEvent(
                 request,
                 NotificationType.BOOKING_UPDATED,
-                "Lịch bận không được duyệt",
-                buildBusyScheduleContext(request, "Yêu cầu lịch bận của bạn không được duyệt."),
+                "Lá»‹ch báº­n khÃ´ng Ä‘Æ°á»£c duyá»‡t",
+                buildBusyScheduleContext(request, "YÃªu cáº§u lá»‹ch báº­n cá»§a báº¡n khÃ´ng Ä‘Æ°á»£c duyá»‡t."),
                 "/dentist/busy-schedule"
         );
     }
@@ -482,9 +548,9 @@ public class NotificationService {
         );
         if (existed) return;
 
-        String customerName = ticket.getCustomerDisplayName() != null ? ticket.getCustomerDisplayName() : "Bệnh nhân";
-        String title = "Phiếu hỗ trợ mới #" + ticket.getId();
-        String message = customerName + " đã tạo phiếu hỗ trợ mới #" + ticket.getId()
+        String customerName = ticket.getCustomerDisplayName() != null ? ticket.getCustomerDisplayName() : "Bá»‡nh nhÃ¢n";
+        String title = "Phiáº¿u há»— trá»£ má»›i #" + ticket.getId();
+        String message = customerName + " Ä‘Ã£ táº¡o phiáº¿u há»— trá»£ má»›i #" + ticket.getId()
                 + (ticket.getTitle() == null || ticket.getTitle().isBlank() ? "." : (": " + ticket.getTitle().trim() + "."));
 
         createForDentist(
@@ -504,9 +570,9 @@ public class NotificationService {
         Long dentistUserId = resolveTicketDentistUserId(ticket);
         if (dentistUserId == null) return;
 
-        String customerName = ticket.getCustomerDisplayName() != null ? ticket.getCustomerDisplayName() : "Bệnh nhân";
-        String title = "Tin nhắn mới trong phiếu #" + ticket.getId();
-        String message = customerName + " vừa gửi tin nhắn mới trong phiếu hỗ trợ #" + ticket.getId() + ".";
+        String customerName = ticket.getCustomerDisplayName() != null ? ticket.getCustomerDisplayName() : "Bá»‡nh nhÃ¢n";
+        String title = "Tin nháº¯n má»›i trong phiáº¿u #" + ticket.getId();
+        String message = customerName + " vá»«a gá»­i tin nháº¯n má»›i trong phiáº¿u há»— trá»£ #" + ticket.getId() + ".";
 
         createForDentist(
                 dentistUserId,
@@ -599,7 +665,7 @@ public class NotificationService {
         }
         String patientName = (appointment.getCustomer() != null && appointment.getCustomer().getFullName() != null)
                 ? appointment.getCustomer().getFullName()
-                : "Bệnh nhân";
+                : "Bá»‡nh nhÃ¢n";
         String phone = (appointment.getCustomer() != null && appointment.getCustomer().getPhone() != null)
                 ? appointment.getCustomer().getPhone()
                 : "";
@@ -610,15 +676,15 @@ public class NotificationService {
         DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
 
         StringBuilder sb = new StringBuilder();
-        sb.append("Bệnh nhân: ").append(patientName);
+        sb.append("Bá»‡nh nhÃ¢n: ").append(patientName);
         if (!phone.isBlank()) {
             sb.append(" (").append(phone).append(")");
         }
         if (date != null) {
-            sb.append(" • Ngày: ").append(date.format(df));
+            sb.append(" â€¢ NgÃ y: ").append(date.format(df));
         }
         if (start != null) {
-            sb.append(" • Giờ: ").append(start.format(tf));
+            sb.append(" â€¢ Giá»: ").append(start.format(tf));
             if (end != null) {
                 sb.append(" - ").append(end.format(tf));
             }
@@ -640,10 +706,10 @@ public class NotificationService {
 
         StringBuilder sb = new StringBuilder(prefix == null ? "" : prefix.trim());
         if (!range.isBlank()) {
-            sb.append(" Thời gian: ").append(range).append(".");
+            sb.append(" Thá»i gian: ").append(range).append(".");
         }
         if (!reason.isBlank()) {
-            sb.append(" Lý do: ").append(reason).append(".");
+            sb.append(" LÃ½ do: ").append(reason).append(".");
         }
         return sb.toString().trim();
     }
@@ -664,8 +730,8 @@ public class NotificationService {
         if (existed) {
             return;
         }
-        String title = "Đặt lịch thành công";
-        String message = "Bạn đã tạo lịch hẹn #" + appointment.getId() + " thành công.";
+        String title = "Äáº·t lá»‹ch thÃ nh cÃ´ng";
+        String message = "Báº¡n Ä‘Ã£ táº¡o lá»‹ch háº¹n #" + appointment.getId() + " thÃ nh cÃ´ng.";
         String url = "/customer/my-appointments#highlight=" + appointment.getId();
         createForCustomer(recipientId, NotificationType.BOOKING_CREATED, title, message, url,
                 NotificationReferenceType.APPOINTMENT, appointment.getId());
@@ -712,7 +778,7 @@ public class NotificationService {
                 customerUserId,
                 NotificationType.PRESCRIPTION_CREATED,
                 "C? ??n thu?c m?i",
-                "Bác sĩ đã tạo đơn thuốc mới cho bạn.",
+                "BÃ¡c sÄ© Ä‘Ã£ táº¡o Ä‘Æ¡n thuá»‘c má»›i cho báº¡n.",
                 "/patient/prescriptions",
                 NotificationReferenceType.PRESCRIPTION,
                 prescriptionId
@@ -737,8 +803,8 @@ public class NotificationService {
         createForCustomer(
                 customer.getUser().getId(),
                 NotificationType.BOOKING_CANCELLED,
-                "Hoàn tiền đặt cọc",
-                "Bạn nhận được hoàn tiền " + amountStr + " VND từ lịch hẹn đã hủy. Số dư ví hiện tại có thể dùng cho lần đặt tiếp theo.",
+                "HoÃ n tiá»n Ä‘áº·t cá»c",
+                "Báº¡n nháº­n Ä‘Æ°á»£c hoÃ n tiá»n " + amountStr + " VND tá»« lá»‹ch háº¹n Ä‘Ã£ há»§y. Sá»‘ dÆ° vÃ­ hiá»‡n táº¡i cÃ³ thá»ƒ dÃ¹ng cho láº§n Ä‘áº·t tiáº¿p theo.",
                 "/customer/wallet",
                 null,
                 null
@@ -777,9 +843,9 @@ public class NotificationService {
                 continue;
             }
 
-            String title = "Nhắc lịch hẹn";
-            String message = "Bạn có lịch hẹn #" + appointment.getId() + " vào ngày "
-                    + appointment.getDate() + " lúc " + appointment.getStartTime() + ".";
+            String title = "Nháº¯c lá»‹ch háº¹n";
+            String message = "Báº¡n cÃ³ lá»‹ch háº¹n #" + appointment.getId() + " vÃ o ngÃ y "
+                    + appointment.getDate() + " lÃºc " + appointment.getStartTime() + ".";
             String url = "/customer/my-appointments#highlight=" + appointment.getId();
             createForCustomer(recipientId, NotificationType.APPOINTMENT_REMINDER, title, message, url,
                     NotificationReferenceType.APPOINTMENT, appointment.getId());

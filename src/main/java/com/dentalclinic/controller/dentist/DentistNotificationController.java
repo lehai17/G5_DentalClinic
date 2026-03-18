@@ -40,10 +40,8 @@ public class DentistNotificationController {
                        @RequestParam(defaultValue = "all") String filter,
                        @RequestParam(defaultValue = "ALL") String category,
                        @RequestParam(required = false) String q,
-                       @RequestParam(required = false) Long open,
                        HttpServletRequest request,
-                       Model model,
-                       RedirectAttributes redirectAttributes) {
+                       Model model) {
         Long dentistUserId = getCurrentDentistId(principal);
 
         var pageable = PageRequest.of(
@@ -54,23 +52,9 @@ public class DentistNotificationController {
 
         var notificationsPage = notificationService.getDentistNotifications(dentistUserId, pageable, filter, category, q);
 
-        Notification openNotification = null;
-        if (open != null) {
-            try {
-                openNotification = notificationService.getOwnedNotification(open, dentistUserId);
-                notificationService.markRead(open, dentistUserId);
-            } catch (RuntimeException ex) {
-                redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            }
-        }
-        if (openNotification == null && !notificationsPage.getContent().isEmpty()) {
-            openNotification = notificationsPage.getContent().get(0);
-        }
-
         String returnTo = buildReturnTo(request);
 
         model.addAttribute("notifications", notificationsPage.getContent());
-        model.addAttribute("openNotification", openNotification);
         model.addAttribute("currentPage", notificationsPage.getNumber());
         model.addAttribute("totalPages", notificationsPage.getTotalPages());
         model.addAttribute("selectedFilter", filter == null ? "all" : filter);
@@ -81,6 +65,20 @@ public class DentistNotificationController {
         model.addAttribute("activePage", "notifications");
 
         return "Dentist/notifications";
+    }
+
+    @PostMapping("/{id}/read")
+    public String markRead(@PathVariable Long id,
+                           @AuthenticationPrincipal UserDetails principal,
+                           @RequestParam(required = false) String returnTo,
+                           RedirectAttributes redirectAttributes) {
+        Long dentistUserId = getCurrentDentistId(principal);
+        try {
+            notificationService.markRead(id, dentistUserId);
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:" + normalizeReturnTo(returnTo);
     }
 
     @PostMapping("/{id}/unread")
@@ -157,4 +155,3 @@ public class DentistNotificationController {
         return returnTo;
     }
 }
-

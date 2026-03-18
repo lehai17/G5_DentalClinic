@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import com.dentalclinic.service.mail.EmailService;
 import java.time.LocalDate;
 import java.time.DayOfWeek;
 import java.util.List;

@@ -3,7 +3,10 @@ package com.dentalclinic.model.support;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.user.User;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "support_ticket")
@@ -42,6 +45,12 @@ public class SupportTicket {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Transient
+    private String customerDisplayName;
+
+    @Transient
+    private String responderDisplayName;
+
+    @Transient
     private String latestCustomerMessage;
 
     @Transient
@@ -51,21 +60,14 @@ public class SupportTicket {
     private String displayStatus;
 
     @Transient
-    private List<ConversationEntry> conversationEntries = new ArrayList<>();
-
-    @Transient
-    private String customerDisplayName;
-
-    @Transient
-    private String responderDisplayName;
-
-    @Transient
     private String serviceLabel;
+
+    @Transient
+    private List<ConversationEntry> conversationEntries = new ArrayList<>();
 
     public SupportTicket() {
     }
 
-    // --- Getters and Setters ---
     public Long getId() {
         return id;
     }
@@ -98,7 +100,7 @@ public class SupportTicket {
         this.staff = staff;
     }
 
-    // Alias cho Dentist để tương thích với logic cũ nếu cần
+    // Alias for old dentist naming in other flows
     public User getDentist() {
         return staff;
     }
@@ -147,24 +149,6 @@ public class SupportTicket {
         this.createdAt = createdAt;
     }
 
-    @Transient
-    private String customerDisplayName;
-
-    @Transient
-    private String responderDisplayName;
-
-    @Transient
-    private String latestCustomerMessage;
-
-    @Transient
-    private String latestStaffReply;
-
-    @Transient
-    private String displayStatus;
-
-    @Transient
-    private java.util.List<ConversationEntry> conversationEntries = new java.util.ArrayList<>();
-
     public String getCustomerDisplayName() {
         return customerDisplayName;
     }
@@ -205,36 +189,20 @@ public class SupportTicket {
         this.displayStatus = displayStatus;
     }
 
-    public java.util.List<ConversationEntry> getConversationEntries() {
-        return conversationEntries;
-    }
-
-    public void setConversationEntries(List<ConversationEntry> conversationEntries) {
-        this.conversationEntries = conversationEntries == null ? new ArrayList<>() : conversationEntries;
-    }
-
-    public String getCustomerDisplayName() {
-        return customerDisplayName;
-    }
-
-    public void setCustomerDisplayName(String customerDisplayName) {
-        this.customerDisplayName = customerDisplayName;
-    }
-
-    public String getResponderDisplayName() {
-        return responderDisplayName;
-    }
-
-    public void setResponderDisplayName(String responderDisplayName) {
-        this.responderDisplayName = responderDisplayName;
-    }
-
     public String getServiceLabel() {
         return serviceLabel;
     }
 
     public void setServiceLabel(String serviceLabel) {
         this.serviceLabel = serviceLabel;
+    }
+
+    public List<ConversationEntry> getConversationEntries() {
+        return conversationEntries;
+    }
+
+    public void setConversationEntries(List<ConversationEntry> conversationEntries) {
+        this.conversationEntries = conversationEntries == null ? new ArrayList<>() : conversationEntries;
     }
 
     public boolean isClosed() {
@@ -246,15 +214,14 @@ public class SupportTicket {
         private String senderLabel;
         private String content;
         private LocalDateTime timestamp;
-        private boolean isCustomer;
+        private boolean customer;
 
-        public ConversationEntry(String senderType, String senderLabel, String content, LocalDateTime timestamp,
-                boolean isCustomer) {
+        public ConversationEntry(String senderType, String senderLabel, String content, LocalDateTime timestamp, boolean customer) {
             this.senderType = senderType;
             this.senderLabel = senderLabel;
             this.content = content;
             this.timestamp = timestamp;
-            this.isCustomer = isCustomer;
+            this.customer = customer;
         }
 
         public String getSenderType() {
@@ -289,12 +256,20 @@ public class SupportTicket {
             this.timestamp = timestamp;
         }
 
-        public boolean isCustomer() {
-            return isCustomer;
+        public LocalDateTime getCreatedAt() {
+            return timestamp;
         }
 
-        public void setCustomer(boolean isCustomer) {
-            this.isCustomer = isCustomer;
+        public boolean isCustomer() {
+            return customer;
+        }
+
+        public void setCustomer(boolean customer) {
+            this.customer = customer;
+        }
+
+        public boolean isCustomerSide() {
+            return customer;
         }
     }
 }

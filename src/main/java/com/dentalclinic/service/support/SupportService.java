@@ -24,7 +24,9 @@ import com.dentalclinic.service.notification.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,9 +82,32 @@ public class SupportService {
                 .orElseThrow(() -> new SupportAccessDeniedException("Không tìm thấy người dùng hiện tại."));
     }
 
-    @Transactional
-    public SupportTicket createTicket(Long customerUserId, String question) {
-        return createTicket(customerUserId, null, "Hỗ trợ chuyên môn", question);
+    @Transactional(readOnly = true)
+    public User getCurrentUser(Authentication authentication) {
+        String email = extractEmail(authentication);
+        if (email == null || email.isBlank()) {
+            throw new SupportAccessDeniedException("Unable to identify current account.");
+        }
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new SupportAccessDeniedException("Current user not found."));
+    }
+
+    private String extractEmail(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        }
+        if (principal instanceof OAuth2User oauth2User) {
+            Object email = oauth2User.getAttributes().get("email");
+            return email != null ? String.valueOf(email) : null;
+        }
+
+        String name = authentication.getName();
+        return (name == null || name.isBlank()) ? null : name;
     }
 
     @Transactional
@@ -137,25 +162,6 @@ public class SupportService {
                 .stream()
                 .filter(this::isEligibleSupportAppointment)
                 .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<SupportTicket> getMyTickets(Long customerUserId) {
-        requireCustomer(customerUserId);
-        return supportTicketRepository.findByCustomer_IdOrderByCreatedAtDesc(customerUserId)
-                .stream()
-                .map(this::hydrateTicket)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public Page<SupportTicket> getMyTicketsPage(Long customerUserId, int page, int size) {
-        return getMyTicketsPage(customerUserId, page, size, null, "newest");
-    }
-
-    @Transactional(readOnly = true)
-    public Page<SupportTicket> getMyTicketsPage(Long customerUserId, int page, int size, String keyword) {
-        return getMyTicketsPage(customerUserId, page, size, keyword, "newest");
     }
 
     @Transactional(readOnly = true)
@@ -620,15 +626,48 @@ public class SupportService {
         if (responder == null) {
             return "Phòng khám";
         }
-        String fullName = resolveUserFullName(responder);
+        String fullName = stripRolePrefix(resolveUserFullName(responder));
         if (responder.getRole() == Role.DENTIST) {
             return "Bác sĩ " + fullName;
         }
         if (responder.getRole() == Role.ADMIN) {
-            return "Qu?n tr? vi?n " + fullName;
+            return "Quản trị viên " + fullName;
         }
-        return "L? t?n " + fullName;
+        return "Lễ tân " + fullName;
     }
+
+    private String stripRolePrefix(String fullName) {
+        if (fullName == null) {
+            return "";
+        }
+
+        String normalized = fullName.trim();
+        if (normalized.isEmpty()) {
+            return normalized;
+        }
+
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("bác sĩ ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("bac si ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("lễ tân ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("le tan ")) {
+            return normalized.substring(7).trim();
+        }
+        if (lower.startsWith("quản trị viên ")) {
+            return normalized.substring(13).trim();
+        }
+        if (lower.startsWith("quan tri vien ")) {
+            return normalized.substring(14).trim();
+        }
+        return normalized;
+    }
+
 
     private String resolveTicketResponderDisplayName(SupportTicket ticket) {
         if (ticket.getDentist() != null) {

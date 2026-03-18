@@ -24,10 +24,13 @@
   let threadId = null;
   let threadSummary = null;
   let pollTimer = null;
+  let pollInFlight = false;
   let lastMessageId = null;
   let loadingMessages = false;
   let sending = false;
   let selectedAttachment = null;
+  const OPEN_POLL_INTERVAL_MS = 3000;
+  const CLOSED_POLL_INTERVAL_MS = 15000;
 
   function normalizeText(value) {
     if (value == null) return "";
@@ -286,6 +289,7 @@
 
   function openWindow() {
     windowEl.classList.remove("hidden");
+    scheduleNextPoll(0);
     loadMessages(true).catch((error) => {
       setHelper(error.message || "Không thể tải cuộc trò chuyện.", "error");
     });
@@ -294,22 +298,50 @@
 
   function closeWindow() {
     windowEl.classList.add("hidden");
+    scheduleNextPoll(CLOSED_POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (!pollTimer) return;
+    window.clearTimeout(pollTimer);
+    pollTimer = null;
+  }
+
+  function scheduleNextPoll(delay) {
+    stopPolling();
+    pollTimer = window.setTimeout(runPollCycle, delay);
+  }
+
+  async function runPollCycle() {
+    if (pollInFlight) {
+      scheduleNextPoll(isOpen() ? OPEN_POLL_INTERVAL_MS : CLOSED_POLL_INTERVAL_MS);
+      return;
+    }
+
+    if (document.visibilityState === "hidden") {
+      scheduleNextPoll(CLOSED_POLL_INTERVAL_MS);
+      return;
+    }
+
+    pollInFlight = true;
+    try {
+      await ensureThread();
+      if (isOpen()) {
+        await loadMessages(false);
+      } else {
+        await loadUnreadCount();
+      }
+    } catch (error) {
+      setStatus("M\u1ea5t k\u1ebft n\u1ed1i t\u1ea1m th\u1eddi", "error");
+    } finally {
+      pollInFlight = false;
+      scheduleNextPoll(isOpen() ? OPEN_POLL_INTERVAL_MS : CLOSED_POLL_INTERVAL_MS);
+    }
   }
 
   function startPolling() {
     if (pollTimer) return;
-    pollTimer = window.setInterval(async () => {
-      try {
-        await ensureThread();
-        if (isOpen()) {
-          await loadMessages(false);
-        } else {
-          await loadUnreadCount();
-        }
-      } catch (error) {
-        setStatus("M\u1ea5t k\u1ebft n\u1ed1i t\u1ea1m th\u1eddi", "error");
-      }
-    }, 3000);
+    scheduleNextPoll(isOpen() ? OPEN_POLL_INTERVAL_MS : CLOSED_POLL_INTERVAL_MS);
   }
 
   async function init() {
@@ -436,6 +468,12 @@
     }
     if (event.key === "Escape") {
       closeWindow();
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      scheduleNextPoll(0);
     }
   });
 

@@ -85,8 +85,6 @@ public class StaffAppointmentService {
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointmentRepository.save(appointment);
 
-        emailService.sendAppointmentConfirmed(appointment);
-
         // Dentist inbox notification
         notificationService.notifyDentistAppointmentConfirmed(appointment);
     }
@@ -123,12 +121,6 @@ public class StaffAppointmentService {
 
         // Dentist inbox notification (confirmed/assigned appointment)
         notificationService.notifyDentistAppointmentConfirmed(saved);
-
-        try {
-            emailService.sendAppointmentConfirmed(saved);
-        } catch (Exception e) {
-            logger.warn("Khong gui duoc email xac nhan cho appointment {}", saved.getId(), e);
-        }
 
         if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
             notificationService.notifyBookingUpdated(saved, "Da doi nha si phu trach lich hen");
@@ -180,27 +172,18 @@ public class StaffAppointmentService {
     }
 
     public void checkInAppointment(Long id) {
-        Appointment a = appointmentRepository.findById(id)
+        Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        if (a.getStatus() != AppointmentStatus.CONFIRMED) {
-            throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
-        }
-
-        a.setStatus(AppointmentStatus.CHECKED_IN);
-        appointmentRepository.save(a);
-
-        // Dentist inbox notification
-        notificationService.notifyDentistAppointmentCheckedIn(a);
-        Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
-
         if (appointment.getStatus() != AppointmentStatus.CONFIRMED) {
-            throw new RuntimeException("Chi lich hen o trang thai CONFIRMED moi co the check-in");
+            throw new RuntimeException("Only CONFIRMED appointment can be checked-in");
         }
 
         appointment.setStatus(AppointmentStatus.CHECKED_IN);
         Appointment saved = appointmentRepository.save(appointment);
+
+        // Dentist inbox notification
+        notificationService.notifyDentistAppointmentCheckedIn(saved);
         notificationService.notifyBookingUpdated(saved, "Da check-in tai quay le tan");
     }
 
@@ -275,6 +258,10 @@ public class StaffAppointmentService {
 
         Invoice invoice = invoiceRepository.findByAppointment_Id(id).orElseGet(Invoice::new);
         invoice.setAppointment(a);
+        invoice.setVoucher(null);
+        invoice.setVoucherUsageCounted(false);
+        invoice.setOriginalAmount(remainingAmount);
+        invoice.setDiscountAmount(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         invoice.setTotalAmount(remainingAmount);
 
         if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -283,6 +270,7 @@ public class StaffAppointmentService {
             a.setStatus(AppointmentStatus.COMPLETED);
             appointmentRepository.save(a);
             notificationService.notifyBookingUpdated(a, "Da hoan tat thanh toan");
+            emailService.sendAppointmentCompletionIfNeeded(a.getId());
             return;
         }
 

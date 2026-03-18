@@ -1,0 +1,152 @@
+﻿.voucher-wallet-shell {
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+    .voucher-wallet-hero,
+    .voucher-wallet-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.06);
+    }
+    .voucher-wallet-hero {
+      padding: 28px 32px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .voucher-wallet-hero h1 {
+      margin: 6px 0 10px;
+      font-size: 32px;
+      color: #1b2559;
+      font-weight: 800;
+    }
+    .voucher-wallet-hero p {
+      margin: 0;
+      color: #64748b;
+      max-width: 760px;
+      line-height: 1.7;
+    }
+    .voucher-wallet-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .voucher-wallet-count {
+      min-width: 140px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+      color: #fff;
+      text-align: center;
+    }
+    .voucher-wallet-count strong {
+      display: block;
+      font-size: 32px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .voucher-wallet-card {
+      padding: 24px;
+    }
+    .voucher-wallet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .voucher-wallet-item {
+      border-radius: 22px;
+      padding: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .voucher-wallet-item__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .voucher-wallet-code {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: .03em;
+    }
+    .voucher-wallet-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .voucher-wallet-item__title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+    }
+    .voucher-wallet-item__desc {
+      color: #475569;
+      line-height: 1.7;
+      min-height: 52px;
+    }
+    .voucher-wallet-meta {
+      display: grid;
+      gap: 10px;
+      margin-top: auto;
+    }
+    .voucher-wallet-meta__row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      font-size: 14px;
+      color: #334155;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.28);
+    }
+    .voucher-wallet-meta__row strong {
+      color: #0f172a;
+      font-weight: 800;
+      text-align: right;
+    }
+    .voucher-wallet-empty {
+      padding: 56px 20px;
+      text-align: center;
+      color: #64748b;
+    }
+    .voucher-wallet-empty i {
+      display: block;
+      font-size: 42px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 900px) {
+      .voucher-wallet-hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .voucher-wallet-count {
+        width: 100%;
+      }
+    }
+

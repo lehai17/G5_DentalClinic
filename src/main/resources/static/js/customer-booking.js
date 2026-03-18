@@ -55,8 +55,8 @@
     setStep(1);
     updateSummary();
 
-    var urlParams = new URLSearchParams(window.location.search);
-    var status = urlParams.get('status');
+    var returnState = getVerifiedReturnState();
+    var status = returnState.type;
     var pendingId = sessionStorage.getItem('pendingAppointmentId');
 
     if (status === 'success') {
@@ -89,9 +89,9 @@
   }
 
   function checkReturnStatus() {
-    var urlParams = new URLSearchParams(window.location.search);
-    var status = urlParams.get('status');
-    var appointmentId = urlParams.get('id');
+    var returnState = getVerifiedReturnState();
+    var status = returnState.type;
+    var appointmentId = returnState.appointmentId;
 
     if (status === 'success') {
       setStep(4);
@@ -122,9 +122,33 @@
           .then(function (res) { return res.json(); })
           .then(function (data) { updateSuccessSummary(data); });
       }
-    } else if (status === 'fail') {
-      showAlert('Thanh toán không thành công hoặc bạn đã hủy giao dịch.', 'error', 'Thanh toán thất bại');
+    } else if (status === 'warning') {
+      showAlert(returnState.message || 'Thanh toán không thành công hoặc bạn đã hủy giao dịch.', 'warning', returnState.title || 'Thanh toán chưa hoàn tất');
       setStep(1);
+    } else if (status === 'info') {
+      showToast(returnState.message || 'Không ghi nhận thay đổi từ liên kết này.', 'info', returnState.title || 'Thông báo');
+      setStep(1);
+    }
+
+    clearReturnQueryParams();
+  }
+
+  function getVerifiedReturnState() {
+    var node = document.getElementById('booking-return-status');
+    if (!node) {
+      return { type: '', title: '', message: '', appointmentId: '' };
+    }
+    return {
+      type: (node.dataset.statusType || '').trim().toLowerCase(),
+      title: normalizeText(node.dataset.statusTitle || ''),
+      message: normalizeText(node.dataset.statusMessage || ''),
+      appointmentId: (node.dataset.appointmentId || '').trim()
+    };
+  }
+
+  function clearReturnQueryParams() {
+    if (window.history && typeof window.history.replaceState === 'function') {
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
@@ -903,72 +927,46 @@
         applySuggestion: function (payload) {
             if (!payload) return;
 
-            var selectedDateInput = document.getElementById('selected-date');
-            var selectedTimeInput = document.getElementById('selected-time');
+            var slotIdInput = document.getElementById('customer-booking-slot-id');
+
+            if (payload.serviceId) {
+                document.querySelectorAll('.customer-service-checkbox').forEach(function (cb) {
+                    cb.checked = String(cb.value) === String(payload.serviceId);
+                });
+            }
 
             if (payload.date) {
                 state.selectedDate = payload.date;
-                if (selectedDateInput) {
-                    selectedDateInput.value = payload.date;
-                }
             }
 
             if (payload.startTime) {
                 state.selectedSlot = {
-                    id: 'ai-selected-slot',
+                    id: payload.slotId || 'ai-selected-slot',
                     startTime: payload.startTime,
-                    endTime: payload.endTime || null
+                    endTime: payload.endTime || null,
+                    available: true,
+                    disabled: false,
+                    availableSpots: 1
                 };
+            } else {
+                state.selectedSlot = null;
+            }
 
-                if (selectedTimeInput) {
-                    selectedTimeInput.value = payload.startTime;
-                }
+            if (slotIdInput) {
+                slotIdInput.value = payload.slotId || '';
             }
 
             renderCalendar();
             updateSummary();
 
-            if (payload.date) {
-                setStep(2);
-                loadSlotsForDate(payload.date).then(function () {
-                    if (!payload.startTime || !Array.isArray(state.renderedSlots)) return;
+            setStep(3);
 
-                    var matched = state.renderedSlots.find(function (slot) {
-                        var hasSpotsValue = slot.availableSpots !== undefined && slot.availableSpots !== null;
-                        var availableSpots = hasSpotsValue ? Number(slot.availableSpots) : null;
-                        var isDisabled = slot.disabled === true;
-                        var isFull = hasSpotsValue ? availableSpots <= 0 : slot.available === false;
-                        var isAvailable = !isDisabled && !isFull;
-
-                        return String(slot.startTime) === String(payload.startTime) && isAvailable;
-                    });
-
-                    if (matched) {
-                        state.selectedSlot = matched;
-
-                        if (selectedTimeInput) {
-                            selectedTimeInput.value = matched.startTime;
-                        }
-
-                        var slotGrid = document.getElementById('time-slots-grid');
-                        if (slotGrid) {
-                            applySelectedSlotVisualState(slotGrid);
-                        }
-
-                        updateSummary();
-                    } else {
-                        state.selectedSlot = null;
-
-                        if (selectedTimeInput) {
-                            selectedTimeInput.value = '';
-                        }
-
-                        updateSummary();
-                    }
-                });
+            var summaryCol = document.getElementById('booking-summary');
+            if (summaryCol) {
+                summaryCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
-            showAlert('Đã áp dụng gợi ý AI vào form đặt lịch.', 'success', 'Thành công');
+            showAlert('Đã áp dụng gợi ý AI. Bạn hãy điền thông tin liên hệ để tiếp tục.', 'success', 'Thành công');
         }
     };
 

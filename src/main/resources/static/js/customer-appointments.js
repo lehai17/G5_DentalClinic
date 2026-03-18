@@ -25,19 +25,32 @@
   );
   var paymentInvoiceIdEl = document.getElementById("cap-payment-invoice-id");
   var paymentAmountEl = document.getElementById("cap-payment-amount");
+  var paymentOriginalLineEl = document.getElementById("cap-payment-original-line");
+  var paymentOriginalAmountEl = document.getElementById("cap-payment-original-amount");
+  var paymentDiscountLineEl = document.getElementById("cap-payment-discount-line");
+  var paymentDiscountAmountEl = document.getElementById("cap-payment-discount-amount");
+  var paymentVoucherInputEl = document.getElementById("cap-payment-voucher-code");
+  var paymentVoucherApplyBtn = document.getElementById("cap-payment-voucher-apply");
+  var paymentVoucherFeedbackEl = document.getElementById("cap-payment-voucher-feedback");
   var paymentWalletBtn = document.getElementById("cap-payment-wallet");
   var paymentVnpayBtn = document.getElementById("cap-payment-vnpay");
   var invoiceModalEl = document.getElementById("cap-invoice-modal");
   var invoiceModalCloseEl = document.getElementById("cap-invoice-close");
   var invoiceModalContentEl = document.getElementById("cap-invoice-modal-content");
-  var reviewModalEl = document.getElementById("cap-review-modal");
-  var reviewModalCloseEl = document.getElementById("cap-review-close");
-  var reviewSubmitEl = document.getElementById("cap-review-submit");
-  var reviewCommentEl = document.getElementById("cap-review-comment");
-  var reviewHintEl = document.getElementById("cap-review-hint");
-  var reviewStarEls = Array.prototype.slice.call(
-    document.querySelectorAll(".cap-review-star"),
-  );
+    var reviewModalEl = document.getElementById("cap-review-modal");
+    var reviewModalCloseEl = document.getElementById("cap-review-close");
+    var reviewSubmitEl = document.getElementById("cap-review-submit");
+    var reviewCommentEl = document.getElementById("cap-review-comment");
+
+    var reviewDentistHintEl = document.getElementById("cap-review-dentist-hint");
+    var reviewServiceHintEl = document.getElementById("cap-review-service-hint");
+
+    var reviewDentistStarEls = Array.prototype.slice.call(
+        document.querySelectorAll(".dentist-star")
+    );
+    var reviewServiceStarEls = Array.prototype.slice.call(
+        document.querySelectorAll(".service-star")
+    );
   var searchTimer = null;
   var queryParams = new URLSearchParams(window.location.search);
   var state = {
@@ -231,6 +244,11 @@
     remainingPaymentSelection = null;
     if (paymentWalletBtn) paymentWalletBtn.disabled = false;
     if (paymentVnpayBtn) paymentVnpayBtn.disabled = false;
+    if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
+    if (paymentVoucherInputEl) paymentVoucherInputEl.value = "";
+    if (paymentVoucherFeedbackEl) paymentVoucherFeedbackEl.textContent = "";
+    if (paymentOriginalLineEl) paymentOriginalLineEl.hidden = true;
+    if (paymentDiscountLineEl) paymentDiscountLineEl.hidden = true;
   }
 
   function closeInvoiceModal() {
@@ -254,6 +272,12 @@
       appointmentId: appointmentId,
       invoiceId: data.invoiceId,
       amount: data.remainingAmount,
+      originalAmount:
+        data.originalRemainingAmount != null
+          ? data.originalRemainingAmount
+          : data.remainingAmount,
+      discountAmount: data.discountAmount || 0,
+      voucherCode: data.voucherCode || "",
     };
 
     if (paymentAppointmentIdEl)
@@ -264,11 +288,123 @@
         : normalizeText("Chưa có");
     if (paymentAmountEl)
       paymentAmountEl.textContent = formatMoney(data.remainingAmount);
+    if (paymentOriginalAmountEl)
+      paymentOriginalAmountEl.textContent = formatMoney(
+        remainingPaymentSelection.originalAmount,
+      );
+    if (paymentDiscountAmountEl)
+      paymentDiscountAmountEl.textContent = formatMoney(
+        remainingPaymentSelection.discountAmount,
+      );
+    if (paymentOriginalLineEl)
+      paymentOriginalLineEl.hidden =
+        toNumber(remainingPaymentSelection.originalAmount) <=
+        toNumber(data.remainingAmount);
+    if (paymentDiscountLineEl)
+      paymentDiscountLineEl.hidden =
+        toNumber(remainingPaymentSelection.discountAmount) <= 0;
+    if (paymentVoucherInputEl)
+      paymentVoucherInputEl.value = remainingPaymentSelection.voucherCode || "";
+    if (paymentVoucherFeedbackEl) {
+      paymentVoucherFeedbackEl.textContent = data.voucherCode
+        ? "Đã áp dụng voucher " + data.voucherCode + "."
+        : "";
+    }
     if (paymentWalletBtn) paymentWalletBtn.disabled = false;
     if (paymentVnpayBtn) paymentVnpayBtn.disabled = false;
+    if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
 
     paymentModalEl.hidden = false;
     document.body.classList.add("cap-payment-modal-open");
+  }
+
+  function updateRemainingPaymentPreview(preview) {
+    if (!remainingPaymentSelection || !preview) return;
+
+    remainingPaymentSelection.invoiceId = preview.invoiceId;
+    remainingPaymentSelection.amount = preview.payableAmount;
+    remainingPaymentSelection.originalAmount = preview.originalAmount;
+    remainingPaymentSelection.discountAmount = preview.discountAmount || 0;
+    remainingPaymentSelection.voucherCode = preview.voucherCode || "";
+
+    if (paymentInvoiceIdEl)
+      paymentInvoiceIdEl.textContent = preview.invoiceId
+        ? "#" + preview.invoiceId
+        : normalizeText("Chưa có");
+    if (paymentAmountEl)
+      paymentAmountEl.textContent = formatMoney(preview.payableAmount);
+    if (paymentOriginalAmountEl)
+      paymentOriginalAmountEl.textContent = formatMoney(preview.originalAmount);
+    if (paymentDiscountAmountEl)
+      paymentDiscountAmountEl.textContent = formatMoney(preview.discountAmount || 0);
+    if (paymentOriginalLineEl)
+      paymentOriginalLineEl.hidden =
+        toNumber(preview.originalAmount) <= toNumber(preview.payableAmount);
+    if (paymentDiscountLineEl)
+      paymentDiscountLineEl.hidden = toNumber(preview.discountAmount) <= 0;
+    if (paymentVoucherInputEl)
+      paymentVoucherInputEl.value = preview.voucherCode || "";
+    if (paymentVoucherFeedbackEl) {
+      paymentVoucherFeedbackEl.textContent = preview.voucherApplied
+        ? normalizeText(
+            "Áp dụng voucher " +
+              preview.voucherCode +
+              (preview.voucherDescription
+                ? ": " + preview.voucherDescription
+                : "."),
+          )
+        : normalizeText(
+            (paymentVoucherInputEl && paymentVoucherInputEl.value.trim())
+              ? "Đã bỏ voucher khỏi hóa đơn."
+              : "",
+          );
+    }
+  }
+
+  function applyVoucherPreview() {
+    if (!remainingPaymentSelection) return Promise.resolve();
+
+    var voucherCode = paymentVoucherInputEl ? paymentVoucherInputEl.value.trim() : "";
+    if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = true;
+    if (paymentWalletBtn) paymentWalletBtn.disabled = true;
+    if (paymentVnpayBtn) paymentVnpayBtn.disabled = true;
+
+    var url =
+      "/customer/payment/final-payment/" +
+      remainingPaymentSelection.appointmentId +
+      "/preview";
+    if (voucherCode) {
+      url += "?voucherCode=" + encodeURIComponent(voucherCode);
+    }
+
+    return fetch(url, { credentials: "same-origin" })
+      .then(function (res) {
+        if (res.status === 401) {
+          throw new Error("Bạn cần đăng nhập.");
+        }
+        return res.json().then(function (payload) {
+          if (!res.ok || payload.success === false || !payload.data) {
+            throw new Error(
+              extractApiError(payload, "Không thể áp dụng voucher."),
+            );
+          }
+          return payload.data;
+        });
+      })
+      .then(function (preview) {
+        updateRemainingPaymentPreview(preview);
+      })
+      .catch(function (err) {
+        if (paymentVoucherFeedbackEl) {
+          paymentVoucherFeedbackEl.textContent = err.message || "Không thể áp dụng voucher.";
+        }
+        throw err;
+      })
+      .finally(function () {
+        if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
+        if (paymentWalletBtn) paymentWalletBtn.disabled = false;
+        if (paymentVnpayBtn) paymentVnpayBtn.disabled = false;
+      });
   }
 
   function buildInvoiceHtml(data) {
@@ -279,10 +415,17 @@
     var settled = isSettledInvoice(data);
     var billedTotal = toNumber(data.billedTotal);
     var depositAmount = toNumber(data.depositAmount);
+    var originalRemaining = toNumber(
+      data.originalRemainingAmount != null
+        ? data.originalRemainingAmount
+        : data.remainingAmount,
+    );
+    var discountAmount = toNumber(data.discountAmount);
     var remainingAmount = toNumber(data.remainingAmount);
+    var patientTotal = Math.max(billedTotal - discountAmount, 0);
     var paidAmount = settled
-      ? billedTotal
-      : Math.max(billedTotal - remainingAmount, 0);
+      ? patientTotal
+      : Math.max(patientTotal - remainingAmount, 0);
     var statusLabel = settled
       ? "Đã thanh toán"
       : formatInvoiceStatus(data.invoiceStatus);
@@ -399,6 +542,16 @@
       '<div class="cap-invoice-total-line"><span>Đặt cọc ban đầu</span><strong>' +
       escapeHtml(formatMoney(depositAmount)) +
       "</strong></div>" +
+      '<div class="cap-invoice-total-line"><span>Tạm tính sau đặt cọc</span><strong>' +
+      escapeHtml(formatMoney(originalRemaining)) +
+      "</strong></div>" +
+      (discountAmount > 0
+        ? '<div class="cap-invoice-total-line"><span>Voucher giảm giá' +
+          (data.voucherCode ? " (" + escapeHtml(data.voucherCode) + ")" : "") +
+          '</span><strong>-' +
+          escapeHtml(formatMoney(discountAmount)) +
+          "</strong></div>"
+        : "") +
       '<div class="cap-invoice-total-line"><span>Đã thanh toán</span><strong>' +
       escapeHtml(formatMoney(paidAmount)) +
       "</strong></div>" +
@@ -429,122 +582,127 @@
     );
   }
 
-  function closeReviewModal() {
-    if (!reviewModalEl) return;
-    reviewModalEl.hidden = true;
-    reviewSelection = { appointmentId: null, rating: 0 };
-    if (reviewCommentEl) reviewCommentEl.value = "";
-    updateReviewStars(0);
-    document.body.classList.remove("cap-payment-modal-open");
-    if (reviewSubmitEl) reviewSubmitEl.disabled = false;
-  }
-
-  function updateReviewStars(rating) {
-    reviewSelection.rating = rating || 0;
-    reviewStarEls.forEach(function (starEl) {
-      var starRating = Number(starEl.dataset.rating || 0);
-      starEl.classList.toggle("active", starRating <= reviewSelection.rating);
-    });
-    if (reviewHintEl) {
-      reviewHintEl.textContent = reviewSelection.rating > 0
-        ? normalizeText("B\u1ea1n \u0111ang ch\u1ecdn " + reviewSelection.rating + " sao")
-        : normalizeText("Ch\u1ecdn s\u1ed1 sao t\u1eeb 1 \u0111\u1ebfn 5");
-    }
-  }
-
-  function openReviewModal(appointmentId) {
-    if (!reviewModalEl) return;
-    reviewSelection = { appointmentId: appointmentId, rating: 0 };
-    if (reviewCommentEl) reviewCommentEl.value = "";
-    updateReviewStars(0);
-    reviewModalEl.hidden = false;
-    document.body.classList.add("cap-payment-modal-open");
-    if (reviewCommentEl) reviewCommentEl.focus();
-  }
-
-  function bindReviewModal() {
-    if (!reviewModalEl) return;
-
-    if (reviewModalCloseEl) {
-      reviewModalCloseEl.addEventListener("click", function () {
-        closeReviewModal();
-      });
+    function closeReviewModal() {
+        if (!reviewModalEl) return;
+        reviewModalEl.hidden = true;
+        reviewSelection = { appointmentId: null, dentistRating: 0, serviceRating: 0 };
+        if (reviewCommentEl) reviewCommentEl.value = "";
+        updateDentistReviewStars(0);
+        updateServiceReviewStars(0);
+        document.body.classList.remove("cap-payment-modal-open");
+        if (reviewSubmitEl) reviewSubmitEl.disabled = false;
     }
 
-    reviewModalEl
-      .querySelectorAll("[data-review-close]")
-      .forEach(function (el) {
-        el.addEventListener("click", function () {
-          closeReviewModal();
+    function updateDentistReviewStars(rating) {
+        reviewSelection.dentistRating = rating || 0;
+        reviewDentistStarEls.forEach(function (starEl) {
+            var starRating = Number(starEl.dataset.rating || 0);
+            starEl.classList.toggle("active", starRating <= reviewSelection.dentistRating);
         });
-      });
 
-    reviewModalEl.addEventListener("click", function (e) {
-      if (e.target === reviewModalEl) {
-        closeReviewModal();
-      }
+        if (reviewDentistHintEl) {
+            reviewDentistHintEl.textContent = reviewSelection.dentistRating > 0
+                ? "Bạn đang chọn " + reviewSelection.dentistRating + " sao cho bác sĩ"
+                : "Chọn số sao cho bác sĩ";
+        }
+    }
+
+    function updateServiceReviewStars(rating) {
+        reviewSelection.serviceRating = rating || 0;
+        reviewServiceStarEls.forEach(function (starEl) {
+            var starRating = Number(starEl.dataset.rating || 0);
+            starEl.classList.toggle("active", starRating <= reviewSelection.serviceRating);
+        });
+
+        if (reviewServiceHintEl) {
+            reviewServiceHintEl.textContent = reviewSelection.serviceRating > 0
+                ? "Bạn đang chọn " + reviewSelection.serviceRating + " sao cho dịch vụ"
+                : "Chọn số sao cho dịch vụ";
+        }
+    }
+
+    function openReviewModal(appointmentId) {
+        if (!reviewModalEl) return;
+        reviewSelection = { appointmentId: appointmentId, dentistRating: 0, serviceRating: 0 };
+        if (reviewCommentEl) reviewCommentEl.value = "";
+        updateDentistReviewStars(0);
+        updateServiceReviewStars(0);
+        reviewModalEl.hidden = false;
+        document.body.classList.add("cap-payment-modal-open");
+        if (reviewCommentEl) reviewCommentEl.focus();
+    }
+
+    reviewDentistStarEls.forEach(function (starEl) {
+        starEl.addEventListener("click", function () {
+            updateDentistReviewStars(Number(starEl.dataset.rating || 0));
+        });
     });
 
-    reviewStarEls.forEach(function (starEl) {
-      starEl.addEventListener("click", function () {
-        updateReviewStars(Number(starEl.dataset.rating || 0));
-      });
+    reviewServiceStarEls.forEach(function (starEl) {
+        starEl.addEventListener("click", function () {
+            updateServiceReviewStars(Number(starEl.dataset.rating || 0));
+        });
     });
 
     if (reviewSubmitEl) {
-      reviewSubmitEl.addEventListener("click", function () {
-        if (!reviewSelection.appointmentId) return;
-        if (!reviewSelection.rating) {
-          showAlert("Vui l\u00f2ng ch\u1ecdn s\u1ed1 sao \u0111\u00e1nh gi\u00e1.", "warning", "Thi\u1ebfu th\u00f4ng tin");
-          return;
-        }
+        reviewSubmitEl.addEventListener("click", function () {
+            if (!reviewSelection.appointmentId) return;
 
-        reviewSubmitEl.disabled = true;
-        fetch("/customer/appointments/" + reviewSelection.appointmentId + "/review", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            rating: reviewSelection.rating,
-            comment: reviewCommentEl ? reviewCommentEl.value : "",
-          }),
-        })
-          .then(function (res) {
-            if (res.status === 401) {
-              throw new Error("Bạn cần đăng nhập.");
+            if (!reviewSelection.dentistRating) {
+                showAlert("Vui lòng chọn số sao đánh giá bác sĩ.", "warning", "Thiếu thông tin");
+                return;
             }
-            return res.json().then(function (payload) {
-              if (!res.ok || payload.success === false) {
-                throw new Error(
-                  extractApiError(payload, "Không thể gửi đánh giá."),
-                );
-              }
-              return payload;
-            });
-          })
-          .then(function (payload) {
-            var reviewedAppointmentId = reviewSelection.appointmentId;
-            closeReviewModal();
-            showToast(
-              payload.message || "\u0110\u00e3 g\u1eedi \u0111\u00e1nh gi\u00e1 b\u00e1c s\u0129 th\u00e0nh c\u00f4ng.",
-              "success",
-              "Cảm ơn bạn",
-            );
-            loadAppointments(function () {
-              openInlineDetail(reviewedAppointmentId, true);
-            }, state.page);
-          })
-          .catch(function (err) {
-            if (reviewSubmitEl) reviewSubmitEl.disabled = false;
-            showAlert(
-              err.message || "Không thể gửi đánh giá.",
-              "error",
-              "Gửi đánh giá thất bại",
-            );
-          });
-      });
+
+            if (!reviewSelection.serviceRating) {
+                showAlert("Vui lòng chọn số sao đánh giá dịch vụ.", "warning", "Thiếu thông tin");
+                return;
+            }
+
+            reviewSubmitEl.disabled = true;
+
+            fetch("/customer/appointments/" + reviewSelection.appointmentId + "/review", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    dentistRating: reviewSelection.dentistRating,
+                    serviceRating: reviewSelection.serviceRating,
+                    comment: reviewCommentEl ? reviewCommentEl.value : ""
+                })
+            })
+                .then(function (res) {
+                    if (res.status === 401) {
+                        throw new Error("Bạn cần đăng nhập.");
+                    }
+                    return res.json().then(function (payload) {
+                        if (!res.ok || payload.success === false) {
+                            throw new Error(payload.message || "Không thể gửi đánh giá.");
+                        }
+                        return payload;
+                    });
+                })
+                .then(function (payload) {
+                    var reviewedAppointmentId = reviewSelection.appointmentId;
+                    closeReviewModal();
+                    showToast(
+                        payload.message || "Đã gửi đánh giá thành công.",
+                        "success",
+                        "Cảm ơn bạn"
+                    );
+                    loadAppointments(function () {
+                        openInlineDetail(reviewedAppointmentId, true);
+                    }, state.page);
+                })
+                .catch(function (err) {
+                    if (reviewSubmitEl) reviewSubmitEl.disabled = false;
+                    showAlert(
+                        err.message || "Không thể gửi đánh giá.",
+                        "error",
+                        "Gửi đánh giá thất bại"
+                    );
+                });
+        });
     }
-  }
 
   function bindRemainingPaymentModal() {
     if (!paymentModalEl) return;
@@ -575,13 +733,25 @@
       }
     });
 
+    if (paymentVoucherApplyBtn) {
+      paymentVoucherApplyBtn.addEventListener("click", function () {
+        applyVoucherPreview().catch(function () {});
+      });
+    }
+
     if (paymentVnpayBtn) {
       paymentVnpayBtn.addEventListener("click", function () {
         if (!remainingPaymentSelection) return;
         paymentVnpayBtn.disabled = true;
-        window.location.href =
+        var url =
           "/customer/payment/create-final-payment/" +
           remainingPaymentSelection.appointmentId;
+        if (remainingPaymentSelection.voucherCode) {
+          url +=
+            "?voucherCode=" +
+            encodeURIComponent(remainingPaymentSelection.voucherCode);
+        }
+        window.location.href = url;
       });
     }
 
@@ -596,6 +766,12 @@
         fetch("/customer/payment/final-payment/" + appointmentId + "/wallet", {
           method: "POST",
           credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          },
+          body:
+            "voucherCode=" +
+            encodeURIComponent(remainingPaymentSelection.voucherCode || ""),
         })
           .then(function (res) {
             if (res.status === 401) {
@@ -723,6 +899,7 @@
     var canCancel =
       data.status !== "CANCELLED" &&
       data.status !== "COMPLETED" &&
+      data.status !== "CHECKED_IN" &&
       data.status !== "WAITING_PAYMENT" &&
       data.status !== "DONE" &&
       data.status !== "EXAMINING" &&
@@ -750,17 +927,17 @@
     var reviewActionHtml = canReview
       ? '<button type="button" class="cap-btn cap-btn-primary" data-action="review"><i class="bi bi-star"></i> Đánh giá bác sĩ</button>'
       : "";
-    var reviewSummaryHtml = data.reviewed
-      ? '<div class="cap-inline-note cap-inline-note-review">' +
-        '<i class="bi bi-star-fill"></i>' +
-        '<span>Bạn đã đánh giá bác sĩ <strong>' +
-        escapeHtml(String(data.reviewRating || "")) +
-        "/5 sao</strong>" +
-        (data.reviewComment
-          ? ": " + escapeHtml(data.reviewComment)
-          : ".") +
-        "</span></div>"
-      : "";
+      var reviewSummaryHtml = data.reviewed
+          ? '<div class="cap-inline-note cap-inline-note-review">' +
+          '<i class="bi bi-star-fill"></i>' +
+          '<span>Bạn đã đánh giá <strong>bác sĩ ' +
+          escapeHtml(String(data.dentistReviewRating || "")) +
+          '/5 sao</strong> và <strong>dịch vụ ' +
+          escapeHtml(String(data.serviceReviewRating || "")) +
+          '/5 sao</strong>' +
+          (data.reviewComment ? ': ' + escapeHtml(data.reviewComment) : '.') +
+          '</span></div>'
+          : "";
     var depositPaidHtml =
       data.status === "PENDING" ||
       data.status === "CONFIRMED" ||
@@ -788,6 +965,10 @@
         "<span>Còn lại cần thanh toán: <strong>" +
         escapeHtml(formatMoney(data.remainingAmount)) +
         "</strong>" +
+        (toNumber(data.discountAmount) > 0
+          ? " - Đã áp dụng voucher giảm " +
+            escapeHtml(formatMoney(data.discountAmount))
+          : "") +
         (data.invoiceId ? " - Mã thanh toán #" + escapeHtml(data.invoiceId) : "") +
         "</span></div>"
       : "";
