@@ -19,10 +19,10 @@ public class Notification {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "title")
+    @Column(name = "title", columnDefinition = "NVARCHAR(255)")
     private String title;
 
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
     @Enumerated(EnumType.STRING)
