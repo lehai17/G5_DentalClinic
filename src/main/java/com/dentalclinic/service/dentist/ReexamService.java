@@ -90,6 +90,13 @@ public class ReexamService {
                         BookingErrorCode.APPOINTMENT_NOT_FOUND,
                         "Original appointment not found"
                 ));
+        if (original.getAppointmentDetails() != null) {
+            original.getAppointmentDetails().forEach(detail -> {
+                if (detail.getService() != null) {
+                    detail.getService().getId();
+                }
+            });
+        }
         validateDentistOwnership(original, dentistUserId);
         return original;
     }

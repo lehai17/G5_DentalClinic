@@ -158,13 +158,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                           @Param("start") LocalDate start,
                                           @Param("end") LocalDate end);
 
+    @EntityGraph(attributePaths = {"customer", "customer.user", "service", "dentist", "dentist.user"})
     @Query("""
-            SELECT DISTINCT a FROM Appointment a
-            JOIN FETCH a.customer c
-            JOIN FETCH c.user cu
-            JOIN FETCH a.service s
-            LEFT JOIN FETCH a.appointmentDetails ad
-            LEFT JOIN FETCH a.dentist d
+            SELECT a
+            FROM Appointment a
             WHERE a.id = :appointmentId
             """)
     Optional<Appointment> findByIdWithDetails(@Param("appointmentId") Long appointmentId);
