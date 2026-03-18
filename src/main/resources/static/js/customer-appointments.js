@@ -584,12 +584,20 @@
 
     function closeReviewModal() {
         if (!reviewModalEl) return;
+
         reviewModalEl.hidden = true;
-        reviewSelection = { appointmentId: null, dentistRating: 0, serviceRating: 0 };
+        reviewSelection = {
+            appointmentId: null,
+            dentistRating: 0,
+            serviceRating: 0
+        };
+
         if (reviewCommentEl) reviewCommentEl.value = "";
         updateDentistReviewStars(0);
         updateServiceReviewStars(0);
+
         document.body.classList.remove("cap-payment-modal-open");
+
         if (reviewSubmitEl) reviewSubmitEl.disabled = false;
     }
 
@@ -1480,6 +1488,103 @@
       loadAppointments(null, 0);
     });
   }
+    function bindReviewModal() {
+        if (!reviewModalEl) return;
+
+        if (reviewModalCloseEl) {
+            reviewModalCloseEl.addEventListener("click", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeReviewModal();
+            });
+        }
+
+        document.querySelectorAll("[data-review-close]").forEach(function (el) {
+            el.addEventListener("click", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeReviewModal();
+            });
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && reviewModalEl && !reviewModalEl.hidden) {
+                closeReviewModal();
+            }
+        });
+
+        reviewDentistStarEls.forEach(function (starEl) {
+            starEl.addEventListener("click", function () {
+                updateDentistReviewStars(Number(starEl.dataset.rating || 0));
+            });
+        });
+
+        reviewServiceStarEls.forEach(function (starEl) {
+            starEl.addEventListener("click", function () {
+                updateServiceReviewStars(Number(starEl.dataset.rating || 0));
+            });
+        });
+
+        if (reviewSubmitEl) {
+            reviewSubmitEl.addEventListener("click", function () {
+                if (!reviewSelection.appointmentId) return;
+
+                if (!reviewSelection.dentistRating) {
+                    showAlert("Vui lòng chọn số sao đánh giá bác sĩ.", "warning", "Thiếu thông tin");
+                    return;
+                }
+
+                if (!reviewSelection.serviceRating) {
+                    showAlert("Vui lòng chọn số sao đánh giá dịch vụ.", "warning", "Thiếu thông tin");
+                    return;
+                }
+
+                reviewSubmitEl.disabled = true;
+
+                fetch("/customer/appointments/" + reviewSelection.appointmentId + "/review", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        dentistRating: reviewSelection.dentistRating,
+                        serviceRating: reviewSelection.serviceRating,
+                        comment: reviewCommentEl ? reviewCommentEl.value : ""
+                    })
+                })
+                    .then(function (res) {
+                        if (res.status === 401) {
+                            throw new Error("Bạn cần đăng nhập.");
+                        }
+                        return res.json().then(function (payload) {
+                            if (!res.ok || payload.success === false) {
+                                throw new Error(payload.message || "Không thể gửi đánh giá.");
+                            }
+                            return payload;
+                        });
+                    })
+                    .then(function (payload) {
+                        var reviewedAppointmentId = reviewSelection.appointmentId;
+                        closeReviewModal();
+                        showToast(
+                            payload.message || "Đã gửi đánh giá thành công.",
+                            "success",
+                            "Cảm ơn bạn"
+                        );
+                        loadAppointments(function () {
+                            openInlineDetail(reviewedAppointmentId, true);
+                        }, state.page);
+                    })
+                    .catch(function (err) {
+                        if (reviewSubmitEl) reviewSubmitEl.disabled = false;
+                        showAlert(
+                            err.message || "Không thể gửi đánh giá.",
+                            "error",
+                            "Gửi đánh giá thất bại"
+                        );
+                    });
+            });
+        }
+    }
 
   bindRemainingPaymentModal();
   bindInvoiceModal();
