@@ -6,6 +6,8 @@
         "MB Bank",
         "VPBank",
       ];
+      const WALLET_TOPUP_MIN = 10000;
+      const WALLET_TOPUP_MAX = 100000000;
 
       document.addEventListener("DOMContentLoaded", function () {
         bindTopupModal();
@@ -297,11 +299,20 @@
         if (submitBtn) {
           submitBtn.addEventListener("click", function () {
             const amount = parseVndInput(amountInput ? amountInput.value : 0);
-            if (!amount || amount < 10000) {
+            if (!amount || amount < WALLET_TOPUP_MIN) {
               showAlert(
                 "Vui lòng nhập số tiền từ 10.000 VND trở lên.",
                 "warning",
                 "Số tiền không hợp lệ",
+              );
+              return;
+            }
+
+            if (amount > WALLET_TOPUP_MAX) {
+              showAlert(
+                "Số tiền nạp tối đa mỗi lần là 100.000.000 VND.",
+                "warning",
+                "Vượt hạn mức nạp",
               );
               return;
             }

@@ -44,6 +44,8 @@ import java.util.TimeZone;
 public class CustomerPaymentController {
 
     private static final String SESSION_USER_ID = "userId";
+    private static final BigDecimal MIN_WALLET_TOPUP_AMOUNT = BigDecimal.valueOf(10_000L);
+    private static final BigDecimal MAX_WALLET_TOPUP_AMOUNT = BigDecimal.valueOf(100_000_000L);
 
     @Autowired
     private VNPayConfig vnPayConfig;
@@ -137,10 +139,17 @@ public class CustomerPaymentController {
         }
 
         BigDecimal normalizedAmount = amount == null ? BigDecimal.ZERO : amount.stripTrailingZeros();
-        if (normalizedAmount.compareTo(BigDecimal.valueOf(10000L)) < 0) {
+        if (normalizedAmount.compareTo(MIN_WALLET_TOPUP_AMOUNT) < 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "So tien nap toi thieu la 10.000 VND."
+            ));
+        }
+
+        if (normalizedAmount.compareTo(MAX_WALLET_TOPUP_AMOUNT) > 0) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "So tien nap toi da la 100.000.000 VND."
             ));
         }
 
