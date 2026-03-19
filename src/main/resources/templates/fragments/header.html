@@ -358,7 +358,7 @@
       </div>
       <script th:src="@{/js/user-dropdown.js}" defer></script>
       <th:block sec:authorize="hasRole('CUSTOMER')">
-        <link rel="stylesheet" th:href="@{/css/chat-widget.css}" />
+        <link rel="stylesheet" th:href="@{/css/customer/chat-widget.css}" />
         <div id="chat-widget" class="chat-widget">
           <button id="chat-toggle" class="chat-toggle" type="button" aria-label="Mở chat với lễ tân">
             <span>&#128172; Chat với lễ tân</span>
@@ -384,7 +384,7 @@
               </div>
             </div>
         </div>
-        <script th:src="@{/js/chat-widget.js}" defer></script>
+        <script th:src="@{/js/customer/chat-widget.js}" defer></script>
       </th:block>
     </nav>
 
