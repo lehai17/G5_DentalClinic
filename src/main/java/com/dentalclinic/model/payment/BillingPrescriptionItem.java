@@ -14,10 +14,10 @@ public class BillingPrescriptionItem {
     @JoinColumn(name = "billing_note_id")
     private BillingNote billingNote;
 
-    @Column(name = "medicine_name", length = 255)
+    @Column(name = "medicine_name", columnDefinition = "NVARCHAR(255)")
     private String medicineName;
 
-    @Column(length = 100)
+    @Column(columnDefinition = "NVARCHAR(100)")
     private String dosage;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
