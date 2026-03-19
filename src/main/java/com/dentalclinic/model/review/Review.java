@@ -38,9 +38,6 @@ public class Review {
     @Column(name = "service_rating", nullable = false)
     private int serviceRating;
 
-    @Column(name = "rating", nullable = false)
-    private int rating;
-
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String comment;
 
@@ -59,49 +56,11 @@ public class Review {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public boolean isApproved() {
-        return approved;
-    }
-
-    public void setApproved(boolean approved) {
-        this.approved = approved;
-    }
-
-    public boolean isHiddenCustomerName() {
-        return hiddenCustomerName;
-    }
-
-    public void setHiddenCustomerName(boolean hiddenCustomerName) {
-        this.hiddenCustomerName = hiddenCustomerName;
-    }
-
-    public Integer getDisplayOrder() {
-        return displayOrder;
-    }
-
-    public void setDisplayOrder(Integer displayOrder) {
-        this.displayOrder = displayOrder;
-    }
-
-    public boolean isFeaturedOnHomepage() {
-        return featuredOnHomepage;
-    }
-
-    public void setFeaturedOnHomepage(boolean featuredOnHomepage) {
-        this.featuredOnHomepage = featuredOnHomepage;
-    }
-
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        syncLegacyRating();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        syncLegacyRating();
     }
 
     public Long getId() {
@@ -150,7 +109,6 @@ public class Review {
 
     public void setDentistRating(int dentistRating) {
         this.dentistRating = dentistRating;
-        syncLegacyRating();
     }
 
     public int getServiceRating() {
@@ -159,7 +117,6 @@ public class Review {
 
     public void setServiceRating(int serviceRating) {
         this.serviceRating = serviceRating;
-        syncLegacyRating();
     }
 
     public String getComment() {
@@ -170,33 +127,43 @@ public class Review {
         this.comment = comment;
     }
 
+    public boolean isApproved() {
+        return approved;
+    }
+
+    public void setApproved(boolean approved) {
+        this.approved = approved;
+    }
+
+    public boolean isFeaturedOnHomepage() {
+        return featuredOnHomepage;
+    }
+
+    public void setFeaturedOnHomepage(boolean featuredOnHomepage) {
+        this.featuredOnHomepage = featuredOnHomepage;
+    }
+
+    public Integer getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public boolean isHiddenCustomerName() {
+        return hiddenCustomerName;
+    }
+
+    public void setHiddenCustomerName(boolean hiddenCustomerName) {
+        this.hiddenCustomerName = hiddenCustomerName;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public int getRating() {
-        return rating;
-    }
-
-    public void setRating(int rating) {
-        this.rating = rating;
-    }
-
-    private void syncLegacyRating() {
-        if (dentistRating > 0 && serviceRating > 0) {
-            this.rating = (int) Math.round((dentistRating + serviceRating) / 2.0d);
-            return;
-        }
-        if (dentistRating > 0) {
-            this.rating = dentistRating;
-            return;
-        }
-        if (serviceRating > 0) {
-            this.rating = serviceRating;
-        }
     }
 }
