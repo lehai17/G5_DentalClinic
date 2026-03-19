@@ -2,6 +2,7 @@ package com.dentalclinic.config;
 
 import com.dentalclinic.model.appointment.Slot;
 import com.dentalclinic.repository.SlotRepository;
+import com.dentalclinic.service.appointment.SlotCapacitySyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -25,10 +26,11 @@ public class SlotSeeder {
     private static final int DAYS_TO_SEED = 30;
 
     /**
-     * Seed & repair slot cho 30 ng� y tiếp theo khi á»©ng dụng khởi động.
+     * Seed và sửa slot cho 30 ngày tiếp theo khi ứng dụng khởi động.
      */
     @Bean
-    public ApplicationRunner seedSlotsIfNeeded(SlotRepository slotRepository) {
+    public ApplicationRunner seedSlotsIfNeeded(SlotRepository slotRepository,
+                                               SlotCapacitySyncService slotCapacitySyncService) {
         return (ApplicationArguments args) -> {
             LocalDate today = LocalDate.now();
 
@@ -51,22 +53,8 @@ public class SlotSeeder {
 
                     if (existing.isPresent()) {
                         Slot slot = existing.get();
-                        boolean changed = false;
-
-                        // BOOT REPAIR: Only update capacity or booked count.
-                        // DO NOT force 'active = true' here as it overwrites manual locks.
-
-                        if (slot.getCapacity() != DEFAULT_CAPACITY) {
-                            slot.setCapacity(DEFAULT_CAPACITY);
-                            changed = true;
-                        }
-
-                        if (slot.getBookedCount() > slot.getCapacity()) {
-                            slot.setBookedCount(slot.getCapacity());
-                            changed = true;
-                        }
-
-                        if (changed) {
+                        if (slot.getBookedCount() < 0) {
+                            slot.setBookedCount(0);
                             slotRepository.save(slot);
                             totalSlotsUpdated++;
                         }
@@ -79,6 +67,8 @@ public class SlotSeeder {
                 }
             }
 
+            slotCapacitySyncService.syncCapacities(today, today.plusDays(DAYS_TO_SEED - 1));
+
             logger.info(
                     "Slot seeding completed. Created={}, Updated={}",
                     totalSlotsCreated,
@@ -87,8 +77,8 @@ public class SlotSeeder {
     }
 
     /**
-     * Vá (repair) các slot bị thiếu trong một khoảng thời gian cụ thể.
-     * Dùng cho admin / task thủ công nếu DB bị thiếu slot.
+     * Vá các slot bị thiếu trong một khoảng thời gian cụ thể.
+     * Dùng cho admin hoặc tác vụ thủ công nếu DB bị thiếu slot.
      */
     public void fillMissingLastSlots(
             SlotRepository slotRepository,
@@ -117,18 +107,6 @@ public class SlotSeeder {
                 if (existingSlot.isEmpty()) {
                     slotRepository.save(new Slot(slotTime, DEFAULT_CAPACITY));
                     slotsAdded++;
-                } else {
-                    Slot slot = existingSlot.get();
-                    boolean changed = false;
-
-                    if (slot.getCapacity() != DEFAULT_CAPACITY) {
-                        slot.setCapacity(DEFAULT_CAPACITY);
-                        changed = true;
-                    }
-
-                    if (changed) {
-                        slotRepository.save(slot);
-                    }
                 }
 
                 slotTime = slotTime.plusMinutes(30);

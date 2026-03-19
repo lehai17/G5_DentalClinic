@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   "use strict";
 
   var listEl = document.getElementById("customer-appointments-list");
@@ -293,7 +293,7 @@
     if (paymentInvoiceIdEl)
       paymentInvoiceIdEl.textContent = data.invoiceId
         ? "#" + data.invoiceId
-        : normalizeText("Chưa có");
+        : normalizeText("Chua có");
     if (paymentAmountEl)
       paymentAmountEl.textContent = formatMoney(data.remainingAmount);
     if (paymentOriginalAmountEl)
@@ -338,7 +338,7 @@
     if (paymentInvoiceIdEl)
       paymentInvoiceIdEl.textContent = preview.invoiceId
         ? "#" + preview.invoiceId
-        : normalizeText("Chưa có");
+        : normalizeText("Chua có");
     if (paymentAmountEl)
       paymentAmountEl.textContent = formatMoney(preview.payableAmount);
     if (paymentOriginalAmountEl)
@@ -1557,48 +1557,6 @@
       loadAppointments(null, 0);
     });
   }
-    function bindReviewModal() {
-        if (!reviewModalEl || reviewModalBound) return;
-        reviewModalBound = true;
-
-        if (reviewModalCloseEl) {
-            reviewModalCloseEl.addEventListener("click", function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                closeReviewModal();
-            });
-        }
-
-        document.querySelectorAll("[data-review-close]").forEach(function (el) {
-            el.addEventListener("click", function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                closeReviewModal();
-            });
-        });
-
-        document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape" && reviewModalEl && !reviewModalEl.hidden) {
-                closeReviewModal();
-            }
-        });
-
-        reviewDentistStarEls.forEach(function (starEl) {
-            starEl.addEventListener("click", function () {
-                updateDentistReviewStars(Number(starEl.dataset.rating || 0));
-            });
-        });
-
-        reviewServiceStarEls.forEach(function (starEl) {
-            starEl.addEventListener("click", function () {
-                updateServiceReviewStars(Number(starEl.dataset.rating || 0));
-            });
-        });
-
-        if (reviewSubmitEl) {
-            reviewSubmitEl.addEventListener("click", handleReviewSubmit);
-        }
-    }
 
   bindRemainingPaymentModal();
   bindInvoiceModal();
@@ -1623,3 +1581,10 @@
     }, 0);
   });
 })();
+
+
+
+
+
+
+
