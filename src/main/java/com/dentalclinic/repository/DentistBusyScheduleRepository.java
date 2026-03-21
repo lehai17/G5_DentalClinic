@@ -48,4 +48,12 @@ public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedul
             """)
     boolean existsApprovedLeaveByDentistAndDate(@Param("dentistId") Long dentistId,
                                                 @Param("targetDate") LocalDate targetDate);
+
+    @Query("""
+            SELECT DISTINCT b.dentist.id
+            FROM BusySchedule b
+            WHERE UPPER(COALESCE(b.status, '')) = 'APPROVED'
+              AND :targetDate BETWEEN b.startDate AND b.endDate
+            """)
+    List<Long> findApprovedDentistIdsByDate(@Param("targetDate") LocalDate targetDate);
 }

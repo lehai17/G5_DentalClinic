@@ -78,6 +78,9 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
         List<Slot> findAllSlotsInRange(@Param("fromTime") LocalDateTime fromTime,
                         @Param("toTime") LocalDateTime toTime);
 
+        @Query("SELECT MAX(s.slotTime) FROM Slot s WHERE s.slotTime >= :fromTime")
+        LocalDateTime findLatestSlotTimeFrom(@Param("fromTime") LocalDateTime fromTime);
+
         @Query("SELECT s FROM Slot s WHERE s.slotTime >= :fromTime AND s.slotTime < :toTime AND s.active = true ORDER BY s.slotTime ASC")
         List<Slot> findAllSlotsBetweenTimes(@Param("fromTime") LocalDateTime fromTime,
                         @Param("toTime") LocalDateTime toTime);
