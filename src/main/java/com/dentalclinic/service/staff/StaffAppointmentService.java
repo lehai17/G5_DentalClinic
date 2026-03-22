@@ -231,6 +231,9 @@ public class StaffAppointmentService {
         }
 
         for (Appointment appointment : appointments) {
+            if (appointment == null || appointment.getId() == null) {
+                continue;
+            }
             boolean dentistOnLeave = appointment != null
                     && appointment.getDentist() != null
                     && appointment.getDentist().getId() != null

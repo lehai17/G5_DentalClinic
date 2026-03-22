@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.dentalclinic.service.mail.EmailService;
 import java.time.LocalDate;
 import java.time.DayOfWeek;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -106,8 +107,12 @@ public class StaffAppointmentController {
                 staffAppointmentService.searchAndSort(keyword, serviceKeyword, sort, page);
 
         model.addAttribute("appointments", appointmentPage.getContent());
-        model.addAttribute("dentistLeaveFlags",
-                staffAppointmentService.buildDentistLeaveFlags(appointmentPage.getContent()));
+        model.addAttribute(
+                "dentistLeaveFlags",
+                java.util.Optional.ofNullable(
+                        staffAppointmentService.buildDentistLeaveFlags(appointmentPage.getContent())
+                ).orElse(Collections.emptyMap())
+        );
 
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", appointmentPage.getTotalPages());
