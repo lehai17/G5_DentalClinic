@@ -171,7 +171,12 @@ public class AIBookingServiceImpl implements AIBookingService {
         boolean hasInvis = response.getServices().stream()
                 .anyMatch(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
                         "invisalign", "trong suot", "khay trong", "khay trong suot"));
+
         if (hasMetal && hasInvis) {
+            AIServiceSuggestionDto first = response.getServices().get(0);
+            boolean invisFirst = first.getName() != null && containsAnyText(normalizeText(first.getName()),
+                    "invisalign", "trong suot", "khay trong", "khay trong suot");
+
             AIServiceSuggestionDto metal = response.getServices().stream()
                     .filter(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
                             "kim loai", "mac cai", "mac cai thuong", "nieng rang thuong", "thuong"))
@@ -186,6 +191,15 @@ public class AIBookingServiceImpl implements AIBookingService {
 
             String metalPrice = metal != null ? formatPrice(metal.getPrice()) : "chưa cập nhật";
             String invisPrice = invis != null ? formatPrice(invis.getPrice()) : "chưa cập nhật";
+
+            if (invisFirst) {
+                return "Tôi gợi ý 2 lựa chọn chỉnh nha phù hợp cho bạn. "
+                        + "Invisalign có ưu điểm thẩm mỹ hơn, khay trong suốt, khó bị phát hiện, dễ tháo lắp, phù hợp người giao tiếp nhiều nhưng chi phí thường cao hơn "
+                        + "(" + invisPrice + "). "
+                        + "Niềng răng kim loại thường phù hợp hơn với các ca phức tạp, lực kéo ổn định và chi phí thường thấp hơn "
+                        + "(" + metalPrice + "). "
+                        + "Bạn hãy chọn 1 trong 2 dịch vụ, sau đó chọn nhanh một khung giờ bên dưới.";
+            }
 
             return "Tôi gợi ý 2 lựa chọn chỉnh nha phù hợp cho bạn. "
                     + "Niềng răng kim loại thường phù hợp hơn với các ca phức tạp, lực kéo ổn định và chi phí thường thấp hơn "

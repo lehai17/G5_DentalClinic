@@ -2,32 +2,95 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Verify Code</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENZ CLINIC - Xác thực mã</title>
     <link rel="stylesheet" th:href="@{/css/login.css}">
 </head>
-<body>
-<div class="page">
-    <div class="card">
-        <h2>Verify Code</h2>
-        <p class="sub">Nhập mã đã được gửi về email</p>
+<body class="login-body">
 
-        <div class="alert" th:if="${param.error}">
-            Mã không đúng hoặc đã hết hạn.
+<header class="brand">
+    <div class="brand__logo" aria-hidden="true">&#129463;</div>
+    <div class="brand__text">
+        <div class="brand__name">GENZ CLINIC</div>
+        <div class="brand__tagline">Nâng tầm nụ cười Việt</div>
+    </div>
+</header>
+
+<main class="page">
+    <section class="card auth-card" aria-label="Xác thực mã">
+        <div class="auth-badge">Bước xác thực</div>
+
+        <h1 class="title">Nhập mã xác thực</h1>
+        <p class="sub">
+            Chúng tôi đã gửi mã xác thực về email của bạn. Vui lòng nhập đúng mã để tiếp tục đặt lại mật khẩu.
+        </p>
+
+        <div class="steps">
+            <div class="step step--done">
+                <span class="step__number">1</span>
+                <span class="step__text">Email</span>
+            </div>
+            <div class="step step--active">
+                <span class="step__number">2</span>
+                <span class="step__text">Xác thực</span>
+            </div>
+            <div class="step">
+                <span class="step__number">3</span>
+                <span class="step__text">Mật khẩu mới</span>
+            </div>
         </div>
 
-        <form th:action="@{/verify-code}" method="post">
-            <label>Email</label>
-            <input type="email" name="email" th:value="${param.email}" required>
+        <div class="alert alert--error" th:if="${param.error}">
+            Mã xác thực không đúng hoặc đã hết hạn. Vui lòng kiểm tra lại.
+        </div>
 
-            <label>Code</label>
-            <input type="text" name="code" maxlength="6" required>
+        <div class="info-panel">
+            <div class="info-panel__title">Lưu ý</div>
+            <p class="info-panel__desc">
+                Mã xác thực có hiệu lực trong thời gian ngắn. Nếu nhập sai hoặc quá hạn, bạn hãy quay lại bước trước để yêu cầu mã mới.
+            </p>
+        </div>
 
-            <div class="btns">
-                <button class="btn primary" type="submit">Verify</button>
+        <form class="form" th:action="@{/verify-code}" method="post">
+            <div class="field">
+                <label class="label" for="email">Email</label>
+                <div class="input-wrap">
+                    <input
+                            id="email"
+                            class="input"
+                            type="email"
+                            name="email"
+                            th:value="${param.email}"
+                            placeholder="Nhập email"
+                            required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="code">Mã xác thực</label>
+                <div class="input-wrap">
+                    <input
+                            id="code"
+                            class="input otp-input"
+                            type="text"
+                            name="code"
+                            maxlength="6"
+                            placeholder="Nhập mã 6 số"
+                            required>
+                </div>
+            </div>
+
+            <div class="btns btns--single">
+                <button class="btn btn--primary" type="submit">Xác thực</button>
+            </div>
+
+            <div class="auth-links">
+                <a class="link" th:href="@{/forgot-password}">Gửi lại mã khác</a>
+                <a class="link link--accent" th:href="@{/login}">Quay lại đăng nhập</a>
             </div>
         </form>
-    </div>
-</div>
+    </section>
+</main>
+
 </body>
 </html>
-

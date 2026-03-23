@@ -24,9 +24,11 @@
         <h1 class="title">Chào mừng quay lại</h1>
         <p class="sub">Đăng nhập vào tài khoản của bạn</p>
 
-        <!-- Alerts -->
         <div class="alert alert--error" th:if="${param.error}">
             Sai email đăng nhập hoặc mật khẩu.
+        </div>
+        <div class="alert alert--success" th:if="${param.resetSuccess}">
+            Mật khẩu đã được thay đổi thành công. Vui lòng đăng nhập lại.
         </div>
         <div class="alert alert--success" th:if="${param.logout}">
             Bạn đã đăng xuất.

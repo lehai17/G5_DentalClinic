@@ -35,6 +35,8 @@ public class ServiceMatcher {
             return List.of();
         }
 
+        String normalizedRaw = normalize(rawMessage);
+
         List<String> allInputs = new ArrayList<>();
         if (rawMessage != null && !rawMessage.isBlank()) {
             allInputs.add(rawMessage);
@@ -47,34 +49,48 @@ public class ServiceMatcher {
             return fallbackGeneralExam(activeServices);
         }
 
-        boolean hasOrthodonticSymptom = allInputs.stream().anyMatch(this::isOrthodonticKeyword);
-        boolean preferInvisalign = allInputs.stream().anyMatch(this::isInvisalignPreferenceKeyword);
-        boolean preferMetal = allInputs.stream().anyMatch(this::isMetalPreferenceKeyword);
-        boolean severeOrthodontic = allInputs.stream().anyMatch(this::isSevereOrthodonticKeyword);
+        // Chỉ dùng RAW MESSAGE để xác định user có nói rõ muốn Invisalign / kim loại hay không
+        boolean rawOrthodonticSymptom = isOrthodonticKeyword(normalizedRaw);
+        boolean rawPreferInvisalign = isInvisalignPreferenceKeyword(normalizedRaw);
+        boolean rawPreferMetal = isMetalPreferenceKeyword(normalizedRaw);
+        boolean rawSevereOrthodontic = isSevereOrthodonticKeyword(normalizedRaw);
 
-        if (hasOrthodonticSymptom) {
-            if (preferMetal && !preferInvisalign) {
+        // Nếu user có biểu hiện chỉnh nha thì ưu tiên xử lý cứng ở đây,
+
+        // không để rơi xuống scoring chung nữa
+        if (rawOrthodonticSymptom) {
+            // user nói rõ 1 phương pháp
+            if (rawPreferMetal && !rawPreferInvisalign) {
                 List<Services> result = matchOrthodonticServices(activeServices, false, true);
                 if (!result.isEmpty()) {
                     return result;
                 }
             }
 
-            if (preferInvisalign && !preferMetal && !severeOrthodontic) {
+            if (rawPreferInvisalign && !rawPreferMetal) {
                 List<Services> result = matchOrthodonticServices(activeServices, true, true);
                 if (!result.isEmpty()) {
                     return result;
                 }
             }
 
-            boolean invisalignFirst = preferInvisalign && !severeOrthodontic;
-            if (preferMetal) {
+            // user chỉ mô tả triệu chứng -> luôn trả 2 lựa chọn
+            boolean invisalignFirst = rawPreferInvisalign && !rawSevereOrthodontic;
+            if (rawPreferMetal || rawSevereOrthodontic) {
                 invisalignFirst = false;
             }
 
             List<Services> orthoServices = matchOrthodonticServices(activeServices, invisalignFirst, false);
             if (!orthoServices.isEmpty()) {
                 return orthoServices;
+            }
+        }
+
+        String primaryNonOrthoGroup = decidePrimaryGroupFromRawOrLlm(normalizedRaw, keywords);
+        if (primaryNonOrthoGroup != null) {
+            List<Services> result = matchSingleGroup(activeServices, primaryNonOrthoGroup);
+            if (!result.isEmpty()) {
+                return result;
             }
         }
 
@@ -114,29 +130,29 @@ public class ServiceMatcher {
                 .filter(e -> e.getValue() >= topScore - 2)
                 .map(Map.Entry::getKey)
                 .distinct()
-                .limit(resolveLimit(keywords))
+                .limit(resolveLimit(keywords, rawMessage))
                 .collect(Collectors.toList());
 
         return result.isEmpty() ? fallbackGeneralExam(activeServices) : result;
     }
 
-    private int resolveLimit(List<String> keywords) {
-        if (keywords == null || keywords.isEmpty()) {
-            return 1;
-        }
+    private int resolveLimit(List<String> keywords, String rawMessage) {
+        String normalizedRaw = normalize(rawMessage);
 
-        boolean hasOrthodonticSymptom = keywords.stream().anyMatch(this::isOrthodonticKeyword);
-        if (hasOrthodonticSymptom) {
+        boolean rawOrthodonticSymptom = isOrthodonticKeyword(normalizedRaw);
+        boolean rawPreferInvisalign = isInvisalignPreferenceKeyword(normalizedRaw);
+        boolean rawPreferMetal = isMetalPreferenceKeyword(normalizedRaw);
+
+        if (rawOrthodonticSymptom) {
+            if ((rawPreferInvisalign && !rawPreferMetal) || (rawPreferMetal && !rawPreferInvisalign)) {
+                return 1;
+            }
             return 2;
         }
 
-        Set<String> canonical = keywords.stream()
-                .map(this::canonicalKeyword)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        return Math.min(3, canonical.isEmpty() ? 1 : canonical.size());
+        return 1;
     }
+
 
     private int scoreByTextSimilarity(Services service, String normalizedKeyword, String canonicalKeyword) {
         String serviceName = normalize(service.getName());
@@ -251,6 +267,43 @@ public class ServiceMatcher {
         return groups;
     }
 
+    private boolean containsAnyLoose(String text, String... phrases) {
+        for (String phrase : phrases) {
+            if (containsPhraseLoose(text, phrase)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsPhraseLoose(String text, String phrase) {
+        List<String> textTokens = tokenizeLoose(text);
+        List<String> phraseTokens = tokenizeLoose(phrase);
+
+        if (textTokens.isEmpty() || phraseTokens.isEmpty()) {
+            return false;
+        }
+
+        Set<String> textSet = new LinkedHashSet<>(textTokens);
+        for (String token : phraseTokens) {
+            if (!textSet.contains(token)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<String> tokenizeLoose(String input) {
+        String normalized = normalize(input).replaceAll("[^a-z0-9\\s]", " ");
+        if (normalized.isBlank()) {
+            return List.of();
+        }
+
+        return Arrays.stream(normalized.split("\\s+"))
+                .filter(s -> !s.isBlank())
+                .toList();
+    }
+
     private String canonicalKeyword(String rawKeyword) {
         String keyword = normalize(rawKeyword);
         if (keyword.isBlank()) {
@@ -344,9 +397,9 @@ public class ServiceMatcher {
                     String name = normalize(s.getName());
                     String desc = normalize(s.getDescription());
                     return containsAny(name,
-                            "kim loai", "mac cai", "nieng rang kim loai", "mac cai thuong", "nieng rang thuong")
+                            "kim loai", "mac cai", "nieng rang kim loai", "mac cai thuong", "nieng rang thuong", "nieng rang truyen thong")
                             || containsAny(desc,
-                            "kim loai", "mac cai", "nieng rang kim loai", "mac cai thuong", "nieng rang thuong");
+                            "kim loai", "mac cai", "nieng rang kim loai", "mac cai thuong", "nieng rang thuong", "nieng rang truyen thong");
                 })
                 .findFirst()
                 .orElse(null);
@@ -373,37 +426,79 @@ public class ServiceMatcher {
     }
 
     private boolean isOrthodonticKeyword(String raw) {
-        String k = normalize(raw);
-        return containsAny(k,
+        return containsAnyLoose(raw,
                 "nieng rang", "chinh nha",
+
                 "sai khop can", "khop can lech", "khop can khong chuan",
-                "rang lech", "rang em bi lech", "rang moc lech", "chen chuc", "rang em chen chuc", "khap khenh", "rang em bi khap khenh", "rang xoay",
-                "rang chong cheo", "rang khong deu", "rang lon xon",
+                "chinh khop can", "muon chinh khop can",
+
+                "rang lech", "rang moc lech", "rang sai vi tri", "rang moc sai vi tri",
+                "rang moc lac cho", "rang moc ngam", "rang moc ket", "rang mai khong moc len",
+
+                "chen chuc", "rang chen chuc", "rang moc chen chuc",
+                "khap khenh",
+                "rang xoay", "rang bi xoay",
+                "rang chong cheo", "rang chong len nhau",
+                "rang khong deu",
+                "rang lon xon", "rang moc lon xon",
+
+                "muon rang deu hon", "muon lam deu rang",
+                "muon keo deu rang", "muon sap deu rang",
+                "muon chinh rang", "muon sua rang",
+
                 "thieu cho tren cung ham", "cung ham hep",
-                "rang thua", "ke rang thua", "khe thua", "thua rang cua", "rang co khe ho",
-                "rang ho", "mieng bi ho", "bi ho", "ho rang", "ho ham",
-                "rang vau", "bi vau", "rang chia", "rang cua dua ra ngoai", "rang tren chia ra nhieu", "overjet",
-                "rang mom", "bi mom", "ham duoi dua ra truoc", "khop can nguoc", "underbite",
-                "can sau", "khop can sau", "overbite", "rang tren phu het rang duoi", "can phu qua nhieu",
-                "can ho", "open bite", "rang truoc khong cham nhau", "rang sau khong cham nhau", "can lai van ho",
+
+                "rang thua", "ke rang thua", "khe thua", "khe ho", "rang co khe ho", "thua rang cua",
+                "muon dong khe thua",
+
+                "rang ho", "ho rang", "ho ham",
+                "rang vau", "vau",
+                "rang chia",
+                "rang cua dua ra ngoai", "rang cua chia ra ngoai",
+                "rang tren chia ra nhieu", "ham tren nho ra", "overjet",
+                "muon chinh ho",
+
+                "rang mom", "mom", "ham duoi dua ra truoc",
+                "khop can nguoc", "underbite",
+                "muon chinh mom",
+
+                "can sau", "khop can sau", "overbite", "can phu qua nhieu",
+                "rang tren phu het rang duoi", "rang can vao nuou", "rang can vao vom mieng",
+                "muon chinh can sau",
+
+                "can ho", "open bite", "rang truoc khong cham nhau", "rang sau khong cham nhau",
+                "can lai van ho", "ngam mieng ma rang khong cham",
+                "muon chinh can ho",
+
                 "can cheo", "crossbite", "can cheo truoc", "can cheo sau", "can doi dau",
-                "lech duong giua", "duong giua rang bi lech", "lech ham", "lech ham chuc nang", "sai lech tuong quan 2 ham",
+                "muon chinh can cheo",
+
+                "lech duong giua", "duong giua rang bi lech",
+                "lech ham", "lech ham chuc nang", "sai lech tuong quan 2 ham",
                 "ham tren hep", "ham duoi lech", "mat can doi xuong ham",
-                "rang moc ngam", "rang moc ket", "rang moc sai vi tri", "rang moc lac cho",
+
                 "rang moc chen ra ngoai cung", "rang moc cup vao trong", "rang vinh vien moc lech",
-                "rang sua ton tai lau gay lech rang", "mat rang sua som gay xo lech rang", "rang bi xo lech sau nho rang", "rang di chuyen", "xe dich",
+                "rang sua ton tai lau gay lech rang", "mat rang sua som gay xo lech rang",
+                "rang bi xo lech sau nho rang", "rang ngay cang xo lech", "rang di chuyen", "xe dich",
+
                 "rang cua khong khep duoc", "moi khong khep kin", "moi khong khep kin do rang ho",
-                "roi loan khop can do thoi quen xau", "sai khop can do mut tay", "sai khop can do day luoi", "ngam ti gia lau", "sai khop can do nghien rang", "lech khop can do chan thuong",
+                "cuoi thay rang chia ra",
+
+                "roi loan khop can do thoi quen xau", "sai khop can do mut tay",
+                "sai khop can do day luoi", "ngam ti gia lau",
+                "sai khop can do nghien rang", "lech khop can do chan thuong",
+
                 "thieu rang bam sinh", "thua rang", "rang nanh moc ngam", "rang nanh moc lech",
-                "nhai bi lech mot ben", "nhai kho vi rang khong khop", "kho can thuc an", "can do an khong dut", "nhai khong deu", "khop can la",
-                "muon chinh khop can", "muon keo deu rang", "muon sap deu rang", "muon dong khe thua", "muon chinh ho", "muon chinh mom", "muon chinh can sau", "muon chinh can ho", "muon chinh can cheo",
+
+                "nhai bi lech mot ben", "nhai kho vi rang khong khop",
+                "kho can thuc an", "can do an khong dut", "nhai khong deu", "khop can la",
+
                 "lam dep rang bang nieng"
         );
     }
 
     private boolean isSevereOrthodonticKeyword(String raw) {
-        String k = normalize(raw);
-        return containsAny(k,
+        return containsAnyLoose(raw,
                 "mom", "khop can nguoc", "underbite",
                 "can sau", "khop can sau", "overbite",
                 "can ho", "open bite",
@@ -417,16 +512,173 @@ public class ServiceMatcher {
 
     private boolean isInvisalignPreferenceKeyword(String raw) {
         String k = normalize(raw);
-        return containsAny(k,
-                "invisalign", "khay trong", "khay trong suot",
-                "nieng trong suot", "tham my", "it lo", "de thao lap",
-                "de thao ra", "giao tiep nhieu"
-        );
+
+        if ("invisalign".equals(k)) {
+            return false;
+        }
+
+        return containsAnyLoose(raw,
+                "nieng trong suot", "nieng rang trong suot",
+                "khay trong", "khay trong suot",
+                "nieng tham my", "tham my hon", "phuong phap tham my", "chinh nha tham my",
+                "it lo", "kin dao", "kin dao hon",
+                "de thao lap", "de thao ra",
+                "giao tiep nhieu", "hay gap khach hang",
+                "muon nieng trong suot", "muon nieng rang trong suot",
+                "muon nieng invisalign",
+                "it bi phat hien", "kho bi phat hien", "kho nhan ra", "khong muon lo"
+        ) || k.contains("invisalign ");
     }
 
     private boolean isMetalPreferenceKeyword(String raw) {
         String k = normalize(raw);
-        return containsAny(k,
-                "kim loai", "mac cai", "nieng kim loai", "mac cai kim loai", "mac cai thuong", "thuong");
+
+        if ("metal braces".equals(k) || "metal_braces".equals(k)) {
+            return false;
+        }
+
+        return containsAnyLoose(raw,
+                "kim loai", "mac cai",
+                "nieng kim loai", "nieng rang kim loai",
+                "mac cai kim loai", "mac cai thuong",
+                "nieng rang truyen thong", "nieng rang mac cai"
+        );
     }
+
+    private String decidePrimaryGroupFromRawOrLlm(String raw, List<String> keywords) {
+        if (isToothJewelrySymptom(raw)) {
+            return GROUP_TOOTH_JEWELRY;
+        }
+        if (isWhiteningSymptom(raw)) {
+            return GROUP_WHITENING;
+        }
+        if (isWisdomToothSymptom(raw)) {
+            return GROUP_WISDOM_TOOTH;
+        }
+        if (isImplantSymptom(raw)) {
+            return GROUP_IMPLANT;
+        }
+        if (isRootCanalSymptom(raw)) {
+            return GROUP_ROOT_CANAL;
+        }
+        if (isCerconCrownSymptom(raw)) {
+            return GROUP_CERCON_CROWN;
+        }
+        if (isFillingSymptom(raw)) {
+            return GROUP_FILLING;
+        }
+        if (isScalingSymptom(raw)) {
+            return GROUP_SCALING;
+        }
+
+        String llmTop = firstSpecificGroup(keywords);
+        if (llmTop != null) {
+            return llmTop;
+        }
+
+        if (isGeneralExamSymptom(raw)) {
+            return GROUP_GENERAL_EXAM;
+        }
+
+        return null;
+    }
+
+    private String firstSpecificGroup(List<String> keywords) {
+        if (keywords == null || keywords.isEmpty()) {
+            return null;
+        }
+
+        for (String keyword : keywords) {
+            String canonical = canonicalKeyword(keyword);
+            if (canonical != null && !GROUP_GENERAL_EXAM.equals(canonical)
+                    && !GROUP_METAL_BRACES.equals(canonical)
+                    && !GROUP_INVISALIGN.equals(canonical)) {
+                return canonical;
+            }
+        }
+        return null;
+    }
+
+    private List<Services> matchSingleGroup(List<Services> activeServices, String group) {
+        return activeServices.stream()
+                .filter(s -> detectServiceGroups(s).contains(group))
+                .limit(1)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isGeneralExamSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "kham rang", "kham tong quat", "kham", "kiem tra rang", "tu van",
+                "dau rang", "e buot", "nhay cam", "lung lay", "sap rung",
+                "viem nuou", "sung nuou", "chay mau chan rang", "hoi mieng"
+        );
+    }
+
+    private boolean isScalingSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "cao voi", "cao rang", "voi rang", "lay cao",
+                "ve sinh rang", "cao voi rang",
+                "chay mau chan rang", "hoi mieng", "viem nuou", "mang bam"
+        );
+    }
+
+    private boolean isWisdomToothSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "rang khon", "rang so 8", "nho rang khon", "nho rang so 8",
+                "dau rang khon", "sung rang khon", "sung loi trum",
+                "rang khon moc lech", "rang khon moc ngam",
+                "dau cuoi ham", "dau goc ham", "ha mieng dau"
+        );
+    }
+
+    private boolean isWhiteningSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "tay trang rang", "lam trang rang", "rang trang hon",
+                "rang o vang", "rang xi mau", "rang vang", "rang ngam mau",
+                "trang rang", "rang bi vang", "rang bi xi mau"
+        );
+    }
+
+    private boolean isFillingSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "tram rang", "rang sau", "lo rang", "lo sau",
+                "rang bi thung", "me rang", "sut rang", "vo nho",
+                "rang sau nhe", "den mat rang", "den mat nhai",
+                "thuc an giat vao lo rang"
+        );
+    }
+
+    private boolean isRootCanalSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "dieu tri tuy", "lay tuy", "viem tuy", "tuy rang",
+                "dau rang du doi", "dau du doi", "dau ve dem", "mat ngu vi dau rang",
+                "e buot keo dai", "dau sau trong rang", "dau giat theo con",
+                "go vao rang dau", "ap xe", "sung mu", "rang chet tuy"
+        );
+    }
+
+    private boolean isImplantSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "implant", "cay ghep implant", "trong rang", "trong lai rang",
+                "mat rang", "rụng rang", "gay rang mat chan", "mat chan rang",
+                "nho rang xong muon trong lai", "phuc hoi cho mat rang", "mat rang lau nam"
+        );
+    }
+
+    private boolean isCerconCrownSymptom(String raw) {
+        return containsAnyLoose(raw,
+                "boc su", "rang su", "boc rang su", "cercon", "phuc hinh rang",
+                "rang vo lon", "rang be lon", "vo lon", "me lon",
+                "rang yeu sau lay tuy", "rang sau dieu tri tuy muon boc su",
+                "muon lam rang su", "muon boc rang su"
+        );
+    }
+
+    private boolean isToothJewelrySymptom(String raw) {
+        return containsAnyLoose(raw,
+                "dinh da rang", "gan da rang", "dinh da", "gan da",
+                "gan charm rang", "lam dep rang bang da"
+        );
+    }
+
 }
