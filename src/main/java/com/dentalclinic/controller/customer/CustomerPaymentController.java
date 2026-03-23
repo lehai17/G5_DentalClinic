@@ -46,7 +46,6 @@ public class CustomerPaymentController {
     private static final String SESSION_USER_ID = "userId";
     private static final BigDecimal MIN_WALLET_TOPUP_AMOUNT = BigDecimal.valueOf(10_000L);
     private static final BigDecimal MAX_WALLET_TOPUP_AMOUNT = BigDecimal.valueOf(100_000_000L);
-    private static final int WALLET_TOPUP_FEE_PERCENT = 5;
 
     @Autowired
     private VNPayConfig vnPayConfig;
@@ -164,8 +163,7 @@ public class CustomerPaymentController {
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "paymentUrl", paymentUrl,
-                "creditedAmount", walletService.calculateTopupCreditedAmount(normalizedAmount),
-                "feePercent", WALLET_TOPUP_FEE_PERCENT
+                "creditedAmount", walletService.calculateTopupCreditedAmount(normalizedAmount)
         ));
     }
 

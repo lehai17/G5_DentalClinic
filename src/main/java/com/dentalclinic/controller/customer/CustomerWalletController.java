@@ -41,9 +41,14 @@ public class CustomerWalletController {
     private Long getCurrentUserId(HttpSession session) {
         Object uid = session.getAttribute(SESSION_USER_ID);
         Long userId = null;
-        if (uid instanceof Long) userId = (Long) uid;
-        else if (uid instanceof Number) userId = ((Number) uid).longValue();
-        if (userId != null && userRepository.existsById(userId)) return userId;
+        if (uid instanceof Long) {
+            userId = (Long) uid;
+        } else if (uid instanceof Number) {
+            userId = ((Number) uid).longValue();
+        }
+        if (userId != null && userRepository.existsById(userId)) {
+            return userId;
+        }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
@@ -124,7 +129,7 @@ public class CustomerWalletController {
         if ("success".equals(normalizedStatus) && verifiedSuccess) {
             model.addAttribute("walletStatusType", "success");
             model.addAttribute("walletStatusTitle", "Nạp tiền thành công");
-            model.addAttribute("walletStatusMessage", "Nạp tiền vào ví thành công. Ví nhận 95% giá trị giao dịch sau khi trừ phí 5%.");
+            model.addAttribute("walletStatusMessage", "Nạp tiền vào ví thành công. Ví nhận đủ 100% giá trị giao dịch.");
             return;
         }
 

@@ -185,9 +185,6 @@ public class WalletTransaction {
         if (type == WalletTransactionType.DEPOSIT) {
             return "N\u1ea1p ti\u1ec1n v\u00e0o v\u00ed" + appointmentRef;
         }
-        if (type == WalletTransactionType.WITHDRAW) {
-            return "R\u00fat ti\u1ec1n t\u1eeb v\u00ed" + appointmentRef;
-        }
         return value;
     }
 }

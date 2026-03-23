@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,7 +37,6 @@ public class AdminWalletService {
         List<Wallet> wallets = walletRepository.findAll();
 
         BigDecimal totalDeposits = sumByType(transactions, WalletTransactionType.DEPOSIT);
-        BigDecimal totalWithdrawals = sumByType(transactions, WalletTransactionType.WITHDRAW);
         BigDecimal totalPayments = sumByType(transactions, WalletTransactionType.PAYMENT);
         BigDecimal totalRefunds = sumByType(transactions, WalletTransactionType.REFUND);
         BigDecimal totalWalletBalance = wallets.stream()
@@ -46,7 +45,6 @@ public class AdminWalletService {
 
         return new AdminWalletOverviewDTO(
                 totalDeposits,
-                totalWithdrawals,
                 totalPayments,
                 totalRefunds,
                 totalWalletBalance,
@@ -55,9 +53,9 @@ public class AdminWalletService {
     }
 
     public List<AdminWalletTransactionRowDTO> getTransactionRows(String keyword,
-                                                                String type,
-                                                                LocalDate dateFrom,
-                                                                LocalDate dateTo) {
+                                                                 String type,
+                                                                 LocalDate dateFrom,
+                                                                 LocalDate dateTo) {
         String normalizedKeyword = normalize(keyword);
         String normalizedType = normalize(type);
 
@@ -129,7 +127,6 @@ public class AdminWalletService {
     private String toTypeLabel(WalletTransactionType type) {
         return switch (type) {
             case DEPOSIT -> "Nap tien";
-            case WITHDRAW -> "Rut tien";
             case PAYMENT -> "Thanh toan";
             case REFUND -> "Hoan tien";
             case ADJUSTMENT -> "Dieu chinh";
