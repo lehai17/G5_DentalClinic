@@ -1,6 +1,5 @@
 const WALLET_TOPUP_MIN = 10000;
 const WALLET_TOPUP_MAX = 100000000;
-const WALLET_TOPUP_FEE = 5000;
 
 document.addEventListener("DOMContentLoaded", function () {
   bindTopupModal();
@@ -121,12 +120,6 @@ function getTypeInfo(type) {
       class: "payment",
       prefix: "-",
     },
-    WITHDRAW: {
-      name: "Rút tiền",
-      icon: "bi bi-cash-stack",
-      class: "withdraw",
-      prefix: "-",
-    },
     ADJUSTMENT: {
       name: "Điều chỉnh",
       icon: "bi bi-arrow-left-right",
@@ -182,9 +175,7 @@ function bindTopupModal() {
   function updateTopupCreditPreview() {
     if (!creditPreview) return;
     const amount = parseVndInput(amountInput ? amountInput.value : 0);
-    const creditedAmount = amount > 0 ? Math.max(amount - WALLET_TOPUP_FEE, 0) : 0;
-    creditPreview.textContent =
-      "Ví sẽ nhận: " + formatCurrency(creditedAmount) + " sau khi trừ phí 5%.";
+    creditPreview.textContent = "Ví sẽ nhận: " + formatCurrency(amount) + ".";
   }
 
   function openModal() {
@@ -232,9 +223,10 @@ function bindTopupModal() {
     });
   }
 
-    if (submitBtn) {
-      submitBtn.addEventListener("click", function () {
-        const amount = parseVndInput(amountInput ? amountInput.value : 0);
+  if (submitBtn) {
+    submitBtn.addEventListener("click", function () {
+      const amount = parseVndInput(amountInput ? amountInput.value : 0);
+
       if (!amount) {
         showAlert(
           "Vui lòng nhập số tiền cần nạp",
