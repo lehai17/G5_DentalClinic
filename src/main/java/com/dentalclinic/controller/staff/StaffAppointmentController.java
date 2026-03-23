@@ -3,6 +3,7 @@ package com.dentalclinic.controller.staff;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.service.mail.EmailService;
 import com.dentalclinic.service.staff.StaffAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -91,7 +92,7 @@ public class StaffAppointmentController {
             @RequestParam(defaultValue = "0") int page,
             Model model) {
 
-        model.addAttribute("pageTitle", "Appointment Management");
+        model.addAttribute("pageTitle", "Quản lý lịch hẹn");
         model.addAttribute("staffName", "Staff");
 
         Page<Appointment> appointmentPage = staffAppointmentService.searchAndSort(keyword, serviceKeyword, sort, page);

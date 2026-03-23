@@ -16,7 +16,6 @@ import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +40,10 @@ public class AIBookingServiceImpl implements AIBookingService {
     public AIBookingSuggestionResponse suggest(Long userId, AIBookingRequest request) {
         LLMBookingInterpretation interpretation = llmService.interpretBookingRequest(request.getMessage());
 
-        List<Services> matchedServices = serviceMatcher.matchServices(interpretation.getServiceKeywords());
+        List<Services> matchedServices = serviceMatcher.matchServices(
+                interpretation.getServiceKeywords(),
+                request.getMessage()
+        );
 
         Services primaryService = matchedServices.isEmpty() ? null : matchedServices.get(0);
 
@@ -162,17 +164,57 @@ public class AIBookingServiceImpl implements AIBookingService {
             return "Tôi đã xác định được dịch vụ phù hợp nhưng ngày này chưa có khung giờ trống. Bạn hãy thử ngày khác hoặc khung giờ khác.";
         }
 
+        boolean hasMetal = response.getServices().stream()
+                .anyMatch(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
+                        "kim loai", "mac cai", "mac cai thuong", "nieng rang thuong", "thuong"));
+
+        boolean hasInvis = response.getServices().stream()
+                .anyMatch(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
+                        "invisalign", "trong suot", "khay trong", "khay trong suot"));
+        if (hasMetal && hasInvis) {
+            AIServiceSuggestionDto metal = response.getServices().stream()
+                    .filter(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
+                            "kim loai", "mac cai", "mac cai thuong", "nieng rang thuong", "thuong"))
+                    .findFirst()
+                    .orElse(null);
+
+            AIServiceSuggestionDto invis = response.getServices().stream()
+                    .filter(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
+                            "invisalign", "trong suot", "khay trong", "khay trong suot"))
+                    .findFirst()
+                    .orElse(null);
+
+            String metalPrice = metal != null ? formatPrice(metal.getPrice()) : "chưa cập nhật";
+            String invisPrice = invis != null ? formatPrice(invis.getPrice()) : "chưa cập nhật";
+
+            return "Tôi gợi ý 2 lựa chọn chỉnh nha phù hợp cho bạn. "
+                    + "Niềng răng kim loại thường phù hợp hơn với các ca phức tạp, lực kéo ổn định và chi phí thường thấp hơn "
+                    + "(" + metalPrice + "). "
+                    + "Invisalign có ưu điểm thẩm mỹ hơn, khay trong suốt, dễ tháo lắp, phù hợp người giao tiếp nhiều nhưng chi phí thường cao hơn "
+                    + "(" + invisPrice + "). "
+                    + "Bạn hãy chọn 1 trong 2 dịch vụ, sau đó chọn nhanh một khung giờ bên dưới.";
+        }
+
         String serviceNames = response.getServices().stream()
                 .map(AIServiceSuggestionDto::getName)
                 .collect(Collectors.joining(", "));
 
-        if (response.getPreferredTime() != null && !response.getPreferredTime().isBlank()) {
-            return "Tôi gợi ý dịch vụ: " + serviceNames
-                    + ". Bạn hãy chọn 1 dịch vụ phù hợp nhất, sau đó chọn nhanh một khung giờ bên dưới.";
-        }
-
         return "Tôi gợi ý dịch vụ: " + serviceNames
                 + ". Bạn hãy chọn 1 dịch vụ phù hợp nhất, sau đó chọn nhanh một khung giờ bên dưới.";
+    }
+
+    private String normalizeText(String input) {
+        if (input == null) return "";
+        return java.text.Normalizer.normalize(input, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D')
+                .toLowerCase(java.util.Locale.ROOT)
+                .trim();
+    }
+
+    private String formatPrice(double price) {
+        return String.format("%,.0f VNĐ", price);
     }
 
     private SlotDto findExactRequestedSlot(List<SlotDto> slots, String preferredTime) {
@@ -269,5 +311,15 @@ public class AIBookingServiceImpl implements AIBookingService {
         String end = slot.getStartTime().plusMinutes(durationMinutes).toString();
 
         return date + " | " + start + " - " + end;
+    }
+
+    private boolean containsAnyText(String text, String... tokens) {
+        if (text == null) return false;
+        for (String token : tokens) {
+            if (text.contains(normalizeText(token))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

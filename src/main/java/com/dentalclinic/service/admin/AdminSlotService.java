@@ -10,6 +10,7 @@ import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.repository.SlotRepository;
+import com.dentalclinic.service.appointment.SlotCapacitySyncService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,13 +34,16 @@ public class AdminSlotService {
     private final SlotRepository slotRepository;
     private final AppointmentRepository appointmentRepository;
     private final DentistProfileRepository dentistProfileRepository;
+    private final SlotCapacitySyncService slotCapacitySyncService;
 
     public AdminSlotService(SlotRepository slotRepository,
             AppointmentRepository appointmentRepository,
-            DentistProfileRepository dentistProfileRepository) {
+            DentistProfileRepository dentistProfileRepository,
+            SlotCapacitySyncService slotCapacitySyncService) {
         this.slotRepository = slotRepository;
         this.appointmentRepository = appointmentRepository;
         this.dentistProfileRepository = dentistProfileRepository;
+        this.slotCapacitySyncService = slotCapacitySyncService;
     }
 
     public static List<LocalTime> buildHalfHourTimes() {
@@ -454,6 +458,7 @@ public class AdminSlotService {
             }
             d = d.plusDays(1);
         }
+        slotCapacitySyncService.syncCapacities(fromDate, toDate);
         return created;
     }
 

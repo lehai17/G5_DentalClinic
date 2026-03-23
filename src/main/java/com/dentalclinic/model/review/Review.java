@@ -56,38 +56,6 @@ public class Review {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public boolean isApproved() {
-        return approved;
-    }
-
-    public void setApproved(boolean approved) {
-        this.approved = approved;
-    }
-
-    public boolean isHiddenCustomerName() {
-        return hiddenCustomerName;
-    }
-
-    public void setHiddenCustomerName(boolean hiddenCustomerName) {
-        this.hiddenCustomerName = hiddenCustomerName;
-    }
-
-    public Integer getDisplayOrder() {
-        return displayOrder;
-    }
-
-    public void setDisplayOrder(Integer displayOrder) {
-        this.displayOrder = displayOrder;
-    }
-
-    public boolean isFeaturedOnHomepage() {
-        return featuredOnHomepage;
-    }
-
-    public void setFeaturedOnHomepage(boolean featuredOnHomepage) {
-        this.featuredOnHomepage = featuredOnHomepage;
-    }
-
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -157,6 +125,38 @@ public class Review {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public boolean isApproved() {
+        return approved;
+    }
+
+    public void setApproved(boolean approved) {
+        this.approved = approved;
+    }
+
+    public boolean isFeaturedOnHomepage() {
+        return featuredOnHomepage;
+    }
+
+    public void setFeaturedOnHomepage(boolean featuredOnHomepage) {
+        this.featuredOnHomepage = featuredOnHomepage;
+    }
+
+    public Integer getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public boolean isHiddenCustomerName() {
+        return hiddenCustomerName;
+    }
+
+    public void setHiddenCustomerName(boolean hiddenCustomerName) {
+        this.hiddenCustomerName = hiddenCustomerName;
     }
 
     public LocalDateTime getCreatedAt() {

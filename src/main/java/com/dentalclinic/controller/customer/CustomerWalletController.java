@@ -1,25 +1,21 @@
 package com.dentalclinic.controller.customer;
 
-import com.dentalclinic.model.profile.CustomerProfile;
-import com.dentalclinic.model.wallet.DemoBankAccount;
 import com.dentalclinic.model.wallet.Wallet;
 import com.dentalclinic.model.wallet.WalletTransaction;
 import com.dentalclinic.model.wallet.WalletTransactionType;
-import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.repository.WalletTransactionRepository;
 import com.dentalclinic.service.wallet.WalletService;
-import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import jakarta.servlet.http.HttpSession;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,32 +23,44 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/customer/wallet")
-//@RequiredArgsConstructor
 public class CustomerWalletController {
     private static final String SESSION_USER_ID = "userId";
 
     private final WalletService walletService;
     private final UserRepository userRepository;
-    private final CustomerProfileRepository customerProfileRepository;
     private final WalletTransactionRepository walletTransactionRepository;
 
     public CustomerWalletController(WalletService walletService,
                                     UserRepository userRepository,
-                                    CustomerProfileRepository customerProfileRepository,
                                     WalletTransactionRepository walletTransactionRepository) {
         this.walletService = walletService;
         this.userRepository = userRepository;
-        this.customerProfileRepository = customerProfileRepository;
         this.walletTransactionRepository = walletTransactionRepository;
     }
 
     private Long getCurrentUserId(HttpSession session) {
         Object uid = session.getAttribute(SESSION_USER_ID);
         Long userId = null;
-        if (uid instanceof Long) userId = (Long) uid;
-        else if (uid instanceof Number) userId = ((Number) uid).longValue();
-        if (userId == null || !userRepository.existsById(userId)) return null;
-        return userId;
+        if (uid instanceof Long) {
+            userId = (Long) uid;
+        } else if (uid instanceof Number) {
+            userId = ((Number) uid).longValue();
+        }
+        if (userId != null && userRepository.existsById(userId)) {
+            return userId;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            return null;
+        }
+
+        return userRepository.findByEmail(authentication.getName())
+                .map(user -> {
+                    session.setAttribute(SESSION_USER_ID, user.getId());
+                    return user.getId();
+                })
+                .orElse(null);
     }
 
     @GetMapping
@@ -75,24 +83,14 @@ public class CustomerWalletController {
     public ResponseEntity<?> getWalletData(HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(401).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         Optional<Wallet> walletOpt = walletService.getWalletByUserId(userId);
-        CustomerProfile customer = customerProfileRepository.findByUser_Id(userId).orElse(null);
-        WalletService.WalletSecurityState securityState = customer == null ? null : walletService.getSecurityState(customer);
-        DemoBankAccount savedWithdrawAccount = customer == null ? null : walletService.getPersonalWithdrawAccount(customer);
         if (walletOpt.isEmpty()) {
             Map<String, Object> emptyResponse = new HashMap<>();
             emptyResponse.put("balance", 0.0);
             emptyResponse.put("transactions", List.of());
-            emptyResponse.put("walletSecurity", buildWalletSecurityMap(securityState));
-            emptyResponse.put("savedWithdrawAccount", savedWithdrawAccount == null ? null : Map.of(
-                    "bankName", savedWithdrawAccount.getBankName(),
-                    "bankAccountNo", savedWithdrawAccount.getAccountNo(),
-                    "accountHolder", savedWithdrawAccount.getAccountHolder(),
-                    "balance", savedWithdrawAccount.getBalance().doubleValue()
-            ));
             return ResponseEntity.ok(emptyResponse);
         }
 
@@ -109,249 +107,8 @@ public class CustomerWalletController {
                 "createdAt", t.getCreatedAt().toString(),
                 "status", t.getStatus().toString()
         )).toList());
-        response.put("walletSecurity", buildWalletSecurityMap(securityState));
-        response.put("savedWithdrawAccount", savedWithdrawAccount == null ? null : Map.of(
-                "bankName", savedWithdrawAccount.getBankName(),
-                "bankAccountNo", savedWithdrawAccount.getAccountNo(),
-                "accountHolder", savedWithdrawAccount.getAccountHolder(),
-                "balance", savedWithdrawAccount.getBalance().doubleValue()
-        ));
 
         return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/api/withdraw")
-    public ResponseEntity<?> withdraw(HttpSession session,
-                                      @RequestParam BigDecimal amount,
-                                      @RequestParam String mode,
-                                      @RequestParam(required = false) String bankName,
-                                      @RequestParam(required = false) String bankAccountNo,
-                                      @RequestParam(required = false) String pinCode) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "success", false,
-                    "message", "Not authenticated"
-            ));
-        }
-
-        if (amount == null || amount.compareTo(BigDecimal.valueOf(10_000L)) < 0) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "So tien rut toi thieu la 10.000 VND."
-            ));
-        }
-
-        try {
-            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
-            DemoBankAccount targetAccount;
-            if ("personal".equalsIgnoreCase(mode)) {
-                if (bankName != null && !bankName.isBlank() && bankAccountNo != null && !bankAccountNo.isBlank()) {
-                    targetAccount = walletService.savePersonalWithdrawAccount(customer, bankName, bankAccountNo);
-                } else {
-                    targetAccount = walletService.getPersonalWithdrawAccount(customer);
-                    if (targetAccount == null) {
-                        throw new IllegalArgumentException("Ban chua luu tai khoan ca nhan. Vui long nhap ngan hang va so tai khoan.");
-                    }
-                }
-            } else if ("manual".equalsIgnoreCase(mode)) {
-                if (bankName == null || bankName.isBlank() || bankAccountNo == null || !bankAccountNo.matches("\\d{10}")) {
-                    throw new IllegalArgumentException("Vui long chon ngan hang va nhap so tai khoan gom 10 chu so.");
-                }
-                targetAccount = walletService.resolveDemoBankAccount(bankName, bankAccountNo);
-            } else {
-                throw new IllegalArgumentException("Che do rut tien khong hop le.");
-            }
-
-            WalletService.WithdrawResult result = walletService.withdraw(
-                    customer,
-                    amount,
-                    targetAccount.getBankName(),
-                    targetAccount.getAccountNo(),
-                    pinCode
-            );
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Rut tien demo thanh cong. Tien da chuyen vao tai khoan demo dich.",
-                    "balance", result.getWalletBalance().doubleValue(),
-                    "destinationBank", result.getDestinationAccount().getBankName(),
-                    "destinationAccountNo", result.getDestinationAccount().getAccountNo(),
-                    "destinationAccountHolder", result.getDestinationAccount().getAccountHolder(),
-                    "destinationBalance", result.getDestinationAccount().getBalance().doubleValue()
-            ));
-        } catch (WalletService.WalletLockedException ex) {
-            return ResponseEntity.status(HttpStatus.LOCKED).body(Map.of(
-                    "success", false,
-                    "code", ex.getCode(),
-                    "message", ex.getMessage(),
-                    "lockedUntil", ex.getLockedUntil()
-            ));
-        } catch (WalletService.WalletPinRequiredException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "success", false,
-                    "code", ex.getCode(),
-                    "message", ex.getMessage()
-            ));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", ex.getMessage()
-            ));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "success", false,
-                    "message", "Loi he thong khi rut tien demo: "
-                            + ex.getClass().getSimpleName()
-                            + (ex.getMessage() != null && !ex.getMessage().isBlank() ? " - " + ex.getMessage() : "")
-            ));
-        }
-    }
-
-    @PostMapping("/api/pin/setup")
-    public ResponseEntity<?> setupPin(HttpSession session,
-                                      @RequestParam String pinCode,
-                                      @RequestParam String confirmPinCode) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Not authenticated"));
-        }
-
-        try {
-            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
-            walletService.setupPin(customer, pinCode, confirmPinCode);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Da thiet lap PIN cho vi."));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
-        }
-    }
-
-    @PostMapping("/api/pin/forgot/request")
-    public ResponseEntity<?> requestPinResetOtp(HttpSession session) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Not authenticated"));
-        }
-
-        try {
-            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
-            walletService.requestPinResetOtp(customer);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Da gui OTP ve email cua ban."));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
-        }
-    }
-
-    @PostMapping("/api/pin/forgot/verify")
-    public ResponseEntity<?> verifyPinResetOtp(HttpSession session,
-                                               @RequestParam String otp) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Not authenticated"));
-        }
-
-        try {
-            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
-            walletService.verifyPinResetOtp(customer, otp);
-            return ResponseEntity.ok(Map.of("success", true, "message", "OTP hop le. Ban co the dat PIN moi."));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
-        }
-    }
-
-    @PostMapping("/api/withdraw/personal-account")
-    public ResponseEntity<?> savePersonalWithdrawAccount(HttpSession session,
-                                                         @RequestParam String bankName,
-                                                         @RequestParam String bankAccountNo) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "success", false,
-                    "message", "Not authenticated"
-            ));
-        }
-
-        try {
-            CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin khach hang."));
-            DemoBankAccount account = walletService.savePersonalWithdrawAccount(customer, bankName, bankAccountNo);
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "bankName", account.getBankName(),
-                    "bankAccountNo", account.getAccountNo(),
-                    "accountHolder", account.getAccountHolder(),
-                    "balance", account.getBalance().doubleValue()
-            ));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", ex.getMessage()
-            ));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "success", false,
-                    "message", "Loi he thong khi luu tai khoan ca nhan: "
-                            + ex.getClass().getSimpleName()
-                            + (ex.getMessage() != null && !ex.getMessage().isBlank() ? " - " + ex.getMessage() : "")
-            ));
-        }
-    }
-
-    @GetMapping("/api/withdraw/account-lookup")
-    public ResponseEntity<?> lookupWithdrawAccount(HttpSession session,
-                                                   @RequestParam String bankName,
-                                                   @RequestParam String bankAccountNo) {
-        Long userId = getCurrentUserId(session);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "success", false,
-                    "message", "Not authenticated"
-            ));
-        }
-
-        try {
-            var account = walletService.resolveDemoBankAccount(bankName, bankAccountNo);
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "bankName", account.getBankName(),
-                    "bankAccountNo", account.getAccountNo(),
-                    "accountHolder", account.getAccountHolder(),
-                    "balance", account.getBalance().doubleValue()
-            ));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", ex.getMessage()
-            ));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "success", false,
-                    "message", "Loi he thong khi tra cuu tai khoan demo: "
-                            + ex.getClass().getSimpleName()
-                            + (ex.getMessage() != null && !ex.getMessage().isBlank() ? " - " + ex.getMessage() : "")
-            ));
-        }
-    }
-
-    private Map<String, Object> buildWalletSecurityMap(WalletService.WalletSecurityState securityState) {
-        if (securityState == null) {
-            return null;
-        }
-        Map<String, Object> data = new HashMap<>();
-        data.put("hasPin", securityState.hasPin());
-        data.put("walletLocked", securityState.walletLocked());
-        data.put("pinLockedUntil", securityState.pinLockedUntil() == null ? null : securityState.pinLockedUntil().toString());
-        data.put("dailyWithdrawLimit", securityState.dailyWithdrawLimit().doubleValue());
-        data.put("withdrawnToday", securityState.withdrawnToday().doubleValue());
-        data.put("remainingDailyLimit", securityState.remainingDailyLimit().doubleValue());
-        data.put("pinRequiredThreshold", securityState.pinRequiredThreshold().doubleValue());
-        return data;
     }
 
     private void applyTopupStatusMessage(Model model, Long userId, String topup, String txnRef) {
@@ -372,7 +129,7 @@ public class CustomerWalletController {
         if ("success".equals(normalizedStatus) && verifiedSuccess) {
             model.addAttribute("walletStatusType", "success");
             model.addAttribute("walletStatusTitle", "Nạp tiền thành công");
-            model.addAttribute("walletStatusMessage", "Nạp tiền vào ví thành công.");
+            model.addAttribute("walletStatusMessage", "Nạp tiền vào ví thành công. Ví nhận đủ 100% giá trị giao dịch.");
             return;
         }
 

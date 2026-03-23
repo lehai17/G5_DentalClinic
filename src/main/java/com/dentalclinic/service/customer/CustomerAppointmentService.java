@@ -241,7 +241,7 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Kh\u00f4ng th\u1ec3 h\u1ee7y l\u1ecbch v\u1edbi tr\u1ea1ng th\u00e1i hi\u1ec7n t\u1ea1i.");
         }
 
         List<Slot> toRelease = appointment.getAppointmentSlots().stream()
@@ -259,7 +259,7 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể xác nhận thanh toán cho lịch hẹn này.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Kh\u00f4ng th\u1ec3 x\u00e1c nh\u1eadn thanh to\u00e1n cho l\u1ecbch h\u1eb9n n\u00e0y.");
         }
 
         appointment.setStatus(AppointmentStatus.PENDING);
@@ -275,7 +275,7 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lịch hẹn này không ở trạng thái chờ thanh toán cọc.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "L\u1ecbch h\u1eb9n n\u00e0y kh\u00f4ng \u1edf tr\u1ea1ng th\u00e1i ch\u1edd thanh to\u00e1n c\u1ecdc.");
         }
 
         BigDecimal depositAmount = resolveAppointmentDepositAmount(appointment);
@@ -303,14 +303,14 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lịch hẹn này không ở trạng thái chờ thanh toán phần còn lại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "L\u1ecbch h\u1eb9n n\u00e0y kh\u00f4ng \u1edf tr\u1ea1ng th\u00e1i ch\u1edd thanh to\u00e1n ph\u1ea7n c\u00f2n l\u1ea1i.");
         }
 
         Invoice invoice = invoiceRepository.findByAppointment_IdAndAppointment_Customer_User_Id(appointmentId, userId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy hóa đơn thanh toán."));
 
         if (invoice.getStatus() == PaymentStatus.PAID) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Hóa đơn này đã được thanh toán.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "H\u00f3a \u0111\u01a1n n\u00e0y \u0111\u00e3 \u0111\u01b0\u1ee3c thanh to\u00e1n.");
         }
 
         BigDecimal baseAmount = calculateInvoiceBaseAmount(appointment);
@@ -333,14 +333,14 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
 
         if (appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lịch hẹn này không ở trạng thái chờ thanh toán phần còn lại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "L\u1ecbch h\u1eb9n n\u00e0y kh\u00f4ng \u1edf tr\u1ea1ng th\u00e1i ch\u1edd thanh to\u00e1n ph\u1ea7n c\u00f2n l\u1ea1i.");
         }
 
         Invoice invoice = invoiceRepository.findByAppointment_IdAndAppointment_Customer_User_Id(appointmentId, userId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy hóa đơn thanh toán."));
 
         if (invoice.getStatus() == PaymentStatus.PAID) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Hóa đơn này đã được thanh toán.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "H\u00f3a \u0111\u01a1n n\u00e0y \u0111\u00e3 \u0111\u01b0\u1ee3c thanh to\u00e1n.");
         }
 
         BigDecimal baseAmount = calculateInvoiceBaseAmount(appointment);
@@ -396,7 +396,7 @@ public class CustomerAppointmentService {
 
         if (appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT
                 && appointment.getStatus() != AppointmentStatus.COMPLETED) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Lịch hẹn không ở trạng thái chờ thanh toán.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "L\u1ecbch h\u1eb9n kh\u00f4ng \u1edf tr\u1ea1ng th\u00e1i ch\u1edd thanh to\u00e1n.");
         }
 
         if (invoice.getStatus() != PaymentStatus.PAID) {
@@ -429,7 +429,7 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy lịch hẹn để đặt lại."));
 
         if (!isRebookEligibleStatus(appointment.getStatus())) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ có thể đặt lại từ lịch hẹn đã hoàn thành hoặc đã hủy.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Ch\u1ec9 c\u00f3 th\u1ec3 \u0111\u1eb7t l\u1ea1i t\u1eeb l\u1ecbch h\u1eb9n \u0111\u00e3 ho\u00e0n th\u00e0nh ho\u1eb7c \u0111\u00e3 h\u1ee7y.");
         }
 
         RebookPrefillDto dto = new RebookPrefillDto();
@@ -604,7 +604,7 @@ public class CustomerAppointmentService {
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy lịch hẹn."));
 
         if (appointment.getStatus() != AppointmentStatus.CANCELLED) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ có thể ẩn khỏi lịch sử với lịch hẹn đã hủy.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Ch\u1ec9 c\u00f3 th\u1ec3 \u1ea9n kh\u1ecfi l\u1ecbch s\u1eed v\u1edbi l\u1ecbch h\u1eb9n \u0111\u00e3 h\u1ee7y.");
         }
 
         appointment.setCustomerHidden(true);
@@ -941,7 +941,7 @@ public class CustomerAppointmentService {
                 || appointment.getStatus() == AppointmentStatus.DONE
                 || appointment.getStatus() == AppointmentStatus.EXAMINING
                 || appointment.getStatus() == AppointmentStatus.IN_PROGRESS) {
-            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
+            throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Kh\u00f4ng th\u1ec3 h\u1ee7y l\u1ecbch v\u1edbi tr\u1ea1ng th\u00e1i hi\u1ec7n t\u1ea1i.");
         }
 
         if (refundIfEligible && (appointment.getStatus() == AppointmentStatus.PENDING || appointment.getStatus() == AppointmentStatus.CONFIRMED)) {
@@ -950,7 +950,7 @@ public class CustomerAppointmentService {
                 walletService.refund(
                         appointment.getCustomer(),
                         refundAmount,
-                        "Hoàn tiền đặt cọc lịch hẹn #" + appointment.getId(),
+                        "Ho\u00e0n ti\u1ec1n \u0111\u1eb7t c\u1ecdc l\u1ecbch h\u1eb9n #" + appointment.getId(),
                         appointment.getId()
                 );
             }
