@@ -114,6 +114,7 @@ public class StaffService {
 
         if (profile.getUser() != null) {
             dto.setEmail(profile.getUser().getEmail());
+            dto.setTempPassword(profile.getUser().getPassword());
             dto.setDateOfBirth(profile.getUser().getDateOfBirth());
             if (profile.getUser().getGender() != null) {
                 dto.setGender(profile.getUser().getGender().name());
@@ -143,6 +144,9 @@ public class StaffService {
 
         // Cập nhật User
         user.setEmail(dto.getEmail());
+        if (dto.getTempPassword() != null && !dto.getTempPassword().trim().isEmpty()) {
+            user.setPassword(dto.getTempPassword());
+        }
         user.setDateOfBirth(dto.getDateOfBirth());
         if (dto.getGender() != null) {
             user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
