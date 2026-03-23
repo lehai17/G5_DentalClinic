@@ -19,6 +19,8 @@ public class WalletTransactionConstraintInitializer {
     @Bean
     public ApplicationRunner walletTransactionConstraintRunner(JdbcTemplate jdbcTemplate) {
         return args -> {
+            jdbcTemplate.update("DELETE FROM " + TABLE_NAME + " WHERE type = 'WITHDRAW'");
+
             List<String> existingConstraints = jdbcTemplate.queryForList(
                     """
                     SELECT cc.name

@@ -595,9 +595,10 @@
                 </p>
                 <div style="display: flex; justify-content: center; gap: 15px;">
                     <button type="button" onclick="closeDeleteModal()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Hủy</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F4F7FE; color: #1B2559; font-weight: 700; cursor: pointer;">Hủy</button>
                     <button type="button" onclick="confirmDeleteDentist()"
-                            style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa bác sĩ</button>
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #F44336; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(244,67,54,0.2);">Xóa
+                        bác sĩ</button>
                 </div>
             </div>
         </div>
@@ -660,6 +661,11 @@
                         <div class="input-group">
                             <label>Địa chỉ email</label>
                             <div class="input-wrapper"><input type="email" id="editEmail" name="email" required></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Mật khẩu</label>
+                            <div class="input-wrapper"><input type="text" id="editTempPassword" name="tempPassword"
+                                    required minlength="6"></div>
                         </div>
                         <div class="input-group">
                             <label>Số điện thoại</label>
@@ -848,6 +854,7 @@
                     document.getElementById('editDentistId').value = data.id;
                     document.getElementById('editFullName').value = data.fullName;
                     document.getElementById('editEmail').value = data.email;
+                    document.getElementById('editTempPassword').value = data.tempPassword;
                     document.getElementById('editPhone').value = data.phone;
                     document.getElementById('editDob').value = data.dateOfBirth;
                     document.getElementById('editGender').value = data.gender;
@@ -941,13 +948,13 @@
         }
 
         // Add event listeners
-        if(document.getElementById('searchInput')) {
+        if (document.getElementById('searchInput')) {
             document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
         }
-        if(document.getElementById('specialtyFilter')) {
+        if (document.getElementById('specialtyFilter')) {
             document.getElementById('specialtyFilter').addEventListener('change', performSearch);
         }
-        if(document.getElementById('statusFilter')) {
+        if (document.getElementById('statusFilter')) {
             document.getElementById('statusFilter').addEventListener('change', performSearch);
         }
     </script>

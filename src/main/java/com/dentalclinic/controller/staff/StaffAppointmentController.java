@@ -92,7 +92,7 @@ public class StaffAppointmentController {
             @RequestParam(defaultValue = "0") int page,
             Model model) {
 
-        model.addAttribute("pageTitle", "Appointment Management");
+        model.addAttribute("pageTitle", "Quản lý lịch hẹn");
         model.addAttribute("staffName", "Staff");
 
         Page<Appointment> appointmentPage = staffAppointmentService.searchAndSort(keyword, serviceKeyword, sort, page);

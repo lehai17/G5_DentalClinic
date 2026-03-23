@@ -89,11 +89,6 @@
         color: #dc2626;
       }
 
-      .transaction-icon.withdraw {
-        background: #fff7ed;
-        color: #c2410c;
-      }
-
       .transaction-details h4 {
         margin: 0;
         font-weight: 600;
@@ -122,10 +117,6 @@
 
       .transaction-amount.payment {
         color: #dc2626;
-      }
-
-      .transaction-amount.withdraw {
-        color: #c2410c;
       }
 
       .empty-state {
@@ -325,77 +316,6 @@
         background: #eff6ff;
         color: #1d4ed8;
         border: 1px solid #bfdbfe;
-      }
-
-      .wallet-withdraw-mode-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-        margin-top: 1rem;
-      }
-
-      .wallet-withdraw-mode {
-        border: 1px solid #dbe5f2;
-        border-radius: 18px;
-        padding: 1rem;
-        background: #fff;
-        cursor: pointer;
-      }
-
-      .wallet-withdraw-mode.active {
-        border-color: #2563eb;
-        background: #eff6ff;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12);
-      }
-
-      .wallet-withdraw-mode h4 {
-        margin: 0 0 0.35rem;
-        font-size: 1rem;
-        font-weight: 800;
-        color: #0f172a;
-      }
-
-      .wallet-withdraw-mode p {
-        margin: 0;
-        font-size: 0.8125rem;
-        color: #64748b;
-        line-height: 1.5;
-      }
-
-      .wallet-withdraw-panel {
-        margin-top: 1rem;
-        padding: 1rem;
-        border-radius: 18px;
-        border: 1px solid #dbe5f2;
-        background: #ffffff;
-      }
-
-      .wallet-withdraw-summary {
-        display: grid;
-        gap: 0.65rem;
-      }
-
-      .wallet-withdraw-summary-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #eef2f7;
-      }
-
-      .wallet-withdraw-summary-row:last-child {
-        border-bottom: none;
-      }
-
-      .wallet-withdraw-summary-label {
-        color: #64748b;
-        font-size: 0.875rem;
-      }
-
-      .wallet-withdraw-summary-value {
-        color: #0f172a;
-        font-weight: 700;
-        text-align: right;
       }
 
       .wallet-inline-actions {

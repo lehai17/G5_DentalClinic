@@ -82,7 +82,7 @@ public class CustomerPaymentController {
         }
 
         Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(id, userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn ID: " + id));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
             return "redirect:/customer/book?status=fail&id=" + id;
@@ -111,7 +111,7 @@ public class CustomerPaymentController {
     public ResponseEntity<?> payDepositWithWallet(@PathVariable Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         try {
@@ -122,7 +122,7 @@ public class CustomerPaymentController {
                     "status", appointment.getStatus().name()
             ));
         } catch (RuntimeException ex) {
-            String message = ex.getMessage() != null ? ex.getMessage() : "Khong the thanh toan bang vi.";
+            String message = ex.getMessage() != null ? ex.getMessage() : "Không thể thanh toán bằng ví.";
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", message
@@ -135,21 +135,21 @@ public class CustomerPaymentController {
     public ResponseEntity<?> createWalletTopup(@RequestParam BigDecimal amount, HttpServletRequest request, HttpSession session) throws Exception {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         BigDecimal normalizedAmount = amount == null ? BigDecimal.ZERO : amount.stripTrailingZeros();
         if (normalizedAmount.compareTo(MIN_WALLET_TOPUP_AMOUNT) < 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "So tien nap toi thieu la 10.000 VND."
+                    "message", "Số tiền nạp tối thiểu là 10.000 VND."
             ));
         }
 
         if (normalizedAmount.compareTo(MAX_WALLET_TOPUP_AMOUNT) > 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "So tien nap toi da la 100.000.000 VND."
+                    "message", "Số tiền nạp tối đa là 100.000.000 VND."
             ));
         }
 
@@ -162,7 +162,8 @@ public class CustomerPaymentController {
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "paymentUrl", paymentUrl
+                "paymentUrl", paymentUrl,
+                "creditedAmount", walletService.calculateTopupCreditedAmount(normalizedAmount)
         ));
     }
 
@@ -200,7 +201,7 @@ public class CustomerPaymentController {
                                                  HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         try {
@@ -224,7 +225,7 @@ public class CustomerPaymentController {
                                                        HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         try {
@@ -237,7 +238,7 @@ public class CustomerPaymentController {
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", ex.getMessage() != null ? ex.getMessage() : "Khong the thanh toan bang vi."
+                    "message", ex.getMessage() != null ? ex.getMessage() : "Không thể thanh toán bằng ví."
             ));
         }
     }
@@ -299,7 +300,7 @@ public class CustomerPaymentController {
             if (appointmentId != null) {
                 customerAppointmentService.cancelUnpaidAppointment(
                         appointmentId,
-                        "Khach hang da huy hoac khong hoan tat thanh toan VNPay."
+                        "Khách hàng đã hủy hoặc không hoàn tất thanh toán VNPay."
                 );
                 return "redirect:/customer/book?status=fail&id=" + appointmentId;
             }
@@ -314,7 +315,7 @@ public class CustomerPaymentController {
     @PostMapping("/appointments/cancel-back/{id}")
     @ResponseBody
     public ResponseEntity<?> cancelOnBack(@PathVariable Long id) {
-        customerAppointmentService.cancelUnpaidAppointment(id, "Khach hang quay lai tu trang thanh toan");
+        customerAppointmentService.cancelUnpaidAppointment(id, "Khách hàng quay lại từ trang thanh toán");
         return ResponseEntity.ok().build();
     }
 
@@ -351,14 +352,15 @@ public class CustomerPaymentController {
         }
 
         CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang de nap vi."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng để nạp ví."));
 
-        BigDecimal amount = new BigDecimal(request.getParameter("vnp_Amount"))
+        BigDecimal paidAmount = new BigDecimal(request.getParameter("vnp_Amount"))
                 .divide(BigDecimal.valueOf(100L));
+        BigDecimal creditedAmount = walletService.calculateTopupCreditedAmount(paidAmount);
         String description = "Nap tien vi qua VNPay [" + txnRef + "]";
 
         if (!walletTransactionRepository.existsByTypeAndDescription(WalletTransactionType.DEPOSIT, description)) {
-            walletService.deposit(customer, amount, description, null);
+            walletService.deposit(customer, creditedAmount, description, null);
         }
 
         return "redirect:/customer/wallet?topup=success&txnRef=" + txnRef;
@@ -391,9 +393,9 @@ public class CustomerPaymentController {
         }
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen thanh toan."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn thanh toán."));
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn thanh toán."));
 
         if (invoice.getAppointment() == null || !appointmentId.equals(invoice.getAppointment().getId())) {
             return "redirect:/customer/my-appointments?payment=fail#highlight=" + appointmentId;

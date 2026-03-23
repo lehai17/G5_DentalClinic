@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Dentist Schedule</title>
+    <title>Lịch bác sĩ</title>
     <link rel="stylesheet" href="/css/staff/staff.css">
 </head>
 <body>
@@ -13,11 +13,11 @@
         <div th:replace="~{staff/fragments/header :: header}"></div>
 
         <div class="content">
-            <h2>️ Dentist's work schedule</h2>
+            <h2>Lịch làm việc của bác sĩ</h2>
 
             <form method="get" th:action="@{/staff/schedules}" class="schedule-filter">
                 <select name="dentistId" required>
-                    <option value="">-- Choose dentist --</option>
+                    <option value="">-- Chọn bác sĩ --</option>
                     <option th:each="d : ${dentists}"
                             th:value="${d.id}"
                             th:text="${d.fullName}"
@@ -27,16 +27,16 @@
 
                 <input type="date" name="date" th:value="${selectedDate}" required/>
 
-                <button type="submit">View</button>
+                <button type="submit">Xem</button>
             </form>
 
 
             <table th:if="${schedule != null}">
                 <thead>
                 <tr>
-                    <th>Dentist</th>
-                    <th>Time</th>
-                    <th>Service</th>
+                    <th>Bác sĩ</th>
+                    <th>Thời gian</th>
+                    <th>Dịch vụ</th>
                 </tr>
                 </thead>
 
