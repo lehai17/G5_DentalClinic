@@ -739,13 +739,13 @@ Tin nhắn khách hàng:
             return KEY_SCALING;
         }
 
+        if (isGeneralExamSymptom(raw)) {
+            return KEY_GENERAL_EXAM;
+        }
+
         String llmTop = firstSpecificKeyword(llmKeywords);
         if (llmTop != null) {
             return llmTop;
-        }
-
-        if (isGeneralExamSymptom(raw)) {
-            return KEY_GENERAL_EXAM;
         }
 
         return null;

@@ -112,6 +112,10 @@
             }
             html += '</div>';
         }
+        if (!Array.isArray(data.services) || data.services.length === 0) {
+            html += '</div>';
+            return html;
+        }
 
         html += '<div>';
         html += '<strong>Khung giờ gợi ý:</strong>';
@@ -122,6 +126,7 @@
         html += '</div>';
         return html;
     }
+
 
     function renderResult(data) {
         var container = qs('ai-booking-result');

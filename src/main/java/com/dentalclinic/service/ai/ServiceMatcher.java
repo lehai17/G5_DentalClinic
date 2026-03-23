@@ -35,105 +35,158 @@ public class ServiceMatcher {
             return List.of();
         }
 
-        String normalizedRaw = normalize(rawMessage);
+        String raw = normalize(rawMessage);
 
-        List<String> allInputs = new ArrayList<>();
-        if (rawMessage != null && !rawMessage.isBlank()) {
-            allInputs.add(rawMessage);
+        System.out.println("=== AI MATCH DEBUG START ===");
+        System.out.println("RAW MESSAGE = " + rawMessage);
+        System.out.println("NORMALIZED RAW = " + raw);
+        System.out.println("KEYWORDS = " + keywords);
+        System.out.println("ACTIVE SERVICES = " + activeServices.stream()
+                .map(s -> s.getId() + " - " + s.getName())
+                .toList());
+
+        /*
+         * 1) Ưu tiên xử lý chỉnh nha riêng
+         */
+        boolean rawOrthodontic = isOrthodonticKeyword(raw);
+        boolean keywordMetal = keywords != null && keywords.stream()
+                .map(this::canonicalKeyword)
+                .anyMatch(GROUP_METAL_BRACES::equals);
+
+        boolean keywordInvis = keywords != null && keywords.stream()
+                .map(this::canonicalKeyword)
+                .anyMatch(GROUP_INVISALIGN::equals);
+
+        if (rawOrthodontic || keywordMetal || keywordInvis) {
+            boolean preferInvis = isInvisalignPreferenceKeyword(raw) || keywordInvis || isSevereOrthodonticKeyword(raw);
+            boolean preferMetal = isMetalPreferenceKeyword(raw) || keywordMetal;
+
+            // Nếu user nói rõ 1 loại thì chỉ trả 1 loại
+            boolean onlyOne = preferInvis ^ preferMetal;
+
+            List<Services> ortho = matchOrthodonticServices(activeServices, preferInvis, onlyOne);
+
+            System.out.println("ORTHO DETECTED = true");
+            System.out.println("PREFER INVIS = " + preferInvis);
+            System.out.println("PREFER METAL = " + preferMetal);
+            System.out.println("ORTHO RESULT = " + ortho.stream().map(Services::getName).toList());
+
+            if (!ortho.isEmpty()) {
+                System.out.println("=== AI MATCH DEBUG END ===");
+                return ortho;
+            }
         }
-        if (keywords != null) {
-            allInputs.addAll(keywords);
+
+        /*
+         * 2) Ưu tiên nhóm chính từ raw/LLM
+         */
+        String primaryGroup = decidePrimaryGroupFromRawOrLlm(raw, keywords);
+        System.out.println("PRIMARY GROUP = " + primaryGroup);
+
+        if (primaryGroup != null) {
+            List<Services> primaryMatch = matchSingleGroup(activeServices, primaryGroup);
+            System.out.println("PRIMARY MATCH = " + primaryMatch.stream().map(Services::getName).toList());
+
+            if (!primaryMatch.isEmpty()) {
+                System.out.println("=== AI MATCH DEBUG END ===");
+                return primaryMatch;
+            }
+
+            // Nếu là khám tổng quát mà match trực tiếp chưa ra thì fallback đúng nghĩa
+            if (GROUP_GENERAL_EXAM.equals(primaryGroup)) {
+                List<Services> generalExam = fallbackGeneralExam(activeServices);
+                System.out.println("GENERAL EXAM FALLBACK = " + generalExam.stream().map(Services::getName).toList());
+                System.out.println("=== AI MATCH DEBUG END ===");
+                return generalExam;
+            }
         }
 
-        if (allInputs.isEmpty()) {
-            return fallbackGeneralExam(activeServices);
-        }
+        /*
+         * 3) Nếu primaryGroup chưa ra service, thử lần lượt theo keywords canonical
+         */
+        if (keywords != null && !keywords.isEmpty()) {
+            for (String keyword : keywords) {
+                String canonical = canonicalKeyword(keyword);
+                if (canonical == null) {
+                    continue;
+                }
 
-        // Chỉ dùng RAW MESSAGE để xác định user có nói rõ muốn Invisalign / kim loại hay không
-        boolean rawOrthodonticSymptom = isOrthodonticKeyword(normalizedRaw);
-        boolean rawPreferInvisalign = isInvisalignPreferenceKeyword(normalizedRaw);
-        boolean rawPreferMetal = isMetalPreferenceKeyword(normalizedRaw);
-        boolean rawSevereOrthodontic = isSevereOrthodonticKeyword(normalizedRaw);
+                // Bỏ orthodontic ở đây vì đã xử lý phía trên
+                if (GROUP_METAL_BRACES.equals(canonical) || GROUP_INVISALIGN.equals(canonical)) {
+                    continue;
+                }
 
-        // Nếu user có biểu hiện chỉnh nha thì ưu tiên xử lý cứng ở đây,
+                List<Services> matched = matchSingleGroup(activeServices, canonical);
+                System.out.println("TRY KEYWORD = " + keyword + " -> " + canonical
+                        + " => " + matched.stream().map(Services::getName).toList());
 
-        // không để rơi xuống scoring chung nữa
-        if (rawOrthodonticSymptom) {
-            // user nói rõ 1 phương pháp
-            if (rawPreferMetal && !rawPreferInvisalign) {
-                List<Services> result = matchOrthodonticServices(activeServices, false, true);
-                if (!result.isEmpty()) {
-                    return result;
+                if (!matched.isEmpty()) {
+                    System.out.println("=== AI MATCH DEBUG END ===");
+                    return matched;
                 }
             }
-
-            if (rawPreferInvisalign && !rawPreferMetal) {
-                List<Services> result = matchOrthodonticServices(activeServices, true, true);
-                if (!result.isEmpty()) {
-                    return result;
-                }
-            }
-
-            // user chỉ mô tả triệu chứng -> luôn trả 2 lựa chọn
-            boolean invisalignFirst = rawPreferInvisalign && !rawSevereOrthodontic;
-            if (rawPreferMetal || rawSevereOrthodontic) {
-                invisalignFirst = false;
-            }
-
-            List<Services> orthoServices = matchOrthodonticServices(activeServices, invisalignFirst, false);
-            if (!orthoServices.isEmpty()) {
-                return orthoServices;
-            }
         }
 
-        String primaryNonOrthoGroup = decidePrimaryGroupFromRawOrLlm(normalizedRaw, keywords);
-        if (primaryNonOrthoGroup != null) {
-            List<Services> result = matchSingleGroup(activeServices, primaryNonOrthoGroup);
-            if (!result.isEmpty()) {
-                return result;
-            }
-        }
-
+        /*
+         * 4) Fallback mềm theo score name/description
+         */
         Map<Services, Integer> scores = new LinkedHashMap<>();
-        for (Services service : activeServices) {
-            scores.put(service, 0);
-        }
 
-        for (String rawKeyword : allInputs) {
-            String canonicalKeyword = canonicalKeyword(rawKeyword);
-            String normalizedKeyword = normalize(rawKeyword);
+        for (Services s : activeServices) {
+            String name = normalize(s.getName());
+            String desc = normalize(s.getDescription());
+            int score = 0;
 
-            for (Services service : activeServices) {
-                int score = scores.get(service);
-                Set<String> groups = detectServiceGroups(service);
+            if (!raw.isBlank()) {
+                if (containsAny(name, raw)) score += 10;
+                if (containsAny(desc, raw)) score += 8;
 
-                if (canonicalKeyword != null && groups.contains(canonicalKeyword)) {
-                    score += 100;
+                for (String token : raw.split("\\s+")) {
+                    if (token.isBlank() || token.length() < 2) continue;
+                    if (name.contains(token)) score += 2;
+                    if (desc.contains(token)) score += 1;
                 }
-
-                score += scoreByTextSimilarity(service, normalizedKeyword, canonicalKeyword);
-                scores.put(service, score);
             }
+
+            if (keywords != null) {
+                for (String keyword : keywords) {
+                    String k = normalize(keyword);
+                    if (k.isBlank()) continue;
+
+                    if (name.contains(k)) score += 6;
+                    if (desc.contains(k)) score += 5;
+
+                    String canonical = canonicalKeyword(keyword);
+                    if (canonical != null && detectServiceGroups(s).contains(canonical)) {
+                        score += 12;
+                    }
+                }
+            }
+
+            scores.put(s, score);
         }
 
-        List<Map.Entry<Services, Integer>> ranked = scores.entrySet().stream()
+        List<Services> ranked = scores.entrySet().stream()
                 .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
-                .toList();
-
-        if (ranked.isEmpty() || ranked.get(0).getValue() <= 0) {
-            return fallbackGeneralExam(activeServices);
-        }
-
-        int topScore = ranked.get(0).getValue();
-        List<Services> result = ranked.stream()
                 .filter(e -> e.getValue() > 0)
-                .filter(e -> e.getValue() >= topScore - 2)
                 .map(Map.Entry::getKey)
-                .distinct()
-                .limit(resolveLimit(keywords, rawMessage))
+                .limit(1)
                 .collect(Collectors.toList());
 
-        return result.isEmpty() ? fallbackGeneralExam(activeServices) : result;
+        System.out.println("SCORE RESULT = " + ranked.stream().map(Services::getName).toList());
+
+        /*
+         * 5) Nếu raw là triệu chứng chung mà vẫn chưa ra thì ép về khám tổng quát
+         */
+        if (ranked.isEmpty() && isGeneralExamSymptom(raw)) {
+            List<Services> generalExam = fallbackGeneralExam(activeServices);
+            System.out.println("FORCED GENERAL EXAM FALLBACK = " + generalExam.stream().map(Services::getName).toList());
+            System.out.println("=== AI MATCH DEBUG END ===");
+            return generalExam;
+        }
+
+        System.out.println("=== AI MATCH DEBUG END ===");
+        return ranked;
     }
 
     private int resolveLimit(List<String> keywords, String rawMessage) {
@@ -225,43 +278,109 @@ public class ServiceMatcher {
     }
 
     private Set<String> detectServiceGroups(Services service) {
+        Set<String> groups = new LinkedHashSet<>();
+        if (service == null) {
+            return groups;
+        }
+
         String name = normalize(service.getName());
         String desc = normalize(service.getDescription());
+        String text = (name + " " + desc).trim();
 
-        Set<String> groups = new LinkedHashSet<>();
-
-        if (containsAny(name, "kham", "tong quat", "tu van") || containsAny(desc, "kham", "tu van", "kiem tra")) {
-            groups.add(GROUP_GENERAL_EXAM);
-        }
-        if (containsAny(name, "cao voi", "lay cao") || containsAny(desc, "cao voi", "voi rang", "ve sinh rang")) {
-            groups.add(GROUP_SCALING);
-        }
-        if (containsAny(name, "rang khon", "rang so 8", "nho rang") || containsAny(desc, "rang khon", "moc ngam", "moc lech")) {
-            groups.add(GROUP_WISDOM_TOOTH);
-        }
-        if (containsAny(name, "tay trang", "whitening") || containsAny(desc, "tay trang", "lam trang")) {
-            groups.add(GROUP_WHITENING);
-        }
-        if (containsAny(name, "tram") || containsAny(desc, "tram", "sau rang", "lo rang", "me rang")) {
-            groups.add(GROUP_FILLING);
-        }
-        if (containsAny(name, "tuy", "lay tuy", "dieu tri tuy") || containsAny(desc, "viem tuy", "dieu tri tuy", "noi nha")) {
-            groups.add(GROUP_ROOT_CANAL);
-        }
-        if (containsAny(name, "implant", "trong rang") || containsAny(desc, "implant", "cay ghep", "mat rang")) {
-            groups.add(GROUP_IMPLANT);
-        }
-        if (containsAny(name, "cercon", "rang su", "boc su") || containsAny(desc, "cercon", "rang su", "phuc hinh")) {
-            groups.add(GROUP_CERCON_CROWN);
-        }
-        if (containsAny(name, "kim loai", "mac cai") || containsAny(desc, "kim loai", "mac cai")) {
+        // 1. Chỉnh nha kim loại
+        if (containsAny(text,
+                "nieng rang kim loai",
+                "mac cai kim loai",
+                "chinh nha kim loai")) {
             groups.add(GROUP_METAL_BRACES);
         }
-        if (containsAny(name, "invisalign", "trong suot", "khay") || containsAny(desc, "invisalign", "trong suot", "khay")) {
+
+        // 2. Invisalign
+        if (containsAny(text,
+                "invisalign",
+                "khay trong suot",
+                "nieng rang trong suot")) {
             groups.add(GROUP_INVISALIGN);
         }
-        if (containsAny(name, "dinh da", "gan da", "da rang") || containsAny(desc, "dinh da", "gan da", "da rang")) {
+
+        // 3. Cạo vôi
+        if (containsAny(text,
+                "lay cao rang",
+                "cao voi",
+                "cao rang",
+                "ve sinh rang mieng",
+                "loai bo mang bam")) {
+            groups.add(GROUP_SCALING);
+        }
+
+        // 4. Nhổ răng khôn
+        if (containsAny(text,
+                "nho rang khon",
+                "rang khon",
+                "tieu phau rang khon")) {
+            groups.add(GROUP_WISDOM_TOOTH);
+        }
+
+        // 5. Tẩy trắng
+        if (containsAny(text,
+                "tay trang rang",
+                "lam trang rang",
+                "whitening",
+                "laser lam trang")) {
+            groups.add(GROUP_WHITENING);
+        }
+
+        // 6. Trám răng
+        if (containsAny(text,
+                "tram rang",
+                "han rang",
+                "phuc hoi rang",
+                "composite")) {
+            groups.add(GROUP_FILLING);
+        }
+
+        // 7. Bọc răng sứ
+        if (containsAny(text,
+                "boc rang su",
+                "su cercon",
+                "cercon",
+                "rang su")) {
+            groups.add(GROUP_CERCON_CROWN);
+        }
+
+        // 8. Implant
+        if (containsAny(text,
+                "implant",
+                "cay ghep implant",
+                "trong rang implant")) {
+            groups.add(GROUP_IMPLANT);
+        }
+
+        // 9. Điều trị tủy
+        if (containsAny(text,
+                "dieu tri tuy",
+                "chua tuy",
+                "tuy rang",
+                "noi nha")) {
+            groups.add(GROUP_ROOT_CANAL);
+        }
+
+        // 10. Đính đá
+        if (containsAny(text,
+                "dinh da rang",
+                "gan da rang",
+                "trang suc rang")) {
             groups.add(GROUP_TOOTH_JEWELRY);
+        }
+
+        // 11. Khám tổng quát
+        // Chỉ match cực chặt, tránh nhầm sang dịch vụ khác
+        if (containsAny(text,
+                "kham tong quat",
+                "kham va tu van tong quat",
+                "tu van tong quat",
+                "kiem tra tong quat")) {
+            groups.add(GROUP_GENERAL_EXAM);
         }
 
         return groups;
@@ -363,21 +482,20 @@ public class ServiceMatcher {
     }
 
     private List<Services> fallbackGeneralExam(List<Services> services) {
-        List<Services> generalExam = services.stream()
+        return services.stream()
+                .filter(Objects::nonNull)
                 .filter(s -> {
-                    String name = normalize(s.getName());
-                    String desc = normalize(s.getDescription());
-                    return containsAny(name, "kham", "tong quat", "tu van")
-                            || containsAny(desc, "kham", "tong quat", "tu van", "kiem tra");
+                    String text = normalize((s.getName() == null ? "" : s.getName()) + " " +
+                            (s.getDescription() == null ? "" : s.getDescription()));
+                    return containsAny(text,
+                            "kham tong quat",
+                            "kham va tu van tong quat",
+                            "tu van tong quat",
+                            "kiem tra tong quat");
                 })
+                .sorted(Comparator.comparing(Services::getId))
                 .limit(1)
                 .collect(Collectors.toList());
-
-        if (!generalExam.isEmpty()) {
-            return generalExam;
-        }
-
-        return services.stream().limit(1).collect(Collectors.toList());
     }
 
     private String normalize(String input) {
@@ -571,13 +689,15 @@ public class ServiceMatcher {
             return GROUP_SCALING;
         }
 
+        // Ưu tiên raw message chung chung -> khám tổng quát
+        if (isGeneralExamSymptom(raw)) {
+            return GROUP_GENERAL_EXAM;
+        }
+
+        // Chỉ dùng LLM khi raw chưa đủ rõ
         String llmTop = firstSpecificGroup(keywords);
         if (llmTop != null) {
             return llmTop;
-        }
-
-        if (isGeneralExamSymptom(raw)) {
-            return GROUP_GENERAL_EXAM;
         }
 
         return null;
@@ -599,9 +719,19 @@ public class ServiceMatcher {
         return null;
     }
 
-    private List<Services> matchSingleGroup(List<Services> activeServices, String group) {
-        return activeServices.stream()
-                .filter(s -> detectServiceGroups(s).contains(group))
+    private List<Services> matchSingleGroup(List<Services> services, String targetGroup) {
+        if (services == null || services.isEmpty() || targetGroup == null || targetGroup.isBlank()) {
+            return List.of();
+        }
+
+        for (Services s : services) {
+            System.out.println("CHECK GROUPS: " + s.getName() + " -> " + detectServiceGroups(s));
+        }
+
+        return services.stream()
+                .filter(Objects::nonNull)
+                .filter(s -> detectServiceGroups(s).contains(targetGroup))
+                .sorted(Comparator.comparing(Services::getId))
                 .limit(1)
                 .collect(Collectors.toList());
     }
