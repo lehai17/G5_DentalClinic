@@ -136,6 +136,14 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label text-muted fw-bold small">MẬT KHẨU</label>
+                                <div class="d-flex align-items-center p-3 rounded-4" style="background: #f4f7fe;">
+                                    <i class="fas fa-key text-primary me-3"></i>
+                                    <span th:text="${staff.tempPassword ?: 'N/A'}"
+                                        class="fw-semibold text-dark">********</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label text-muted fw-bold small">SỐ ĐIỆN THOẠI</label>
                                 <div class="d-flex align-items-center p-3 rounded-4" style="background: #f4f7fe;">
                                     <i class="fas fa-phone-alt text-primary me-3"></i>

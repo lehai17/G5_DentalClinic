@@ -253,6 +253,7 @@ public class DentistService {
         // 2. Dữ liệu từ User (Phải dùng đúng tên hàm trong User.java)
         if (profile.getUser() != null) {
             dto.setEmail(profile.getUser().getEmail());
+            dto.setTempPassword(profile.getUser().getPassword());
             // Đảm bảo tên hàm này khớp với User.java (getDateOfBirth hoặc getDob)
             dto.setDateOfBirth(profile.getUser().getDateOfBirth());
             if (profile.getUser().getGender() != null) {
@@ -296,6 +297,7 @@ public class DentistService {
 
         if (profile.getUser() != null) {
             dto.setEmail(profile.getUser().getEmail());
+            dto.setTempPassword(profile.getUser().getPassword());
             dto.setDateOfBirth(profile.getUser().getDateOfBirth());
             if (profile.getUser().getGender() != null) {
                 dto.setGender(profile.getUser().getGender().name());
@@ -349,6 +351,9 @@ public class DentistService {
 
         // Cập nhật User
         user.setEmail(dto.getEmail());
+        if (dto.getTempPassword() != null && !dto.getTempPassword().trim().isEmpty()) {
+            user.setPassword(dto.getTempPassword());
+        }
         user.setDateOfBirth(dto.getDateOfBirth());
         if (dto.getGender() != null) {
             user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));

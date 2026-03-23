@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
 
 public class UpdateDentistDTO {
     private Long id;
@@ -30,6 +31,10 @@ public class UpdateDentistDTO {
 
     @NotBlank(message = "Giới tính không được để trống")
     private String gender;
+
+    @NotBlank(message = "Mật khẩu không được để trống")
+    @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
+    private String tempPassword;
 
     @NotBlank(message = "Chuyên khoa không được để trống")
     private String specialization;
@@ -111,6 +116,14 @@ public class UpdateDentistDTO {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getTempPassword() {
+        return tempPassword;
+    }
+
+    public void setTempPassword(String tempPassword) {
+        this.tempPassword = tempPassword;
     }
 
     public String getSpecialization() {
