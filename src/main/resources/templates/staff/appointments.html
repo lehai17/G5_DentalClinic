@@ -7,10 +7,10 @@
   </head>
   <body>
     <div class="app-wrapper">
-      <div th:replace="staff/fragments/sidebar :: sidebar"></div>
+      <div th:replace="~{staff/fragments/sidebar :: sidebar}"></div>
 
       <div class="main-content">
-        <div th:replace="staff/fragments/header :: header"></div>
+        <div th:replace="~{staff/fragments/header :: header}"></div>
 
         <div class="content">
           <h2>Quản lý lịch hẹn</h2>
@@ -85,7 +85,7 @@
                   <button
                     type="button"
                     class="btn-change-dentist"
-                    th:if="${(a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED') and a.dentist != null and dentistLeaveFlags[a.id]}"
+                    th:if="${(a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED') and a.dentist != null and dentistLeaveFlags != null and dentistLeaveFlags[a.id]}"
                     th:onclick="'changeDentist(' + ${a.id} + ')'"
                   >
                     Đổi nha sĩ

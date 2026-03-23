@@ -41,6 +41,7 @@ public class AppointmentDto {
     private boolean canPayRemaining;
     private String voucherCode;
     private String voucherDescription;
+    private List<AvailableVoucherDto> availableVouchers;
     private List<AppointmentInvoiceItemDto> invoiceItems;
     private Long billingNoteId;
     private String billingNoteNote;
@@ -119,6 +120,8 @@ public class AppointmentDto {
     public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
     public String getVoucherDescription() { return voucherDescription; }
     public void setVoucherDescription(String voucherDescription) { this.voucherDescription = voucherDescription; }
+    public List<AvailableVoucherDto> getAvailableVouchers() { return availableVouchers; }
+    public void setAvailableVouchers(List<AvailableVoucherDto> availableVouchers) { this.availableVouchers = availableVouchers; }
     public List<AppointmentInvoiceItemDto> getInvoiceItems() { return invoiceItems; }
     public void setInvoiceItems(List<AppointmentInvoiceItemDto> invoiceItems) { this.invoiceItems = invoiceItems; }
     public Long getBillingNoteId() { return billingNoteId; }

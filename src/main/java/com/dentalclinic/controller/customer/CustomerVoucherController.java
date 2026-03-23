@@ -33,7 +33,7 @@ public class CustomerVoucherController {
             return "redirect:/login";
         }
 
-        List<Voucher> vouchers = customerVoucherWalletService.getAvailableVouchers();
+        List<Voucher> vouchers = customerVoucherWalletService.getAvailableVouchers(userId);
         model.addAttribute("active", "vouchers");
         model.addAttribute("vouchers", vouchers);
         model.addAttribute("voucherWalletCount", vouchers.size());

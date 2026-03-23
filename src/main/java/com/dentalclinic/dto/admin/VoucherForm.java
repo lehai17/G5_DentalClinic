@@ -9,6 +9,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VoucherForm {
 
@@ -43,6 +45,10 @@ public class VoucherForm {
     @NotNull(message = "Vui lòng chọn thời gian kết thúc.")
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endDateTime;
+
+    private String audienceType = "SYSTEM";
+
+    private List<Long> targetUserIds = new ArrayList<>();
 
     private boolean active = true;
 
@@ -116,6 +122,22 @@ public class VoucherForm {
 
     public void setEndDateTime(LocalDateTime endDateTime) {
         this.endDateTime = endDateTime;
+    }
+
+    public String getAudienceType() {
+        return audienceType;
+    }
+
+    public void setAudienceType(String audienceType) {
+        this.audienceType = audienceType;
+    }
+
+    public List<Long> getTargetUserIds() {
+        return targetUserIds;
+    }
+
+    public void setTargetUserIds(List<Long> targetUserIds) {
+        this.targetUserIds = targetUserIds;
     }
 
     public boolean isActive() {

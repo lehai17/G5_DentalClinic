@@ -1,6 +1,7 @@
 package com.dentalclinic.dto.customer;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class FinalPaymentPreviewDto {
     private Long appointmentId;
@@ -11,6 +12,7 @@ public class FinalPaymentPreviewDto {
     private String voucherCode;
     private String voucherDescription;
     private boolean voucherApplied;
+    private List<AvailableVoucherDto> availableVouchers;
 
     public Long getAppointmentId() {
         return appointmentId;
@@ -74,5 +76,13 @@ public class FinalPaymentPreviewDto {
 
     public void setVoucherApplied(boolean voucherApplied) {
         this.voucherApplied = voucherApplied;
+    }
+
+    public List<AvailableVoucherDto> getAvailableVouchers() {
+        return availableVouchers;
+    }
+
+    public void setAvailableVouchers(List<AvailableVoucherDto> availableVouchers) {
+        this.availableVouchers = availableVouchers;
     }
 }
