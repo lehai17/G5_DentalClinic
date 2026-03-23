@@ -24,8 +24,8 @@
             <span class="voucher-wallet-eyebrow"><i class="bi bi-ticket-perforated"></i> Ưu đãi của bạn</span>
             <h1>Ví voucher</h1>
             <p>
-              Tất cả voucher đang hoạt động từ hệ thống sẽ được hiển thị tại đây để bạn dễ theo dõi
-              và sử dụng khi thanh toán phần còn lại của lịch hẹn.
+              Theo dõi voucher toàn hệ thống và voucher riêng cho tài khoản của bạn.
+              Bạn có thể tìm nhanh, sắp xếp, và xem điều kiện trước khi áp dụng khi thanh toán.
             </p>
           </div>
 
@@ -36,30 +36,53 @@
         </div>
 
         <div class="voucher-wallet-card">
+          <div class="voucher-wallet-toolbar" th:if="${!#lists.isEmpty(vouchers)}">
+            <label class="voucher-wallet-search" for="voucher-wallet-search">
+              <i class="bi bi-search"></i>
+              <input id="voucher-wallet-search" type="search" placeholder="Tìm theo mã, mô tả hoặc ưu đãi">
+            </label>
+            <label class="voucher-wallet-sort" for="voucher-wallet-sort">
+              <span>Sắp xếp</span>
+              <select id="voucher-wallet-sort">
+                <option value="expiring">Hết hạn sớm nhất</option>
+                <option value="newest">Mới nhất</option>
+                <option value="discount_desc">Ưu đãi lớn nhất</option>
+                <option value="code_asc">Mã voucher A-Z</option>
+              </select>
+            </label>
+          </div>
+
           <div class="voucher-wallet-grid" th:if="${!#lists.isEmpty(vouchers)}">
-            <article class="voucher-wallet-item" th:each="voucher : ${vouchers}">
+            <article class="voucher-wallet-item"
+                     th:each="voucher : ${vouchers}"
+                     th:attr="data-code=${voucher.code},
+                              data-search=${#strings.toLowerCase((voucher.code != null ? voucher.code : '') + ' ' + (voucher.description != null ? voucher.description : '') + ' ' + voucherService.buildDiscountLabel(voucher))},
+                              data-created=${voucher.createdAt},
+                              data-end=${voucher.endDateTime},
+                              data-discount=${voucher.discountValue}">
               <div class="voucher-wallet-item__head">
                 <span class="voucher-wallet-code" th:text="${voucher.code}">GENZ50K</span>
-                <span class="voucher-wallet-chip">
+                <span class="voucher-wallet-chip"
+                      th:classappend="${voucherService.buildAudienceLabel(voucher) == 'Voucher riêng cho tài khoản' ? ' voucher-wallet-chip--targeted' : ''}">
                   <i class="bi bi-patch-check-fill"></i>
-                  <span>Đang hoạt động</span>
+                  <span th:text="${voucherService.buildAudienceLabel(voucher)}">Voucher toàn hệ thống</span>
                 </span>
               </div>
 
               <h2 class="voucher-wallet-item__title" th:text="${voucherService.buildDiscountLabel(voucher)}">Giảm 50.000 VND</h2>
               <div class="voucher-wallet-item__desc"
-                   th:text="${#strings.isEmpty(voucher.description) ? 'Voucher ưu đãi đang sẵn sàng để dùng khi thanh toán.' : voucher.description}">
+                   th:text="${#strings.isEmpty(voucher.description) ? 'Voucher sẵn sàng để dùng khi thanh toán phần còn lại của lịch hẹn.' : voucher.description}">
                 Mô tả voucher
               </div>
 
               <div class="voucher-wallet-meta">
                 <div class="voucher-wallet-meta__row">
                   <span>Đơn tối thiểu</span>
-                  <strong th:text="${#numbers.formatDecimal(voucher.minOrderAmount, 0, 'POINT', 0, 'COMMA') + ' VNĐ'}">0 VNĐ</strong>
+                  <strong th:text="${voucherService.buildMinOrderLabel(voucher)}">Không yêu cầu tối thiểu</strong>
                 </div>
                 <div class="voucher-wallet-meta__row">
                   <span>Thời gian hiệu lực</span>
-                  <strong th:text="${#temporals.format(voucher.startDateTime, 'dd/MM HH:mm') + ' - ' + #temporals.format(voucher.endDateTime, 'dd/MM HH:mm')}">17/03 08:00 - 30/03 23:59</strong>
+                  <strong th:text="${voucherService.buildValidPeriodLabel(voucher)}">17/03 08:00 - 30/03 23:59</strong>
                 </div>
                 <div class="voucher-wallet-meta__row">
                   <span>Lượt sử dụng</span>
@@ -69,7 +92,8 @@
             </article>
           </div>
 
-          <div class="voucher-wallet-empty" th:if="${#lists.isEmpty(vouchers)}">
+          <div class="voucher-wallet-empty" id="voucher-wallet-empty"
+               th:attr="hidden=${!#lists.isEmpty(vouchers)} ? 'hidden' : null">
             <i class="bi bi-ticket-perforated"></i>
             <div>Hiện tại chưa có voucher nào đang hoạt động để hiển thị trong ví voucher.</div>
           </div>
@@ -78,5 +102,6 @@
     </section>
   </main>
 </div>
+<script th:src="@{/js/customer/customer-voucher-wallet.js}"></script>
 </body>
 </html>

@@ -32,6 +32,8 @@
   var paymentVoucherInputEl = document.getElementById("cap-payment-voucher-code");
   var paymentVoucherApplyBtn = document.getElementById("cap-payment-voucher-apply");
   var paymentVoucherFeedbackEl = document.getElementById("cap-payment-voucher-feedback");
+  var paymentVoucherListEl = document.getElementById("cap-payment-voucher-list");
+  var paymentVoucherEmptyEl = document.getElementById("cap-payment-voucher-empty");
   var paymentWalletBtn = document.getElementById("cap-payment-wallet");
   var paymentVnpayBtn = document.getElementById("cap-payment-vnpay");
   var invoiceModalEl = document.getElementById("cap-invoice-modal");
@@ -255,6 +257,8 @@
     if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
     if (paymentVoucherInputEl) paymentVoucherInputEl.value = "";
     if (paymentVoucherFeedbackEl) paymentVoucherFeedbackEl.textContent = "";
+    if (paymentVoucherListEl) paymentVoucherListEl.innerHTML = "";
+    if (paymentVoucherEmptyEl) paymentVoucherEmptyEl.hidden = true;
     if (paymentOriginalLineEl) paymentOriginalLineEl.hidden = true;
     if (paymentDiscountLineEl) paymentDiscountLineEl.hidden = true;
   }
@@ -286,6 +290,9 @@
           : data.remainingAmount,
       discountAmount: data.discountAmount || 0,
       voucherCode: data.voucherCode || "",
+      availableVouchers: Array.isArray(data.availableVouchers)
+        ? data.availableVouchers
+        : [],
     };
 
     if (paymentAppointmentIdEl)
@@ -293,7 +300,7 @@
     if (paymentInvoiceIdEl)
       paymentInvoiceIdEl.textContent = data.invoiceId
         ? "#" + data.invoiceId
-        : normalizeText("Chua có");
+        : normalizeText("Chưa có");
     if (paymentAmountEl)
       paymentAmountEl.textContent = formatMoney(data.remainingAmount);
     if (paymentOriginalAmountEl)
@@ -321,6 +328,7 @@
     if (paymentWalletBtn) paymentWalletBtn.disabled = false;
     if (paymentVnpayBtn) paymentVnpayBtn.disabled = false;
     if (paymentVoucherApplyBtn) paymentVoucherApplyBtn.disabled = false;
+    renderApplicableVoucherList();
 
     paymentModalEl.hidden = false;
     document.body.classList.add("cap-payment-modal-open");
@@ -334,11 +342,14 @@
     remainingPaymentSelection.originalAmount = preview.originalAmount;
     remainingPaymentSelection.discountAmount = preview.discountAmount || 0;
     remainingPaymentSelection.voucherCode = preview.voucherCode || "";
+    remainingPaymentSelection.availableVouchers = Array.isArray(preview.availableVouchers)
+      ? preview.availableVouchers
+      : remainingPaymentSelection.availableVouchers || [];
 
     if (paymentInvoiceIdEl)
       paymentInvoiceIdEl.textContent = preview.invoiceId
         ? "#" + preview.invoiceId
-        : normalizeText("Chua có");
+        : normalizeText("Chưa có");
     if (paymentAmountEl)
       paymentAmountEl.textContent = formatMoney(preview.payableAmount);
     if (paymentOriginalAmountEl)
@@ -367,6 +378,75 @@
               : "",
           );
     }
+    renderApplicableVoucherList();
+  }
+
+  function renderApplicableVoucherList() {
+    if (!paymentVoucherListEl || !remainingPaymentSelection) return;
+
+    var vouchers = Array.isArray(remainingPaymentSelection.availableVouchers)
+      ? remainingPaymentSelection.availableVouchers
+      : [];
+    var activeCode = String(remainingPaymentSelection.voucherCode || "").toUpperCase();
+
+    if (!vouchers.length) {
+      paymentVoucherListEl.innerHTML = "";
+      if (paymentVoucherEmptyEl) paymentVoucherEmptyEl.hidden = false;
+      return;
+    }
+
+    if (paymentVoucherEmptyEl) paymentVoucherEmptyEl.hidden = true;
+    paymentVoucherListEl.innerHTML = vouchers
+      .map(function (voucher) {
+        var code = String(voucher.code || "");
+        var isActive = activeCode && code.toUpperCase() === activeCode;
+        var description = voucher.description
+          ? '<div class="cap-payment-voucher__item-desc">' +
+            escapeHtml(voucher.description) +
+            "</div>"
+          : "";
+        return (
+          '<div class="cap-payment-voucher__item' +
+          (isActive ? " cap-payment-voucher__item--active" : "") +
+          '">' +
+          '<div class="cap-payment-voucher__item-head">' +
+          '<div class="cap-payment-voucher__item-copy">' +
+          '<div class="cap-payment-voucher__item-code">' +
+          escapeHtml(code) +
+          " • " +
+          escapeHtml(voucher.discountLabel || "Voucher") +
+          "</div>" +
+          description +
+          '<div class="cap-payment-voucher__item-meta">' +
+          escapeHtml(voucher.minOrderAmountLabel || "") +
+          " • " +
+          escapeHtml(voucher.validPeriodLabel || "") +
+          (voucher.audienceLabel ? " • " + escapeHtml(voucher.audienceLabel) : "") +
+          "</div>" +
+          "</div>" +
+          '<button type="button" class="cap-payment-voucher__item-cta' +
+          (isActive ? " cap-payment-voucher__item-cta--clear" : "") +
+          '" data-voucher-apply="' +
+          escapeHtml(isActive ? "" : code) +
+          '">' +
+          (isActive ? "Bỏ chọn" : "Dùng ngay") +
+          "</button>" +
+          "</div>" +
+          "</div>"
+        );
+      })
+      .join("")
+      .replace(/\u00e2\u20ac\u00a2/g, "•");
+
+    paymentVoucherListEl
+      .querySelectorAll("[data-voucher-apply]")
+      .forEach(function (button) {
+        button.addEventListener("click", function () {
+          if (!paymentVoucherInputEl) return;
+          paymentVoucherInputEl.value = button.getAttribute("data-voucher-apply") || "";
+          applyVoucherPreview().catch(function () {});
+        });
+      });
   }
 
   function applyVoucherPreview() {
@@ -779,6 +859,14 @@
 
     if (paymentVoucherApplyBtn) {
       paymentVoucherApplyBtn.addEventListener("click", function () {
+        applyVoucherPreview().catch(function () {});
+      });
+    }
+
+    if (paymentVoucherInputEl) {
+      paymentVoucherInputEl.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
         applyVoucherPreview().catch(function () {});
       });
     }

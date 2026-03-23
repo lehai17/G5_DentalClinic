@@ -45,7 +45,7 @@
     <div class="toolbar">
         <div>
             <h1>Quản lý voucher</h1>
-            <p>Tạo và quản lý mã khuyến mãi để sẵn sàng tích hợp vào đặt lịch và thanh toán sau này.</p>
+            <p>Tạo, cập nhật và quản lý voucher toàn hệ thống hoặc voucher riêng theo từng tài khoản customer.</p>
         </div>
         <a class="btn btn-primary" th:href="@{/admin/vouchers/create}">
             <i class="fa-solid fa-plus"></i>
@@ -68,6 +68,7 @@
                 <th>Giảm tối đa</th>
                 <th>Giới hạn dùng</th>
                 <th>Đã dùng</th>
+                <th>Phạm vi</th>
                 <th>Trạng thái</th>
                 <th>Thời gian áp dụng</th>
                 <th>Ngày tạo</th>
@@ -91,6 +92,7 @@
                 <td th:text="${voucher.maxDiscount != null ? #numbers.formatDecimal(voucher.maxDiscount, 0, 'POINT', 0, 'COMMA') + ' VNĐ' : 'Không giới hạn'}">Không giới hạn</td>
                 <td th:text="${voucher.usageLimit != null ? voucher.usageLimit : 'Không giới hạn'}">100</td>
                 <td th:text="${voucher.usedCount}">0</td>
+                <td th:text="${voucherHelper.buildAudienceLabel(voucher)}">Toàn hệ thống</td>
                 <td>
                     <span class="badge"
                           th:classappend="${voucher.active ? ' badge-active' : ' badge-inactive'}"

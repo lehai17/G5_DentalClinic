@@ -69,14 +69,24 @@ public class CustomerHomepageController {
                                Model model) {
         model.addAttribute("active", "homepage");
         model.addAttribute("featuredReviews", reviewMarketingService.getHomepageFeaturedReviews());
-
         Long currentCustomerId = resolveCurrentUserId(authentication);
+        if (currentCustomerId == null) {
+            return "redirect:/login";
+        }
 
         try {
-            // dữ liệu dùng chung cho cả guest và user đã login
+            CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
+            if (profile == null) {
+                profile = new CustomerProfile();
+                profile.setFullName("Khách hàng");
+                model.addAttribute("appointments", new ArrayList<>());
+            } else {
+                model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
+            }
+            model.addAttribute("customer", profile);
             model.addAttribute("services", serviceRepo.findByActiveTrue());
             model.addAttribute("dentists", dentistRepo.filterDentists(null, null, UserStatus.ACTIVE));
-            model.addAttribute("voucherBannerVouchers", customerVoucherWalletService.getHomepageBannerVouchers());
+            model.addAttribute("voucherBannerVouchers", customerVoucherWalletService.getHomepageBannerVouchers(currentCustomerId));
             model.addAttribute("voucherService", customerVoucherWalletService);
 
             int safePage = Math.max(page, 0);
@@ -86,32 +96,9 @@ public class CustomerHomepageController {
             model.addAttribute("currentPage", safePage);
             model.addAttribute("totalPages", blogPage.getTotalPages());
 
-            // nếu chưa login thì vẫn cho vào homepage
-            if (currentCustomerId == null) {
-                CustomerProfile guest = new CustomerProfile();
-                guest.setFullName("Khách hàng");
-                model.addAttribute("customer", guest);
-                model.addAttribute("appointments", new ArrayList<>());
-                return "customer/homepage";
-            }
-
-            // nếu đã login thì load thông tin customer
-            CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
-            if (profile == null) {
-                profile = new CustomerProfile();
-                profile.setFullName("Khách hàng");
-                model.addAttribute("appointments", new ArrayList<>());
-            } else {
-                model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
-            }
-
-            model.addAttribute("customer", profile);
             return "customer/homepage";
-
         } catch (Exception e) {
-            CustomerProfile fallback = new CustomerProfile();
-            fallback.setFullName("Khách hàng");
-            model.addAttribute("customer", fallback);
+            model.addAttribute("customer", new CustomerProfile());
             model.addAttribute("appointments", new ArrayList<>());
             model.addAttribute("services", new ArrayList<>());
             model.addAttribute("dentists", new ArrayList<>());

@@ -34,6 +34,7 @@ public class AdminVoucherController {
     @GetMapping
     public String list(Model model) {
         model.addAttribute("vouchers", adminVoucherService.getAllVouchersForAdmin());
+        model.addAttribute("voucherHelper", adminVoucherService);
         model.addAttribute("activePage", "vouchers");
         return "admin/voucher-list";
     }
@@ -43,6 +44,7 @@ public class AdminVoucherController {
         if (!model.containsAttribute("voucherForm")) {
             model.addAttribute("voucherForm", new VoucherForm());
         }
+        model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
         model.addAttribute("activePage", "vouchers");
         return "admin/voucher-create";
     }
@@ -53,6 +55,7 @@ public class AdminVoucherController {
                          Model model,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
             model.addAttribute("activePage", "vouchers");
             return "admin/voucher-create";
         }
@@ -62,6 +65,7 @@ public class AdminVoucherController {
             return "redirect:/admin/vouchers";
         } catch (BusinessException ex) {
             model.addAttribute("error", ex.getMessage());
+            model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
             model.addAttribute("activePage", "vouchers");
             return "admin/voucher-create";
         }
@@ -73,6 +77,7 @@ public class AdminVoucherController {
             if (!model.containsAttribute("voucherForm")) {
                 model.addAttribute("voucherForm", adminVoucherService.getVoucherFormById(id));
             }
+            model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
             model.addAttribute("voucherId", id);
             model.addAttribute("activePage", "vouchers");
             return "admin/voucher-edit";
@@ -89,6 +94,7 @@ public class AdminVoucherController {
                          Model model,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
             model.addAttribute("voucherId", id);
             model.addAttribute("activePage", "vouchers");
             return "admin/voucher-edit";
@@ -98,6 +104,7 @@ public class AdminVoucherController {
             redirectAttributes.addFlashAttribute("success", "Cập nhật voucher thành công.");
             return "redirect:/admin/vouchers";
         } catch (BusinessException ex) {
+            model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
             model.addAttribute("voucherId", id);
             model.addAttribute("error", ex.getMessage());
             model.addAttribute("activePage", "vouchers");

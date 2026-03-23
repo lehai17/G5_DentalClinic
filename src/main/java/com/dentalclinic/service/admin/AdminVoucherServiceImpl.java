@@ -2,8 +2,14 @@ package com.dentalclinic.service.admin;
 
 import com.dentalclinic.dto.admin.VoucherForm;
 import com.dentalclinic.exception.BusinessException;
+import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.promotion.DiscountType;
 import com.dentalclinic.model.promotion.Voucher;
+import com.dentalclinic.model.promotion.VoucherAssignment;
+import com.dentalclinic.model.user.Role;
+import com.dentalclinic.model.user.UserStatus;
+import com.dentalclinic.repository.CustomerProfileRepository;
+import com.dentalclinic.repository.VoucherAssignmentRepository;
 import com.dentalclinic.repository.VoucherRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -11,16 +17,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 @Service
 public class AdminVoucherServiceImpl implements AdminVoucherService {
 
     private final VoucherRepository voucherRepository;
+    private final VoucherAssignmentRepository voucherAssignmentRepository;
+    private final CustomerProfileRepository customerProfileRepository;
 
-    public AdminVoucherServiceImpl(VoucherRepository voucherRepository) {
+    public AdminVoucherServiceImpl(VoucherRepository voucherRepository,
+                                   VoucherAssignmentRepository voucherAssignmentRepository,
+                                   CustomerProfileRepository customerProfileRepository) {
         this.voucherRepository = voucherRepository;
+        this.voucherAssignmentRepository = voucherAssignmentRepository;
+        this.customerProfileRepository = customerProfileRepository;
     }
 
     @Override
@@ -51,7 +65,17 @@ public class AdminVoucherServiceImpl implements AdminVoucherService {
         form.setStartDateTime(voucher.getStartDateTime());
         form.setEndDateTime(voucher.getEndDateTime());
         form.setActive(voucher.isActive());
+
+        List<Long> assignedUserIds = voucherAssignmentRepository.findAssignedCustomerIdsByVoucherId(id);
+        form.setAudienceType(assignedUserIds.isEmpty() ? "SYSTEM" : "ACCOUNT");
+        form.setTargetUserIds(assignedUserIds);
         return form;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerProfile> getAssignableCustomers() {
+        return customerProfileRepository.findByUser_RoleAndUser_StatusOrderByFullNameAsc(Role.CUSTOMER, UserStatus.ACTIVE);
     }
 
     @Override
@@ -60,6 +84,7 @@ public class AdminVoucherServiceImpl implements AdminVoucherService {
         Voucher voucher = new Voucher();
         applyFormToEntity(form, voucher, null);
         saveVoucher(voucher, "Mã voucher đã tồn tại trong hệ thống.");
+        updateAssignments(voucher, form);
     }
 
     @Override
@@ -71,6 +96,7 @@ public class AdminVoucherServiceImpl implements AdminVoucherService {
             throw new BusinessException("Giới hạn sử dụng không được nhỏ hơn số lượt đã dùng.");
         }
         saveVoucher(voucher, "Mã voucher đã tồn tại trong hệ thống.");
+        updateAssignments(voucher, form);
     }
 
     @Override
@@ -81,6 +107,7 @@ public class AdminVoucherServiceImpl implements AdminVoucherService {
         voucher.setActive(false);
         voucher.setCode(buildDeletedCode(voucher));
         saveVoucher(voucher, "Không thể xóa voucher.");
+        voucherAssignmentRepository.deleteByVoucher_Id(voucher.getId());
     }
 
     @Override
@@ -89,6 +116,27 @@ public class AdminVoucherServiceImpl implements AdminVoucherService {
         Voucher voucher = getVoucherByIdForAdmin(id);
         voucher.setActive(active);
         saveVoucher(voucher, "Không thể cập nhật trạng thái voucher.");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isTargetedVoucher(Voucher voucher) {
+        return voucher != null
+                && voucher.getId() != null
+                && voucherAssignmentRepository.existsByVoucher_Id(voucher.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String buildAudienceLabel(Voucher voucher) {
+        if (voucher == null || voucher.getId() == null) {
+            return "Toàn hệ thống";
+        }
+        long targetCount = voucherAssignmentRepository.countByVoucher_Id(voucher.getId());
+        if (targetCount <= 0) {
+            return "Toàn hệ thống";
+        }
+        return targetCount == 1 ? "Riêng 1 tài khoản" : "Riêng " + targetCount + " tài khoản";
     }
 
     private void applyFormToEntity(VoucherForm form, Voucher voucher, Long currentId) {
@@ -102,6 +150,7 @@ public class AdminVoucherServiceImpl implements AdminVoucherService {
         validateDiscountRules(form.getDiscountType(), discountValue, maxDiscount);
         validateDateRange(form.getStartDateTime(), form.getEndDateTime());
         validateCodeUniqueness(normalizedCode, currentId);
+        normalizeTargetUserIds(form);
 
         voucher.setCode(normalizedCode);
         voucher.setDescription(normalizedDescription);
@@ -156,6 +205,65 @@ public class AdminVoucherServiceImpl implements AdminVoucherService {
         } catch (DataIntegrityViolationException ex) {
             throw new BusinessException(duplicateMessage);
         }
+    }
+
+    private void updateAssignments(Voucher voucher, VoucherForm form) {
+        voucherAssignmentRepository.deleteByVoucher_Id(voucher.getId());
+
+        List<Long> targetUserIds = normalizeTargetUserIds(form);
+        if (targetUserIds.isEmpty()) {
+            return;
+        }
+
+        List<CustomerProfile> selectedCustomers = customerProfileRepository.findAllById(targetUserIds);
+        if (selectedCustomers.size() != targetUserIds.size()) {
+            throw new BusinessException("Có tài khoản khách hàng không tồn tại hoặc đã bị xóa.");
+        }
+
+        for (CustomerProfile customer : selectedCustomers) {
+            if (customer.getUser() == null
+                    || customer.getUser().getRole() != Role.CUSTOMER
+                    || customer.getUser().getStatus() != UserStatus.ACTIVE) {
+                throw new BusinessException("Chỉ có thể gán voucher cho tài khoản khách hàng đang hoạt động.");
+            }
+        }
+
+        for (CustomerProfile customer : selectedCustomers) {
+            VoucherAssignment assignment = new VoucherAssignment();
+            assignment.setVoucher(voucher);
+            assignment.setCustomer(customer.getUser());
+            assignment.setAssignedAt(LocalDateTime.now());
+            voucherAssignmentRepository.save(assignment);
+        }
+    }
+
+    private List<Long> normalizeTargetUserIds(VoucherForm form) {
+        String audienceType = form.getAudienceType() == null
+                ? "SYSTEM"
+                : form.getAudienceType().trim().toUpperCase(Locale.ROOT);
+        if (!"ACCOUNT".equals(audienceType)) {
+            form.setAudienceType("SYSTEM");
+            form.setTargetUserIds(List.of());
+            return List.of();
+        }
+
+        Set<Long> normalizedIds = new LinkedHashSet<>();
+        if (form.getTargetUserIds() != null) {
+            for (Long userId : form.getTargetUserIds()) {
+                if (userId != null) {
+                    normalizedIds.add(userId);
+                }
+            }
+        }
+
+        if (normalizedIds.isEmpty()) {
+            throw new BusinessException("Vui lòng chọn ít nhất một tài khoản khách hàng cho voucher riêng.");
+        }
+
+        List<Long> normalizedList = List.copyOf(normalizedIds);
+        form.setAudienceType("ACCOUNT");
+        form.setTargetUserIds(normalizedList);
+        return normalizedList;
     }
 
     private String normalizeCode(String code) {

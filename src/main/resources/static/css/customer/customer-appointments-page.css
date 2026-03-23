@@ -2254,6 +2254,70 @@
     line-height: 1.5;
 }
 
+.cap-payment-voucher__list {
+    display: grid;
+    gap: 10px;
+}
+
+.cap-payment-voucher__item {
+    display: grid;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: #fff;
+}
+
+.cap-payment-voucher__item--active {
+    border-color: rgba(29, 78, 216, 0.5);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.08);
+}
+
+.cap-payment-voucher__item-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cap-payment-voucher__item-copy {
+    display: grid;
+    gap: 4px;
+}
+
+.cap-payment-voucher__item-code {
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.cap-payment-voucher__item-desc,
+.cap-payment-voucher__item-meta {
+    color: #64748b;
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+.cap-payment-voucher__item-cta {
+    flex: 0 0 auto;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: #0f172a;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cap-payment-voucher__item-cta--clear {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.cap-payment-voucher__empty {
+    color: #64748b;
+    font-size: 0.86rem;
+}
+
 .cap-payment-method {
     display: flex;
     align-items: center;

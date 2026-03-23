@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -29,9 +30,47 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
               AND v.startDateTime <= :now
               AND v.endDateTime >= :now
               AND (v.usageLimit IS NULL OR v.usedCount < v.usageLimit)
+              AND (
+                    NOT EXISTS (
+                        SELECT 1 FROM VoucherAssignment vaScope
+                        WHERE vaScope.voucher = v
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM VoucherAssignment vaUser
+                        WHERE vaUser.voucher = v
+                          AND vaUser.customer.id = :userId
+                    )
+              )
             ORDER BY v.endDateTime ASC, v.createdAt DESC
             """)
-    List<Voucher> findAllAvailableForCustomer(@Param("now") LocalDateTime now);
+    List<Voucher> findAllAvailableForCustomer(@Param("userId") Long userId,
+                                              @Param("now") LocalDateTime now);
+
+    @Query("""
+            SELECT v
+            FROM Voucher v
+            WHERE v.deleted = false
+              AND v.active = true
+              AND v.startDateTime <= :now
+              AND v.endDateTime >= :now
+              AND (v.usageLimit IS NULL OR v.usedCount < v.usageLimit)
+              AND (v.minOrderAmount IS NULL OR v.minOrderAmount <= :orderAmount)
+              AND (
+                    NOT EXISTS (
+                        SELECT 1 FROM VoucherAssignment vaScope
+                        WHERE vaScope.voucher = v
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM VoucherAssignment vaUser
+                        WHERE vaUser.voucher = v
+                          AND vaUser.customer.id = :userId
+                    )
+              )
+            ORDER BY v.endDateTime ASC, v.createdAt DESC
+            """)
+    List<Voucher> findAllApplicableForCustomer(@Param("userId") Long userId,
+                                               @Param("now") LocalDateTime now,
+                                               @Param("orderAmount") BigDecimal orderAmount);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT v FROM Voucher v WHERE v.id = :id AND v.deleted = false")

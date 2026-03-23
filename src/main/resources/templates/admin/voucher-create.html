@@ -25,11 +25,23 @@
         .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
         .error-text { color: var(--danger); font-size: 12px; margin-top: 6px; }
         .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+        .scope-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .scope-option { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: #f8fbff; }
+        .scope-option label { display: flex; gap: 10px; cursor: pointer; font-weight: 700; }
+        .scope-option small { display: block; margin-top: 8px; color: var(--muted); line-height: 1.5; }
+        .customer-picker { border: 1px solid var(--border); border-radius: 14px; background: #f8fbff; padding: 14px; }
+        .customer-picker[hidden] { display: none !important; }
+        .customer-search { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font: inherit; margin-bottom: 12px; }
+        .customer-list { max-height: 280px; overflow: auto; display: grid; gap: 8px; }
+        .customer-item { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+        .customer-item label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+        .customer-item strong { display: block; color: var(--text); }
+        .customer-item span { color: var(--muted); font-size: 12px; }
         .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
         .btn { display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 12px; padding: 10px 16px; text-decoration: none; font-weight: 700; cursor: pointer; }
         .btn-primary { background: var(--primary); color: #fff; }
         .btn-light { background: #EEF2FF; color: var(--primary); }
-        @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .form-grid, .scope-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -38,7 +50,7 @@
 <div class="main-content">
     <div class="page-header">
         <h1>Tạo voucher</h1>
-        <p>Khai báo mã khuyến mãi mới cho hệ thống quản trị.</p>
+        <p>Khai báo voucher toàn hệ thống hoặc voucher riêng cho từng tài khoản khách hàng.</p>
     </div>
 
     <div class="card">
@@ -68,6 +80,46 @@
                     <textarea class="textarea" id="description" th:field="*{description}" maxlength="500"
                               placeholder="Mô tả ngắn về mục đích hoặc điều kiện sử dụng voucher"></textarea>
                     <div class="error-text" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Lỗi mô tả</div>
+                </div>
+
+                <div class="field full">
+                    <span class="label">Phạm vi áp dụng</span>
+                    <div class="scope-grid">
+                        <div class="scope-option">
+                            <label>
+                                <input type="radio" th:field="*{audienceType}" value="SYSTEM">
+                                <span>Voucher toàn hệ thống</span>
+                            </label>
+                            <small>Mọi customer đủ điều kiện đều có thể thấy và sử dụng voucher này.</small>
+                        </div>
+                        <div class="scope-option">
+                            <label>
+                                <input type="radio" th:field="*{audienceType}" value="ACCOUNT">
+                                <span>Voucher riêng theo tài khoản</span>
+                            </label>
+                            <small>Chỉ các tài khoản được admin chọn bên dưới mới nhìn thấy và áp dụng được.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field full">
+                    <div class="customer-picker" id="target-user-panel" hidden>
+                        <label class="label" for="voucher-customer-search">Chọn tài khoản customer</label>
+                        <input class="customer-search" id="voucher-customer-search" type="search" placeholder="Tìm theo tên, email hoặc số điện thoại">
+                        <div class="customer-list" id="voucher-customer-list">
+                            <div class="customer-item" th:each="customer : ${assignableCustomers}"
+                                 th:attr="data-search=${#strings.toLowerCase((customer.fullName != null ? customer.fullName : '') + ' ' + (customer.user.email != null ? customer.user.email : '') + ' ' + (customer.phone != null ? customer.phone : ''))}">
+                                <label>
+                                    <input type="checkbox" th:field="*{targetUserIds}" th:value="${customer.user.id}">
+                                    <span>
+                                        <strong th:text="${customer.fullName}">Nguyen Van A</strong>
+                                        <span th:text="${customer.user.email + (#strings.isEmpty(customer.phone) ? '' : ' • ' + customer.phone)}">demo@example.com</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="hint">Voucher riêng sẽ chỉ hiện trong ví voucher và modal thanh toán của các tài khoản được chọn.</div>
+                    </div>
                 </div>
 
                 <div class="field">
@@ -128,5 +180,35 @@
         </form>
     </div>
 </div>
+<script>
+    (function () {
+        const audienceInputs = Array.from(document.querySelectorAll('input[name="audienceType"]'));
+        const targetPanel = document.getElementById('target-user-panel');
+        const searchInput = document.getElementById('voucher-customer-search');
+        const customerItems = Array.from(document.querySelectorAll('#voucher-customer-list .customer-item'));
+
+        function syncAudiencePanel() {
+            const selected = audienceInputs.find((input) => input.checked);
+            const showTargets = selected && selected.value === 'ACCOUNT';
+            if (targetPanel) {
+                targetPanel.hidden = !showTargets;
+            }
+        }
+
+        function filterCustomers() {
+            const keyword = (searchInput && searchInput.value ? searchInput.value : '').trim().toLowerCase();
+            customerItems.forEach((item) => {
+                const haystack = item.getAttribute('data-search') || '';
+                item.hidden = keyword.length > 0 && !haystack.includes(keyword);
+            });
+        }
+
+        audienceInputs.forEach((input) => input.addEventListener('change', syncAudiencePanel));
+        if (searchInput) {
+            searchInput.addEventListener('input', filterCustomers);
+        }
+        syncAudiencePanel();
+    })();
+</script>
 </body>
 </html>

@@ -97,6 +97,7 @@ public class CustomerAppointmentService {
     private final WalletService walletService;
     private final WalletTransactionRepository walletTransactionRepository;
     private final CustomerVoucherService customerVoucherService;
+    private final CustomerVoucherWalletService customerVoucherWalletService;
     private final EntityManager entityManager;
 
     public CustomerAppointmentService(CustomerProfileRepository customerProfileRepository,
@@ -112,6 +113,7 @@ public class CustomerAppointmentService {
                                       WalletService walletService,
                                       WalletTransactionRepository walletTransactionRepository,
                                       CustomerVoucherService customerVoucherService,
+                                      CustomerVoucherWalletService customerVoucherWalletService,
                                       EntityManager entityManager) {
         this.customerProfileRepository = customerProfileRepository;
         this.userRepository = userRepository;
@@ -126,6 +128,7 @@ public class CustomerAppointmentService {
         this.walletService = walletService;
         this.walletTransactionRepository = walletTransactionRepository;
         this.customerVoucherService = customerVoucherService;
+        this.customerVoucherWalletService = customerVoucherWalletService;
         this.entityManager = entityManager;
     }
 
@@ -320,11 +323,11 @@ public class CustomerAppointmentService {
                 invoice.setDiscountAmount(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                 invoice.setTotalAmount(baseAmount);
             }
-            return customerVoucherService.buildPreview(invoice, null);
+            return customerVoucherService.buildPreview(userId, invoice, null);
         }
 
         invoice.setOriginalAmount(baseAmount);
-        return customerVoucherService.buildPreview(invoice, voucherCode);
+        return customerVoucherService.buildPreview(userId, invoice, voucherCode);
     }
 
     @Transactional
@@ -351,9 +354,9 @@ public class CustomerAppointmentService {
             invoice.setVoucherUsageCounted(false);
             invoice.setDiscountAmount(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
             invoice.setTotalAmount(baseAmount);
-            preview = customerVoucherService.buildPreview(invoice, null);
+            preview = customerVoucherService.buildPreview(userId, invoice, null);
         } else {
-            preview = customerVoucherService.applyVoucherToInvoice(invoice, voucherCode);
+            preview = customerVoucherService.applyVoucherToInvoice(userId, invoice, voucherCode);
         }
         invoiceRepository.save(invoice);
         return preview;
@@ -1567,6 +1570,17 @@ public class CustomerAppointmentService {
                             && invoice.getStatus() != null
                             && "UNPAID".equals(invoice.getStatus().name())
             );
+            if (dto.isCanPayRemaining()
+                    && appointment.getCustomer() != null
+                    && appointment.getCustomer().getUser() != null
+                    && appointment.getCustomer().getUser().getId() != null) {
+                dto.setAvailableVouchers(
+                        customerVoucherWalletService.getApplicableVoucherOptions(
+                                appointment.getCustomer().getUser().getId(),
+                                dto.getOriginalRemainingAmount()
+                        )
+                );
+            }
         });
 
         if (appointment.getDentist() != null) {

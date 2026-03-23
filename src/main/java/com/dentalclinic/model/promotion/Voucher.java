@@ -1,9 +1,12 @@
 package com.dentalclinic.model.promotion;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -23,7 +26,8 @@ public class Voucher {
     @Column(nullable = false, length = 120)
     private String code;
 
-    @Column(length = 500)
+    @Nationalized
+    @Column(length = 500, columnDefinition = "nvarchar(500)")
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -62,6 +66,9 @@ public class Voucher {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "voucher", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<VoucherAssignment> assignments = new LinkedHashSet<>();
 
     @PrePersist
     public void prePersist() {
@@ -207,5 +214,13 @@ public class Voucher {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Set<VoucherAssignment> getAssignments() {
+        return assignments;
+    }
+
+    public void setAssignments(Set<VoucherAssignment> assignments) {
+        this.assignments = assignments;
     }
 }

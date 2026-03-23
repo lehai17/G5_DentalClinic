@@ -1,6 +1,8 @@
 package com.dentalclinic.repository;
 
 import com.dentalclinic.model.profile.CustomerProfile;
+import com.dentalclinic.model.user.Role;
+import com.dentalclinic.model.user.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +13,9 @@ import java.util.Optional;
 public interface CustomerProfileRepository
                 extends JpaRepository<CustomerProfile, Long> {
 
-        Optional<CustomerProfile> findByUser_Id(Long userId);
+	        Optional<CustomerProfile> findByUser_Id(Long userId);
+
+        java.util.List<CustomerProfile> findByUser_RoleAndUser_StatusOrderByFullNameAsc(Role role, UserStatus status);
 
         @Query("SELECT c FROM CustomerProfile c " +
                         "JOIN c.user u " +
