@@ -141,9 +141,8 @@
 
             <div class="busy-form-card">
                 <h2 style="margin-bottom: 10px;" th:text="${editingRequest != null ? 'Cập nhật đơn xin nghỉ' : 'Đăng ký nghỉ làm'}">Đăng ký nghỉ làm</h2>
-                <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Mỗi đơn đăng ký tối đa 2 ngày liên tiếp.</p>
 
-                <form th:action="${editingRequest != null} ? @{/dentist/busy-schedule/update/{id}(id=${editingRequest.id})} : @{/dentist/busy-schedule/submit}" method="post" id="absenceForm">
+                <form th:action="${editingRequest != null} ? @{/dentist/busy-schedule/update/{id}(id=${editingRequest.id})} : @{/dentist/busy-schedule/submit}" method="post" id="absenceForm" novalidate>
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Từ ngày</label>
@@ -273,6 +272,31 @@
             errorDiv.style.display = 'block';
         }
 
+        function isSunday(dateStr) {
+            if (!dateStr) {
+                return false;
+            }
+            return new Date(`${dateStr}T00:00:00`).getDay() === 0;
+        }
+
+        function rangeContainsSunday(startStr, endStr) {
+            if (!startStr || !endStr) {
+                return false;
+            }
+
+            let current = new Date(`${startStr}T00:00:00`);
+            const end = new Date(`${endStr}T00:00:00`);
+
+            while (current <= end) {
+                if (current.getDay() === 0) {
+                    return true;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            return false;
+        }
+
         function validate() {
             const startStr = startDateInput.value;
             const endStr = endDateInput.value;
@@ -311,15 +335,34 @@
                 return false;
             }
 
+            if (isSunday(startStr)) {
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                startDateInput.classList.add('input-error');
+                return false;
+            }
+
             if (endVal < startVal) {
                 showError('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.');
                 endDateInput.classList.add('input-error');
                 return false;
             }
 
+            if (isSunday(endStr)) {
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
             const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
-            if (dayDiff > 2) {
+            if (dayDiff > 1) {
                 showError('Thời gian nghỉ mỗi đơn không được vượt quá 2 ngày liên tiếp.');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
+            if (rangeContainsSunday(startStr, endStr)) {
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                startDateInput.classList.add('input-error');
                 endDateInput.classList.add('input-error');
                 return false;
             }
@@ -331,7 +374,7 @@
                 if (overlappingRange.status === 'APPROVED') {
                     showError('Khoảng thời gian này đã được duyệt nghỉ trước đó.');
                 } else {
-                    showError('Khoảng thời gian này đã tồn tại trong đơn xin nghỉ khác.');
+                    showError('Khoảng thời gian này đã có trong đơn xin nghỉ. Vui lòng chờ duyệt.');
                 }
                 startDateInput.classList.add('input-error');
                 endDateInput.classList.add('input-error');
@@ -353,18 +396,82 @@
             pendingDeleteForm = null;
         }
 
+        function clearValidationState() {
+            errorDiv.style.display = 'none';
+            startDateInput.classList.remove('input-error');
+            endDateInput.classList.remove('input-error');
+            reasonInput.classList.remove('input-error');
+        }
+
+        function validateDateRangeSelection() {
+            const startStr = startDateInput.value;
+            const endStr = endDateInput.value;
+
+            if (!startStr || !endStr) {
+                return true;
+            }
+
+            const startVal = new Date(startStr).setHours(0, 0, 0, 0);
+            const endVal = new Date(endStr).setHours(0, 0, 0, 0);
+            const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
+
+            if (dayDiff > 1) {
+                clearValidationState();
+                showError('Thời gian nghỉ mỗi đơn không được vượt quá 2 ngày liên tiếp.');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateOnInteraction() {
+            const hasStartDate = !!startDateInput.value;
+            const hasEndDate = !!endDateInput.value;
+            const hasReason = !!(reasonInput && reasonInput.value.trim());
+
+            if (!hasStartDate || !hasEndDate || !hasReason) {
+                clearValidationState();
+                return;
+            }
+
+            validate();
+        }
+
         startDateInput.addEventListener('change', function() {
+            if (isSunday(startDateInput.value)) {
+                startDateInput.value = '';
+                clearValidationState();
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                startDateInput.classList.add('input-error');
+                return;
+            }
             if (startDateInput.value) {
                 endDateInput.setAttribute('min', startDateInput.value);
                 if (endDateInput.value && endDateInput.value < startDateInput.value) {
                     endDateInput.value = startDateInput.value;
                 }
             }
-            validate();
+            if (!validateDateRangeSelection()) {
+                return;
+            }
+            validateOnInteraction();
         });
 
-        endDateInput.addEventListener('change', validate);
-        reasonInput.addEventListener('input', validate);
+        endDateInput.addEventListener('change', function() {
+            if (isSunday(endDateInput.value)) {
+                endDateInput.value = '';
+                clearValidationState();
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                endDateInput.classList.add('input-error');
+                return;
+            }
+            if (!validateDateRangeSelection()) {
+                return;
+            }
+            validateOnInteraction();
+        });
+        reasonInput.addEventListener('input', validateOnInteraction);
 
         form.addEventListener('submit', function(event) {
             if (!validate()) {
@@ -399,3 +506,7 @@
 </script>
 </body>
 </html>
+
+
+
+

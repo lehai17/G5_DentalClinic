@@ -9,7 +9,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -125,6 +127,12 @@ public class AdminBusyScheduleService {
         if (reason == null || reason.trim().isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập lý do xin nghỉ.");
         }
+        if (ChronoUnit.DAYS.between(start, end) > 1) {
+            throw new IllegalArgumentException("Thời gian nghỉ mỗi đơn không được vượt quá 2 ngày liên tiếp.");
+        }
+        if (containsSunday(start, end)) {
+            throw new IllegalArgumentException("Không thể đăng ký nghỉ vào ngày Chủ nhật.");
+        }
 
         LocalDate firstDayOfMonth = start.withDayOfMonth(1);
         LocalDate lastDayOfMonth = start.withDayOfMonth(start.lengthOfMonth());
@@ -132,8 +140,8 @@ public class AdminBusyScheduleService {
         long count = excludeRequestId == null
                 ? repository.countLeavesInMonth(dentistId, firstDayOfMonth, lastDayOfMonth)
                 : repository.countLeavesInMonthExcludingId(excludeRequestId, dentistId, firstDayOfMonth, lastDayOfMonth);
-        if (count >= 2) {
-            throw new RuntimeException("Bác sĩ đã dùng hết giới hạn nghỉ trong tháng " + start.getMonthValue() + " (tối đa 2 lần/tháng).");
+        if (count >= 3) {
+            throw new RuntimeException("Bác sĩ đã dùng hết giới hạn nghỉ trong tháng " + start.getMonthValue() + " (tối đa 3 lần/tháng).");
         }
 
         long overlappingApproved = excludeRequestId == null
@@ -147,7 +155,22 @@ public class AdminBusyScheduleService {
                 ? repository.countOverlappingRequestsByStatus(dentistId, start, end, "PENDING")
                 : repository.countOverlappingRequestsByStatusExcludingId(excludeRequestId, dentistId, start, end, "PENDING");
         if (overlappingPending > 0) {
-            throw new IllegalArgumentException("Khoảng thời gian này đã tồn tại trong đơn xin nghỉ khác.");
+            throw new IllegalArgumentException("Khoảng thời gian này đã có trong đơn xin nghỉ. Vui lòng chờ duyệt.");
         }
     }
+
+    private boolean containsSunday(LocalDate start, LocalDate end) {
+        if (start == null || end == null || end.isBefore(start)) {
+            return false;
+        }
+
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            if (date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
+
+
