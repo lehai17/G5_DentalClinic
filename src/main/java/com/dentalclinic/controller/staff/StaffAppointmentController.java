@@ -99,6 +99,7 @@ public class StaffAppointmentController {
         List<Appointment> appointments = appointmentPage.getContent();
 
         model.addAttribute("appointments", appointments);
+        model.addAttribute("serviceSummaries", staffAppointmentService.buildServiceSummaries(appointments));
         model.addAttribute("dentistLeaveFlags", staffAppointmentService.buildDentistLeaveFlags(appointments));
 
         model.addAttribute("currentPage", page);
