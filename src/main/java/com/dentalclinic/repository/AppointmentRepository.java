@@ -254,13 +254,19 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword);
 
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service", "customer", "dentist"})
     Page<Appointment> findByCustomer_FullNameContainingIgnoreCase(String keyword, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service", "customer", "dentist"})
     Page<Appointment> findByService_NameContainingIgnoreCase(String serviceKeyword, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service", "customer", "dentist"})
     Page<Appointment> findByCustomer_FullNameContainingIgnoreCaseAndService_NameContainingIgnoreCase(String customerKeyword,
                                                                                                      String serviceKeyword,
                                                                                                      Pageable pageable);
+
+    @EntityGraph(attributePaths = {"service", "appointmentDetails", "appointmentDetails.service", "customer", "dentist"})
+    Page<Appointment> findAllBy(Pageable pageable);
 
     @Query("""
             SELECT a FROM Appointment a

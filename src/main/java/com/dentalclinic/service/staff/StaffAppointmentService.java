@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class StaffAppointmentService {
@@ -168,7 +170,22 @@ public class StaffAppointmentService {
             return appointmentRepository.findByService_NameContainingIgnoreCase(serviceKeyword, pageable);
         }
 
-        return appointmentRepository.findAll(pageable);
+        return appointmentRepository.findAllBy(pageable);
+    }
+
+    public Map<Long, String> buildServiceSummaries(List<Appointment> appointments) {
+        Map<Long, String> summaries = new HashMap<>();
+        if (appointments == null) {
+            return summaries;
+        }
+
+        for (Appointment appointment : appointments) {
+            if (appointment == null || appointment.getId() == null) {
+                continue;
+            }
+            summaries.put(appointment.getId(), buildServiceSummary(appointment));
+        }
+        return summaries;
     }
 
     public void checkInAppointment(Long id) {
@@ -298,6 +315,30 @@ public class StaffAppointmentService {
         }
 
         return total.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String buildServiceSummary(Appointment appointment) {
+        if (appointment.getAppointmentDetails() != null && !appointment.getAppointmentDetails().isEmpty()) {
+            List<String> names = appointment.getAppointmentDetails().stream()
+                    .map(detail -> detail != null ? detail.getServiceNameSnapshot() : null)
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(name -> !name.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!names.isEmpty()) {
+                return String.join(", ", names);
+            }
+        }
+
+        if (appointment.getService() != null && appointment.getService().getName() != null) {
+            String serviceName = appointment.getService().getName().trim();
+            if (!serviceName.isEmpty()) {
+                return serviceName;
+            }
+        }
+
+        return "Chua co dich vu";
     }
 
 }

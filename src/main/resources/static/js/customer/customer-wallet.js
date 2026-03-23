@@ -1,5 +1,6 @@
 const WALLET_TOPUP_MIN = 10000;
 const WALLET_TOPUP_MAX = 100000000;
+const WALLET_TRANSACTIONS_PER_PAGE = 15;
 
 document.addEventListener("DOMContentLoaded", function () {
   bindTopupModal();
@@ -33,9 +34,11 @@ function loadWalletData() {
   const loading = document.getElementById("loading");
   const list = document.getElementById("transactions-list");
   const empty = document.getElementById("empty-state");
+  const pagination = document.getElementById("transactions-pagination");
 
   if (loading) loading.style.display = "";
   if (list) list.innerHTML = "";
+  if (pagination) pagination.innerHTML = "";
 
   fetch("/customer/wallet/api", { credentials: "same-origin" })
     .then((response) => {
@@ -58,12 +61,11 @@ function loadWalletData() {
 
       if (data.transactions && data.transactions.length > 0) {
         if (empty) empty.style.display = "none";
-        if (list) {
-          list.innerHTML = data.transactions.map((item) => createTransactionHTML(item)).join("");
-        }
+        renderTransactionsPage(data.transactions, 1);
       } else {
         if (empty) empty.style.display = "";
         if (list) list.innerHTML = "";
+        if (pagination) pagination.classList.add("wallet-pagination-hidden");
       }
     })
     .catch((error) => {
@@ -98,6 +100,68 @@ function createTransactionHTML(transaction) {
       </div>
     </div>
   `;
+}
+
+function renderTransactionsPage(transactions, page) {
+  const list = document.getElementById("transactions-list");
+  const pagination = document.getElementById("transactions-pagination");
+
+  if (!list) return;
+
+  const totalPages = Math.ceil(transactions.length / WALLET_TRANSACTIONS_PER_PAGE);
+  const safePage = Math.min(Math.max(page || 1, 1), Math.max(totalPages, 1));
+  const startIndex = (safePage - 1) * WALLET_TRANSACTIONS_PER_PAGE;
+  const pageItems = transactions.slice(startIndex, startIndex + WALLET_TRANSACTIONS_PER_PAGE);
+
+  list.innerHTML = pageItems.map((item) => createTransactionHTML(item)).join("");
+
+  if (!pagination) return;
+
+  if (totalPages <= 1) {
+    pagination.innerHTML = "";
+    pagination.classList.add("wallet-pagination-hidden");
+    return;
+  }
+
+  pagination.classList.remove("wallet-pagination-hidden");
+  pagination.innerHTML = createPaginationHTML(safePage, totalPages);
+
+  pagination.querySelectorAll("[data-page]").forEach((button) => {
+    button.addEventListener("click", function () {
+      const nextPage = Number(this.getAttribute("data-page"));
+      renderTransactionsPage(transactions, nextPage);
+    });
+  });
+}
+
+function createPaginationHTML(currentPage, totalPages) {
+  let buttons = "";
+
+  buttons += `
+    <button type="button" class="wallet-pagination-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? "disabled" : ""}>
+      Trước
+    </button>
+  `;
+
+  for (let page = 1; page <= totalPages; page += 1) {
+    buttons += `
+      <button
+        type="button"
+        class="wallet-pagination-btn ${page === currentPage ? "active" : ""}"
+        data-page="${page}"
+      >
+        ${page}
+      </button>
+    `;
+  }
+
+  buttons += `
+    <button type="button" class="wallet-pagination-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? "disabled" : ""}>
+      Sau
+    </button>
+  `;
+
+  return buttons;
 }
 
 function getTypeInfo(type) {

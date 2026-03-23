@@ -415,6 +415,47 @@
   margin-bottom: 2rem;
 }
 
+.wallet-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+
+.wallet-pagination-hidden {
+  display: none;
+}
+
+.wallet-pagination-btn {
+  min-width: 42px;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #dbe5f2;
+  background: #fff;
+  color: #334155;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wallet-pagination-btn:hover:not(:disabled) {
+  border-color: #7c9ef5;
+  background: #f8fbff;
+}
+
+.wallet-pagination-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.wallet-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .wallet-page-title {
   font-size: 1.875rem;
   font-weight: 700;
