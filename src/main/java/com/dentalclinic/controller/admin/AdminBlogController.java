@@ -8,13 +8,38 @@ import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.BlogWorkflowService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+
+import java.io.InputStream;
+import java.nio.file.*;
+import java.util.Set;
+import java.util.UUID;
 
 import java.io.IOException;
+
 
 @Controller
 @RequestMapping("/admin/blogs")
@@ -23,6 +48,7 @@ public class AdminBlogController {
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
     private final BlogWorkflowService workflowService;
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif");
 
     public AdminBlogController(BlogRepository blogRepository,
                                UserRepository userRepository,
@@ -89,7 +115,7 @@ public class AdminBlogController {
         blog.setTitle(title);
         blog.setSummary(summary);
         blog.setContent(content);
-        // KHÔNG set imageUrl => giữ nguyên áº£nh
+
 
         blogRepository.save(blog);
 
@@ -126,53 +152,66 @@ public class AdminBlogController {
         return "admin/blog/create";
     }
     @PostMapping("/create")
-    public String create(@RequestParam String title,
-                         @RequestParam String summary,
-                         @RequestParam String content,
-                         @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+    public String create(@ModelAttribute Blog form,
+                         @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
+                         @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
                          Authentication authentication) throws IOException {
 
         User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
 
-        Blog blog = new Blog();
-        blog.setTitle(title);
-        blog.setSummary(summary);
-        blog.setContent(content);
-        blog.setCreatedBy(admin);
-
-        // upload image (optional)
-        if (imageFile != null && !imageFile.isEmpty()) {
-            String ext = org.springframework.util.StringUtils
-                    .getFilenameExtension(imageFile.getOriginalFilename());
-            String fileName = java.util.UUID.randomUUID() + (ext != null ? "." + ext : "");
-
-            // âœ… Lưu v? o thư mục ngo� i: uploads/blog (tính theo thư mục chạy project)
-            java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads", "blog");
-            java.nio.file.Files.createDirectories(uploadDir); // âœ… đảm bảo folder tồn tại
-
-            java.nio.file.Path filePath = uploadDir.resolve(fileName);
-
-            // âœ… dùng NIO copy (ổn hơn transferTo á»Ÿ một số môi trường)
-            try (java.io.InputStream in = imageFile.getInputStream()) {
-                java.nio.file.Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            blog.setImageUrl("/uploads/blog/" + fileName);
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            form.setImageUrl(storeBlogImage(thumbnailFile));
+        } else {
+            form.setImageUrl(existingImageUrl);
         }
 
+        // Bước 1: tạo theo logic giống staff
+        Blog blog = workflowService.createAndApprove(form, admin);
 
-        // auto approved
-        blog.setStatus(BlogStatus.APPROVED);
-        blog.setApprovedBy(admin);
-        blog.setApprovedAt(java.time.LocalDateTime.now());
-        blog.setRejectionReason(null);
+        // Bước 2: admin auto duyệt luôn để hiện ngoài homepage
+        workflowService.approve(blog, admin);
 
-        blogRepository.save(blog);
-
+        // Nếu muốn admin quay về danh sách blog admin:
         return "redirect:/admin/blogs?status=APPROVED&created=true";
+
+
+        // return "redirect:/homepage";
     }
 
+    private String storeBlogImage(MultipartFile imageFile) throws IOException {
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
 
+        String ext = StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
+        ext = ext != null ? ext.toLowerCase() : "";
+
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only jpg, jpeg, png, webp, gif are allowed");
+        }
+
+        String fileName = UUID.randomUUID() + "." + ext;
+
+        Path uploadDir = Paths.get("uploads", "blog");
+        Files.createDirectories(uploadDir);
+
+        Path filePath = uploadDir.resolve(fileName);
+
+        try (InputStream in = imageFile.getInputStream()) {
+            Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        return "/uploads/blog/" + fileName;
+    }
+
+    @PostMapping(value = "/upload-inline-image", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> uploadInlineImage(@RequestParam("upload") MultipartFile file) throws IOException {
+        String url = storeBlogImage(file);
+        Map<String, Object> response = new HashMap<>();
+        response.put("url", url);
+        return response;
+    }
 
 }
 

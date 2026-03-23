@@ -3,23 +3,195 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Tạo bài viết - Quản trị</title>
+    <title th:text="${blog.id == null} ? 'Tạo bài viết - Quản trị' : 'Chỉnh sửa bài viết - Quản trị'">Tạo bài viết - Quản trị</title>
 
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        :root { --bg:#F4F7FE; --card:#fff; --text:#1B2559; --muted:#707EAE; --border:#E6ECF5; }
-        body { margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); display:flex; }
-        .main-content { flex:1; padding:20px; }
-        .card { background:var(--card); border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,.05); padding:18px; }
-        .label { font-size:12px; color:var(--muted); margin: 10px 0 6px; }
-        .input, textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:12px; outline:none; }
-        textarea { resize: vertical; min-height: 160px; white-space: pre-wrap; }
-        .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top: 12px; }
-        .btn { border:none; border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:700; text-decoration:none; display:inline-block; }
-        .btn-primary { background:#1A237E; color:#fff; }
-        .btn-light { background:#EEF2FF; color:#1A237E; }
+        :root {
+            --bg: #F4F7FE;
+            --card: #FFFFFF;
+            --text: #1B2559;
+            --muted: #707EAE;
+            --border: #E6ECF5;
+            --primary: #1A237E;
+            --primary-light: #EEF2FF;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background: var(--bg);
+            display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .page-header {
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .05);
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .page-title {
+            margin: 0;
+            color: var(--text);
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .form-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .05);
+            padding: 18px;
+        }
+
+        .label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin: 10px 0 6px;
+        }
+
+        .required {
+            color: var(--danger);
+        }
+
+        .input,
+        textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            outline: none;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        .input:focus,
+        textarea:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 140px;
+        }
+
+        .thumbnail-box {
+            border: 1px dashed #CBD5E1;
+            border-radius: 12px;
+            padding: 14px;
+            background: #F8FAFC;
+        }
+
+        .thumbnail-note,
+        .hint,
+        .small-note,
+        .editor-note {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .thumbnail-preview {
+            margin-top: 12px;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #F8FAFC;
+            max-height: 320px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumbnail-preview.hidden {
+            display: none;
+        }
+
+        .actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform .05s ease, opacity .2s ease;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-light {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .publish-note {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #ECFDF5;
+            border: 1px solid #BBF7D0;
+            color: #166534;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .ck-editor__editable_inline {
+            min-height: 420px;
+        }
+
+        @media (max-width: 992px) {
+            .form-layout {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -27,47 +199,202 @@
 <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
 <div class="main-content">
-    <div class="card" style="margin-bottom:14px;">
-        <h2 style="margin:0; color:var(--text);">Tạo bài viết</h2>
+    <div class="page-header">
+        <h2 class="page-title"
+            th:text="${blog.id == null} ? 'Tạo bài viết sức khỏe' : 'Chỉnh sửa bài viết sức khỏe'">
+            Tạo bài viết sức khỏe
+        </h2>
+        <div class="page-subtitle">
+            Form này dùng cùng cấu trúc nhập liệu như staff, nhưng bài viết của admin sẽ được xuất bản ngay,
+            không cần qua bước gửi duyệt.
+        </div>
     </div>
 
-    <div class="card">
-        <form th:action="@{/admin/blogs/create}" method="post" enctype="multipart/form-data">
-            <div class="label">Tiêu đề</div>
-            <input class="input" type="text" name="title" required>
+    <form th:action="@{/admin/blogs/create}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="id" th:if="${blog.id != null}" th:value="${blog.id}"/>
+        <input type="hidden" name="existingImageUrl" th:value="${blog.imageUrl}"/>
 
-            <div class="label">Tóm tắt</div>
-            <textarea class="input" name="summary" rows="4" required></textarea>
+        <div class="form-layout">
+            <div class="card">
+                <div class="label">Ảnh thumbnail / ảnh đầu bài</div>
 
-            <div class="label">Ảnh bài viết</div>
-            <input class="input" type="file" name="imageFile" accept="image/*" id="imageFile">
+                <div class="thumbnail-box">
+                    <input id="thumbnailFile" class="input" type="file" name="thumbnailFile" accept="image/*">
 
-            <img id="preview" style="margin-top:10px; max-width:320px; display:none; border-radius:12px; border:1px solid #E6ECF5;">
-            <script>
-                const input = document.getElementById('imageFile');
-                const preview = document.getElementById('preview');
-                if (input) {
-                    input.addEventListener('change', (e) => {
-                        const file = e.target.files && e.target.files[0];
-                        if (!file) { preview.style.display='none'; return; }
-                        preview.src = URL.createObjectURL(file);
-                        preview.style.display = 'block';
-                    });
-                }
-            </script>
+                    <div class="small-note" style="margin-top:10px;">
+                        Ảnh này sẽ hiển thị ở trang danh sách bài viết và phần đầu của bài viết chi tiết.
+                    </div>
 
-            <div class="label">Nội dung</div>
-            <textarea class="input" name="content" rows="10" required></textarea>
+                    <img id="thumbnailPreviewOld"
+                         class="thumbnail-preview"
+                         th:if="${blog.imageUrl != null and !#strings.isEmpty(blog.imageUrl)}"
+                         th:src="${blog.imageUrl}"
+                         alt="Ảnh hiện tại"/>
 
-            <div class="btn-row">
-                <a class="btn btn-light" th:href="@{/admin/blogs(status='APPROVED')}">Hủy</a>
-                <button class="btn btn-primary" type="submit">
-                    <i class="fa-solid fa-floppy-disk"></i> Tạo bài viết
-                </button>
+                    <img id="thumbnailPreviewNew"
+                         class="thumbnail-preview hidden"
+                         alt="Ảnh xem trước"/>
+
+                    <div class="hint" style="margin-top:10px;">
+                        Hỗ trợ định dạng: JPG, JPEG, PNG, WEBP, GIF.
+                    </div>
+                </div>
             </div>
-        </form>
-    </div>
+
+            <div class="card">
+                <div class="label">Tiêu đề <span class="required">*</span></div>
+                <input id="title" class="input" type="text" name="title"
+                       th:value="${blog.title}" required maxlength="255"
+                       placeholder="Nhập tiêu đề bài viết">
+
+                <div class="label">Tóm tắt <span class="required">*</span></div>
+                <textarea id="summary" class="input" name="summary" rows="4" required maxlength="1000"
+                          placeholder="Nhập tóm tắt ngắn gọn cho bài viết"
+                          th:text="${blog.summary}"></textarea>
+
+                <div class="label">Nội dung bài viết <span class="required">*</span></div>
+                <textarea id="content" name="content" th:text="${blog.content}"></textarea>
+                <div class="editor-note" style="margin-top:8px;">
+                    Bạn có thể bấm nút chèn ảnh trong editor để đưa ảnh vào giữa các đoạn như bài báo.
+                </div>
+
+                <div class="publish-note">
+                    <strong>Lưu ý:</strong> khác với staff, bài viết do admin tạo sẽ được đăng ngay sau khi bấm
+                    <strong>“Tạo và xuất bản”</strong>, không cần chuyển sang trạng thái chờ duyệt.
+                </div>
+
+                <div class="actions">
+                    <a class="btn btn-light" th:href="@{/admin/blogs(status='APPROVED')}">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Hủy
+                    </a>
+
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Tạo và xuất bản
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
+
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script>
+    const thumbnailInput = document.getElementById('thumbnailFile');
+    const thumbnailPreviewNew = document.getElementById('thumbnailPreviewNew');
+
+    if (thumbnailInput) {
+        thumbnailInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+
+            if (!file) {
+                thumbnailPreviewNew.classList.add('hidden');
+                thumbnailPreviewNew.removeAttribute('src');
+                return;
+            }
+
+            thumbnailPreviewNew.src = URL.createObjectURL(file);
+            thumbnailPreviewNew.classList.remove('hidden');
+        });
+    }
+
+    let blogEditor;
+
+    function BlogUploadAdapter(loader) {
+        this.loader = loader;
+    }
+
+    BlogUploadAdapter.prototype.upload = function () {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+            const data = new FormData();
+            data.append('upload', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/admin/blogs/upload-inline-image', true);
+
+            const csrfInput = document.querySelector('input[name="_csrf"]');
+            if (csrfInput) {
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrfInput.value);
+            }
+
+            xhr.responseType = 'json';
+
+            xhr.addEventListener('error', () => reject('Không thể upload ảnh.'));
+            xhr.addEventListener('abort', () => reject('Upload ảnh đã bị huỷ.'));
+            xhr.addEventListener('load', () => {
+                const response = xhr.response;
+
+                if (!response || xhr.status >= 400) {
+                    reject((response && response.message) || 'Upload ảnh thất bại.');
+                    return;
+                }
+
+                resolve({ default: response.url });
+            });
+
+            xhr.send(data);
+        }));
+    };
+
+    BlogUploadAdapter.prototype.abort = function () {};
+
+    function BlogUploadAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return new BlogUploadAdapter(loader);
+        };
+    }
+
+    ClassicEditor
+        .create(document.querySelector('#content'), {
+            extraPlugins: [BlogUploadAdapterPlugin],
+            toolbar: [
+                'heading',
+                '|',
+                'bold', 'italic', 'link',
+                '|',
+                'bulletedList', 'numberedList',
+                '|',
+                'insertTable', 'blockQuote', 'imageUpload',
+                '|',
+                'undo', 'redo'
+            ]
+        })
+        .then(editor => {
+            blogEditor = editor;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const title = document.getElementById('title').value.trim();
+        const summary = document.getElementById('summary').value.trim();
+        const content = blogEditor ? blogEditor.getData().trim() : '';
+
+        if (blogEditor) {
+            document.getElementById('content').value = content;
+        }
+
+        if (!title) {
+            e.preventDefault();
+            alert('Vui lòng nhập tiêu đề.');
+            return;
+        }
+
+        if (!summary) {
+            e.preventDefault();
+            alert('Vui lòng nhập tóm tắt.');
+            return;
+        }
+
+        if (!content) {
+            e.preventDefault();
+            alert('Vui lòng nhập nội dung bài viết.');
+        }
+    });
+</script>
 
 </body>
 </html>
