@@ -1,7 +1,7 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
   <head>
-    <title>Lich hen nhan vien</title>
+    <title>Lịch hẹn nhân viên</title>
     <link rel="stylesheet" href="/css/staff/staff.css" />
     <script src="/js/staff/staff.js" defer></script>
   </head>
@@ -13,43 +13,43 @@
         <div th:replace="staff/fragments/header :: header"></div>
 
         <div class="content">
-          <h2>Quan ly lich hen</h2>
+          <h2>Quản lý lịch hẹn</h2>
 
           <form method="get" th:action="@{/staff/appointments}" class="filter-form">
             <input
               type="text"
               name="keyword"
-              placeholder="Tim theo ten khach hang..."
+              placeholder="Tìm theo tên khách hàng..."
               th:value="${keyword}"
             />
 
             <input
               type="text"
               name="serviceKeyword"
-              placeholder="Tim theo dich vu..."
+              placeholder="Tìm theo dịch vụ..."
               th:value="${serviceKeyword}"
             />
 
             <select name="sort">
-              <option value="">-- Sap xep theo ngay --</option>
-              <option value="newest" th:selected="${sort == 'newest'}">Moi nhat</option>
-              <option value="oldest" th:selected="${sort == 'oldest'}">Cu nhat</option>
+              <option value="">-- Sắp xếp theo ngày --</option>
+              <option value="newest" th:selected="${sort == 'newest'}">Mới nhất</option>
+              <option value="oldest" th:selected="${sort == 'oldest'}">Cũ nhất</option>
             </select>
 
-            <button type="submit">Loc</button>
+            <button type="submit">Lọc</button>
           </form>
 
           <table>
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Khach hang</th>
-                <th>Ngay</th>
-                <th>Gio</th>
-                <th>Dich vu</th>
-                <th>Bac si</th>
-                <th>Status</th>
-                <th>Thao tac</th>
+                <th>Khách hàng</th>
+                <th>Ngày</th>
+                <th>Giờ</th>
+                <th>Dịch vụ</th>
+                <th>Nha sĩ</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
 
@@ -60,7 +60,7 @@
                 <td th:text="${a.date}"></td>
                 <td th:text="${a.startTime}"></td>
                 <td th:text="${a.service.name}"></td>
-                <td th:text="${a.dentist != null ? a.dentist.fullName : 'Chua phan cong'}"></td>
+                <td th:text="${a.dentist != null ? a.dentist.fullName : 'Chưa phân công'}"></td>
                 <td th:text="${a.status}"></td>
 
                 <td>
@@ -70,7 +70,7 @@
                     th:if="${a.status.name() == 'PENDING' and a.dentist == null}"
                     th:onclick="'assignDentist(' + ${a.id} + ')'"
                   >
-                    Gan BS
+                    Gán BS
                   </button>
 
                   <button
@@ -79,7 +79,7 @@
                     th:if="${a.status.name() == 'PENDING' and a.dentist != null}"
                     th:onclick="'confirmAppointment(' + ${a.id} + ')'"
                   >
-                    Xac nhan
+                    Xác nhận
                   </button>
 
                   <button
@@ -88,7 +88,7 @@
                     th:if="${(a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED') and a.dentist != null and dentistLeaveFlags[a.id]}"
                     th:onclick="'changeDentist(' + ${a.id} + ')'"
                   >
-                    Change dentist
+                    Đổi nha sĩ
                   </button>
 
                   <button
@@ -115,7 +115,7 @@
                     th:if="${a.status.name() == 'DONE'}"
                     th:onclick="'goToPayment(' + ${a.id} + ')'"
                   >
-                    Thanh toan
+                    Thanh toán
                   </button>
 
                   <a
@@ -123,7 +123,7 @@
                     th:if="${a.status.name() == 'COMPLETED'}"
                     th:href="@{/staff/appointments/{id}/result(id=${a.id})}"
                   >
-                    Result
+                    Kết quả
                   </a>
                 </td>
               </tr>
@@ -135,7 +135,7 @@
               th:if="${currentPage > 0}"
               th:href="@{/staff/appointments(page=${currentPage - 1}, keyword=${keyword}, serviceKeyword=${serviceKeyword}, sort=${sort})}"
             >
-              Truoc
+              Trước
             </a>
 
             <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">

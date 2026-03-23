@@ -33,7 +33,7 @@ public class AIBookingController {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+                    .body(Map.of("error", "Chưa đăng nhập."));
         }
 
         AIBookingSuggestionResponse response = aiBookingService.suggest(userId, request);

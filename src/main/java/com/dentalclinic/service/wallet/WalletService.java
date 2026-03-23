@@ -30,6 +30,7 @@ import java.util.Optional;
 
 @Service
 public class WalletService {
+    public static final BigDecimal WALLET_TOPUP_CREDIT_RATE = new BigDecimal("0.95");
     private static final String[] FIRST_NAMES = {
             "Nguyen", "Tran", "Le", "Pham", "Hoang", "Vo", "Dang", "Bui", "Do", "Ngo"
     };
@@ -108,6 +109,13 @@ public class WalletService {
                 .appointmentId(appointmentId)
                 .build();
         walletTransactionRepository.save(transaction);
+    }
+
+    public BigDecimal calculateTopupCreditedAmount(BigDecimal paidAmount ) {
+        if (paidAmount == null || paidAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("So tien nap phai lon hon 0");
+        }
+        return paidAmount.multiply(WALLET_TOPUP_CREDIT_RATE);
     }
 
     @Transactional

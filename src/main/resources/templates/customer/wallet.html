@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -17,7 +17,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" th:href="@{/css/customer/customer-wallet.css}" />
-
   </head>
   <body>
     <div class="app-wrapper">
@@ -33,56 +32,19 @@
             th:attr="data-status-type=${walletStatusType},data-status-title=${walletStatusTitle},data-status-message=${walletStatusMessage}"
           ></div>
 
-          <!-- Header -->
           <div class="wallet-page-header">
-            <h1 class="wallet-page-title">
-              Ví Của Tôi
-            </h1>
-            <p class="wallet-page-subtitle">
-              Quản lý số dư và lịch sử giao dịch ví
-            </p>
+            <h1 class="wallet-page-title">Ví Của Tôi</h1>
+            <p class="wallet-page-subtitle">Quản lý số dư và lịch sử giao dịch ví</p>
           </div>
 
-          <!-- Wallet Card -->
           <div class="wallet-card">
             <div class="wallet-balance">Số dư hiện tại</div>
             <div class="wallet-amount" id="wallet-balance">0 VND</div>
             <a href="#" class="wallet-action" id="wallet-open-topup">
               <i class="bi bi-plus-circle"></i> Nạp tiền
             </a>
-            <a href="#" class="wallet-action" id="wallet-open-withdraw">
-              <i class="bi bi-cash-stack"></i> Rút tiền
-            </a>
           </div>
 
-          <div
-            id="wallet-demo-account-card"
-            class="wallet-demo-account-card wallet-demo-account-card-hidden"
-          >
-            <h2 class="wallet-section-title">
-              <i class="bi bi-bank"></i> Tài khoản demo cá nhân
-            </h2>
-            <div class="wallet-withdraw-summary">
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Ngân hàng</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-bank">--</span>
-              </div>
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Số tài khoản</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-account">--</span>
-              </div>
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Chủ tài khoản</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-holder">--</span>
-              </div>
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Số dư tài khoản demo</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-demo-card-balance">0 VND</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Transactions List -->
           <div class="wallet-transactions-card">
             <h2 class="wallet-section-title wallet-section-title-spaced">
               <i class="bi bi-clock-history"></i> Lịch sử giao dịch
@@ -98,12 +60,8 @@
             </div>
 
             <div id="loading" class="wallet-loading">
-              <i
-                class="bi bi-hourglass-split wallet-loading-icon"
-              ></i>
-              <p class="wallet-loading-text">
-                Đang tải dữ liệu...
-              </p>
+              <i class="bi bi-hourglass-split wallet-loading-icon"></i>
+              <p class="wallet-loading-text">Đang tải dữ liệu...</p>
             </div>
           </div>
         </section>
@@ -127,18 +85,14 @@
         >
           <i class="bi bi-x-lg"></i>
         </button>
-        <h3 id="wallet-topup-title" class="wallet-modal-title">
-          Nạp tiền vào ví
-        </h3>
+        <h3 id="wallet-topup-title" class="wallet-modal-title">Nạp tiền vào ví</h3>
         <p class="wallet-modal-subtitle">
           Chọn số tiền bạn muốn nạp. Hệ thống sẽ chuyển sang VNPay để hoàn tất
-          giao dịch.
+          giao dịch. Phí nạp qua VNPay là 5%, ví sẽ nhận 95% số tiền thanh toán.
         </p>
 
         <div class="wallet-input-group">
-          <label class="wallet-input-label" for="wallet-topup-amount"
-            >Số tiền nạp</label
-          >
+          <label class="wallet-input-label" for="wallet-topup-amount">Số tiền nạp</label>
           <input
             id="wallet-topup-amount"
             class="wallet-amount-input"
@@ -147,50 +101,17 @@
             placeholder="Ví dụ: 1.000.000"
           />
           <div class="wallet-amount-presets">
-            <button
-              type="button"
-              class="wallet-preset-btn"
-              data-amount="100000"
-            >
-              100.000
-            </button>
-            <button
-              type="button"
-              class="wallet-preset-btn"
-              data-amount="200000"
-            >
-              200.000
-            </button>
-            <button
-              type="button"
-              class="wallet-preset-btn"
-              data-amount="500000"
-            >
-              500.000
-            </button>
-            <button
-              type="button"
-              class="wallet-preset-btn"
-              data-amount="1000000"
-            >
-              1.000.000
-            </button>
-            <button
-              type="button"
-              class="wallet-preset-btn"
-              data-amount="2000000"
-            >
-              2.000.000
-            </button>
-            <button
-              type="button"
-              class="wallet-preset-btn"
-              data-amount="5000000"
-            >
-              5.000.000
-            </button>
+            <button type="button" class="wallet-preset-btn" data-amount="100000">100.000</button>
+            <button type="button" class="wallet-preset-btn" data-amount="200000">200.000</button>
+            <button type="button" class="wallet-preset-btn" data-amount="500000">500.000</button>
+            <button type="button" class="wallet-preset-btn" data-amount="1000000">1.000.000</button>
+            <button type="button" class="wallet-preset-btn" data-amount="2000000">2.000.000</button>
+            <button type="button" class="wallet-preset-btn" data-amount="5000000">5.000.000</button>
           </div>
           <div class="wallet-helper">Số tiền nạp từ 10.000 VND đến tối đa 100.000.000 VND mỗi lần.</div>
+          <div class="wallet-helper" id="wallet-topup-credit-preview">
+            Ví sẽ nhận: 0 VND sau khi trừ phí 5%.
+          </div>
         </div>
 
         <button
@@ -203,312 +124,7 @@
       </div>
     </div>
 
-    <div class="wallet-modal" id="wallet-withdraw-modal" hidden>
-      <div class="wallet-modal-backdrop" data-wallet-withdraw-close></div>
-      <div
-        class="wallet-modal-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="wallet-withdraw-title"
-      >
-        <button
-          type="button"
-          class="wallet-modal-close"
-          id="wallet-withdraw-close"
-        >
-          <i class="bi bi-x-lg"></i>
-        </button>
-        <h3 id="wallet-withdraw-title" class="wallet-modal-title">Rút tiền</h3>
-        <p class="wallet-modal-subtitle">
-          Đây là luồng demo transfer: hệ thống trừ ví của bạn và cộng vào tài
-          khoản nhận demo đã nhập bên dưới.
-        </p>
-
-        <div class="wallet-withdraw-mode-grid">
-          <button
-            type="button"
-            class="wallet-withdraw-mode active"
-            id="wallet-withdraw-mode-manual"
-          >
-            <h4>Nhập tài khoản khác</h4>
-            <p>Nhập ngân hàng và số tài khoản nhận tiền cho lần rút hiện tại.</p>
-          </button>
-          <button
-            type="button"
-            class="wallet-withdraw-mode"
-            id="wallet-withdraw-mode-personal"
-          >
-            <h4>Tài khoản cá nhân</h4>
-            <p>Lưu lại tài khoản để các lần rút sau dùng nhanh và có thể chỉnh sửa.</p>
-          </button>
-        </div>
-
-        <div class="wallet-input-group">
-          <label class="wallet-input-label" for="wallet-withdraw-amount"
-            >Số tiền rút</label
-          >
-          <input
-            id="wallet-withdraw-amount"
-            class="wallet-amount-input"
-            type="text"
-            inputmode="numeric"
-            placeholder="Ví dụ: 10.000"
-          />
-        </div>
-
-        <div id="wallet-withdraw-manual-panel" class="wallet-withdraw-panel">
-          <div class="wallet-input-group wallet-input-group-first">
-            <label class="wallet-input-label" for="wallet-withdraw-bank-search"
-              >Ngân hàng nhận tiền</label
-            >
-            <input
-              id="wallet-withdraw-bank-search"
-              class="wallet-bank-search"
-              type="text"
-              placeholder="Tìm ngân hàng"
-            />
-            <div id="wallet-withdraw-bank-list" class="wallet-bank-list"></div>
-          </div>
-
-          <div class="wallet-input-group">
-            <label class="wallet-input-label" for="wallet-withdraw-account-no"
-              >Số tài khoản</label
-            >
-            <input
-              id="wallet-withdraw-account-no"
-              class="wallet-amount-input"
-              type="text"
-              inputmode="numeric"
-              maxlength="10"
-              placeholder="Nhập 10 chữ số"
-            />
-            <div class="wallet-helper">
-              Hệ thống sẽ tự tra cứu chủ tài khoản mock khi bạn nhập đủ 10 chữ số.
-            </div>
-          </div>
-
-          <div class="wallet-input-group">
-            <label class="wallet-input-label" for="wallet-withdraw-account-holder"
-              >Chủ tài khoản</label
-            >
-            <input
-              id="wallet-withdraw-account-holder"
-              class="wallet-amount-input wallet-input-readonly"
-              type="text"
-              placeholder="Tự động điền sau khi tra cứu"
-              readonly
-            />
-          </div>
-
-          <div class="wallet-helper" id="wallet-withdraw-demo-balance">
-            Số dư tài khoản demo hiện tại: 0 VND
-          </div>
-        </div>
-
-        <div id="wallet-withdraw-personal-panel" class="wallet-withdraw-panel" hidden>
-          <div id="wallet-personal-saved-view" hidden>
-            <div class="wallet-withdraw-summary">
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Ngân hàng</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-personal-bank-value">--</span>
-              </div>
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Số tài khoản</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-personal-account-value">--</span>
-              </div>
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Chủ tài khoản</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-personal-holder-value">--</span>
-              </div>
-              <div class="wallet-withdraw-summary-row">
-                <span class="wallet-withdraw-summary-label">Số dư tài khoản demo</span>
-                <span class="wallet-withdraw-summary-value" id="wallet-personal-balance-value">0 VND</span>
-              </div>
-            </div>
-            <div class="wallet-inline-actions">
-              <button type="button" class="wallet-inline-btn" id="wallet-personal-edit-btn">
-                Chỉnh sửa
-              </button>
-            </div>
-          </div>
-
-          <div id="wallet-personal-form-view">
-            <div class="wallet-input-group wallet-input-group-first">
-              <label class="wallet-input-label" for="wallet-personal-bank-search"
-                >Ngân hàng cá nhân</label
-              >
-              <input
-                id="wallet-personal-bank-search"
-                class="wallet-bank-search"
-                type="text"
-                placeholder="Tìm ngân hàng"
-              />
-              <div id="wallet-personal-bank-list" class="wallet-bank-list"></div>
-            </div>
-
-            <div class="wallet-input-group">
-              <label class="wallet-input-label" for="wallet-personal-account-no"
-                >Số tài khoản cá nhân</label
-              >
-              <input
-                id="wallet-personal-account-no"
-                class="wallet-amount-input"
-                type="text"
-                inputmode="numeric"
-                maxlength="10"
-                placeholder="Nhập 10 chữ số"
-              />
-            </div>
-
-            <div class="wallet-input-group">
-              <label class="wallet-input-label" for="wallet-personal-account-holder"
-                >Chủ tài khoản</label
-              >
-              <input
-                id="wallet-personal-account-holder"
-                class="wallet-amount-input wallet-input-readonly"
-                type="text"
-                placeholder="Tự động điền sau khi tra cứu"
-                readonly
-              />
-              <div class="wallet-helper">Lần đầu bạn nhập xong, hệ thống sẽ lưu lại cho các lần rút sau.</div>
-            </div>
-
-            <div class="wallet-helper" id="wallet-personal-demo-balance">
-              Số dư tài khoản demo hiện tại: 0 VND
-            </div>
-
-            <div class="wallet-inline-actions">
-              <button type="button" class="wallet-inline-btn" id="wallet-personal-save-btn">
-                Lưu tài khoản cá nhân
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="wallet-helper">Số tiền rút tối thiểu là 10.000 VND.</div>
-        <div class="wallet-security-box">
-          <div class="wallet-security-line">
-            Mỗi ngày bạn chỉ được rút tối đa <strong>10.000.000 VND</strong>.
-          </div>
-          <div class="wallet-security-line">
-            Giao dịch rút trên <strong>1.000.000 VND</strong> sẽ yêu cầu nhập PIN ví 6 số.
-          </div>
-          <div class="wallet-security-line" id="wallet-daily-limit-info">
-            Hạn mức còn lại hôm nay: <strong>10.000.000 VND</strong>
-          </div>
-          <div class="wallet-security-line" id="wallet-lock-info" hidden>
-            Chức năng ví đang bị khóa tạm thời.
-          </div>
-        </div>
-
-        <button
-          type="button"
-          class="wallet-modal-submit"
-          id="wallet-withdraw-submit"
-        >
-          Xác nhận rút tiền
-        </button>
-      </div>
-    </div>
-
-    <div class="wallet-modal" id="wallet-pin-modal" hidden>
-      <div class="wallet-modal-backdrop" data-wallet-pin-close></div>
-      <div
-        class="wallet-modal-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="wallet-pin-title"
-      >
-        <button
-          type="button"
-          class="wallet-modal-close"
-          id="wallet-pin-close"
-        >
-          <i class="bi bi-x-lg"></i>
-        </button>
-        <h3 id="wallet-pin-title" class="wallet-modal-title">Bảo mật ví</h3>
-        <p class="wallet-modal-subtitle" id="wallet-pin-subtitle">
-          Xác nhận PIN để tiếp tục giao dịch rút tiền.
-        </p>
-
-        <div class="wallet-input-group" id="wallet-pin-otp-group" hidden>
-          <label class="wallet-input-label" for="wallet-pin-otp">Mã OTP Email</label>
-          <input
-            id="wallet-pin-otp"
-            class="wallet-amount-input"
-            type="text"
-            inputmode="numeric"
-            maxlength="6"
-            placeholder="Nhập 6 chữ số OTP"
-          />
-          <div class="wallet-helper">OTP sẽ được gửi về email của bạn sau khi bấm "Forgot PIN?".</div>
-        </div>
-
-        <div class="wallet-input-group">
-          <label class="wallet-input-label" for="wallet-pin-code">PIN ví</label>
-          <div class="wallet-pin-field">
-            <input
-              id="wallet-pin-code"
-              class="wallet-pin-hidden-input"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              autocomplete="one-time-code"
-              autocapitalize="off"
-              spellcheck="false"
-            />
-            <div class="wallet-pin-dots" id="wallet-pin-code-dots">
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="wallet-input-group" id="wallet-pin-confirm-group" hidden>
-          <label class="wallet-input-label" for="wallet-pin-confirm">Xác nhận lại PIN ví</label>
-          <div class="wallet-pin-field">
-            <input
-              id="wallet-pin-confirm"
-              class="wallet-pin-hidden-input"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              autocomplete="one-time-code"
-              autocapitalize="off"
-              spellcheck="false"
-            />
-            <div class="wallet-pin-dots" id="wallet-pin-confirm-dots">
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-              <span class="wallet-pin-dot"></span>
-            </div>
-          </div>
-        </div>
-
-        <button type="button" class="wallet-link-btn" id="wallet-pin-forgot-btn">
-          Đặt lại mã PIN
-        </button>
-
-        <button
-          type="button"
-          class="wallet-modal-submit"
-          id="wallet-pin-submit"
-        >
-          Xác nhận
-        </button>
-      </div>
-    </div>
-
     <script th:src="@{/js/customer/customer-feedback.js}"></script>
     <script th:src="@{/js/customer/customer-wallet.js}"></script>
   </body>
 </html>
-
