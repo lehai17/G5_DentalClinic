@@ -1,5 +1,6 @@
 package com.dentalclinic.controller.staff;
 
+import com.dentalclinic.exception.BlogValidationException;
 import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.blog.BlogStatus;
 import com.dentalclinic.model.user.User;
@@ -88,7 +89,8 @@ public class StaffBlogController {
     public String saveDraft(@ModelAttribute Blog form,
                             @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
                             @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
-                            Authentication authentication) throws IOException {
+                            Authentication authentication,
+                            Model model) throws IOException {
 
         User staff = userRepository.findByEmail(authentication.getName()).orElseThrow();
 
@@ -98,14 +100,18 @@ public class StaffBlogController {
             form.setImageUrl(existingImageUrl);
         }
 
-        if (form.getId() == null) {
-            workflowService.createDraft(form, staff);
-        } else {
-            Blog existing = blogRepository.findById(form.getId()).orElseThrow();
-            if (!existing.getCreatedBy().getId().equals(staff.getId())) {
-                return "redirect:/staff/blogs?forbidden=true";
+        try {
+            if (form.getId() == null) {
+                workflowService.createDraft(form, staff);
+            } else {
+                Blog existing = blogRepository.findById(form.getId()).orElseThrow();
+                if (!existing.getCreatedBy().getId().equals(staff.getId())) {
+                    return "redirect:/staff/blogs?forbidden=true";
+                }
+                workflowService.updateByStaff(existing, form, staff);
             }
-            workflowService.updateByStaff(existing, form, staff);
+        } catch (BlogValidationException ex) {
+            return renderFormWithError(model, form, ex.getMessage());
         }
 
         return "redirect:/staff/blogs?saved=true";
@@ -115,7 +121,8 @@ public class StaffBlogController {
     public String submitReview(@ModelAttribute Blog form,
                                @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
                                @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
-                               Authentication authentication) throws IOException {
+                               Authentication authentication,
+                               Model model) throws IOException {
 
         User staff = userRepository.findByEmail(authentication.getName()).orElseThrow();
 
@@ -126,17 +133,22 @@ public class StaffBlogController {
         }
 
         Blog target;
-        if (form.getId() == null) {
-            target = workflowService.createDraft(form, staff);
-        } else {
-            Blog existing = blogRepository.findById(form.getId()).orElseThrow();
-            if (!existing.getCreatedBy().getId().equals(staff.getId())) {
-                return "redirect:/staff/blogs?forbidden=true";
+        try {
+            if (form.getId() == null) {
+                target = workflowService.createDraft(form, staff);
+            } else {
+                Blog existing = blogRepository.findById(form.getId()).orElseThrow();
+                if (!existing.getCreatedBy().getId().equals(staff.getId())) {
+                    return "redirect:/staff/blogs?forbidden=true";
+                }
+                target = workflowService.updateByStaff(existing, form, staff);
             }
-            target = workflowService.updateByStaff(existing, form, staff);
+
+            workflowService.submitForReview(target, staff);
+        } catch (BlogValidationException ex) {
+            return renderFormWithError(model, form, ex.getMessage());
         }
 
-        workflowService.submitForReview(target, staff);
         return "redirect:/staff/blogs?submitted=true";
     }
 
@@ -166,6 +178,13 @@ public class StaffBlogController {
         Map<String, Object> response = new HashMap<>();
         response.put("url", url);
         return response;
+    }
+
+    private String renderFormWithError(Model model, Blog form, String errorMessage) {
+        model.addAttribute("blog", form);
+        model.addAttribute("errorMessage", errorMessage);
+        model.addAttribute("activePage", "blogs");
+        return "staff/blog-form";
     }
 
     private void assertOwner(Blog blog, User staff) {

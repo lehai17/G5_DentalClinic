@@ -133,6 +133,16 @@
             font-size: 13px;
         }
 
+        .flash-error {
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            font-size: 14px;
+        }
+
         .editor-note {
             font-size: 13px;
             color: #6b7280;
@@ -161,6 +171,8 @@
             <h2 class="page-title" th:text="${blog.id == null} ? 'Tạo bài viết sức khỏe' : 'Chỉnh sửa bài viết sức khỏe'"></h2>
 
             <div class="blog-form-card">
+                <div th:if="${errorMessage}" class="flash-error" th:text="${errorMessage}"></div>
+
                 <form th:action="@{/staff/blogs/save-draft}" method="post" enctype="multipart/form-data">
                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <input type="hidden" name="id" th:if="${blog.id != null}" th:value="${blog.id}"/>

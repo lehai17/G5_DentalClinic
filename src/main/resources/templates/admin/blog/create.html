@@ -183,6 +183,17 @@
             line-height: 1.5;
         }
 
+        .flash-error {
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
         .ck-editor__editable_inline {
             min-height: 420px;
         }
@@ -214,10 +225,11 @@
         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <input type="hidden" name="id" th:if="${blog.id != null}" th:value="${blog.id}"/>
         <input type="hidden" name="existingImageUrl" th:value="${blog.imageUrl}"/>
+        <div th:if="${errorMessage}" class="flash-error" th:text="${errorMessage}"></div>
 
         <div class="form-layout">
             <div class="card">
-                <div class="label">Ảnh thumbnail / ảnh đầu bài</div>
+                <div class="label">Ảnh thumbnail / ảnh đầu bài <span class="required">*</span></div>
 
                 <div class="thumbnail-box">
                     <input id="thumbnailFile" class="input" type="file" name="thumbnailFile" accept="image/*">
@@ -261,7 +273,7 @@
 
                 <div class="publish-note">
                     <strong>Lưu ý:</strong> khác với staff, bài viết do admin tạo sẽ được đăng ngay sau khi bấm
-                    <strong>“Tạo và xuất bản”</strong>, không cần chuyển sang trạng thái chờ duyệt.
+                    <strong>"Tạo và xuất bản"</strong>, không cần chuyển sang trạng thái chờ duyệt.
                 </div>
 
                 <div class="actions">
@@ -322,7 +334,7 @@
             xhr.responseType = 'json';
 
             xhr.addEventListener('error', () => reject('Không thể upload ảnh.'));
-            xhr.addEventListener('abort', () => reject('Upload ảnh đã bị huỷ.'));
+            xhr.addEventListener('abort', () => reject('Upload ảnh đã bị hủy.'));
             xhr.addEventListener('load', () => {
                 const response = xhr.response;
 
@@ -386,6 +398,12 @@
         if (!summary) {
             e.preventDefault();
             alert('Vui lòng nhập tóm tắt.');
+            return;
+        }
+
+        if (!thumbnailInput || !thumbnailInput.files || thumbnailInput.files.length === 0) {
+            e.preventDefault();
+            alert('Vui lòng chọn ảnh thumbnail cho bài viết.');
             return;
         }
 
