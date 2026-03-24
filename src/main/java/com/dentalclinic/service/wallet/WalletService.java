@@ -18,6 +18,10 @@ import java.util.Optional;
 @Service
 public class WalletService {
     public static final BigDecimal WALLET_TOPUP_CREDIT_RATE = BigDecimal.ONE;
+//    public static final BigDecimal WALLET_TOPUP_CREDIT_RATE = new BigDecimal("0.95");
+//    public static final BigDecimal WALLET_TOPUP_FIXED_FEE = BigDecimal.valueOf(5_000L);
+
+
 
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository walletTransactionRepository;
@@ -69,6 +73,13 @@ public class WalletService {
             throw new IllegalArgumentException("So tien nap phai lon hon 0");
         }
         return paidAmount.multiply(WALLET_TOPUP_CREDIT_RATE);
+
+//        BigDecimal creditedAmount = paidAmount.subtract(WALLET_TOPUP_FIXED_FEE);
+//        if (creditedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+//            throw new IllegalArgumentException("So tien nhan vao vi phai lon hon 0 sau khi tru phi");
+//        }
+//
+//        return creditedAmount.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     @Transactional
