@@ -1332,6 +1332,7 @@ public class CustomerAppointmentService {
 
     private void ensureRescheduleAllowed(Appointment appointment) {
         if (appointment.getStatus() == AppointmentStatus.COMPLETED
+                || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT
                 || appointment.getStatus() == AppointmentStatus.CANCELLED) {
             throw new BookingException(BookingErrorCode.RESCHEDULE_NOT_ALLOWED,
                     "Không thể đổi lịch với trạng thái hiện tại.");

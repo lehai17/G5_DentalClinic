@@ -22,9 +22,6 @@ public class BillingPerformedService {
     @Column(nullable = false)
     private int qty;
 
-    @Column(name = "tooth_no", length = 50)
-    private String toothNo;
-
     // getters & setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -38,6 +35,4 @@ public class BillingPerformedService {
     public int getQty() { return qty; }
     public void setQty(int qty) { this.qty = qty; }
 
-    public String getToothNo() { return toothNo; }
-    public void setToothNo(String toothNo) { this.toothNo = toothNo; }
 }

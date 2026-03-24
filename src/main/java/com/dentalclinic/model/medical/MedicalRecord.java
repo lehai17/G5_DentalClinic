@@ -32,9 +32,6 @@ public class MedicalRecord {
     @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<MedicalImage> images = new java.util.ArrayList<>();
 
-    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<MedicalProposedService> proposedServices = new java.util.ArrayList<>();
-
     @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL)
     private List<Prescription> prescriptions;
 
@@ -51,10 +48,6 @@ public class MedicalRecord {
 
     public java.util.List<MedicalImage> getImages() { return images; }
     public void setImages(java.util.List<MedicalImage> images) { this.images = images; }
-
-    public java.util.List<MedicalProposedService> getProposedServices() { return proposedServices; }
-    public void setProposedServices(java.util.List<MedicalProposedService> proposedServices) { this.proposedServices = proposedServices; }
-
 
     public String getComplaintNote() { return complaintNote; }
     public void setComplaintNote(String complaintNote) { this.complaintNote = complaintNote; }

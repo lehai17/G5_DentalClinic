@@ -135,8 +135,6 @@ public class DentistSessionService {
                 mr.getImages().add(i);
             }
         }
-        mr.getProposedServices().clear();
-
         medicalRecordRepository.save(mr);
     }
 
@@ -221,7 +219,6 @@ public class DentistSessionService {
 
                 if (ps.getQty() <= 0) ps.setQty(1);
 
-                ps.setToothNo(null);
                 ps.setBillingNote(bn);
                 bn.getPerformedServices().add(ps);
             }

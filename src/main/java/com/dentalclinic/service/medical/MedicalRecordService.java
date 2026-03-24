@@ -132,11 +132,6 @@ public class MedicalRecordService {
                                 finding.getNote()
                         ))
                         .toList(),
-                medicalRecord == null ? List.of() : medicalRecord.getProposedServices().stream()
-                        .map(ps -> ps.getService() != null ? ps.getService().getName() : null)
-                        .filter(name -> name != null && !name.isBlank())
-                        .distinct()
-                        .toList(),
                 medicalRecord == null ? List.of() : medicalRecord.getImages().stream()
                         .map(image -> new ImageView(
                                 image.getType(),
@@ -154,8 +149,7 @@ public class MedicalRecordService {
                 billingNote == null ? List.of() : billingNote.getPerformedServices().stream()
                         .map(service -> new PerformedServiceView(
                                 service.getService() != null ? service.getService().getName() : null,
-                                service.getQty(),
-                                service.getToothNo()
+                                service.getQty()
                         ))
                         .toList()
         );
@@ -176,11 +170,6 @@ public class MedicalRecordService {
             image.getNote();
             image.getUrl();
         }
-        medicalRecord.getProposedServices().forEach(ps -> {
-            if (ps.getService() != null) {
-                ps.getService().getName();
-            }
-        });
     }
 
     private void touchBillingNote(BillingNote billingNote) {
@@ -194,7 +183,6 @@ public class MedicalRecordService {
         }
         for (BillingPerformedService service : billingNote.getPerformedServices()) {
             service.getQty();
-            service.getToothNo();
             if (service.getService() != null) {
                 service.getService().getName();
             }
@@ -244,7 +232,6 @@ public class MedicalRecordService {
             String complaintNote,
             String clinicalNotes,
             List<FindingView> findings,
-            List<String> proposedServices,
             List<ImageView> images,
             List<PrescriptionView> prescriptions,
             List<PerformedServiceView> performedServices
@@ -271,8 +258,7 @@ public class MedicalRecordService {
 
     public record PerformedServiceView(
             String serviceName,
-            int qty,
-            String toothNo
+            int qty
     ) {}
 
     // UPSERT - không tạo record mới
@@ -315,14 +301,6 @@ public class MedicalRecordService {
                 record.getImages().add(i);
             }
         }
-        record.getProposedServices().clear();
-        if (form.getProposedServices() != null) {
-            for (com.dentalclinic.model.medical.MedicalProposedService ps : form.getProposedServices()) {
-                ps.setMedicalRecord(record);
-                record.getProposedServices().add(ps);
-            }
-        }
-
         return medicalRecordRepository.save(record);
     }
 }

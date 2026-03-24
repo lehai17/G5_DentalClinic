@@ -28,8 +28,6 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
 
     @Query("""
         SELECT mr FROM MedicalRecord mr
-        LEFT JOIN FETCH mr.proposedServices ps
-        LEFT JOIN FETCH ps.service
         WHERE mr.appointment.id IN :appointmentIds
     """)
     List<MedicalRecord> findByAppointment_IdInWithDetails(@Param("appointmentIds") List<Long> appointmentIds);
