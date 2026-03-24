@@ -4,54 +4,24 @@
     <meta charset="UTF-8">
     <title>Quản lý đánh giá khách hàng</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f7fb;
-            color: #111827;
-        }
+    <link rel="stylesheet" href="/css/staff/staff.css">
 
-        .page-wrap {
-            max-width: 1280px;
-            margin: 0 auto;
+    <style>
+        .content {
             padding: 24px;
         }
 
-        .top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            background: #ffffff;
-            color: #2563eb;
-            border: 1px solid #dbeafe;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-weight: 700;
-            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
-        }
-
         .page-title {
-            margin: 0;
-            font-size: 40px;
+            margin: 0 0 8px;
+            font-size: 38px;
             font-weight: 800;
+            color: #111827;
         }
 
         .page-subtitle {
-            margin: 8px 0 0;
+            margin: 0 0 24px;
             color: #6b7280;
-            font-size: 15px;
+            font-size: 16px;
         }
 
         .review-board {
@@ -184,8 +154,16 @@
             background: #2563eb;
         }
 
+        .save-btn:hover {
+            background: #1d4ed8;
+        }
+
         .delete-btn {
             background: #dc2626;
+        }
+
+        .delete-btn:hover {
+            background: #b91c1c;
         }
 
         .empty-box {
@@ -197,13 +175,13 @@
             border: 1px dashed #cbd5e1;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
             .review-card-grid {
                 grid-template-columns: 1fr 1fr;
             }
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 768px) {
             .review-card-grid {
                 grid-template-columns: 1fr;
             }
@@ -215,96 +193,105 @@
     </style>
 </head>
 <body>
-<div class="page-wrap">
-    <div class="top-bar">
-        <div>
-            <a th:href="@{/staff/dashboard}" class="back-btn">← Quay lại Dashboard</a>
+<div class="app-wrapper">
+
+    <th:block th:replace="~{staff/fragments/sidebar :: sidebar}"></th:block>
+
+    <div class="main-content">
+        <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
+
+        <div class="content">
             <h1 class="page-title">Quản lý đánh giá khách hàng</h1>
-            <p class="page-subtitle">Chọn review hiển thị ngoài homepage, sắp xếp thứ tự và xóa các đánh giá không cần thiết.</p>
-        </div>
-    </div>
+            <p class="page-subtitle">
+                Chọn review hiển thị ngoài homepage, sắp xếp thứ tự và xóa các đánh giá không cần thiết.
+            </p>
 
-    <div class="review-board" th:if="${reviews != null and !#lists.isEmpty(reviews)}">
-        <div class="review-card" th:each="r : ${reviews}" th:attr="data-review-id=${r.id}">
-            <div class="review-card-grid">
-                <div>
-                    <div class="cell-label">ID</div>
-                    <div class="id-badge" th:text="${r.id}"></div>
-                </div>
-
-                <div>
-                    <div class="cell-label">Khách hàng</div>
-                    <div class="cell-value" th:text="${r.customerName}"></div>
-                </div>
-
-                <div>
-                    <div class="cell-label">Dịch vụ</div>
-                    <div class="cell-value" th:text="${r.serviceName}"></div>
-                </div>
-
-                <div>
-                    <div class="cell-label">Bác sĩ</div>
-                    <div class="cell-value" th:text="${r.dentistName}"></div>
-                </div>
-
-                <div>
-                    <div class="cell-label">Điểm đánh giá</div>
-                    <div class="rating-chip">
-                        <span>Bác sĩ:</span>
-                        <span class="rating-stars" th:text="${'★'.repeat(r.dentistRating)}"></span>
-                    </div>
-                    <div class="rating-chip">
-                        <span>Dịch vụ:</span>
-                        <span class="rating-stars" th:text="${'★'.repeat(r.serviceRating)}"></span>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="cell-label">Nội dung</div>
-                    <div class="comment-box" th:text="${r.comment != null and !#strings.isEmpty(r.comment) ? r.comment : 'Không có nội dung đánh giá'}"></div>
-                </div>
-
-                <div>
-                    <div class="cell-label">Ngày tạo</div>
-                    <div class="cell-value" th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
-                </div>
-
-                <div>
-                    <div class="cell-label">Thiết lập</div>
-                    <div class="settings-box">
-                        <div class="setting-item">
-                            <label>
-                                <input type="checkbox" class="featured-check" th:checked="${r.featuredOnHomepage}">
-                                Hiện ở homepage
-                            </label>
+            <div class="review-board" th:if="${reviews != null and !#lists.isEmpty(reviews)}">
+                <div class="review-card" th:each="r : ${reviews}" th:attr="data-review-id=${r.id}">
+                    <div class="review-card-grid">
+                        <div>
+                            <div class="cell-label">ID</div>
+                            <div class="id-badge" th:text="${r.id}">1</div>
                         </div>
 
-                        <div class="setting-item">
-                            <label>
-                                <input type="checkbox" class="hidden-name-check" th:checked="${r.hiddenCustomerName}">
-                                Ẩn tên khách hàng
-                            </label>
+                        <div>
+                            <div class="cell-label">Khách hàng</div>
+                            <div class="cell-value" th:text="${r.customerName}">Nguyễn Văn A</div>
                         </div>
 
-                        <div class="setting-item">
-                            <label>
-                                Thứ tự hiển thị
-                            </label>
-                            <input type="number" class="display-order-input" th:value="${r.displayOrder}">
+                        <div>
+                            <div class="cell-label">Dịch vụ</div>
+                            <div class="cell-value" th:text="${r.serviceName}">Tẩy trắng răng</div>
                         </div>
 
-                        <div class="btn-row">
-                            <button type="button" class="save-btn">Lưu</button>
-                            <button type="button" class="delete-btn">Xóa</button>
+                        <div>
+                            <div class="cell-label">Bác sĩ</div>
+                            <div class="cell-value" th:text="${r.dentistName}">Bác sĩ Trung</div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Điểm đánh giá</div>
+                            <div class="rating-chip">
+                                <span>Bác sĩ:</span>
+                                <span class="rating-stars" th:text="${'★'.repeat(r.dentistRating)}">★★★★★</span>
+                            </div>
+                            <div class="rating-chip">
+                                <span>Dịch vụ:</span>
+                                <span class="rating-stars" th:text="${'★'.repeat(r.serviceRating)}">★★★★★</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Nội dung</div>
+                            <div class="comment-box"
+                                 th:text="${r.comment != null and !#strings.isEmpty(r.comment) ? r.comment : 'Không có nội dung đánh giá'}">
+                                Nội dung đánh giá
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Ngày tạo</div>
+                            <div class="cell-value" th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                24/03/2026 09:19
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Thiết lập</div>
+                            <div class="settings-box">
+                                <div class="setting-item">
+                                    <label>
+                                        <input type="checkbox" class="featured-check" th:checked="${r.featuredOnHomepage}">
+                                        Hiện ở homepage
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label>
+                                        <input type="checkbox" class="hidden-name-check" th:checked="${r.hiddenCustomerName}">
+                                        Ẩn tên khách hàng
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label>Thứ tự hiển thị</label>
+                                    <input type="number" class="display-order-input" th:value="${r.displayOrder}">
+                                </div>
+
+                                <div class="btn-row">
+                                    <button type="button" class="save-btn">Lưu</button>
+                                    <button type="button" class="delete-btn">Xóa</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="empty-box" th:if="${reviews == null or #lists.isEmpty(reviews)}">
-        Chưa có đánh giá nào từ khách hàng.
+            <div class="empty-box" th:if="${reviews == null or #lists.isEmpty(reviews)}">
+                Chưa có đánh giá nào từ khách hàng.
+            </div>
+        </div>
     </div>
 </div>
 

@@ -34,10 +34,13 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
 
-        // Create/update user + profile first, then sync session userId for customer flows.
         oAuthUserService.upsertGoogleUser(oauthUser);
-        userRepository.findByEmail(authentication.getName())
-                .ifPresent(user -> request.getSession().setAttribute(SESSION_USER_ID, user.getId()));
+
+        String email = oauthUser.getAttribute("email");
+        if (email != null && !email.isBlank()) {
+            userRepository.findByEmail(email)
+                    .ifPresent(user -> request.getSession().setAttribute(SESSION_USER_ID, user.getId()));
+        }
 
         response.sendRedirect("/homepage");
     }
