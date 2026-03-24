@@ -55,7 +55,6 @@ public class DentistAppointmentController {
             RedirectAttributes redirect,
             Authentication authentication
     ) {
-        model.addAttribute("services", servicesRepository.findAll());
         Long dentistUserId = resolveCurrentDentistUserId(authentication);
 
         Appointment appt;
@@ -68,9 +67,8 @@ public class DentistAppointmentController {
         if (appt.getStatus() == AppointmentStatus.CONFIRMED) {
             return buildWorkScheduleRedirect(weekStart);
         }
-        // Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT
-        if (appt.getStatus() != AppointmentStatus.DONE
-                && appt.getStatus() != AppointmentStatus.COMPLETED
+        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa COMPLETED/WAITING_PAYMENT 
+        if (appt.getStatus() != AppointmentStatus.COMPLETED
                 && appt.getStatus() != AppointmentStatus.WAITING_PAYMENT
                 && appt.getStatus() != AppointmentStatus.EXAMINING) {
 
@@ -94,45 +92,37 @@ public class DentistAppointmentController {
                 medicalRecordService.findByAppointmentId(id).orElse(new MedicalRecord());
         record.setAppointment(appt);
         model.addAttribute("medicalRecord", record);
-        model.addAttribute(
-                "selectedServiceIds",
-                record.getProposedServices()
-                        .stream()
-                        .filter(ps -> ps.getService() != null)
-                        .map(ps -> ps.getService().getId())
-                        .toList()
-        );
         model.addAttribute("historySteps", medicalRecordService.findReexamHistorySteps(id));
 
         return "Dentist/examination";
     }
 
-@PostMapping("/{id}/examination")
-public String saveExamination(
-        @PathVariable Long id,
-        @RequestParam Long customerUserId,
-        @ModelAttribute MedicalRecord medicalRecord,
-        @RequestParam(required = false) String weekStart,
-        RedirectAttributes redirect,
-        Authentication authentication
-) {
-    try {
-        dentistSessionService.saveExam(
-                id,
-                customerUserId,
-                resolveCurrentDentistUserId(authentication),
-                medicalRecord
-        );
-    } catch (IllegalArgumentException ex) {
-        redirect.addFlashAttribute("errorMessage", ex.getMessage());
-        return buildWorkScheduleRedirect(weekStart);
-    }
-    redirect.addFlashAttribute("successMessage", "Examination saved");
+    @PostMapping("/{id}/examination")
+    public String saveExamination(
+            @PathVariable Long id,
+            @RequestParam Long customerUserId,
+            @ModelAttribute MedicalRecord medicalRecord,
+            @RequestParam(required = false) String weekStart, // âœ… THÊM
+            RedirectAttributes redirect,
+            Authentication authentication
+    ) {
+        try {
+            dentistSessionService.saveExam(
+                    id,
+                    customerUserId,
+                    resolveCurrentDentistUserId(authentication),
+                    medicalRecord
+            );
+        } catch (IllegalArgumentException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+            return buildWorkScheduleRedirect(weekStart);
+        }
+        redirect.addFlashAttribute("successMessage", "Examination saved");
 
-    return "redirect:/dentist/appointments/" + id +
-            "/examination?customerUserId=" + customerUserId +
-            "&weekStart=" + weekStart;
-}
+        return "redirect:/dentist/appointments/" + id +
+                "/examination?customerUserId=" + customerUserId +
+                "&weekStart=" + weekStart;
+    }
 
     /* ================= BILLING ================= */
 
@@ -221,7 +211,6 @@ public String saveExamination(
             return false;
         }
         return status == AppointmentStatus.EXAMINING
-                || status == AppointmentStatus.DONE
                 || status == AppointmentStatus.WAITING_PAYMENT
                 || status == AppointmentStatus.COMPLETED;
     }

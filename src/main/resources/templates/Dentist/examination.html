@@ -21,6 +21,11 @@
 </head>
 <body class="exam-page">
 <div class="exam-container">
+  <div class="page-heading">
+    <div class="page-kicker">Dentist Workspace</div>
+    <h1>Khám lâm sàng</h1>
+    <p>Ghi lại triệu chứng, hình ảnh, nhận xét và chẩn đoán cho ca khám hiện tại.</p>
+  </div>
   <h2>Khám lâm sàng</h2>
   <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}">Lưu thành công.</div>
 
@@ -73,7 +78,7 @@
       <div class="visit-body">
         <div class="visit-body-content">
           <div><strong>Chẩn đoán:</strong> <span th:text="${r.diagnosis}"></span></div>
-          <div><strong>Ghi chú:</strong> <span th:text="${r.clinicalNotes}"></span></div>
+          <div><strong>Đánh giá bác sĩ:</strong> <span th:text="${r.clinicalNotes}"></span></div>
         </div>
       </div>
     </div>
@@ -84,7 +89,7 @@
       <div class="visit-history-head">
         <div>
           <div class="visit-history-title">Lich su cac ca truoc trong chuoi tai kham</div>
-          <div class="visit-history-sub">Xem nhanh cac lan kham truoc de nam chan doan, trieu chung, ghi nhan theo rang, ghi chu lam sang va hinh anh nha khoa.</div>
+          <div class="visit-history-sub">Xem nhanh các lần khám trước để nắm chẩn đoán, triệu chứng, ghi nhận theo răng, đánh giá bác sĩ và hình ảnh nha khoa.</div>
         </div>
       </div>
 
@@ -124,7 +129,7 @@
               </div>
               <div class="visit-info-box">
                 <div class="visit-info-label">Trang thai</div>
-                <div class="visit-info-value" th:text="${step.status != null ? step.status : 'N/A'}">DONE</div>
+                <div class="visit-info-value" th:text="${step.status != null ? step.status : 'N/A'}">WAITING_PAYMENT</div>
               </div>
               <div class="visit-info-box">
                 <div class="visit-info-label">Dich vu</div>
@@ -152,7 +157,7 @@
                 </div>
               </div>
               <div class="visit-section">
-                <div class="visit-section-title">Ghi chu lam sang</div>
+                <div class="visit-section-title">Đánh giá bác sĩ</div>
                 <div class="visit-box"
                      th:text="${step.clinicalNotes != null && !#strings.isEmpty(#strings.trim(step.clinicalNotes)) ? step.clinicalNotes : 'Chua co du lieu'}">
                   Chua co du lieu
@@ -224,13 +229,7 @@
     <input type="hidden" id="appointmentStatus" th:value="${appointmentStatus}">
 
     <div class="section">
-      <div style="font-weight:900;">A) Chẩn đoán</div>
-      <div class="mini">Chẩn đoán chính sẽ được lưu vào hồ sơ khám.</div>
-      <textarea th:field="*{diagnosis}" rows="3" placeholder="Nhập chẩn đoán chính..."></textarea>
-    </div>
-
-    <div class="section">
-      <div style="font-weight:900;">B) Triệu chứng</div>
+      <div style="font-weight:900;">A) Triệu chứng</div>
       <div class="field" style="width:100%;">
         <label>Ghi chú triệu chứng</label>
         <textarea th:field="*{complaintNote}" rows="3" placeholder="Ghi chú thêm nếu cần..." style="width:100%;"></textarea>
@@ -240,7 +239,7 @@
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:end;">
         <div>
-          <div style="font-weight:900;">C) Ghi nhận theo răng</div>
+          <div style="font-weight:900;">B) Ghi nhận theo răng</div>
           <div class="mini">Nhập số răng, tình trạng, mức độ và ghi chú nếu có.</div>
         </div>
         <button type="button" class="icon-mini" id="btnAddFinding">+ Thêm</button>
@@ -276,31 +275,9 @@
     </div>
 
     <div class="section">
-      <div style="font-weight:900;">D) Đề xuất thêm dịch vụ</div>
-      <div class="mini">Chọn các dịch vụ cần đề xuất thêm sau khi thăm khám.</div>
-
-      <div class="chipbox" id="proposeBox">
-        <label class="svc-chip" th:each="s : ${services}">
-          <input type="checkbox"
-                 class="prop-check"
-                 th:attr="data-service-id=${s.id}"
-                 th:checked="${selectedServiceIds.contains(s.id)}">
-          <span th:text="${s.name}">Cạo vôi răng</span>
-        </label>
-      </div>
-      <div id="proposedInputs"></div>
-    </div>
-
-    <div class="section">
-      <div style="font-weight:900;">E) Ghi chú lâm sàng</div>
-      <div class="mini">Nhập thêm ghi chú chi tiết về tình trạng lâm sàng và các quan sát khác.</div>
-      <textarea th:field="*{clinicalNotes}" rows="5" placeholder="Nhập ghi chú lâm sàng chi tiết..."></textarea>
-    </div>
-
-    <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:end;">
         <div>
-          <div style="font-weight:900;">F) Hình ảnh nha khoa</div>
+          <div style="font-weight:900;">C) Hình ảnh nha khoa</div>
           <div class="mini">Chọn ảnh từ máy, chọn loại ảnh và ghi chú (nếu có).</div>
         </div>
         <button type="button" class="icon-mini" id="btnAddImg">+ Thêm</button>
@@ -357,7 +334,19 @@
       </table>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:14px;">
+    <div class="section">
+      <div style="font-weight:900;">D) Đánh giá bác sĩ</div>
+      <div class="mini">Ghi lại nhận xét của bác sĩ về tình trạng bệnh, diễn tiến và các lưu ý chuyên môn.</div>
+      <textarea th:field="*{clinicalNotes}" rows="5" placeholder="Nhập đánh giá của bác sĩ về tình trạng bệnh..."></textarea>
+    </div>
+
+    <div class="section">
+      <div style="font-weight:900;">E) Chẩn đoán</div>
+      <div class="mini">Chẩn đoán chính sẽ được lưu vào hồ sơ khám.</div>
+      <textarea th:field="*{diagnosis}" rows="3" placeholder="Nhập chẩn đoán chính..."></textarea>
+    </div>
+
+    <div class="form-actions">
       <button class="btn primary" type="submit">Lưu</button>
       <a class="btn" th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">Quay lại</a>
     </div>
@@ -493,21 +482,6 @@
     });
   }
 
-  document.getElementById('examForm').addEventListener('submit', () => {
-    const container = document.getElementById('proposedInputs');
-    if (!container) return;
-    container.innerHTML = '';
-    let idx = 0;
-    document.querySelectorAll('.prop-check:checked').forEach(ch => {
-      const inp = document.createElement('input');
-      inp.type = 'hidden';
-      inp.name = `proposedServices[${idx}].service.id`;
-      inp.value = ch.dataset.serviceId;
-      container.appendChild(inp);
-      idx++;
-    });
-  });
-
   document.querySelectorAll('#findingTable tbody tr').forEach(tr => {
     tr.querySelector('.del')?.addEventListener('click', () => tr.remove());
   });
@@ -540,7 +514,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
 
-    if (status === 'DONE' || status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
+    if (status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
       document.querySelectorAll('input, textarea, select, button')
               .forEach(el => el.disabled = true);
       const saveBtn = document.querySelector('button[type="submit"]');

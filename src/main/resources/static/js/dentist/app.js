@@ -69,7 +69,7 @@
                 + `&weekStart=${encodeURIComponent(weekStart)}`;
 
             // Configure REEXAM button based on status
-            const reexamAvailableStatuses = ['EXAMINING', 'DONE', 'COMPLETED', 'WAITING_PAYMENT'];
+            const reexamAvailableStatuses = ['EXAMINING', 'COMPLETED', 'WAITING_PAYMENT'];
             if (reexamAvailableStatuses.includes(status)) {
                 btnReexam.style.display = '';
                 btnReexam.href = 

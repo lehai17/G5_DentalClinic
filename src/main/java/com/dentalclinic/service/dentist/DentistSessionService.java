@@ -5,7 +5,6 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.medical.MedicalRecord;
 import com.dentalclinic.model.medical.MedicalFinding;
 import com.dentalclinic.model.medical.MedicalImage;
-import com.dentalclinic.model.medical.MedicalProposedService;
 import com.dentalclinic.model.payment.BillingNote;
 import com.dentalclinic.model.payment.BillingPerformedService;
 import com.dentalclinic.model.payment.BillingPrescriptionItem;
@@ -137,12 +136,6 @@ public class DentistSessionService {
             }
         }
         mr.getProposedServices().clear();
-        if (form.getProposedServices() != null) {
-            for (MedicalProposedService ps : form.getProposedServices()) {
-                ps.setMedicalRecord(mr);
-                mr.getProposedServices().add(ps);
-            }
-        }
 
         medicalRecordRepository.save(mr);
     }
@@ -182,7 +175,6 @@ public class DentistSessionService {
                     ps.setBillingNote(bn);
                     ps.setService(detail.getService());
                     ps.setQty(1);
-                    ps.setToothNo("");
                     bn.getPerformedServices().add(ps);
                 }
             } else if (appt.getService() != null) {
@@ -190,7 +182,6 @@ public class DentistSessionService {
                 ps.setBillingNote(bn);
                 ps.setService(appt.getService());
                 ps.setQty(1);
-                ps.setToothNo("");
                 bn.getPerformedServices().add(ps);
             }
         }
@@ -230,6 +221,7 @@ public class DentistSessionService {
 
                 if (ps.getQty() <= 0) ps.setQty(1);
 
+                ps.setToothNo(null);
                 ps.setBillingNote(bn);
                 bn.getPerformedServices().add(ps);
             }
@@ -252,12 +244,12 @@ public class DentistSessionService {
         }
 
         billingNoteRepository.save(bn);
-        appt.setStatus(AppointmentStatus.DONE);
+        appt.setStatus(AppointmentStatus.WAITING_PAYMENT);
         appointmentRepository.save(appt);
         appointmentRepository.flush();  // Force flush to DB
         
         // Auto-confirm any pending reexams for this appointment
-        logger.info("[SESSION] Appointment {} status changed to DONE, attempting to auto-confirm reexam", appt.getId());
+        logger.info("[SESSION] Appointment {} status changed to WAITING_PAYMENT, attempting to auto-confirm reexam", appt.getId());
         try {
             // Debug: check database directly
             var debugData = appointmentRepository.debugFindReexamByOriginalId(appt.getId());
@@ -329,11 +321,10 @@ public class DentistSessionService {
     }
 
     /**
-     * Validate that appointment is not in finalized state (DONE, COMPLETED, WAITING_PAYMENT)
+     * Validate that appointment is not in finalized state (COMPLETED, WAITING_PAYMENT)
      */
     private void validateAppointmentNotFinalized(Appointment appt) {
-        if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED
+        if (appt.getStatus() == AppointmentStatus.COMPLETED
                 || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             throw new IllegalStateException("Appointment already finalized");
         }
@@ -344,7 +335,6 @@ public class DentistSessionService {
             return false;
         }
         return status == AppointmentStatus.EXAMINING
-                || status == AppointmentStatus.DONE
                 || status == AppointmentStatus.WAITING_PAYMENT
                 || status == AppointmentStatus.COMPLETED;
     }

@@ -49,7 +49,6 @@ public class ReexamService {
      */
     public boolean isReexamAvailable(AppointmentStatus status) {
         return status == AppointmentStatus.EXAMINING ||
-               status == AppointmentStatus.DONE ||
                status == AppointmentStatus.COMPLETED ||
                status == AppointmentStatus.WAITING_PAYMENT;
     }
@@ -71,8 +70,7 @@ public class ReexamService {
     }
 
     private boolean shouldActivateReexamImmediately(AppointmentStatus status) {
-        return status == AppointmentStatus.DONE
-                || status == AppointmentStatus.COMPLETED
+        return status == AppointmentStatus.COMPLETED
                 || status == AppointmentStatus.WAITING_PAYMENT;
     }
     

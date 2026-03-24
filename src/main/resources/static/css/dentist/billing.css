@@ -1,26 +1,64 @@
-/* ===============================
+﻿/* ===============================
    BILLING PAGE LAYOUT
 ================================ */
 
 .billing-page {
-    background: #f3f4f6;
+    background:
+            radial-gradient(circle at top left, rgba(191, 219, 254, 0.55), transparent 28%),
+            linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 52px 24px 72px;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     overflow: auto;
 }
 
 .billing-container {
-    max-width: 1000px;
-    margin: 40px auto;
+    max-width: 1060px;
+    margin: 0 auto;
     background: #ffffff;
-    padding: 32px;
-    border-radius: 22px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    padding: 52px 32px 40px;
+    border-radius: 30px;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.page-heading {
+    margin-bottom: 26px;
+}
+
+.page-kicker {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.page-heading h1 {
+    margin: 14px 0 8px;
+    font-size: 40px;
+    line-height: 1.05;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.page-heading p {
+    max-width: 700px;
+    margin: 0;
+    color: #475569;
+    font-size: 15px;
+    line-height: 1.7;
 }
 
 .billing-title {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 20px;
+    display: none;
 }
 
 /* ===============================
@@ -29,9 +67,16 @@
 
 .billing-meta {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
     margin-bottom: 25px;
+}
+
+.billing-meta > div {
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #dbe4f0;
 }
 
 .meta-label {
@@ -51,6 +96,10 @@
 
 .billing-section {
     margin-top: 30px;
+    padding: 24px;
+    border-radius: 24px;
+    background: #fbfdff;
+    border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .billing-section-title {
@@ -115,24 +164,8 @@
     font-size: 13px;
 }
 
-/* tooth input */
-.svc-tooth {
-    height: 38px;
-    border-radius: 20px;
-    border: 1px solid #d1d5db;
-    padding: 0 14px;
-    background: #ffffff;
-    transition: 0.2s;
-}
-
-.svc-tooth::placeholder {
-    color: #9ca3af;
-    font-size: 13px;
-}
-
 /* focus effect */
-.svc-qty:focus,
-.svc-tooth:focus {
+.svc-qty:focus {
     outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
@@ -171,7 +204,7 @@
     padding: 10px;
 }
 
-/* bo trÃ²n tá»«ng row */
+/* bo tròn từng row */
 #rxTable tbody tr td:first-child {
     border-top-left-radius: 18px;
     border-bottom-left-radius: 18px;
@@ -233,6 +266,7 @@ textarea {
     resize: vertical;
     min-height: 100px;
     margin-top: 10px;
+    background: #ffffff;
 }
 
 textarea:focus {
@@ -274,6 +308,12 @@ textarea:focus {
 .btn-secondary:hover {
     background: #e5e7eb;
 }
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
 /* ===== ADD MEDICINE BUTTON ===== */
 
 #btnAddRx:hover {
@@ -311,6 +351,7 @@ textarea:focus {
     border-collapse: separate;
     border-spacing: 0 12px;
     margin-top: 15px;
+    table-layout: fixed;
 }
 
 #performedTable thead th {
@@ -329,7 +370,7 @@ textarea:focus {
     padding: 10px;
 }
 
-/* bo trÃ²n tá»«ng row giá»‘ng prescription */
+/* bo tròn từng row giống prescription */
 #performedTable tbody tr td:first-child {
     border-top-left-radius: 18px;
     border-bottom-left-radius: 18px;
@@ -350,16 +391,31 @@ textarea:focus {
     background: #ffffff;
 }
 
-/* chá»‰nh Ä‘á»™ rá»™ng cÃ¡c cá»™t */
-#performedTable td:nth-child(1) { width: 40%; }
-#performedTable td:nth-child(2) { width: 90px; }
-#performedTable td:nth-child(3) { width: 180px; }
-#performedTable td:nth-child(4) { width: 50px; }
+/* chỉnh độ rộng các cột */
+#performedTable th:nth-child(1),
+#performedTable td:nth-child(1) { width: auto; }
 
-/* cÄƒn giá»¯a qty */
+#performedTable th:nth-child(2),
+#performedTable td:nth-child(2) { width: 110px; }
+
+#performedTable th:nth-child(3),
+#performedTable td:nth-child(3) { width: 64px; }
+
+/* căn giữa qty */
 #performedTable td:nth-child(2) {
     text-align: left;
     padding-left: 6px;
+}
+
+#performedTable td:nth-child(3) {
+    text-align: center;
+    padding-left: 0;
+    padding-right: 12px;
+}
+
+#performedTable .icon-mini.del {
+    margin-left: auto;
+    margin-right: auto;
 }
 #btnAddService,
 #btnAddRx {
@@ -367,13 +423,13 @@ textarea:focus {
     align-items: center;
     justify-content: center;
 
-    width: fit-content;          /* Ã°Å¸â€Â¥ ÃƒÂ©p rá»™ng theo ná»™i dung */
+    width: fit-content;          /* ðŸ”¥ Ã©p rộng theo nội dung */
     height: auto;
 
     margin-top: 18px;
     margin-left: 10px;
 
-    padding: 8px 18px;           /* padding Ä‘á»u hai bÃªn */
+    padding: 8px 18px;           /* padding đều hai bên */
 
     border-radius: 999px;
     border: 1px solid #2563eb;
@@ -383,7 +439,7 @@ textarea:focus {
 
     font-weight: 600;
     font-size: 14px;
-    line-height: 1;              /* Ã°Å¸â€Â¥ trÃ¡nh cao báº¥t thÆ°á»ng */
+    line-height: 1;              /* ðŸ”¥ tránh cao bất thường */
 
     white-space: nowrap;
     cursor: pointer;
@@ -394,5 +450,27 @@ textarea:focus {
 #btnAddRx:hover {
     background: #2563eb;
     color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    .billing-container {
+        padding: 28px 14px 32px;
+        border-radius: 22px;
+    }
+
+    .page-heading h1 {
+        font-size: 32px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
 }
 

@@ -145,7 +145,7 @@ public class StaffAppointmentService {
 
     @Transactional
     public void completeAppointment(Long id) {
-        throw new RuntimeException("Khong con ho tro chuyen truc tiep sang COMPLETED. Luong dung la EXAMINING -> DONE -> WAITING_PAYMENT -> COMPLETED.");
+        throw new RuntimeException("Khong con ho tro chuyen truc tiep sang COMPLETED. Luong dung la EXAMINING -> WAITING_PAYMENT -> COMPLETED.");
     }
 
     @Transactional
@@ -254,6 +254,9 @@ public class StaffAppointmentService {
         }
 
         for (Appointment appointment : appointments) {
+            if (appointment == null || appointment.getId() == null) {
+                continue;
+            }
             boolean dentistOnLeave = appointment != null
                     && appointment.getDentist() != null
                     && appointment.getDentist().getId() != null
@@ -272,8 +275,8 @@ public class StaffAppointmentService {
         Appointment a = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
 
-        if (a.getStatus() != AppointmentStatus.DONE) {
-            throw new RuntimeException("Chi lich hen co trang thai DONE moi co the tien hanh thanh toan.");
+        if (a.getStatus() != AppointmentStatus.WAITING_PAYMENT) {
+            throw new RuntimeException("Chi lich hen co trang thai WAITING_PAYMENT moi co the tien hanh thanh toan.");
         }
 
         BillingNote billingNote = billingNoteRepository.findByAppointment_Id(id)

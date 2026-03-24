@@ -133,7 +133,7 @@
                 <td>
                   <span class="badge status-badge"
                         th:classappend="${chain.root.status != null ? chain.root.status.name().toLowerCase() : ''}"
-                        th:text="${chain.root.status}">DONE</span>
+                        th:text="${chain.root.status}">WAITING_PAYMENT</span>
                 </td>
                 <td>
                 <div class="chain-pills">
@@ -178,7 +178,7 @@
                           <span class="dot">•</span>
                           <span th:text="${step.appointment.startTime != null and step.appointment.endTime != null ? (#temporals.format(step.appointment.startTime, 'HH:mm') + ' - ' + #temporals.format(step.appointment.endTime, 'HH:mm')) : '-'}">09:30 - 10:30</span>
                           <span class="dot">•</span>
-                          <span th:text="${step.appointment.status}">DONE</span>
+                          <span th:text="${step.appointment.status}">WAITING_PAYMENT</span>
                         </div>
                       </div>
                     </div>
@@ -196,7 +196,7 @@
                              th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.complaintNote)) ? 'Chưa có dữ liệu' : step.medicalRecord.complaintNote}"></div>
                       </div>
                       <div class="detail-section">
-                        <div class="detail-section-title"><i class="fas fa-stethoscope"></i> Ghi chú lâm sàng</div>
+                        <div class="detail-section-title"><i class="fas fa-stethoscope"></i> Đánh giá bác sĩ</div>
                         <div class="detail-box"
                              th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.clinicalNotes)) ? 'Chưa có dữ liệu' : step.medicalRecord.clinicalNotes}"></div>
                       </div>
@@ -225,18 +225,6 @@
                         </tr>
                         </tbody>
                       </table>
-                    </div>
-
-                    <div class="detail-section">
-                      <div class="detail-section-title"><i class="fas fa-list-check"></i> Dịch vụ đề xuất</div>
-                      <div class="chip-row" th:if="${step.medicalRecord == null || step.medicalRecord.proposedServices == null || step.medicalRecord.proposedServices.isEmpty()}">
-                        <span class="muted">Chưa có dữ liệu</span>
-                      </div>
-                      <div class="chip-row" th:if="${step.medicalRecord != null && step.medicalRecord.proposedServices != null && !step.medicalRecord.proposedServices.isEmpty()}">
-                        <span class="chip"
-                              th:each="ps : ${step.medicalRecord.proposedServices}"
-                              th:text="${ps.service != null ? ps.service.name : 'Dịch vụ'}">Dịch vụ</span>
-                      </div>
                     </div>
 
                     <div class="detail-section">

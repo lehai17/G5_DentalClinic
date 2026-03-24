@@ -481,9 +481,9 @@
 
     <div class="section-grid">
         <div class="section-card">
-            <div class="section-title">C) Ghi chú lâm sàng</div>
+            <div class="section-title">C) Đánh giá bác sĩ</div>
             <div class="section-content"
-                 th:text="${medicalRecord != null && medicalRecord.clinicalNotes != null && !#strings.isEmpty(medicalRecord.clinicalNotes) ? medicalRecord.clinicalNotes : 'Không có ghi chú lâm sàng.'}">
+                 th:text="${medicalRecord != null && medicalRecord.clinicalNotes != null && !#strings.isEmpty(medicalRecord.clinicalNotes) ? medicalRecord.clinicalNotes : 'Không có đánh giá từ bác sĩ.'}">
                 Khuyến nghị vệ sinh răng miệng, tái khám nếu đau tăng
             </div>
         </div>
@@ -527,24 +527,7 @@
     </div>
 
     <div class="section-card">
-        <div class="section-title">F) Dịch vụ đề xuất sau khám</div>
-
-        <div class="empty-box"
-             th:if="${medicalRecord == null || medicalRecord.proposedServices == null || medicalRecord.proposedServices.isEmpty()}">
-            Không có dịch vụ đề xuất.
-        </div>
-
-        <div class="pill-row"
-             th:if="${medicalRecord != null && medicalRecord.proposedServices != null && !medicalRecord.proposedServices.isEmpty()}">
-            <span class="pill" th:each="ps : ${medicalRecord.proposedServices}">
-                <span th:text="${ps.service != null && ps.service.name != null ? ps.service.name : 'Dịch vụ'}">Dịch vụ</span>
-                <small th:text="${ps.qty > 0 ? 'x' + ps.qty : 'x1'}">x1</small>
-            </span>
-        </div>
-    </div>
-
-    <div class="section-card">
-        <div class="section-title">G) Hình ảnh lâm sàng</div>
+        <div class="section-title">F) Hình ảnh lâm sàng</div>
 
         <div class="empty-box"
              th:if="${medicalRecord == null || medicalRecord.images == null || medicalRecord.images.isEmpty()}">

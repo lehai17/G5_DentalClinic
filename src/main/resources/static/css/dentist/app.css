@@ -361,18 +361,6 @@ textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     color:#0369a1;
 }
 
-/* ⚫ DONE – đã chốt */
-.appt-done{
-    background:#f1f5f9;
-    border:2px solid #334155;
-}
-.appt-done .appt-name{
-    color:#0f172a;
-}
-.appt-done .appt-sub{
-    color:#475569;
-}
-
 /* 🟢 COMPLETED – hoàn tất thanh toán */
 .appt-completed{
     background:#dcfce7;

@@ -6,11 +6,9 @@ document.getElementById('billingForm').addEventListener('submit', () => {
 
         const service = tr.querySelector('select');
         const qty = tr.querySelector('.svc-qty');
-        const tooth = tr.querySelector('.svc-tooth');
 
         if(service) service.name = `performedServices[${i}].service.id`;
         if(qty) qty.name = `performedServices[${i}].qty`;
-        if(tooth) tooth.name = `performedServices[${i}].toothNo`;
 
     });
 

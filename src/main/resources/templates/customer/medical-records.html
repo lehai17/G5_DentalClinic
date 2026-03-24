@@ -179,7 +179,7 @@
                                th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.complaintNote)) ? 'Chưa có dữ liệu' : step.medicalRecord.complaintNote}"></div>
                         </div>
                         <div class="mr-section">
-                          <div class="mr-section-title"><i class="bi bi-journal-medical"></i> Ghi chú lâm sàng</div>
+                          <div class="mr-section-title"><i class="bi bi-journal-medical"></i> Đánh giá bác sĩ</div>
                           <div class="mr-box"
                                th:text="${step.medicalRecord == null || #strings.isEmpty(#strings.trim(step.medicalRecord.clinicalNotes)) ? 'Chưa có dữ liệu' : step.medicalRecord.clinicalNotes}"></div>
                         </div>
@@ -208,18 +208,6 @@
                           </tr>
                           </tbody>
                         </table>
-                      </div>
-
-                      <div class="mr-section">
-                        <div class="mr-section-title"><i class="bi bi-ui-checks"></i> Dịch vụ đề xuất</div>
-                        <div class="mr-pill-row" th:if="${step.medicalRecord == null || step.medicalRecord.proposedServices == null || step.medicalRecord.proposedServices.isEmpty()}">
-                          <span class="cap-muted">Chưa có dữ liệu</span>
-                        </div>
-                        <div class="mr-pill-row" th:if="${step.medicalRecord != null && step.medicalRecord.proposedServices != null && !step.medicalRecord.proposedServices.isEmpty()}">
-                          <span class="mr-pill"
-                                th:each="ps : ${step.medicalRecord.proposedServices}"
-                                th:text="${ps.service != null ? ps.service.name : 'Dịch vụ'}">Dịch vụ</span>
-                        </div>
                       </div>
 
                       <div class="mr-section">

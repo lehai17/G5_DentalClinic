@@ -149,7 +149,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                     com.dentalclinic.model.appointment.AppointmentStatus.CONFIRMED,
                     com.dentalclinic.model.appointment.AppointmentStatus.CHECKED_IN,
                     com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
-                    com.dentalclinic.model.appointment.AppointmentStatus.DONE,
                     com.dentalclinic.model.appointment.AppointmentStatus.WAITING_PAYMENT
               )
             ORDER BY a.date ASC, a.startTime ASC
@@ -212,7 +211,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               AND a.date = :date
               AND a.status IN (
                     com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
-                    com.dentalclinic.model.appointment.AppointmentStatus.DONE,
                     com.dentalclinic.model.appointment.AppointmentStatus.WAITING_PAYMENT
               )
             """)
@@ -274,7 +272,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               AND (
                     a.status IN (
                         com.dentalclinic.model.appointment.AppointmentStatus.COMPLETED,
-                        com.dentalclinic.model.appointment.AppointmentStatus.DONE,
                         com.dentalclinic.model.appointment.AppointmentStatus.CANCELLED
                     )
                     OR (a.date < CAST(:now AS date) OR (a.date = CAST(:now AS date) AND a.startTime <= CAST(:now AS time)))

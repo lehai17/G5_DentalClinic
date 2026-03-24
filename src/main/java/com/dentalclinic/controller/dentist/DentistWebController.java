@@ -223,8 +223,7 @@ public class DentistWebController {
         for (LocalDate d : weekDays) {
             Map<AppointmentStatus, Long> map = countsByDay.getOrDefault(d, Map.of());
 
-            long finishedCount = map.getOrDefault(AppointmentStatus.DONE, 0L)
-                    + map.getOrDefault(AppointmentStatus.COMPLETED, 0L)
+            long finishedCount = map.getOrDefault(AppointmentStatus.COMPLETED, 0L)
                     + map.getOrDefault(AppointmentStatus.WAITING_PAYMENT, 0L);
 
             long examiningCount = map.getOrDefault(AppointmentStatus.EXAMINING, 0L);
