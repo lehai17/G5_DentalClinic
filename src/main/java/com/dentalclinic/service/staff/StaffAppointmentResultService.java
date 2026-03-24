@@ -37,14 +37,6 @@ public class StaffAppointmentResultService {
                 mr.getImages().size();
             }
 
-            if (mr.getProposedServices() != null) {
-                mr.getProposedServices().size();
-                mr.getProposedServices().forEach(ps -> {
-                    if (ps.getService() != null) {
-                        ps.getService().getName();
-                    }
-                });
-            }
         }
 
         return new AppointmentResult(appt, mr);

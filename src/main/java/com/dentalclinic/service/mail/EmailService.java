@@ -128,7 +128,7 @@ public class EmailService {
         try {
             sendHtmlMail(
                     recipientEmail,
-                    "Xác nhận lịch hẹn #" + appointment.getId() + " - " + clinicName,
+                    "XÃ¡c nháº­n lá»‹ch háº¹n #" + appointment.getId() + " - " + clinicName,
                     "email/appointment-confirmation",
                     buildAppointmentConfirmationContext(appointment)
             );
@@ -153,15 +153,15 @@ public class EmailService {
         fillCommonClinicContext(context);
         context.setVariable("customerName", resolveCustomerName(appointment));
         context.setVariable("appointmentId", appointment.getId());
-        context.setVariable("appointmentDate", appointment.getDate() != null ? appointment.getDate().format(DATE_FORMATTER) : "ChÃ†Â°a xÃƒÂ¡c Ã„â€˜Ã¡Â»â€¹nh");
+        context.setVariable("appointmentDate", appointment.getDate() != null ? appointment.getDate().format(DATE_FORMATTER) : "ChÃƒâ€ Ã‚Â°a xÃƒÆ’Ã‚Â¡c Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹nh");
         context.setVariable("appointmentTime", buildTimeRange(appointment));
         context.setVariable("serviceSummary", buildServiceSummary(appointment));
-        context.setVariable("dentistName", appointment.getDentist() != null ? appointment.getDentist().getFullName() : "SÃ¡ÂºÂ½ Ã„â€˜Ã†Â°Ã¡Â»Â£c cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t sau");
+        context.setVariable("dentistName", appointment.getDentist() != null ? appointment.getDentist().getFullName() : "SÃƒÂ¡Ã‚ÂºÃ‚Â½ Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã‚Â£c cÃƒÂ¡Ã‚ÂºÃ‚Â­p nhÃƒÂ¡Ã‚ÂºÃ‚Â­t sau");
         context.setVariable("depositAmount", formatCurrency(appointment.getDepositAmount()));
         context.setVariable("bookingStatus", toStatusLabel(appointment.getStatus()));
-        context.setVariable("patientNote", StringUtils.hasText(appointment.getNotes()) ? appointment.getNotes().trim() : "KhÃƒÂ´ng cÃƒÂ³");
-        context.setVariable("contactChannel", StringUtils.hasText(appointment.getContactChannel()) ? appointment.getContactChannel() : "LiÃƒÂªn hÃ¡Â»â€¡ tÃ¡ÂºÂ¡i quÃ¡ÂºÂ§y");
-        context.setVariable("contactValue", StringUtils.hasText(appointment.getContactValue()) ? appointment.getContactValue() : "KhÃƒÂ´ng cÃƒÂ³");
+        context.setVariable("patientNote", StringUtils.hasText(appointment.getNotes()) ? appointment.getNotes().trim() : "KhÃƒÆ’Ã‚Â´ng cÃƒÆ’Ã‚Â³");
+        context.setVariable("contactChannel", StringUtils.hasText(appointment.getContactChannel()) ? appointment.getContactChannel() : "LiÃƒÆ’Ã‚Âªn hÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡ tÃƒÂ¡Ã‚ÂºÃ‚Â¡i quÃƒÂ¡Ã‚ÂºÃ‚Â§y");
+        context.setVariable("contactValue", StringUtils.hasText(appointment.getContactValue()) ? appointment.getContactValue() : "KhÃƒÆ’Ã‚Â´ng cÃƒÆ’Ã‚Â³");
         return context;
     }
 
@@ -201,7 +201,7 @@ public class EmailService {
 
             sendHtmlMail(
                     recipientEmail,
-                    "Hóa đơn thanh toán #" + (invoice != null ? invoice.getId() : appointment.getId()) + " - " + clinicName,
+                    "HÃ³a Ä‘Æ¡n thanh toÃ¡n #" + (invoice != null ? invoice.getId() : appointment.getId()) + " - " + clinicName,
                     "email/appointment-completed",
                     buildAppointmentCompletionContext(appointment, invoice, billingNote)
             );
@@ -236,11 +236,11 @@ public class EmailService {
         context.setVariable("customerName", resolveCustomerName(appointment));
         context.setVariable("invoiceId", invoice != null ? invoice.getId() : null);
         context.setVariable("appointmentId", appointment.getId());
-        context.setVariable("appointmentDate", appointment.getDate() != null ? appointment.getDate().format(DATE_FORMATTER) : "ChÃ†Â°a xÃƒÂ¡c Ã„â€˜Ã¡Â»â€¹nh");
+        context.setVariable("appointmentDate", appointment.getDate() != null ? appointment.getDate().format(DATE_FORMATTER) : "ChÃƒâ€ Ã‚Â°a xÃƒÆ’Ã‚Â¡c Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹nh");
         context.setVariable("appointmentTime", buildTimeRange(appointment));
         context.setVariable("serviceSummary", buildServiceSummary(appointment));
-        context.setVariable("dentistName", appointment.getDentist() != null ? appointment.getDentist().getFullName() : "ChÃ†Â°a phÃƒÂ¢n cÃƒÂ´ng");
-        context.setVariable("invoiceStatusLabel", invoice != null ? resolveInvoiceStatusLabel(invoice.getStatus()) : "Ã„ÂÃƒÂ£ thanh toÃƒÂ¡n");
+        context.setVariable("dentistName", appointment.getDentist() != null ? appointment.getDentist().getFullName() : "ChÃƒâ€ Ã‚Â°a phÃƒÆ’Ã‚Â¢n cÃƒÆ’Ã‚Â´ng");
+        context.setVariable("invoiceStatusLabel", invoice != null ? resolveInvoiceStatusLabel(invoice.getStatus()) : "Ãƒâ€žÃ‚ÂÃƒÆ’Ã‚Â£ thanh toÃƒÆ’Ã‚Â¡n");
         context.setVariable("invoiceItems", invoiceItems);
         context.setVariable("billedTotal", formatCurrency(billedTotal));
         context.setVariable("depositAmount", formatCurrency(depositAmount));
@@ -249,7 +249,7 @@ public class EmailService {
         context.setVariable("paidAmount", formatCurrency(paidAmount));
         context.setVariable("voucherCode", invoice != null && invoice.getVoucher() != null ? invoice.getVoucher().getCode() : null);
         context.setVariable("hasDiscount", discountAmount.compareTo(BigDecimal.ZERO) > 0);
-        context.setVariable("completionMessage", "HÃƒÂ³a Ã„â€˜Ã†Â¡n Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c thanh toÃƒÂ¡n xong.");
+        context.setVariable("completionMessage", "HÃƒÆ’Ã‚Â³a Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â¡n Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Â£ Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã‚Â£c thanh toÃƒÆ’Ã‚Â¡n xong.");
         return context;
     }
 
@@ -268,8 +268,8 @@ public class EmailService {
 
     private void fillCommonClinicContext(Context context) {
         context.setVariable("clinicName", clinicName);
-        context.setVariable("clinicAddress", StringUtils.hasText(clinicAddress) ? clinicAddress : "Vui lÃƒÂ²ng cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trong cÃ¡ÂºÂ¥u hÃƒÂ¬nh hÃ¡Â»â€¡ thÃ¡Â»â€˜ng");
-        context.setVariable("clinicPhone", StringUtils.hasText(clinicPhone) ? clinicPhone : "Vui lÃƒÂ²ng cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trong cÃ¡ÂºÂ¥u hÃƒÂ¬nh hÃ¡Â»â€¡ thÃ¡Â»â€˜ng");
+        context.setVariable("clinicAddress", StringUtils.hasText(clinicAddress) ? clinicAddress : "Vui lÃƒÆ’Ã‚Â²ng cÃƒÂ¡Ã‚ÂºÃ‚Â­p nhÃƒÂ¡Ã‚ÂºÃ‚Â­t trong cÃƒÂ¡Ã‚ÂºÃ‚Â¥u hÃƒÆ’Ã‚Â¬nh hÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡ thÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœng");
+        context.setVariable("clinicPhone", StringUtils.hasText(clinicPhone) ? clinicPhone : "Vui lÃƒÆ’Ã‚Â²ng cÃƒÂ¡Ã‚ÂºÃ‚Â­p nhÃƒÂ¡Ã‚ÂºÃ‚Â­t trong cÃƒÂ¡Ã‚ÂºÃ‚Â¥u hÃƒÆ’Ã‚Â¬nh hÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡ thÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœng");
         context.setVariable("clinicEmail", StringUtils.hasText(clinicEmail) ? clinicEmail : resolveFromAddress());
     }
 
@@ -289,8 +289,7 @@ public class EmailService {
                         qty,
                         formatCurrency(unitPrice),
                         formatCurrency(amount),
-                        amount,
-                        performedService.getToothNo()
+                        amount
                 ));
             }
         }
@@ -306,12 +305,11 @@ public class EmailService {
                 }
                 BigDecimal unitPrice = normalizeMoney(detail.getPriceSnapshot());
                 items.add(new InvoiceEmailItem(
-                        StringUtils.hasText(detail.getServiceNameSnapshot()) ? detail.getServiceNameSnapshot().trim() : "DÃ¡Â»â€¹ch vÃ¡Â»Â¥",
+                        StringUtils.hasText(detail.getServiceNameSnapshot()) ? detail.getServiceNameSnapshot().trim() : "DÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch vÃƒÂ¡Ã‚Â»Ã‚Â¥",
                         1,
                         formatCurrency(unitPrice),
                         formatCurrency(unitPrice),
-                        unitPrice,
-                        null
+                        unitPrice
                 ));
             }
         }
@@ -376,7 +374,7 @@ public class EmailService {
         if (appointment.getCustomer() != null && StringUtils.hasText(appointment.getCustomer().getFullName())) {
             return appointment.getCustomer().getFullName().trim();
         }
-        return "QuÃƒÂ½ khÃƒÂ¡ch";
+        return "QuÃƒÆ’Ã‚Â½ khÃƒÆ’Ã‚Â¡ch";
     }
 
     private String buildServiceSummary(Appointment appointment) {
@@ -396,12 +394,12 @@ public class EmailService {
             return appointment.getService().getName().trim();
         }
 
-        return "DÃ¡Â»â€¹ch vÃ¡Â»Â¥ sÃ¡ÂºÂ½ Ã„â€˜Ã†Â°Ã¡Â»Â£c cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t sau";
+        return "DÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ch vÃƒÂ¡Ã‚Â»Ã‚Â¥ sÃƒÂ¡Ã‚ÂºÃ‚Â½ Ãƒâ€žÃ¢â‚¬ËœÃƒâ€ Ã‚Â°ÃƒÂ¡Ã‚Â»Ã‚Â£c cÃƒÂ¡Ã‚ÂºÃ‚Â­p nhÃƒÂ¡Ã‚ÂºÃ‚Â­t sau";
     }
 
     private String buildTimeRange(Appointment appointment) {
         if (appointment.getStartTime() == null || appointment.getEndTime() == null) {
-            return "ChÃ†Â°a xÃƒÂ¡c Ã„â€˜Ã¡Â»â€¹nh";
+            return "ChÃƒâ€ Ã‚Â°a xÃƒÆ’Ã‚Â¡c Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹nh";
         }
         return appointment.getStartTime().format(TIME_FORMATTER) + " - " + appointment.getEndTime().format(TIME_FORMATTER);
     }
@@ -419,28 +417,27 @@ public class EmailService {
 
     private String resolveInvoiceStatusLabel(PaymentStatus status) {
         if (status == null) {
-            return "KhÃƒÂ´ng xÃƒÂ¡c Ã„â€˜Ã¡Â»â€¹nh";
+            return "KhÃƒÆ’Ã‚Â´ng xÃƒÆ’Ã‚Â¡c Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹nh";
         }
         return switch (status) {
-            case PAID -> "Ã„ÂÃƒÂ£ thanh toÃƒÂ¡n";
-            case UNPAID -> "ChÃ†Â°a thanh toÃƒÂ¡n";
+            case PAID -> "Ãƒâ€žÃ‚ÂÃƒÆ’Ã‚Â£ thanh toÃƒÆ’Ã‚Â¡n";
+            case UNPAID -> "ChÃƒâ€ Ã‚Â°a thanh toÃƒÆ’Ã‚Â¡n";
         };
     }
 
-    private String toStatusLabel(AppointmentStatus status) {
+        private String toStatusLabel(AppointmentStatus status) {
         if (status == null) {
-            return "ChÃ†Â°a xÃƒÂ¡c Ã„â€˜Ã¡Â»â€¹nh";
+            return "Chua xac dinh";
         }
         return switch (status) {
-            case PENDING_DEPOSIT -> "ChÃ¡Â»Â thanh toÃƒÂ¡n cÃ¡Â»Âc";
-            case PENDING -> "ChÃ¡Â»Â lÃ¡Â»â€¦ tÃƒÂ¢n xÃƒÂ¡c nhÃ¡ÂºÂ­n";
-            case CONFIRMED -> "Ã„ÂÃƒÂ£ xÃƒÂ¡c nhÃ¡ÂºÂ­n";
-            case EXAMINING -> "Ã„Âang khÃƒÂ¡m";
-            case DONE -> "Ã„ÂÃƒÂ£ hoÃƒÂ n tÃ¡ÂºÂ¥t khÃƒÂ¡m";
-            case WAITING_PAYMENT -> "ChÃ¡Â»Â thanh toÃƒÂ¡n";
-            case COMPLETED -> "HoÃƒÂ n thÃƒÂ nh";
-            case CANCELLED -> "Ã„ÂÃƒÂ£ hÃ¡Â»Â§y";
-            case REEXAM -> "TÃƒÂ¡i khÃƒÂ¡m";
+            case PENDING_DEPOSIT -> "Cho thanh toan coc";
+            case PENDING -> "Cho le tan xac nhan";
+            case CONFIRMED -> "Da xac nhan";
+            case EXAMINING -> "Dang kham";
+            case WAITING_PAYMENT -> "Cho thanh toan";
+            case COMPLETED -> "Hoan thanh";
+            case CANCELLED -> "Da huy";
+            case REEXAM -> "Tai kham";
             default -> status.name();
         };
     }
@@ -470,20 +467,17 @@ public class EmailService {
         private final String unitPrice;
         private final String amount;
         private final BigDecimal amountValue;
-        private final String toothNo;
 
         private InvoiceEmailItem(String name,
                                  Integer qty,
                                  String unitPrice,
                                  String amount,
-                                 BigDecimal amountValue,
-                                 String toothNo) {
+                                 BigDecimal amountValue) {
             this.name = name;
             this.qty = qty;
             this.unitPrice = unitPrice;
             this.amount = amount;
             this.amountValue = amountValue;
-            this.toothNo = toothNo;
         }
 
         public String getName() {
@@ -505,9 +499,6 @@ public class EmailService {
         public BigDecimal getAmountValue() {
             return amountValue;
         }
-
-        public String getToothNo() {
-            return toothNo;
-        }
     }
 }
+
