@@ -1,7 +1,6 @@
 package com.dentalclinic.model.promotion;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,8 +25,7 @@ public class Voucher {
     @Column(nullable = false, length = 120)
     private String code;
 
-    @Nationalized
-    @Column(length = 500, columnDefinition = "nvarchar(500)")
+    @Column(length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
