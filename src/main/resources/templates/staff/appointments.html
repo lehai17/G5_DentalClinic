@@ -106,8 +106,9 @@
                   <button
                     type="button"
                     class="btn-payment"
-                    th:if="${a.status.name() == 'WAITING_PAYMENT'}"
+                    th:if="${a.status.name() == 'WAITING_PAYMENT' or a.status.name() == 'COMPLETED'}"
                     th:onclick="'viewInvoice(' + ${a.id} + ')'"
+                    th:text="${a.status.name() == 'COMPLETED' ? 'Xem hóa đơn' : 'Thanh toán'}"
                   >
                     Thanh toán
                   </button>
