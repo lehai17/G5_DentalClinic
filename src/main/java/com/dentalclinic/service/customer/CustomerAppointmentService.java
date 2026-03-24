@@ -658,7 +658,7 @@ public class CustomerAppointmentService {
                         "Không tìm thấy lịch hẹn để đánh giá."));
 
         if (!(appointment.getStatus() == AppointmentStatus.COMPLETED
-                || appointment.getStatus() == AppointmentStatus.DONE)) {
+                || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT)) {
             throw new BookingException(
                     BookingErrorCode.APPOINTMENT_STATUS_INVALID,
                     "Chỉ có thể đánh giá sau khi lịch hẹn đã hoàn thành.");
@@ -958,7 +958,7 @@ public class CustomerAppointmentService {
 
         if (appointment.getStatus() == AppointmentStatus.CANCELLED
                 || appointment.getStatus() == AppointmentStatus.COMPLETED
-                || appointment.getStatus() == AppointmentStatus.DONE
+                || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT
                 || appointment.getStatus() == AppointmentStatus.EXAMINING
                 || appointment.getStatus() == AppointmentStatus.IN_PROGRESS) {
             throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID,
@@ -1325,7 +1325,7 @@ public class CustomerAppointmentService {
 
     private boolean isRebookEligibleStatus(AppointmentStatus status) {
         return status == AppointmentStatus.COMPLETED
-                || status == AppointmentStatus.DONE
+                || status == AppointmentStatus.WAITING_PAYMENT
                 || status == AppointmentStatus.CANCELLED
                 || status == AppointmentStatus.REEXAM;
     }
@@ -1348,7 +1348,6 @@ public class CustomerAppointmentService {
                 || appointment.getStatus() == AppointmentStatus.CHECKED_IN
                 || appointment.getStatus() == AppointmentStatus.EXAMINING
                 || appointment.getStatus() == AppointmentStatus.IN_PROGRESS
-                || appointment.getStatus() == AppointmentStatus.DONE
                 || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID,
                     "Không thể hủy lịch với trạng thái hiện tại.");
@@ -1549,7 +1548,6 @@ public class CustomerAppointmentService {
                     line.setQty(qty);
                     line.setUnitPrice(unitPrice);
                     line.setAmount(lineAmount);
-                    line.setToothNo(item.getToothNo());
                     invoiceItems.add(line);
 
                     billedTotal = billedTotal.add(lineAmount);
@@ -1625,7 +1623,7 @@ public class CustomerAppointmentService {
                 !dto.isReviewed()
                         && appointment.getDentist() != null
                         && (appointment.getStatus() == AppointmentStatus.COMPLETED
-                                || appointment.getStatus() == AppointmentStatus.DONE));
+                                || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT));
         return dto;
     }
 

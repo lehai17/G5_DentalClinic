@@ -81,7 +81,6 @@
                                                 <div style="font-size:20px;font-weight:800;color:#1e293b;" th:text="${item.name}">Nhổ răng</div>
                                                 <div style="margin-top:8px;font-size:14px;color:#64748b;line-height:1.6;">
                                                     <span th:text="${'SL: ' + item.qty + ' • Đơn giá: ' + item.unitPrice}">SL: 1 • Đơn giá: 250.000 VND</span>
-                                                    <span th:if="${item.toothNo != null and !#strings.isEmpty(item.toothNo)}" th:text="${' • Răng: ' + item.toothNo}"></span>
                                                 </div>
                                             </div>
                                             <div style="font-size:18px;font-weight:800;color:#0f172a;white-space:nowrap;" th:text="${item.amount}">250.000 VND</div>

@@ -320,8 +320,7 @@ public class StaffAppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
 
-        if (appointment.getStatus() != AppointmentStatus.DONE
-                && appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT
+        if (appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT
                 && appointment.getStatus() != AppointmentStatus.COMPLETED) {
             throw new RuntimeException("Chi co the xem hoa don cho lich hen da kham xong.");
         }
@@ -371,7 +370,6 @@ public class StaffAppointmentService {
                 line.setQty(qty);
                 line.setUnitPrice(unitPrice);
                 line.setAmount(lineAmount);
-                line.setToothNo(item.getToothNo());
                 invoiceItems.add(line);
 
                 if (item.getService().getName() != null && !item.getService().getName().isBlank()) {
@@ -423,7 +421,7 @@ public class StaffAppointmentService {
                     : originalRemainingAmount);
         });
 
-        dto.setCanPayRemaining(appointment.getStatus() == AppointmentStatus.DONE);
+        dto.setCanPayRemaining(appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT);
         return dto;
     }
 
@@ -432,7 +430,7 @@ public class StaffAppointmentService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
 
-        if (appointment.getStatus() == AppointmentStatus.DONE) {
+        if (appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             processPayment(appointmentId);
             appointment = appointmentRepository.findById(appointmentId)
                     .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
@@ -470,7 +468,7 @@ public class StaffAppointmentService {
             throw new RuntimeException("Khong tim thay tai khoan khach hang de tru vi.");
         }
 
-        if (appointment.getStatus() == AppointmentStatus.DONE) {
+        if (appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             processPayment(appointmentId);
         }
 
@@ -485,7 +483,7 @@ public class StaffAppointmentService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
 
-        if (appointment.getStatus() == AppointmentStatus.DONE) {
+        if (appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             processPayment(appointmentId);
             appointment = appointmentRepository.findById(appointmentId)
                     .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
