@@ -3,6 +3,8 @@ package com.dentalclinic.service.staff;
 import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.dto.customer.AppointmentInvoiceItemDto;
 import com.dentalclinic.dto.customer.AppointmentPrescriptionItemDto;
+import com.dentalclinic.dto.customer.CreateWalkInAppointmentRequest;
+import com.dentalclinic.dto.customer.SlotDto;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.payment.BillingNote;
@@ -12,11 +14,17 @@ import com.dentalclinic.model.payment.Invoice;
 import com.dentalclinic.model.payment.PaymentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.model.profile.CustomerProfile;
+import com.dentalclinic.model.user.Gender;
+import com.dentalclinic.model.user.Role;
+import com.dentalclinic.model.user.User;
+import com.dentalclinic.model.user.UserStatus;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.BillingNoteRepository;
+import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.DentistBusyScheduleRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.repository.InvoiceRepository;
+import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.dentist.ReexamService;
 import com.dentalclinic.service.mail.EmailService;
@@ -34,11 +42,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,8 +90,58 @@ public class StaffAppointmentService {
     @Autowired
     private PayOsService payOsService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private CustomerProfileRepository customerProfileRepository;
+
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
+    }
+
+    public List<SlotDto> getWalkInAvailableSlots(List<Long> serviceIds, LocalDate date) {
+        return customerAppointmentService.getAvailableSlotsForWalkIn(serviceIds, date);
+    }
+
+    public List<SlotDto> getAllWalkInSlotsForDate(LocalDate date) {
+        return customerAppointmentService.getAllSlotsForDate(date);
+    }
+
+    @Transactional
+    public AppointmentDto createWalkInAppointment(CreateWalkInAppointmentRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Du lieu dat lich khong hop le.");
+        }
+
+        String fullName = request.getFullName() != null ? request.getFullName().trim() : "";
+        String contactChannel = request.getContactChannel() != null ? request.getContactChannel().trim().toUpperCase() : "";
+        String contactValue = request.getContactValue() != null ? request.getContactValue().trim() : "";
+        if (fullName.isEmpty()) {
+            throw new RuntimeException("Vui long nhap ho ten khach vang lai.");
+        }
+        if (contactChannel.isEmpty()) {
+            throw new RuntimeException("Vui long chon kenh lien he.");
+        }
+        if (contactValue.isEmpty()) {
+            throw new RuntimeException("Vui long nhap thong tin lien he.");
+        }
+        if (!"PHONE".equals(contactChannel) && !"EMAIL".equals(contactChannel)) {
+            throw new RuntimeException("Kenh lien he chi ho tro so dien thoai hoac email.");
+        }
+
+        request.setContactChannel(contactChannel);
+        request.setContactValue(contactValue);
+        String phone = "PHONE".equals(contactChannel) ? contactValue : null;
+
+        CustomerProfile walkInCustomer = createWalkInCustomerProfile(fullName, phone);
+        AppointmentDto created = customerAppointmentService.createAppointmentForWalkIn(
+                walkInCustomer,
+                request.toCreateAppointmentRequest(),
+                AppointmentStatus.PENDING,
+                BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+        created.setCustomerName(fullName);
+        return created;
     }
 
     @Transactional
@@ -581,6 +641,30 @@ public class StaffAppointmentService {
         }
 
         return "Chua co dich vu";
+    }
+
+    private CustomerProfile createWalkInCustomerProfile(String fullName, String phone) {
+        User user = new User();
+        user.setEmail(generateWalkInEmail());
+        user.setPassword("{noop}" + UUID.randomUUID());
+        user.setRole(Role.CUSTOMER);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setGender(Gender.OTHER);
+        user = userRepository.save(user);
+
+        CustomerProfile profile = new CustomerProfile();
+        profile.setUser(user);
+        profile.setFullName(fullName);
+        profile.setPhone(phone != null && !phone.isBlank() ? phone : null);
+        return customerProfileRepository.save(profile);
+    }
+
+    private String generateWalkInEmail() {
+        String email;
+        do {
+            email = "walkin-" + UUID.randomUUID() + "@guest.local";
+        } while (userRepository.existsByEmail(email));
+        return email;
     }
 
 }

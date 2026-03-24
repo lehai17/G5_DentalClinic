@@ -10,6 +10,7 @@ public class AppointmentDto {
     private Long id;
     private Long serviceId;
     private String serviceName;
+    private String customerName;
     private List<Long> serviceIds;
     private List<AppointmentServiceItemDto> services;
     private Integer totalDurationMinutes;
@@ -58,6 +59,8 @@ public class AppointmentDto {
     public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
     public String getServiceName() { return serviceName; }
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
     public List<Long> getServiceIds() { return serviceIds; }
     public void setServiceIds(List<Long> serviceIds) { this.serviceIds = serviceIds; }
     public List<AppointmentServiceItemDto> getServices() { return services; }

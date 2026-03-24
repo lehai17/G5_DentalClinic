@@ -170,6 +170,22 @@ public class CustomerAppointmentService {
         return getAllSlotsEntitiesForDate(date).stream().map(this::toSlotDto).collect(Collectors.toList());
     }
 
+    public List<SlotDto> getAvailableSlotsForWalkIn(List<Long> serviceIds, LocalDate date) {
+        validateSelectedDate(date);
+
+        if (serviceIds == null || serviceIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> normalizedServiceIds = normalizeAndValidateServiceIds(serviceIds, true);
+        List<Services> services = validateServices(normalizedServiceIds);
+        BookingTotals totals = calculateBookingTotals(services);
+
+        return getAvailableSlotsForDuration(date, totals.totalDurationMinutes()).stream()
+                .map(this::toSlotDto)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public AppointmentDto createAppointment(Long userId, CreateAppointmentRequest request) {
         validateCreateRequest(request);
@@ -205,6 +221,67 @@ public class CustomerAppointmentService {
                 request.getContactChannel().trim().toUpperCase(),
                 request.getContactValue().trim(),
                 request.getPatientNote());
+        return toDto(created);
+    }
+
+    @Transactional
+    public AppointmentDto createAppointmentForWalkIn(CustomerProfile customer,
+                                                     CreateAppointmentRequest request,
+                                                     AppointmentStatus initialStatus,
+                                                     BigDecimal depositAmountOverride) {
+        validateCreateRequest(request);
+        if (customer == null) {
+            throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Khach vang lai khong hop le.");
+        }
+
+        List<Long> requestedServiceIds = normalizeAndValidateServiceIds(request.getResolvedServiceIds(), true);
+        List<Services> selectedServices = validateServices(requestedServiceIds);
+        BookingTotals totals = calculateBookingTotals(selectedServices);
+
+        int slotsNeeded = calculateSlotsNeeded(totals.totalDurationMinutes());
+        LocalDateTime start = resolveStartDateTime(request);
+        LocalDateTime end = calculateAppointmentEndDateTime(start, slotsNeeded);
+
+        validateNotInPast(start);
+        validateWorkingWindow(start, end);
+
+        List<Slot> reserved = reserveSlots(start, slotsNeeded);
+        if (reserved.isEmpty()) {
+            throw new BookingException(BookingErrorCode.SLOT_FULL, "Khung gio da het cho.");
+        }
+
+        if (reserved.isEmpty()) {
+            throw new BookingException(BookingErrorCode.SLOT_FULL, "Khung gio da het cho.");
+        }
+
+        Slot first = reserved.get(0);
+        Slot last = reserved.get(reserved.size() - 1);
+
+        Appointment created = resolveAppointmentEntityForCreate(customer, first.getSlotTime().toLocalDate(),
+                first.getStartTime());
+        created.setService(selectedServices.get(0));
+        created.setTotalDurationMinutes(totals.totalDurationMinutes());
+        created.setTotalAmount(totals.totalAmount());
+        created.setDepositAmount(depositAmountOverride != null
+                ? depositAmountOverride.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP)
+                : totals.depositAmount());
+        created.setDate(first.getSlotTime().toLocalDate());
+        created.setStartTime(first.getStartTime());
+        created.setEndTime(last.getEndTime());
+        created.setStatus(initialStatus != null ? initialStatus : AppointmentStatus.PENDING);
+        created.setContactChannel(request.getContactChannel().trim().toUpperCase(Locale.ROOT));
+        created.setContactValue(request.getContactValue().trim());
+        created.setNotes(request.getPatientNote() != null ? request.getPatientNote().trim() : null);
+
+        for (int i = 0; i < reserved.size(); i++) {
+            created.addAppointmentSlot(new AppointmentSlot(created, reserved.get(i), i));
+        }
+
+        for (int i = 0; i < selectedServices.size(); i++) {
+            created.addAppointmentDetail(buildAppointmentDetail(selectedServices.get(i), i));
+        }
+
+        created = appointmentRepository.save(created);
         return toDto(created);
     }
 
@@ -1457,6 +1534,7 @@ public class CustomerAppointmentService {
         dto.setCreatedAt(appointment.getCreatedAt());
         dto.setStatus(appointment.getStatus().name());
         dto.setNotes(appointment.getNotes());
+        dto.setCustomerName(appointment.getCustomer() != null ? appointment.getCustomer().getFullName() : null);
         dto.setContactChannel(appointment.getContactChannel());
         dto.setContactValue(appointment.getContactValue());
         dto.setCancellationReason(
