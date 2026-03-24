@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.ArrayList;
 
@@ -69,24 +70,12 @@ public class CustomerHomepageController {
                                Model model) {
         model.addAttribute("active", "homepage");
         model.addAttribute("featuredReviews", reviewMarketingService.getHomepageFeaturedReviews());
+
         Long currentCustomerId = resolveCurrentUserId(authentication);
-        if (currentCustomerId == null) {
-            return "redirect:/login";
-        }
 
         try {
-            CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
-            if (profile == null) {
-                profile = new CustomerProfile();
-                profile.setFullName("Khách hàng");
-                model.addAttribute("appointments", new ArrayList<>());
-            } else {
-                model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
-            }
-            model.addAttribute("customer", profile);
             model.addAttribute("services", serviceRepo.findByActiveTrue());
             model.addAttribute("dentists", dentistRepo.filterDentists(null, null, UserStatus.ACTIVE));
-            model.addAttribute("voucherBannerVouchers", customerVoucherWalletService.getHomepageBannerVouchers(currentCustomerId));
             model.addAttribute("voucherService", customerVoucherWalletService);
 
             int safePage = Math.max(page, 0);
@@ -96,9 +85,34 @@ public class CustomerHomepageController {
             model.addAttribute("currentPage", safePage);
             model.addAttribute("totalPages", blogPage.getTotalPages());
 
+            if (currentCustomerId != null) {
+                CustomerProfile profile = profileService.getCurrentCustomerProfile(currentCustomerId);
+
+                if (profile == null) {
+                    profile = new CustomerProfile();
+                    profile.setFullName("Khách hàng");
+                    model.addAttribute("appointments", new ArrayList<>());
+                } else {
+                    model.addAttribute("appointments", profileService.getCustomerAppointments(profile.getId()));
+                }
+
+                model.addAttribute("customer", profile);
+                model.addAttribute("voucherBannerVouchers",
+                        customerVoucherWalletService.getHomepageBannerVouchers(currentCustomerId));
+            } else {
+                CustomerProfile guest = new CustomerProfile();
+                guest.setFullName("Khách");
+                model.addAttribute("customer", guest);
+                model.addAttribute("appointments", new ArrayList<>());
+                model.addAttribute("voucherBannerVouchers", new ArrayList<>());
+            }
+
             return "customer/homepage";
         } catch (Exception e) {
-            model.addAttribute("customer", new CustomerProfile());
+            CustomerProfile guest = new CustomerProfile();
+            guest.setFullName("Khách");
+
+            model.addAttribute("customer", guest);
             model.addAttribute("appointments", new ArrayList<>());
             model.addAttribute("services", new ArrayList<>());
             model.addAttribute("dentists", new ArrayList<>());
@@ -107,6 +121,7 @@ public class CustomerHomepageController {
             model.addAttribute("blogs", new ArrayList<>());
             model.addAttribute("currentPage", 0);
             model.addAttribute("totalPages", 0);
+
             return "customer/homepage";
         }
     }
@@ -200,10 +215,20 @@ public class CustomerHomepageController {
         }
 
         Object principal = authentication.getPrincipal();
+
         if (principal instanceof UserDetails userDetails) {
             return userRepository.findByEmail(userDetails.getUsername())
                     .map(user -> user.getId())
                     .orElse(null);
+        }
+
+        if (principal instanceof OAuth2User oauth2User) {
+            String email = oauth2User.getAttribute("email");
+            if (email != null && !email.isBlank()) {
+                return userRepository.findByEmail(email)
+                        .map(user -> user.getId())
+                        .orElse(null);
+            }
         }
 
         return userRepository.findByEmail(authentication.getName())

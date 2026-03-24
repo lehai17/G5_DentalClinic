@@ -28,21 +28,25 @@ public class OAuthUserService {
         String email = oauthUser.getAttribute("email");
         String fullName = oauthUser.getAttribute("name");
 
-        // 1) Upsert USER
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Google account không trả về email.");
+        }
+
+        if (fullName == null || fullName.isBlank()) {
+            fullName = email;
+        }
+
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User u = new User();
             u.setEmail(email);
-            u.setPassword("GOOGLE");          // pass ngẫu nhiên vì kh cần pass
+            u.setPassword("GOOGLE");
             u.setRole(Role.CUSTOMER);
             u.setStatus(UserStatus.ACTIVE);
-
-            // GG kh có DOB/Gender
-            u.setGender(Gender.OTHER);        // trả other hoặc null
+            u.setGender(Gender.OTHER);
             u.setDateOfBirth(null);
             return userRepository.save(u);
         });
 
-        // 2) Tạo luôn profile mới
         CustomerProfile profile = customerProfileRepository
                 .findByUser_Id(user.getId())
                 .orElseGet(() -> {
@@ -51,7 +55,6 @@ public class OAuthUserService {
                     return p;
                 });
 
-        // lấy fullName
         profile.setFullName(fullName);
         customerProfileRepository.save(profile);
     }
