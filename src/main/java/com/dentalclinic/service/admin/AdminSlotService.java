@@ -9,7 +9,9 @@ import com.dentalclinic.model.appointment.Slot;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
+import com.dentalclinic.repository.DentistScheduleRepository;
 import com.dentalclinic.repository.SlotRepository;
+import com.dentalclinic.service.appointment.SlotCapacitySyncService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,13 +35,19 @@ public class AdminSlotService {
     private final SlotRepository slotRepository;
     private final AppointmentRepository appointmentRepository;
     private final DentistProfileRepository dentistProfileRepository;
+    private final DentistScheduleRepository dentistScheduleRepository;
+    private final SlotCapacitySyncService slotCapacitySyncService;
 
     public AdminSlotService(SlotRepository slotRepository,
+            SlotCapacitySyncService slotCapacitySyncService,
             AppointmentRepository appointmentRepository,
-            DentistProfileRepository dentistProfileRepository) {
+            DentistProfileRepository dentistProfileRepository,
+            DentistScheduleRepository dentistScheduleRepository) {
         this.slotRepository = slotRepository;
+        this.slotCapacitySyncService = slotCapacitySyncService;
         this.appointmentRepository = appointmentRepository;
         this.dentistProfileRepository = dentistProfileRepository;
+        this.dentistScheduleRepository = dentistScheduleRepository;
     }
 
     public static List<LocalTime> buildHalfHourTimes() {
@@ -434,7 +442,11 @@ public class AdminSlotService {
             while (cur.isBefore(end)) {
                 Slot slot = slotMap.get(cur);
                 if (slot == null) {
-                    slotRepository.save(new Slot(cur, cap));
+                    Slot newSlot = new Slot(cur, cap);
+                    if (d.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                        newSlot.setActive(false);
+                    }
+                    slotRepository.save(newSlot);
                     created++;
                 } else {
                     boolean changed = false;
@@ -452,6 +464,7 @@ public class AdminSlotService {
             }
             d = d.plusDays(1);
         }
+        slotCapacitySyncService.syncCapacities(fromDate, toDate);
         return created;
     }
 
@@ -506,17 +519,90 @@ public class AdminSlotService {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
 
-        // Ensure standard slots exist
         List<Slot> existing = slotRepository.findAllSlotsInRange(start, end);
         if (existing == null || existing.isEmpty()) {
             generateSlots(date, date, 3);
-        } else {
-            unlockSlots(start, end);
         }
+
+        List<Slot> toUnlock = slotRepository.findAllSlotsInRange(start, end);
+        for (Slot s : toUnlock) {
+            s.setActive(true);
+            s.setLockReason(null);
+        }
+        slotRepository.saveAll(toUnlock);
     }
 
     @Transactional
     public void resetAllSlots() {
-        slotRepository.enableAllSlots();
+        List<Slot> all = slotRepository.findAll();
+        List<Slot> toSave = new ArrayList<>();
+        for (Slot s : all) {
+            if (s.getSlotTime() != null) {
+                if (s.getSlotTime().getDayOfWeek() == DayOfWeek.SUNDAY) {
+                    if (s.isActive()) {
+                        s.setActive(false);
+                        s.setLockReason("Nghỉ Chủ Nhật");
+                        toSave.add(s);
+                    }
+                } else {
+                    if (!s.isActive()) {
+                        s.setActive(true);
+                        s.setLockReason(null);
+                        toSave.add(s);
+                    }
+                }
+            }
+        }
+        if (!toSave.isEmpty()) {
+            slotRepository.saveAll(toSave);
+        }
+    }
+
+    @Transactional
+    public void generateMonthlySchedule(java.time.YearMonth yearMonth) {
+        LocalDate start = yearMonth.atDay(1);
+        LocalDate end = yearMonth.atEndOfMonth();
+
+        // 1. Sinh lịch Slot mặc định cho cả tháng đó
+        generateSlots(start, end, 3);
+
+        // 2. Lấy danh sách bác sĩ đang hoạt động
+        List<DentistProfile> activeDentists = dentistProfileRepository.findAll().stream()
+                .filter(d -> d.getUser() != null
+                        && d.getUser().getStatus() == com.dentalclinic.model.user.UserStatus.ACTIVE)
+                .toList();
+
+        if (activeDentists.isEmpty())
+            return;
+
+        // 3. Quét từng Bác Sĩ qua các ng y
+        LocalDate d = start;
+        while (!d.isAfter(end)) {
+            if (d.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                final LocalDate currentDay = d;
+                for (DentistProfile dentist : activeDentists) {
+                    List<com.dentalclinic.model.schedule.DentistSchedule> existing = dentistScheduleRepository
+                            .findByDentist_IdAndDate(dentist.getId(), currentDay);
+                    if (existing == null || existing.isEmpty()) {
+                        long totalSaves = 0;
+                        int[][] shifts = { { 8, 12 }, { 13, 17 } };
+                        for (int[] shift : shifts) {
+                            for (int hour = shift[0]; hour < shift[1]; hour++) {
+                                com.dentalclinic.model.schedule.DentistSchedule s = new com.dentalclinic.model.schedule.DentistSchedule();
+                                s.setDentist(dentist);
+                                s.setDate(currentDay);
+                                s.setDayOfWeek(currentDay.getDayOfWeek());
+                                s.setStartTime(LocalTime.of(hour, 0));
+                                s.setEndTime(LocalTime.of(hour + 1, 0));
+                                s.setAvailable(true);
+                                dentistScheduleRepository.save(s);
+                                totalSaves++;
+                            }
+                        }
+                    }
+                }
+            }
+            d = d.plusDays(1);
+        }
     }
 }

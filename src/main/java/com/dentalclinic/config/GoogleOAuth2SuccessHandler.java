@@ -1,5 +1,6 @@
 package com.dentalclinic.config;
 
+import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.common.OAuthUserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,11 +14,15 @@ import java.io.IOException;
 
 @Component
 public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler {
+    private static final String SESSION_USER_ID = "userId";
 
     private final OAuthUserService oAuthUserService;
+    private final UserRepository userRepository;
 
-    public GoogleOAuth2SuccessHandler(OAuthUserService oAuthUserService) {
+    public GoogleOAuth2SuccessHandler(OAuthUserService oAuthUserService,
+                                      UserRepository userRepository) {
         this.oAuthUserService = oAuthUserService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -29,10 +34,14 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
 
-        // tạo user + profile trong 1 transaction
         oAuthUserService.upsertGoogleUser(oauthUser);
+
+        String email = oauthUser.getAttribute("email");
+        if (email != null && !email.isBlank()) {
+            userRepository.findByEmail(email)
+                    .ifPresent(user -> request.getSession().setAttribute(SESSION_USER_ID, user.getId()));
+        }
 
         response.sendRedirect("/homepage");
     }
 }
-

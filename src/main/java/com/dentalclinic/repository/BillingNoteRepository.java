@@ -20,7 +20,7 @@ public interface BillingNoteRepository extends JpaRepository<BillingNote, Long> 
     );
 
     @Query("""
-        SELECT DISTINCT bn FROM BillingNote bn
+        SELECT bn FROM BillingNote bn
         LEFT JOIN FETCH bn.prescriptionItems
         WHERE bn.appointment.id IN :appointmentIds
     """)

@@ -12,6 +12,8 @@ import com.dentalclinic.repository.UserRepository;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.regex.Pattern;
@@ -75,9 +78,7 @@ public class DentistExaminedPatientsController {
             Model model
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        var user = userRepository.findByEmail(email)
+        var user = resolveCurrentUser(authentication)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Long dentistUserId = user.getId();
@@ -325,6 +326,39 @@ public class DentistExaminedPatientsController {
             current = inMap;
         }
         return current != null && current.getId() != null ? current.getId() : appt.getId();
+    }
+
+    private Optional<com.dentalclinic.model.user.User> resolveCurrentUser(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return Optional.empty();
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            return userRepository.findByEmail(userDetails.getUsername());
+        }
+        if (principal instanceof OAuth2User oauth2User) {
+            Object email = oauth2User.getAttributes().get("email");
+            if (email != null) {
+                return userRepository.findByEmail(String.valueOf(email));
+            }
+        }
+
+        String name = authentication.getName();
+        if (name == null || name.isBlank()) {
+            return Optional.empty();
+        }
+
+        Optional<com.dentalclinic.model.user.User> byEmail = userRepository.findByEmail(name);
+        if (byEmail.isPresent()) {
+            return byEmail;
+        }
+
+        try {
+            return userRepository.findById(Long.parseLong(name));
+        } catch (NumberFormatException ex) {
+            return Optional.empty();
+        }
     }
 
     private record ChainRaw(Appointment root, List<Appointment> steps) {}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đánh giá khách hàng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/staff/staff.css">
+
+    <style>
+        .content {
+            padding: 24px;
+        }
+
+        .page-title {
+            margin: 0 0 8px;
+            font-size: 38px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .page-subtitle {
+            margin: 0 0 24px;
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .review-board {
+            display: grid;
+            gap: 20px;
+        }
+
+        .review-card {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+            border: 1px solid #eef2f7;
+            padding: 20px;
+        }
+
+        .review-card-grid {
+            display: grid;
+            grid-template-columns: 90px 1.2fr 1fr 1fr 1fr 2fr 150px 280px;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .cell-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .cell-value {
+            font-size: 16px;
+            color: #111827;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            line-height: 1.55;
+        }
+
+        .id-badge {
+            display: inline-block;
+            min-width: 48px;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-weight: 800;
+        }
+
+        .rating-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-weight: 700;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .rating-stars {
+            color: #f59e0b;
+            letter-spacing: 1px;
+            font-size: 14px;
+        }
+
+        .comment-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+            min-height: 96px;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .settings-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .setting-item {
+            margin-bottom: 14px;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-item label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .setting-item input[type="number"] {
+            width: 100%;
+            max-width: 110px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            margin-top: 8px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .save-btn, .delete-btn {
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .save-btn {
+            background: #2563eb;
+        }
+
+        .save-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+        }
+
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+
+        .empty-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 18px;
+            text-align: center;
+            color: #6b7280;
+            border: 1px dashed #cbd5e1;
+        }
+
+        @media (max-width: 1400px) {
+            .review-card-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .review-card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+    <th:block th:replace="~{staff/fragments/sidebar :: sidebar}"></th:block>
+
+    <div class="main-content">
+        <th:block th:replace="~{staff/fragments/header :: header}"></th:block>
+
+        <div class="content">
+            <h1 class="page-title">Quản lý đánh giá khách hàng</h1>
+            <p class="page-subtitle">
+                Chọn review hiển thị ngoài homepage, sắp xếp thứ tự và xóa các đánh giá không cần thiết.
+            </p>
+
+            <div class="review-board" th:if="${reviews != null and !#lists.isEmpty(reviews)}">
+                <div class="review-card" th:each="r : ${reviews}" th:attr="data-review-id=${r.id}">
+                    <div class="review-card-grid">
+                        <div>
+                            <div class="cell-label">ID</div>
+                            <div class="id-badge" th:text="${r.id}">1</div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Khách hàng</div>
+                            <div class="cell-value" th:text="${r.customerName}">Nguyễn Văn A</div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Dịch vụ</div>
+                            <div class="cell-value" th:text="${r.serviceName}">Tẩy trắng răng</div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Bác sĩ</div>
+                            <div class="cell-value" th:text="${r.dentistName}">Bác sĩ Trung</div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Điểm đánh giá</div>
+                            <div class="rating-chip">
+                                <span>Bác sĩ:</span>
+                                <span class="rating-stars" th:text="${'★'.repeat(r.dentistRating)}">★★★★★</span>
+                            </div>
+                            <div class="rating-chip">
+                                <span>Dịch vụ:</span>
+                                <span class="rating-stars" th:text="${'★'.repeat(r.serviceRating)}">★★★★★</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Nội dung</div>
+                            <div class="comment-box"
+                                 th:text="${r.comment != null and !#strings.isEmpty(r.comment) ? r.comment : 'Không có nội dung đánh giá'}">
+                                Nội dung đánh giá
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Ngày tạo</div>
+                            <div class="cell-value" th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                24/03/2026 09:19
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="cell-label">Thiết lập</div>
+                            <div class="settings-box">
+                                <div class="setting-item">
+                                    <label>
+                                        <input type="checkbox" class="featured-check" th:checked="${r.featuredOnHomepage}">
+                                        Hiện ở homepage
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label>
+                                        <input type="checkbox" class="hidden-name-check" th:checked="${r.hiddenCustomerName}">
+                                        Ẩn tên khách hàng
+                                    </label>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label>Thứ tự hiển thị</label>
+                                    <input type="number" class="display-order-input" th:value="${r.displayOrder}">
+                                </div>
+
+                                <div class="btn-row">
+                                    <button type="button" class="save-btn">Lưu</button>
+                                    <button type="button" class="delete-btn">Xóa</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-box" th:if="${reviews == null or #lists.isEmpty(reviews)}">
+                Chưa có đánh giá nào từ khách hàng.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll(".save-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var row = btn.closest(".review-card");
+            var reviewId = row.getAttribute("data-review-id");
+
+            var payload = {
+                featuredOnHomepage: row.querySelector(".featured-check").checked,
+                hiddenCustomerName: row.querySelector(".hidden-name-check").checked,
+                displayOrder: row.querySelector(".display-order-input").value
+                    ? parseInt(row.querySelector(".display-order-input").value, 10)
+                    : null
+            };
+
+            fetch("/staff/reviews/" + reviewId + "/feature", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify(payload)
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (!data.success) {
+                        throw new Error(data.message || "Cập nhật thất bại");
+                    }
+                    alert(data.message || "Đã lưu");
+                })
+                .catch(function (err) {
+                    alert(err.message || "Có lỗi xảy ra");
+                });
+        });
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var row = btn.closest(".review-card");
+            var reviewId = row.getAttribute("data-review-id");
+
+            if (!confirm("Bạn có chắc muốn xóa đánh giá này không?")) {
+                return;
+            }
+
+            fetch("/staff/reviews/" + reviewId, {
+                method: "DELETE",
+                credentials: "same-origin"
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (!data.success) {
+                        throw new Error(data.message || "Xóa thất bại");
+                    }
+                    alert(data.message || "Đã xóa");
+                    row.remove();
+                })
+                .catch(function (err) {
+                    alert(err.message || "Có lỗi xảy ra");
+                });
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -528,6 +528,11 @@
                             <div class="input-wrapper"><input type="email" id="editEmail" name="email" required></div>
                         </div>
                         <div class="input-group">
+                            <label>Mật khẩu</label>
+                            <div class="input-wrapper"><input type="text" id="editTempPassword" name="tempPassword"
+                                    required minlength="6"></div>
+                        </div>
+                        <div class="input-group">
                             <label>Số điện thoại</label>
                             <div class="input-wrapper"><input type="text" id="editPhone" name="phone" required
                                     pattern="^(0|\+84)[0-9]{9}$" title="Số điện thoại không hợp lệ"></div>
@@ -653,6 +658,7 @@
                     document.getElementById('editStaffId').value = data.id;
                     document.getElementById('editFullName').value = data.fullName;
                     document.getElementById('editEmail').value = data.email;
+                    document.getElementById('editTempPassword').value = data.tempPassword;
                     document.getElementById('editPhone').value = data.phone;
                     document.getElementById('editPosition').value = data.position;
                     document.getElementById('editDob').value = data.dateOfBirth;

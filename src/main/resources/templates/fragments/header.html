@@ -13,7 +13,7 @@
                 style="
                   width: 2.5rem;
                   height: 2.5rem;
-                  background: var(--medical-600);
+                  background: var(--medical-600, #667eea);
                   border-radius: 0.75rem;
                   display: flex;
                   align-items: center;
@@ -301,6 +301,19 @@
                 >
                 <a
                   class="dropdown-item"
+                  th:href="@{/customer/vouchers}"
+                  style="
+                    display: block;
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid var(--slate-100);
+                    text-decoration: none;
+                    color: var(--slate-900);
+                    transition: background 0.3s;
+                  "
+                  >Ví voucher</a
+                >
+                <a
+                  class="dropdown-item"
                   th:href="@{/change-password}"
                   style="
                     display: block;
@@ -345,7 +358,7 @@
       </div>
       <script th:src="@{/js/user-dropdown.js}" defer></script>
       <th:block sec:authorize="hasRole('CUSTOMER')">
-        <link rel="stylesheet" th:href="@{/css/chat-widget.css}" />
+        <link rel="stylesheet" th:href="@{/css/customer/chat-widget.css}" />
         <div id="chat-widget" class="chat-widget">
           <button id="chat-toggle" class="chat-toggle" type="button" aria-label="Mở chat với lễ tân">
             <span>&#128172; Chat với lễ tân</span>
@@ -371,7 +384,7 @@
               </div>
             </div>
         </div>
-        <script th:src="@{/js/chat-widget.js}" defer></script>
+        <script th:src="@{/js/customer/chat-widget.js}" defer></script>
       </th:block>
     </nav>
 

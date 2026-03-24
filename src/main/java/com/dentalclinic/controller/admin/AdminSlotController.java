@@ -111,11 +111,14 @@ public class AdminSlotController {
             gridStart = gridStart.minusDays(1);
         }
         LocalDate gridEnd = gridStart.plusDays(41);
+
         List<SlotDayBadgeDto> badges = adminSlotService.getBadgesInRange(gridStart, gridEnd);
         Map<String, SlotDayBadgeDto> badgeMap = new HashMap<>();
+
         if (badges != null) {
             for (SlotDayBadgeDto b : badges) {
                 if (b != null && b.getDate() != null) {
+
                     badgeMap.put(b.getDate().toString(), b);
                 }
             }
@@ -152,10 +155,23 @@ public class AdminSlotController {
         return "redirect:/admin/slots?date=" + fromDate;
     }
 
+    @PostMapping("/api/generate-monthly")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> apiGenerateMonthly(@RequestParam String month) {
+        try {
+            YearMonth ym = YearMonth.parse(month);
+            adminSlotService.generateMonthlySchedule(ym);
+            return ResponseEntity.ok(Map.of("message", "Đã tạo thành công ca làm việc cho toàn bộ tháng " + month));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Lỗi không xác định"));
+        }
+    }
+
     @PostMapping("/api/lock-day")
     @ResponseBody
     public ResponseEntity<Map<String, String>> apiLockDay(@RequestParam String date,
-            @RequestParam(required = false) String reason) {
+            @RequestParam String reason) {
         try {
             adminSlotService.lockDay(LocalDate.parse(date), reason);
             return ResponseEntity.ok(Map.of("message", "Success"));

@@ -8,17 +8,18 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedule, Long> {
     List<BusySchedule> findAllByOrderByCreatedAtDesc();
 
-    // Thêm hàm này để đếm số yêu cầu nghỉ trong tháng (không tính những cái bị REJECTED)
     @Query("SELECT COUNT(b) FROM BusySchedule b WHERE b.dentist.id = :dentistId " +
             "AND b.status <> 'REJECTED' " +
             "AND b.startDate >= :startOfMonth AND b.startDate <= :endOfMonth")
     long countApprovedLeavesInMonth(@Param("dentistId") Long dentistId,
                                     @Param("startOfMonth") LocalDate startOfMonth,
                                     @Param("endOfMonth") LocalDate endOfMonth);
+
     @Query("SELECT COUNT(b) FROM BusySchedule b WHERE b.dentist.id = :dentistId " +
             "AND b.status <> 'REJECTED' " +
             "AND b.startDate >= :startOfMonth AND b.startDate <= :endOfMonth")
@@ -26,7 +27,22 @@ public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedul
                             @Param("startOfMonth") LocalDate startOfMonth,
                             @Param("endOfMonth") LocalDate endOfMonth);
 
+    @Query("""
+            SELECT COUNT(b) FROM BusySchedule b
+            WHERE b.id <> :requestId
+              AND b.dentist.id = :dentistId
+              AND b.status <> 'REJECTED'
+              AND b.startDate >= :startOfMonth
+              AND b.startDate <= :endOfMonth
+            """)
+    long countLeavesInMonthExcludingId(@Param("requestId") Long requestId,
+                                       @Param("dentistId") Long dentistId,
+                                       @Param("startOfMonth") LocalDate startOfMonth,
+                                       @Param("endOfMonth") LocalDate endOfMonth);
+
     List<BusySchedule> findByDentistIdOrderByCreatedAtDesc(Long dentistId);
+
+    Optional<BusySchedule> findByIdAndDentistId(Long id, Long dentistId);
 
     @Query("SELECT COUNT(b) FROM BusySchedule b WHERE b.dentist.id = :dentistId " +
             "AND b.status != 'REJECTED' " +
@@ -34,6 +50,31 @@ public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedul
     long countOverlappingRequests(@Param("dentistId") Long dentistId,
                                   @Param("startDate") LocalDate startDate,
                                   @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            SELECT COUNT(b) FROM BusySchedule b
+            WHERE b.dentist.id = :dentistId
+              AND UPPER(COALESCE(b.status, '')) = :status
+              AND (:startDate <= b.endDate AND :endDate >= b.startDate)
+            """)
+    long countOverlappingRequestsByStatus(@Param("dentistId") Long dentistId,
+                                          @Param("startDate") LocalDate startDate,
+                                          @Param("endDate") LocalDate endDate,
+                                          @Param("status") String status);
+
+    @Query("""
+            SELECT COUNT(b) FROM BusySchedule b
+            WHERE b.id <> :requestId
+              AND b.dentist.id = :dentistId
+              AND UPPER(COALESCE(b.status, '')) = :status
+              AND (:startDate <= b.endDate AND :endDate >= b.startDate)
+            """)
+    long countOverlappingRequestsByStatusExcludingId(@Param("requestId") Long requestId,
+                                                     @Param("dentistId") Long dentistId,
+                                                     @Param("startDate") LocalDate startDate,
+                                                     @Param("endDate") LocalDate endDate,
+                                                     @Param("status") String status);
+
     @Query("SELECT b FROM BusySchedule b WHERE (:name IS NULL OR b.dentist.fullName LIKE %:name%)")
     List<BusySchedule> findByDentistName(@Param("name") String name, Sort sort);
 
@@ -48,4 +89,12 @@ public interface DentistBusyScheduleRepository extends JpaRepository<BusySchedul
             """)
     boolean existsApprovedLeaveByDentistAndDate(@Param("dentistId") Long dentistId,
                                                 @Param("targetDate") LocalDate targetDate);
+
+    @Query("""
+            SELECT DISTINCT b.dentist.id
+            FROM BusySchedule b
+            WHERE UPPER(COALESCE(b.status, '')) = 'APPROVED'
+              AND :targetDate BETWEEN b.startDate AND b.endDate
+            """)
+    List<Long> findApprovedDentistIdsByDate(@Param("targetDate") LocalDate targetDate);
 }

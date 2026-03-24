@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" th:href="@{/css/homepage/home.css}">
   <link rel="stylesheet" th:href="@{/css/homepage/sidebar.css}">
-  <link rel="stylesheet" th:href="@{/css/customer-tools.css}">
+  <link rel="stylesheet" th:href="@{/css/customer/customer-tools.css}">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -42,7 +42,7 @@
               <select id="appointmentId"
                       th:field="*{appointmentId}"
                       class="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white">
-                <option value="">Hỗ trợ khác (gửi tới staff)</option>
+                <option value="">Hỗ trợ khác</option>
                 <option th:each="appt : ${appointments}"
                         th:value="${appt.id}"
                         th:text="'#' + ${appt.id} + ' - ' + ${#temporals.format(appt.date, 'dd/MM/yyyy')} + ' - ' + ${appt.startTime} + ' - ' + (${appt.service != null ? appt.service.name : 'Dịch vụ'})">

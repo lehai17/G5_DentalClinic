@@ -8,17 +8,38 @@ import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.BlogWorkflowService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/admin/blogs")
 public class AdminBlogController {
+
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif");
 
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
@@ -57,12 +78,10 @@ public class AdminBlogController {
         return "admin/blog/detail";
     }
 
-    // ====== Edit screen: ONLY PENDING/APPROVED ======
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         Blog blog = blogRepository.findById(id).orElseThrow();
 
-        // Admin chỉ được edit khi PENDING hoặc APPROVED
         if (!(blog.getStatus() == BlogStatus.PENDING || blog.getStatus() == BlogStatus.APPROVED)) {
             return "redirect:/admin/blogs?status=" + blog.getStatus() + "&editDenied=true";
         }
@@ -72,7 +91,6 @@ public class AdminBlogController {
         return "admin/blog/edit";
     }
 
-    // ====== Update: ONLY PENDING/APPROVED, DO NOT change imageUrl ======
     @PostMapping("/{id}/update")
     public String update(@PathVariable Long id,
                          @RequestParam String title,
@@ -81,7 +99,6 @@ public class AdminBlogController {
 
         Blog blog = blogRepository.findById(id).orElseThrow();
 
-        // Admin chỉ được edit khi PENDING hoặc APPROVED
         if (!(blog.getStatus() == BlogStatus.PENDING || blog.getStatus() == BlogStatus.APPROVED)) {
             return "redirect:/admin/blogs?status=" + blog.getStatus() + "&editDenied=true";
         }
@@ -89,7 +106,6 @@ public class AdminBlogController {
         blog.setTitle(title);
         blog.setSummary(summary);
         blog.setContent(content);
-        // KHÔNG set imageUrl => giữ nguyên áº£nh
 
         blogRepository.save(blog);
 
@@ -125,54 +141,66 @@ public class AdminBlogController {
         model.addAttribute("activePage", "blogs");
         return "admin/blog/create";
     }
+
     @PostMapping("/create")
-    public String create(@RequestParam String title,
-                         @RequestParam String summary,
-                         @RequestParam String content,
-                         @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-                         Authentication authentication) throws IOException {
+    public String create(@ModelAttribute Blog form,
+                         @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
+                         @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
+                         Authentication authentication,
+                         Model model) throws IOException {
 
         User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
 
-        Blog blog = new Blog();
-        blog.setTitle(title);
-        blog.setSummary(summary);
-        blog.setContent(content);
-        blog.setCreatedBy(admin);
-
-        // upload image (optional)
-        if (imageFile != null && !imageFile.isEmpty()) {
-            String ext = org.springframework.util.StringUtils
-                    .getFilenameExtension(imageFile.getOriginalFilename());
-            String fileName = java.util.UUID.randomUUID() + (ext != null ? "." + ext : "");
-
-            // âœ… Lưu v? o thư mục ngo� i: uploads/blog (tính theo thư mục chạy project)
-            java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads", "blog");
-            java.nio.file.Files.createDirectories(uploadDir); // âœ… đảm bảo folder tồn tại
-
-            java.nio.file.Path filePath = uploadDir.resolve(fileName);
-
-            // âœ… dùng NIO copy (ổn hơn transferTo á»Ÿ một số môi trường)
-            try (java.io.InputStream in = imageFile.getInputStream()) {
-                java.nio.file.Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            blog.setImageUrl("/uploads/blog/" + fileName);
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            form.setImageUrl(storeBlogImage(thumbnailFile));
+        } else {
+            form.setImageUrl(existingImageUrl);
         }
 
+        if (!StringUtils.hasText(form.getImageUrl())) {
+            model.addAttribute("blog", form);
+            model.addAttribute("errorMessage", "Vui lòng chọn ảnh thumbnail cho bài viết.");
+            model.addAttribute("activePage", "blogs");
+            return "admin/blog/create";
+        }
 
-        // auto approved
-        blog.setStatus(BlogStatus.APPROVED);
-        blog.setApprovedBy(admin);
-        blog.setApprovedAt(java.time.LocalDateTime.now());
-        blog.setRejectionReason(null);
-
-        blogRepository.save(blog);
+        workflowService.createAndApprove(form, admin);
 
         return "redirect:/admin/blogs?status=APPROVED&created=true";
     }
 
+    private String storeBlogImage(MultipartFile imageFile) throws IOException {
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
 
+        String ext = StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
+        ext = ext != null ? ext.toLowerCase() : "";
 
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only jpg, jpeg, png, webp, gif are allowed");
+        }
+
+        String fileName = UUID.randomUUID() + "." + ext;
+
+        Path uploadDir = Paths.get("uploads", "blog");
+        Files.createDirectories(uploadDir);
+
+        Path filePath = uploadDir.resolve(fileName);
+
+        try (InputStream in = imageFile.getInputStream()) {
+            Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        return "/uploads/blog/" + fileName;
+    }
+
+    @PostMapping(value = "/upload-inline-image", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> uploadInlineImage(@RequestParam("upload") MultipartFile file) throws IOException {
+        String url = storeBlogImage(file);
+        Map<String, Object> response = new HashMap<>();
+        response.put("url", url);
+        return response;
+    }
 }
-

@@ -7,21 +7,94 @@
     <link rel="stylesheet" th:href="@{/css/dentist/support.css}"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .busy-form-card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .busy-form-card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
         .input-style { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; outline: none; transition: 0.3s; }
-        .input-style:focus { border-color: #4A90E2; }
-        .btn-submit { background: #4A90E2; color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .btn-submit:hover { background: #357ABD; }
+        .input-style:focus { border-color: #4a90e2; }
+        .btn-submit { background: #4a90e2; color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-submit:hover { background: #357abd; }
         .badge-pending { background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
         .badge-approved { background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
         .badge-rejected { background: #f8d7da; color: #721c24; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
-        .validation-error { color: #dc3545; font-size: 13px; margin-top: 8px; display: none; padding: 10px; background: #fff5f5; border-radius: 6px; border: 1px solid #ffcccc; }
+        .validation-error { color: #dc3545; font-size: 13px; margin-top: 8px; display: none; padding: 10px 14px; background: #fff5f5; border-radius: 10px; border: 1px solid #ffcccc; }
         .input-error { border-color: #dc3545 !important; background-color: #fff8f8; }
         .server-alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .history-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .history-btn { border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+        .history-btn.edit { background: #e0ecff; color: #1d4ed8; }
+        .history-btn.delete { background: #fee2e2; color: #b91c1c; }
+        .confirm-modal[hidden] { display: none !important; }
+        .confirm-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .confirm-modal__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+        }
+        .confirm-modal__dialog {
+            position: relative;
+            width: min(460px, 100%);
+            background: #fff;
+            border-radius: 22px;
+            padding: 28px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+        }
+        .confirm-modal__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: #fff7ed;
+            color: #c2410c;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .confirm-modal__title {
+            margin: 0 0 12px;
+            font-size: 30px;
+            line-height: 1.2;
+            color: #0f172a;
+            font-weight: 800;
+        }
+        .confirm-modal__text {
+            margin: 0 0 24px;
+            color: #475569;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+        .confirm-modal__actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .confirm-modal__btn {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 20px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .confirm-modal__btn.cancel {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        .confirm-modal__btn.confirm {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -61,19 +134,23 @@
                 <span th:text="${error}"></span>
             </div>
 
-            <div class="busy-form-card">
-                <h2 style="margin-bottom: 10px;">Đăng ký nghỉ làm</h2>
-                <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Mỗi đơn đăng ký tối đa 2 ngày liên tiếp.</p>
+            <div th:if="${message}" class="server-alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${message}"></span>
+            </div>
 
-                <form th:action="@{/dentist/busy-schedule/submit}" method="post" id="absenceForm">
+            <div class="busy-form-card">
+                <h2 style="margin-bottom: 10px;" th:text="${editingRequest != null ? 'Cập nhật đơn xin nghỉ' : 'Đăng ký nghỉ làm'}">Đăng ký nghỉ làm</h2>
+
+                <form th:action="${editingRequest != null} ? @{/dentist/busy-schedule/update/{id}(id=${editingRequest.id})} : @{/dentist/busy-schedule/submit}" method="post" id="absenceForm" novalidate>
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Từ ngày</label>
-                            <input type="date" name="startDate" id="startDate" class="input-style" required>
+                            <input type="date" name="startDate" id="startDate" class="input-style" th:value="${editingRequest != null ? editingRequest.startDate : ''}" required>
                         </div>
                         <div class="form-group">
                             <label>Đến ngày</label>
-                            <input type="date" name="endDate" id="endDate" class="input-style" required>
+                            <input type="date" name="endDate" id="endDate" class="input-style" th:value="${editingRequest != null ? editingRequest.endDate : ''}" required>
                         </div>
                     </div>
 
@@ -83,12 +160,13 @@
 
                     <div class="form-group" style="margin-top: 15px;">
                         <label>Lý do vắng mặt</label>
-                        <textarea name="reason" class="input-style" rows="4" placeholder="Lý do nghỉ..." required></textarea>
+                        <textarea name="reason" id="reason" class="input-style" rows="4" placeholder="Lý do nghỉ..." required th:text="${editingRequest != null ? editingRequest.reason : ''}"></textarea>
                     </div>
 
                     <div style="text-align: right; margin-top: 20px;">
-                        <button type="reset" class="action-link" style="border:none; background:none; margin-right:20px; cursor:pointer;">Hủy</button>
-                        <button type="submit" class="btn-submit" id="submitBtn">Xác nhận yêu cầu nghỉ</button>
+                        <a th:if="${editingRequest != null}" th:href="@{/dentist/busy-schedule}" class="action-link" style="margin-right:20px;">Hủy chỉnh sửa</a>
+                        <button th:if="${editingRequest == null}" type="reset" class="action-link" style="border:none; background:none; margin-right:20px; cursor:pointer;">Hủy</button>
+                        <button type="submit" class="btn-submit" id="submitBtn" th:text="${editingRequest != null ? 'Cập nhật đơn xin nghỉ' : 'Xác nhận yêu cầu nghỉ'}">Xác nhận yêu cầu nghỉ</button>
                     </div>
                 </form>
             </div>
@@ -101,28 +179,54 @@
                         <th>THỜI GIAN NGHỈ</th>
                         <th>LÝ DO</th>
                         <th>TRẠNG THÁI</th>
+                        <th>THAO TÁC</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="req : ${myRequests}" class="history-row"
+                        th:data-id="${req.id}"
                         th:data-start="${req.startDate}"
                         th:data-end="${req.endDate}"
                         th:data-status="${req.status}">
                         <td>
-                            <i class="far fa-calendar-alt" style="color:#4A90E2; margin-right:8px;"></i>
+                            <i class="far fa-calendar-alt" style="color:#4a90e2; margin-right:8px;"></i>
                             <span th:text="${req.startDate} + ' → ' + ${req.endDate}"></span>
                         </td>
                         <td th:text="${req.reason}"></td>
                         <td>
                             <span th:class="'badge-' + ${#strings.toLowerCase(req.status)}" th:text="${req.status}"></span>
                         </td>
+                        <td>
+                            <div class="history-actions" th:if="${req.status == 'PENDING'}">
+                                <a class="history-btn edit" th:href="@{/dentist/busy-schedule(editId=${req.id})}">Sửa</a>
+                                <form th:action="@{/dentist/busy-schedule/delete/{id}(id=${req.id})}" method="post" class="delete-request-form">
+                                    <button type="submit" class="history-btn delete">Xóa</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(myRequests)}">
-                        <td colspan="3" style="text-align:center; padding:30px; color:#999;">Bạn chưa có yêu cầu nghỉ nào.</td>
+                        <td colspan="4" style="text-align:center; padding:30px; color:#999;">Bạn chưa có yêu cầu nghỉ nào.</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="confirm-modal" id="deleteConfirmModal" hidden>
+    <div class="confirm-modal__backdrop" data-close-delete-modal></div>
+    <div class="confirm-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+        <div class="confirm-modal__badge">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>LƯU Ý</span>
+        </div>
+        <h3 class="confirm-modal__title" id="delete-modal-title">Xóa đơn xin nghỉ</h3>
+        <p class="confirm-modal__text">Bạn có chắc chắn muốn xóa đơn.</p>
+        <div class="confirm-modal__actions">
+            <button type="button" class="confirm-modal__btn cancel" id="deleteModalCancel">Hủy</button>
+            <button type="button" class="confirm-modal__btn confirm" id="deleteModalConfirm">Xóa đơn</button>
         </div>
     </div>
 </div>
@@ -132,11 +236,15 @@
         const form = document.getElementById('absenceForm');
         const startDateInput = document.getElementById('startDate');
         const endDateInput = document.getElementById('endDate');
+        const reasonInput = document.getElementById('reason');
         const errorDiv = document.getElementById('clientError');
         const errorText = document.getElementById('errorText');
+        const editingRequestId = /*[[${editingRequest != null ? editingRequest.id : null}]]*/ null;
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        const deleteModalCancel = document.getElementById('deleteModalCancel');
+        const deleteModalConfirm = document.getElementById('deleteModalConfirm');
+        let pendingDeleteForm = null;
 
-        // 1. KHÓA NGÀY QUÁ KHỨ NGAY KHI LOAD TRANG
-        // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -146,66 +254,128 @@
         startDateInput.setAttribute('min', todayStr);
         endDateInput.setAttribute('min', todayStr);
 
-        // 2. LẤY DỮ LIỆU ĐÃ ĐĂNG KÝ TỪ BẢNG (Để check trùng)
         function getBookedRanges() {
             const historyRows = document.querySelectorAll('.history-row');
             return Array.from(historyRows)
                 .filter(row => row.dataset.status !== 'REJECTED')
+                .filter(row => !editingRequestId || String(row.dataset.id) !== String(editingRequestId))
                 .map(row => ({
+                    id: row.dataset.id,
+                    status: row.dataset.status,
                     start: new Date(row.dataset.start).setHours(0, 0, 0, 0),
                     end: new Date(row.dataset.end).setHours(0, 0, 0, 0)
                 }));
         }
 
-        function showError(msg) {
-            errorText.innerText = msg;
+        function showError(message) {
+            errorText.innerText = message;
             errorDiv.style.display = 'block';
+        }
+
+        function isSunday(dateStr) {
+            if (!dateStr) {
+                return false;
+            }
+            return new Date(`${dateStr}T00:00:00`).getDay() === 0;
+        }
+
+        function rangeContainsSunday(startStr, endStr) {
+            if (!startStr || !endStr) {
+                return false;
+            }
+
+            let current = new Date(`${startStr}T00:00:00`);
+            const end = new Date(`${endStr}T00:00:00`);
+
+            while (current <= end) {
+                if (current.getDay() === 0) {
+                    return true;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            return false;
         }
 
         function validate() {
             const startStr = startDateInput.value;
             const endStr = endDateInput.value;
+            const reason = reasonInput ? reasonInput.value.trim() : '';
 
             errorDiv.style.display = 'none';
             startDateInput.classList.remove('input-error');
             endDateInput.classList.remove('input-error');
+            reasonInput.classList.remove('input-error');
 
-            if (!startStr || !endStr) return true;
+            if (!startStr) {
+                showError('Vui lòng chọn ngày bắt đầu.');
+                startDateInput.classList.add('input-error');
+                return false;
+            }
+
+            if (!endStr) {
+                showError('Vui lòng chọn ngày kết thúc.');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
+            if (!reason) {
+                showError('Vui lòng nhập lý do xin nghỉ.');
+                reasonInput.classList.add('input-error');
+                return false;
+            }
 
             const startVal = new Date(startStr).setHours(0, 0, 0, 0);
             const endVal = new Date(endStr).setHours(0, 0, 0, 0);
             const todayVal = new Date().setHours(0, 0, 0, 0);
 
-            // Kiểm tra 1: Ngày quá khứ
             if (startVal < todayVal) {
-                showError("Không được chọn ngày trong quá khứ.");
+                showError('Không được chọn ngày trong quá khứ.');
                 startDateInput.classList.add('input-error');
                 return false;
             }
 
-            // Kiểm tra 2: Thứ tự ngày
+            if (isSunday(startStr)) {
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                startDateInput.classList.add('input-error');
+                return false;
+            }
+
             if (endVal < startVal) {
-                showError("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+                showError('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.');
                 endDateInput.classList.add('input-error');
                 return false;
             }
 
-            // Kiểm tra 3: Tối đa 2 ngày (dayDiff > 1)
+            if (isSunday(endStr)) {
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
             const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
             if (dayDiff > 1) {
-                showError("Thời gian nghỉ mỗi đơn không được quá 2 ngày liên tiếp.");
+                showError('Thời gian nghỉ mỗi đơn không được vượt quá 2 ngày liên tiếp.');
                 endDateInput.classList.add('input-error');
                 return false;
             }
 
-            // Kiểm tra 4: TRÙNG LỊCH
-            const bookedRanges = getBookedRanges();
-            const isOverlapping = bookedRanges.some(range => {
-                return (startVal <= range.end) && (endVal >= range.start);
-            });
+            if (rangeContainsSunday(startStr, endStr)) {
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                startDateInput.classList.add('input-error');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
 
-            if (isOverlapping) {
-                showError("Thời gian này trùng với một yêu cầu nghỉ khác đã đăng ký.");
+            const bookedRanges = getBookedRanges();
+            const overlappingRange = bookedRanges.find(range => (startVal <= range.end) && (endVal >= range.start));
+
+            if (overlappingRange) {
+                if (overlappingRange.status === 'APPROVED') {
+                    showError('Khoảng thời gian này đã được duyệt nghỉ trước đó.');
+                } else {
+                    showError('Khoảng thời gian này đã có trong đơn xin nghỉ. Vui lòng chờ duyệt.');
+                }
                 startDateInput.classList.add('input-error');
                 endDateInput.classList.add('input-error');
                 return false;
@@ -214,26 +384,129 @@
             return true;
         }
 
-        // Sự kiện thay đổi ngày
+        function openDeleteModal(targetForm) {
+            pendingDeleteForm = targetForm;
+            deleteModal.hidden = false;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            deleteModal.hidden = true;
+            document.body.style.overflow = '';
+            pendingDeleteForm = null;
+        }
+
+        function clearValidationState() {
+            errorDiv.style.display = 'none';
+            startDateInput.classList.remove('input-error');
+            endDateInput.classList.remove('input-error');
+            reasonInput.classList.remove('input-error');
+        }
+
+        function validateDateRangeSelection() {
+            const startStr = startDateInput.value;
+            const endStr = endDateInput.value;
+
+            if (!startStr || !endStr) {
+                return true;
+            }
+
+            const startVal = new Date(startStr).setHours(0, 0, 0, 0);
+            const endVal = new Date(endStr).setHours(0, 0, 0, 0);
+            const dayDiff = (endVal - startVal) / (1000 * 3600 * 24);
+
+            if (dayDiff > 1) {
+                clearValidationState();
+                showError('Thời gian nghỉ mỗi đơn không được vượt quá 2 ngày liên tiếp.');
+                endDateInput.classList.add('input-error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateOnInteraction() {
+            const hasStartDate = !!startDateInput.value;
+            const hasEndDate = !!endDateInput.value;
+            const hasReason = !!(reasonInput && reasonInput.value.trim());
+
+            if (!hasStartDate || !hasEndDate || !hasReason) {
+                clearValidationState();
+                return;
+            }
+
+            validate();
+        }
+
         startDateInput.addEventListener('change', function() {
+            if (isSunday(startDateInput.value)) {
+                startDateInput.value = '';
+                clearValidationState();
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                startDateInput.classList.add('input-error');
+                return;
+            }
             if (startDateInput.value) {
-                // Khóa các ngày trước ngày bắt đầu ở ô kết thúc
                 endDateInput.setAttribute('min', startDateInput.value);
                 if (endDateInput.value && endDateInput.value < startDateInput.value) {
                     endDateInput.value = startDateInput.value;
                 }
             }
-            validate();
+            if (!validateDateRangeSelection()) {
+                return;
+            }
+            validateOnInteraction();
         });
 
-        endDateInput.addEventListener('change', validate);
+        endDateInput.addEventListener('change', function() {
+            if (isSunday(endDateInput.value)) {
+                endDateInput.value = '';
+                clearValidationState();
+                showError('Không xin nghỉ vào ngày chủ nhật');
+                endDateInput.classList.add('input-error');
+                return;
+            }
+            if (!validateDateRangeSelection()) {
+                return;
+            }
+            validateOnInteraction();
+        });
+        reasonInput.addEventListener('input', validateOnInteraction);
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function(event) {
             if (!validate()) {
-                e.preventDefault();
+                event.preventDefault();
+            }
+        });
+
+        document.querySelectorAll('.delete-request-form').forEach(function(deleteForm) {
+            deleteForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                openDeleteModal(deleteForm);
+            });
+        });
+
+        deleteModalCancel.addEventListener('click', closeDeleteModal);
+        deleteModalConfirm.addEventListener('click', function() {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+            }
+        });
+
+        document.querySelectorAll('[data-close-delete-modal]').forEach(function(node) {
+            node.addEventListener('click', closeDeleteModal);
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && !deleteModal.hidden) {
+                closeDeleteModal();
             }
         });
     });
 </script>
 </body>
 </html>
+
+
+
+

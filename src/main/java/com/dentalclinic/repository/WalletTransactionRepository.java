@@ -19,6 +19,7 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
     List<WalletTransaction> findByAppointmentId(Long appointmentId);
     boolean existsByAppointmentIdAndType(Long appointmentId, WalletTransactionType type);
     boolean existsByTypeAndDescription(WalletTransactionType type, String description);
+    boolean existsByWallet_Customer_User_IdAndTypeAndDescription(Long userId, WalletTransactionType type, String description);
 
     @EntityGraph(attributePaths = {"wallet", "wallet.customer", "wallet.customer.user"})
     List<WalletTransaction> findByWallet_Customer_User_IdAndAppointmentIdIsNotNullOrderByCreatedAtDesc(Long userId);

@@ -1,5 +1,6 @@
 package com.dentalclinic.model.wallet;
 
+import com.dentalclinic.util.DisplayTextUtils;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -88,7 +89,7 @@ public class WalletTransaction {
     }
 
     public String getDescription() {
-        return description;
+        return fallbackQuestionMarkDescription(normalizeDisplayText(description));
     }
 
     public void setDescription(String description) {
@@ -111,7 +112,6 @@ public class WalletTransaction {
         this.createdAt = createdAt;
     }
 
-    // --- BỔ SUNG BUILDER THỦ CÔNG ---
     public static WalletTransactionBuilder builder() {
         return new WalletTransactionBuilder();
     }
@@ -164,5 +164,27 @@ public class WalletTransaction {
             transaction.setAppointmentId(this.appointmentId);
             return transaction;
         }
+    }
+
+    private String normalizeDisplayText(String value) {
+        return DisplayTextUtils.normalize(value);
+    }
+
+    private String fallbackQuestionMarkDescription(String value) {
+        if (value == null || !value.contains("?")) {
+            return value;
+        }
+
+        String appointmentRef = appointmentId != null ? " #" + appointmentId : "";
+        if (type == WalletTransactionType.REFUND) {
+            return "Ho\u00e0n ti\u1ec1n \u0111\u1eb7t c\u1ecdc l\u1ecbch h\u1eb9n" + appointmentRef;
+        }
+        if (type == WalletTransactionType.PAYMENT) {
+            return "Thanh to\u00e1n l\u1ecbch h\u1eb9n" + appointmentRef;
+        }
+        if (type == WalletTransactionType.DEPOSIT) {
+            return "N\u1ea1p ti\u1ec1n v\u00e0o v\u00ed" + appointmentRef;
+        }
+        return value;
     }
 }

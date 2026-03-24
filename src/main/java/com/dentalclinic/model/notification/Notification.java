@@ -1,9 +1,9 @@
 package com.dentalclinic.model.notification;
 
 import com.dentalclinic.model.user.User;
+import com.dentalclinic.util.DisplayTextUtils;
 import jakarta.persistence.*;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,7 +14,6 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // user_id
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -39,11 +38,9 @@ public class Notification {
     @Column(name = "url", length = 500)
     private String url;
 
-    // is_read
     @Column(name = "is_read", nullable = false)
     private boolean isRead;
 
-    // created_at
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -52,10 +49,6 @@ public class Notification {
 
     @Transient
     private boolean relatedAvailable = true;
-
-    // =========================
-    // Getter & Setter
-    // =========================
 
     public Long getId() {
         return id;
@@ -74,7 +67,7 @@ public class Notification {
     }
 
     public String getTitle() {
-        return normalizeDisplayText(title);
+        return fallbackQuestionMarkTitle(normalizeDisplayText(title));
     }
 
     public void setTitle(String title) {
@@ -82,7 +75,7 @@ public class Notification {
     }
 
     public String getContent() {
-        return normalizeDisplayText(content);
+        return fallbackQuestionMarkContent(normalizeDisplayText(content));
     }
 
     public void setContent(String content) {
@@ -154,22 +147,47 @@ public class Notification {
     }
 
     private String normalizeDisplayText(String value) {
-        if (value == null || value.isBlank()) {
-            return value;
-        }
-        if (!looksMojibake(value)) {
-            return value;
-        }
-        String repaired = new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-        return repaired.isBlank() ? value : repaired;
+        return DisplayTextUtils.normalize(value);
     }
 
-    private boolean looksMojibake(String value) {
-        return value.contains("Ã")
-                || value.contains("Ä")
-                || value.contains("á»")
-                || value.contains("áº")
-                || value.contains("Æ")
-                || value.contains("Â");
+    private String fallbackQuestionMarkTitle(String value) {
+        if (value == null || !value.contains("?")) {
+            return value;
+        }
+
+        if (type == NotificationType.BOOKING_UPDATED) {
+            return "L\u1ecbch h\u1eb9n \u0111\u01b0\u1ee3c c\u1eadp nh\u1eadt";
+        }
+        if (type == NotificationType.BOOKING_CANCELLED) {
+            return "L\u1ecbch h\u1eb9n \u0111\u00e3 b\u1ecb h\u1ee7y";
+        }
+        if (type == NotificationType.BOOKING_CREATED) {
+            return "L\u1ecbch h\u1eb9n \u0111\u00e3 \u0111\u01b0\u1ee3c t\u1ea1o";
+        }
+        if (type == NotificationType.APPOINTMENT_REMINDER) {
+            return "Nh\u1eafc l\u1ecbch h\u1eb9n";
+        }
+        return value;
+    }
+
+    private String fallbackQuestionMarkContent(String value) {
+        if (value == null || !value.contains("?")) {
+            return value;
+        }
+
+        String appointmentRef = referenceId != null ? " #" + referenceId : "";
+        if (type == NotificationType.BOOKING_UPDATED) {
+            return "L\u1ecbch h\u1eb9n" + appointmentRef + " \u0111\u00e3 \u0111\u01b0\u1ee3c c\u1eadp nh\u1eadt.";
+        }
+        if (type == NotificationType.BOOKING_CANCELLED) {
+            return "L\u1ecbch h\u1eb9n" + appointmentRef + " \u0111\u00e3 b\u1ecb h\u1ee7y.";
+        }
+        if (type == NotificationType.BOOKING_CREATED) {
+            return "L\u1ecbch h\u1eb9n" + appointmentRef + " \u0111\u00e3 \u0111\u01b0\u1ee3c t\u1ea1o th\u00e0nh c\u00f4ng.";
+        }
+        if (type == NotificationType.APPOINTMENT_REMINDER) {
+            return "B\u1ea1n c\u00f3 l\u1ecbch h\u1eb9n s\u1eafp t\u1edbi. Vui l\u00f2ng ki\u1ec3m tra l\u1ea1i th\u1eddi gian kh\u00e1m.";
+        }
+        return value;
     }
 }

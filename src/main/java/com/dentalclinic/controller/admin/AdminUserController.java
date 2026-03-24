@@ -23,7 +23,7 @@ public class AdminUserController {
     @Autowired
     private DentistService dentistService;
 
-    // 1. Hiển thị danh sï¿½ch kèm bộ lọc Tìm kiếm
+    // 1. Hiển thị danh sách kèm bộ lọc tìm kiếm
     @GetMapping
     public String showDentistList(
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -31,14 +31,14 @@ public class AdminUserController {
             @RequestParam(value = "status", required = false) String status,
             Model model) {
 
-        // Gọi Service xử lý lọc dữ liệu an to n
+        // Gọi service xử lý lọc dữ liệu an toàn
         List<DentistProfile> dentists = dentistService.searchDentists(keyword, specialty, status);
 
         model.addAttribute("dentists", dentists);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thï¿½i Dropdown
+        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thái Dropdown
         model.addAttribute("selectedStatus", status);
-        model.addAttribute("activePage", "dentists"); // L m sï¿½ng Menu Sidebar
+        model.addAttribute("activePage", "dentists"); // Làm sáng Menu Sidebar
 
         // Cập nhật số liệu thực tế cho Stat Cards
         model.addAttribute("totalDentists", dentistProfileRepository.count());
@@ -47,7 +47,7 @@ public class AdminUserController {
         return "admin/dentist-list";
     }
 
-    // 2. Hiển thị Form thêm mới
+    // 2. Hiển thị form thêm mới
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("dentistDTO", new DentistDTO());
@@ -76,7 +76,7 @@ public class AdminUserController {
 
     @PostMapping("/lock/{id}")
     public String lockDentist(@PathVariable("id") Long userId, RedirectAttributes ra) {
-        // Sử dụng chung logic khóa từ hệ thống (trạng thï¿½i User sang LOCKED)
+        // Sử dụng chung logic khóa từ hệ thống (trạng thái User sang LOCKED)
         dentistService.deactivateDentist(userId);
         ra.addFlashAttribute("success", "Khóa tài khoản bác sĩ thành công!");
         return "redirect:/admin/dentists";
@@ -85,7 +85,7 @@ public class AdminUserController {
     @PostMapping("/unlock/{id}")
     public String unlockDentist(@PathVariable("id") Long id, RedirectAttributes ra) {
         try {
-            // ï¿½ï¿½ có userService để gọi h� m n� y
+            // Đã có userService để gọi hàm này
             dentistService.updateDentistStatus(id, UserStatus.ACTIVE);
             ra.addFlashAttribute("success", "Mở khóa bác sĩ thành công!");
         } catch (Exception e) {
@@ -96,7 +96,7 @@ public class AdminUserController {
 
     @GetMapping("/detail/{id}")
     public String showDentistDetail(@PathVariable("id") Long id, Model model) {
-        // Log ra để kiểm tra xem request dï¿½ v� o tới dï¿½y chưa
+        // Log ra để kiểm tra xem request đã vào tới đây chưa
         System.out.println(" xem chi tiết bác sĩ có ID: " + id);
 
         DentistDTO dentist = dentistService.getDentistById(id);

@@ -1,21 +1,22 @@
 package com.dentalclinic.service.dentist;
 
 import com.dentalclinic.dto.admin.DentistDTO;
+import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
 import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.user.Gender;
 import com.dentalclinic.model.user.Role;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.model.user.UserStatus;
+import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.DentistProfileRepository;
 import com.dentalclinic.repository.DentistScheduleRepository;
 import com.dentalclinic.repository.UserRepository;
+import com.dentalclinic.service.appointment.SlotCapacitySyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.dentalclinic.repository.AppointmentRepository;
-import com.dentalclinic.model.appointment.AppointmentStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,16 +43,17 @@ public class DentistService {
     private DentistScheduleRepository dentistScheduleRepository;
     @Autowired
     private AppointmentRepository appointmentRepository;
+    @Autowired
+    private SlotCapacitySyncService slotCapacitySyncService;
 
     private final String UPLOAD_DIR = "uploads/dentists/";
 
     private String sanitizeFileName(String fileName) {
-        if (fileName == null)
+        if (fileName == null) {
             return "avatar.png";
-        // Normalize and remove Vietnamese accents
+        }
         String normalized = java.text.Normalizer.normalize(fileName, java.text.Normalizer.Form.NFD);
         normalized = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
-        // Remove spaces and special characters, keep extension
         return normalized.replaceAll("[^a-zA-Z0-9.-]", "_").replaceAll("__+", "_");
     }
 
@@ -79,41 +81,35 @@ public class DentistService {
     @Transactional
     public void saveDentist(DentistDTO dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email n� y dï¿½ được sử dụng trong hệ thống!");
+            throw new RuntimeException("Email này đã được sử dụng trong hệ thống!");
         }
-        // 1. Kiểm tra ng� y sinh v?  tính tuổi
         if (dto.getDateOfBirth() == null) {
-            throw new IllegalArgumentException("Ng� y sinh không được để trống.");
+            throw new IllegalArgumentException("Ngày sinh không được để trống.");
         }
 
         LocalDate today = LocalDate.now();
         int age = Period.between(dto.getDateOfBirth(), today).getYears();
 
-        // ĐIỀU KIỆN 1: Bï¿½c sĩ phải từ 25 tuổi trở lên
         if (age < 25) {
-            throw new IllegalArgumentException("Bï¿½c sĩ phải từ 25 tuổi trở lên (Hiện tại: " + age + " tuổi).");
+            throw new IllegalArgumentException("Bác sĩ phải từ 25 tuổi trở lên (Hiện tại: " + age + " tuổi).");
         }
 
-        // ĐIỀU KIỆN 2: Kiểm tra năm kinh nghiệm (không quï¿½ tuổi trừ Ä‘i 22 năm học
-        // đại
-        // học)
         int experienceYears = dto.getExperienceYears();
         int maxAllowedExperience = age - 22;
 
         if (experienceYears > maxAllowedExperience) {
-            throw new IllegalArgumentException("Số năm kinh nghiệm (" + experienceYears +
-                    ") không hợp lệ cho bï¿½c sĩ " + age + " tuổi. (Tối Ä‘a cho phép: " + maxAllowedExperience
-                    + " năm).");
+            throw new IllegalArgumentException("Số năm kinh nghiệm (" + experienceYears
+                    + ") không hợp lệ cho bác sĩ " + age + " tuổi. (Tối đa cho phép: "
+                    + maxAllowedExperience + " năm).");
         }
-        // 1. Tạo t� i khoản User đăng nhập
+
         User user = new User();
         user.setEmail(dto.getEmail());
-        user.setPassword("123456"); // Mật khẩu mặc định
+        user.setPassword("123456");
         user.setRole(Role.DENTIST);
         user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);
 
-        // 2. Tạo hồ sơ bï¿½c sĩ (DentistProfile)
         DentistProfile profile = new DentistProfile();
         profile.setUser(user);
         profile.setFullName(dto.getFullName());
@@ -127,14 +123,13 @@ public class DentistService {
         }
 
         dentistProfileRepository.save(profile);
-        // ï¿½ï¿½Y LÀ DÒNG QUAN TRỌNG NHẤT: Lưu dữ liệu v? o bảng users
-        user.setDateOfBirth(dto.getDateOfBirth());
 
-        userRepository.save(user);
+        user.setDateOfBirth(dto.getDateOfBirth());
         if (dto.getGender() != null) {
             user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
         }
-        // 3. Xử lý lịch l� m việc dựa trên Enum DayOfWeek
+        userRepository.save(user);
+
         if (dto.getAvailableDays() != null && !dto.getAvailableDays().isEmpty()) {
             LocalTime startTime = parseTimeSafe(dto.getShiftStartTime());
             LocalTime endTime = parseTimeSafe(dto.getShiftEndTime());
@@ -143,24 +138,20 @@ public class DentistService {
                 try {
                     DentistSchedule schedule = new DentistSchedule();
                     schedule.setDentist(profile);
-
-                    // Chuyển String ng� y (MONDAY, TUESDAY...) sang Enum an to� n
                     schedule.setDayOfWeek(DayOfWeek.valueOf(dayStr.toUpperCase()));
-
                     schedule.setStartTime(startTime);
                     schedule.setEndTime(endTime);
-
                     dentistScheduleRepository.save(schedule);
                 } catch (IllegalArgumentException e) {
-                    // Bỏ qua nếu chuỗi ng� y không hợp lệ
-                    System.err.println("Ng� y không hợp lệ: " + dayStr);
+                    System.err.println("Ngày không hợp lệ: " + dayStr);
                 }
             }
         }
+        slotCapacitySyncService.syncAllFutureCapacities();
     }
 
     /**
-     * H� m hỗ trợ parse thời gian an to� n trï¿½nh lỗi hệ thống
+     * Hỗ trợ parse thời gian an toàn để tránh lỗi dữ liệu đầu vào.
      */
     private LocalTime parseTimeSafe(String timeStr) {
         if (timeStr != null && !timeStr.trim().isEmpty()) {
@@ -188,24 +179,7 @@ public class DentistService {
 
         return dentistProfileRepository.filterDentists(keywordParam, specialtyParam, status);
     }
-    // public List<DentistDTO> searchByKeyword(String keyword) {
-    // List<DentistProfile> profiles;
-    //
-    // if (keyword != null && !keyword.trim().isEmpty()) {
-    // // Gọi h� m tìm kiếm từ Repository dï¿½ l� m á»Ÿ bước trước
-    // profiles = dentistProfileRepository.findByKeyword(keyword);
-    // } else {
-    // // Trả về danh sï¿½ch mặc định sắp xếp mới nhất lên đầu
-    // profiles = dentistProfileRepository.findAllOrderByNewest();
-    // }
-    //
-    // // Đảm bảo h� m convertToDTO dï¿½ tồn tại v?  hoạt động đúng
-    // return profiles.stream()
-    // .map(this::convertToDTO)
-    // .collect(Collectors.toList());
-    // }
 
-    // H� m đếm số lượng cho Stat Cards
     public long countByStatus(String statusStr) {
         try {
             return dentistProfileRepository.countByUserStatus(UserStatus.valueOf(statusStr.toUpperCase()));
@@ -216,25 +190,24 @@ public class DentistService {
 
     public void deactivateDentist(Long userId) {
         userRepository.findById(userId).ifPresent(user -> {
-            // Cập nhật trạng thï¿½i người dùng th� nh LOCKED
             user.setStatus(UserStatus.LOCKED);
             userRepository.save(user);
-
-            // Log thông bï¿½o hoặc xử lý logic phụ nếu cần (ví dụ: hủy lịch hẹn tương lai)
-            System.out.println("ï¿½ï¿½ khóa t� i khoản bï¿½c sĩ có User ID: " + userId);
+            slotCapacitySyncService.syncAllFutureCapacities();
+            System.out.println("Đã khóa tài khoản bác sĩ có User ID: " + userId);
         });
     }
 
     public void updateDentistStatus(Long userId, UserStatus status) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Kh?ng t?m th?y ng??i d?ng"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         user.setStatus(status);
         userRepository.save(user);
+        slotCapacitySyncService.syncAllFutureCapacities();
     }
 
     public DentistDTO getDentistById(Long id) {
         DentistProfile profile = dentistProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bï¿½c sĩ!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bác sĩ!"));
 
         return convertToDTO(profile);
     }
@@ -242,7 +215,6 @@ public class DentistService {
     private DentistDTO convertToDTO(DentistProfile profile) {
         DentistDTO dto = new DentistDTO();
 
-        // 1. Dữ liệu từ DentistProfile
         dto.setId(profile.getId());
         dto.setFullName(profile.getFullName() != null ? profile.getFullName() : "N/A");
         dto.setPhone(profile.getPhone() != null ? profile.getPhone() : "N/A");
@@ -250,32 +222,29 @@ public class DentistService {
         dto.setExperienceYears(profile.getExperienceYears());
         dto.setBio(profile.getBio() != null ? profile.getBio() : "Chưa có tiểu sử.");
         dto.setAvatarPath(profile.getAvatar());
-        // 2. Dữ liệu từ User (Phải dùng đúng tên h� m trong User.java)
+
         if (profile.getUser() != null) {
             dto.setEmail(profile.getUser().getEmail());
-            // Đảm bảo tên h� m n� y khớp với User.java (getDateOfBirth hoặc getDob)
+            dto.setTempPassword(profile.getUser().getPassword());
+            // Đảm bảo tên hàm này khớp với User.java (getDateOfBirth hoặc getDob)
             dto.setDateOfBirth(profile.getUser().getDateOfBirth());
             if (profile.getUser().getGender() != null) {
                 dto.setGender(profile.getUser().getGender().name());
             }
         }
 
-        // 3. Xử lý Lịch trực an to� n
         if (profile.getSchedules() != null) {
             dto.setSchedules(profile.getSchedules());
         } else {
             dto.setSchedules(new ArrayList<>());
         }
 
-        System.out.println("DEBUG: ï¿½ï¿½ lấy xong dữ liệu cho email: " + dto.getEmail()); // Sẽ hiện nếu code chạy hết
+        System.out.println("DEBUG: Đã lấy xong dữ liệu cho email: " + dto.getEmail());
         return dto;
     }
 
     public List<DentistDTO> getAllDentists() {
-        // Gọi h� m truy vấn tùy chỉnh để đưa bï¿½c sĩ Tuấn lên đầu
         List<DentistProfile> profiles = dentistProfileRepository.findAllOrderByNewest();
-
-        // Chuyển đổi List Entity sang List DTO
         return profiles.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -283,7 +252,7 @@ public class DentistService {
 
     public com.dentalclinic.dto.admin.UpdateDentistDTO getDentistForUpdate(Long id) {
         DentistProfile profile = dentistProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bï¿½c sĩ"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ"));
 
         com.dentalclinic.dto.admin.UpdateDentistDTO dto = new com.dentalclinic.dto.admin.UpdateDentistDTO();
         dto.setId(profile.getId());
@@ -296,6 +265,7 @@ public class DentistService {
 
         if (profile.getUser() != null) {
             dto.setEmail(profile.getUser().getEmail());
+            dto.setTempPassword(profile.getUser().getPassword());
             dto.setDateOfBirth(profile.getUser().getDateOfBirth());
             if (profile.getUser().getGender() != null) {
                 dto.setGender(profile.getUser().getGender().name());
@@ -321,34 +291,35 @@ public class DentistService {
     @Transactional
     public void updateDentist(Long id, com.dentalclinic.dto.admin.UpdateDentistDTO dto) {
         DentistProfile profile = dentistProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bï¿½c sĩ"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ"));
 
         User user = profile.getUser();
         if (user == null) {
-            throw new RuntimeException("Lỗi dữ liệu: Bï¿½c sĩ không có t� i khoản user");
+            throw new RuntimeException("Lỗi dữ liệu: Bác sĩ không có tài khoản user");
         }
 
-        // Kiểm tra trùng email
         if (!user.getEmail().equals(dto.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email n� y dï¿½ được sử dụng trong hệ thống!");
+            throw new RuntimeException("Email này đã được sử dụng trong hệ thống!");
         }
 
-        // Validate độ tuổi (>= 25)
         if (dto.getDateOfBirth() != null) {
             LocalDate today = LocalDate.now();
             int age = Period.between(dto.getDateOfBirth(), today).getYears();
             if (age < 25) {
-                throw new IllegalArgumentException("Bï¿½c sĩ phải từ 25 tuổi trở lên (Hiện tại: " + age + " tuổi).");
+                throw new IllegalArgumentException("Bác sĩ phải từ 25 tuổi trở lên (Hiện tại: " + age + " tuổi).");
             }
             int maxAllowedExperience = age - 22;
             if (dto.getExperienceYears() > maxAllowedExperience) {
-                throw new IllegalArgumentException("Số năm kinh nghiệm (" + dto.getExperienceYears() +
-                        ") không hợp lệ cho bï¿½c sĩ " + age + " tuổi. (Tối Ä‘a: " + maxAllowedExperience + " năm).");
+                throw new IllegalArgumentException("Số năm kinh nghiệm (" + dto.getExperienceYears()
+                        + ") không hợp lệ cho bác sĩ " + age + " tuổi. (Tối đa: "
+                        + maxAllowedExperience + " năm).");
             }
         }
 
-        // Cập nhật User
         user.setEmail(dto.getEmail());
+        if (dto.getTempPassword() != null && !dto.getTempPassword().trim().isEmpty()) {
+            user.setPassword(dto.getTempPassword());
+        }
         user.setDateOfBirth(dto.getDateOfBirth());
         if (dto.getGender() != null) {
             user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
@@ -358,7 +329,6 @@ public class DentistService {
         }
         userRepository.save(user);
 
-        // Cập nhật Profile
         profile.setFullName(dto.getFullName());
         profile.setPhone(dto.getPhone());
         profile.setSpecialization(dto.getSpecialization());
@@ -372,7 +342,6 @@ public class DentistService {
 
         dentistProfileRepository.save(profile);
 
-        // Cập nhật Lịch l� m việc
         dentistScheduleRepository.deleteAll(profile.getSchedules());
         profile.getSchedules().clear();
 
@@ -390,10 +359,11 @@ public class DentistService {
                     profile.getSchedules().add(schedule);
                     dentistScheduleRepository.save(schedule);
                 } catch (IllegalArgumentException e) {
-                    System.err.println("Ng� y không hợp lệ: " + dayStr);
+                    System.err.println("Ngày không hợp lệ: " + dayStr);
                 }
             }
         }
+        slotCapacitySyncService.syncAllFutureCapacities();
     }
 
     @Transactional
@@ -401,7 +371,7 @@ public class DentistService {
         DentistProfile profile = dentistProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nha sĩ!"));
 
-        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.WAITING_PAYMENT);
+        List<AppointmentStatus> excludedStatuses = List.of(AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED);
         int upcomingCount = appointmentRepository.countUpcomingAppointments(id, LocalDate.now(), excludedStatuses);
 
         if (upcomingCount > 0) {
@@ -414,17 +384,15 @@ public class DentistService {
             if (user != null) {
                 userRepository.delete(user);
             }
+            slotCapacitySyncService.syncAllFutureCapacities();
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             throw new RuntimeException(
-                    "Không thể xóa do nha sĩ dï¿½ có lịch sử khï¿½m bệnh. Vui lòng sử dụng tính năng 'Khóa' thay vì xóa.");
+                    "Không thể xóa do nha sĩ đã có lịch sử khám bệnh. Vui lòng sử dụng tính năng 'Khóa' thay vì xóa.");
         }
     }
 
     public List<DentistProfile> getAvailableDentistsForDate(LocalDate date) {
-        // Lấy ra thứ trong tuần từ ng� y chọn (Ví dụ: MONDAY, TUESDAY...)
-        java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
-
-        // Gọi h� m Repository mới dï¿½ sửa
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
         return dentistProfileRepository.findAvailableDentistsWithSchedule(date, dayOfWeek);
     }
 }

@@ -1,6 +1,7 @@
 package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.config.VNPayConfig;
+import com.dentalclinic.dto.customer.FinalPaymentPreviewDto;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.payment.Invoice;
@@ -20,6 +21,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +44,8 @@ import java.util.TimeZone;
 public class CustomerPaymentController {
 
     private static final String SESSION_USER_ID = "userId";
+    private static final BigDecimal MIN_WALLET_TOPUP_AMOUNT = BigDecimal.valueOf(10_000L);
+    private static final BigDecimal MAX_WALLET_TOPUP_AMOUNT = BigDecimal.valueOf(100_000_000L);
 
     @Autowired
     private VNPayConfig vnPayConfig;
@@ -77,7 +82,7 @@ public class CustomerPaymentController {
         }
 
         Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(id, userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn ID: " + id));
 
         if (appointment.getStatus() != AppointmentStatus.PENDING_DEPOSIT) {
             return "redirect:/customer/book?status=fail&id=" + id;
@@ -106,7 +111,7 @@ public class CustomerPaymentController {
     public ResponseEntity<?> payDepositWithWallet(@PathVariable Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         try {
@@ -117,7 +122,7 @@ public class CustomerPaymentController {
                     "status", appointment.getStatus().name()
             ));
         } catch (RuntimeException ex) {
-            String message = ex.getMessage() != null ? ex.getMessage() : "Khong the thanh toan bang vi.";
+            String message = ex.getMessage() != null ? ex.getMessage() : "Không thể thanh toán bằng ví.";
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", message
@@ -130,14 +135,21 @@ public class CustomerPaymentController {
     public ResponseEntity<?> createWalletTopup(@RequestParam BigDecimal amount, HttpServletRequest request, HttpSession session) throws Exception {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         BigDecimal normalizedAmount = amount == null ? BigDecimal.ZERO : amount.stripTrailingZeros();
-        if (normalizedAmount.compareTo(BigDecimal.valueOf(10000L)) < 0) {
+        if (normalizedAmount.compareTo(MIN_WALLET_TOPUP_AMOUNT) < 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "So tien nap toi thieu la 10.000 VND."
+                    "message", "Số tiền nạp tối thiểu là 10.000 VND."
+            ));
+        }
+
+        if (normalizedAmount.compareTo(MAX_WALLET_TOPUP_AMOUNT) > 0) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Số tiền nạp tối đa là 100.000.000 VND."
             ));
         }
 
@@ -150,52 +162,74 @@ public class CustomerPaymentController {
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "paymentUrl", paymentUrl
+                "paymentUrl", paymentUrl,
+                "creditedAmount", walletService.calculateTopupCreditedAmount(normalizedAmount)
         ));
     }
 
     @GetMapping("/create-final-payment/{id}")
-    public String createFinalPayment(@PathVariable Long id, HttpServletRequest request, HttpSession session) throws Exception {
+    public String createFinalPayment(@PathVariable Long id,
+                                     @RequestParam(required = false) String voucherCode,
+                                     HttpServletRequest request,
+                                     HttpSession session) throws Exception {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return "redirect:/login";
         }
 
-        Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(id, userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen ID: " + id));
+        try {
+            FinalPaymentPreviewDto preview = customerAppointmentService.applyVoucherForFinalPayment(userId, id, voucherCode);
+            if (preview.getPayableAmount() == null || preview.getPayableAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                customerAppointmentService.completeFinalPayment(id, preview.getInvoiceId());
+                return "redirect:/customer/my-appointments?payment=success#highlight=" + id;
+            }
 
-        if (appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT) {
+            long amount = preview.getPayableAmount().multiply(BigDecimal.valueOf(100L)).longValue();
+            String txnRef = "FINAL" + System.currentTimeMillis();
+            String orderInfo = "FINAL_PAYMENT_" + id + "_" + preview.getInvoiceId() + "_" + txnRef;
+            String paymentUrl = buildPaymentUrl(buildVnpayParams(amount, txnRef, orderInfo, request));
+            return "redirect:" + paymentUrl;
+        } catch (RuntimeException ex) {
             return "redirect:/customer/my-appointments?payment=fail#highlight=" + id;
         }
+    }
 
-        Invoice invoice = invoiceRepository.findByAppointment_IdAndAppointment_Customer_User_Id(id, userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
-
-        BigDecimal remainingAmount = customerAppointmentService.resolveRemainingInvoiceAmount(appointment, invoice);
-        invoice.setTotalAmount(remainingAmount);
-        invoiceRepository.save(invoice);
-
-        if (invoice.getStatus() != PaymentStatus.UNPAID || remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            return "redirect:/customer/my-appointments?payment=fail#highlight=" + id;
+    @GetMapping("/final-payment/{id}/preview")
+    @ResponseBody
+    public ResponseEntity<?> previewFinalPayment(@PathVariable Long id,
+                                                 @RequestParam(required = false) String voucherCode,
+                                                 HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
-        long amount = remainingAmount.multiply(BigDecimal.valueOf(100L)).longValue();
-        String txnRef = "FINAL" + System.currentTimeMillis();
-        String orderInfo = "FINAL_PAYMENT_" + id + "_" + invoice.getId() + "_" + txnRef;
-        String paymentUrl = buildPaymentUrl(buildVnpayParams(amount, txnRef, orderInfo, request));
-        return "redirect:" + paymentUrl;
+        try {
+            FinalPaymentPreviewDto preview = customerAppointmentService.previewFinalPayment(userId, id, voucherCode);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "data", preview
+            ));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", ex.getMessage() != null ? ex.getMessage() : "Không thể áp dụng voucher."
+            ));
+        }
     }
 
     @PostMapping("/final-payment/{id}/wallet")
     @ResponseBody
-    public ResponseEntity<?> payFinalPaymentWithWallet(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> payFinalPaymentWithWallet(@PathVariable Long id,
+                                                       @RequestParam(required = false) String voucherCode,
+                                                       HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         }
 
         try {
-            Appointment appointment = customerAppointmentService.payRemainingWithWallet(userId, id);
+            Appointment appointment = customerAppointmentService.payRemainingWithWallet(userId, id, voucherCode);
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "appointmentId", appointment.getId(),
@@ -204,7 +238,7 @@ public class CustomerPaymentController {
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", ex.getMessage() != null ? ex.getMessage() : "Khong the thanh toan bang vi."
+                    "message", ex.getMessage() != null ? ex.getMessage() : "Không thể thanh toán bằng ví."
             ));
         }
     }
@@ -222,6 +256,7 @@ public class CustomerPaymentController {
             }
 
             String vnp_SecureHash = fields.remove("vnp_SecureHash");
+            fields.remove("vnp_SecureHashType");
             List<String> fieldNames = new ArrayList<>(fields.keySet());
             Collections.sort(fieldNames);
 
@@ -243,7 +278,7 @@ public class CustomerPaymentController {
 
             if (vnp_SecureHash == null || !checkHash.equalsIgnoreCase(vnp_SecureHash)) {
                 return isWalletTopupOrder(orderInfo)
-                        ? "redirect:/customer/wallet?topup=fail"
+                        ? "redirect:/customer/wallet?topup=fail" + buildWalletTxnRefQuery(orderInfo)
                         : (isFinalPaymentOrder(orderInfo)
                         ? "redirect:/customer/my-appointments?payment=fail"
                         : "redirect:/customer/book?status=fail");
@@ -265,7 +300,7 @@ public class CustomerPaymentController {
             if (appointmentId != null) {
                 customerAppointmentService.cancelUnpaidAppointment(
                         appointmentId,
-                        "Khach hang da huy hoac khong hoan tat thanh toan VNPay."
+                        "Khách hàng đã hủy hoặc không hoàn tất thanh toán VNPay."
                 );
                 return "redirect:/customer/book?status=fail&id=" + appointmentId;
             }
@@ -280,7 +315,7 @@ public class CustomerPaymentController {
     @PostMapping("/appointments/cancel-back/{id}")
     @ResponseBody
     public ResponseEntity<?> cancelOnBack(@PathVariable Long id) {
-        customerAppointmentService.cancelUnpaidAppointment(id, "Khach hang quay lai tu trang thanh toan");
+        customerAppointmentService.cancelUnpaidAppointment(id, "Khách hàng quay lại từ trang thanh toán");
         return ResponseEntity.ok().build();
     }
 
@@ -313,21 +348,35 @@ public class CustomerPaymentController {
         String txnRef = parts[3];
 
         if (!"00".equals(responseCode)) {
-            return "redirect:/customer/wallet?topup=fail";
+            return "redirect:/customer/wallet?topup=fail&txnRef=" + txnRef;
         }
 
         CustomerProfile customer = customerProfileRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay khach hang de nap vi."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng để nạp ví."));
 
-        BigDecimal amount = new BigDecimal(request.getParameter("vnp_Amount"))
+        BigDecimal paidAmount = new BigDecimal(request.getParameter("vnp_Amount"))
                 .divide(BigDecimal.valueOf(100L));
+        BigDecimal creditedAmount = walletService.calculateTopupCreditedAmount(paidAmount);
         String description = "Nap tien vi qua VNPay [" + txnRef + "]";
 
         if (!walletTransactionRepository.existsByTypeAndDescription(WalletTransactionType.DEPOSIT, description)) {
-            walletService.deposit(customer, amount, description, null);
+            walletService.deposit(customer, creditedAmount, description, null);
         }
 
-        return "redirect:/customer/wallet?topup=success";
+        return "redirect:/customer/wallet?topup=success&txnRef=" + txnRef;
+    }
+
+    private String buildWalletTxnRefQuery(String orderInfo) {
+        if (!isWalletTopupOrder(orderInfo)) {
+            return "";
+        }
+
+        String[] parts = orderInfo.split("_", 4);
+        if (parts.length < 4 || parts[3] == null || parts[3].isBlank()) {
+            return "";
+        }
+
+        return "&txnRef=" + parts[3];
     }
 
     private String handleFinalPaymentReturn(String responseCode, String orderInfo) {
@@ -344,24 +393,15 @@ public class CustomerPaymentController {
         }
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen thanh toan."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn thanh toán."));
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn thanh toán."));
 
         if (invoice.getAppointment() == null || !appointmentId.equals(invoice.getAppointment().getId())) {
             return "redirect:/customer/my-appointments?payment=fail#highlight=" + appointmentId;
         }
 
-        if (invoice.getStatus() != PaymentStatus.PAID) {
-            invoice.setStatus(PaymentStatus.PAID);
-            invoiceRepository.save(invoice);
-        }
-
-        if (appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
-            appointment.setStatus(AppointmentStatus.COMPLETED);
-            appointmentRepository.save(appointment);
-            notificationService.notifyBookingUpdated(appointment, "Da thanh toan hoa don thanh cong");
-        }
+        customerAppointmentService.completeFinalPayment(appointmentId, invoiceId);
 
         return "redirect:/customer/my-appointments?payment=success#highlight=" + appointmentId;
     }
@@ -426,9 +466,20 @@ public class CustomerPaymentController {
         } else if (uid instanceof Number) {
             userId = ((Number) uid).longValue();
         }
-        if (userId == null || !userRepository.existsById(userId)) {
+        if (userId != null && userRepository.existsById(userId)) {
+            return userId;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
             return null;
         }
-        return userId;
+
+        return userRepository.findByEmail(authentication.getName())
+                .map(user -> {
+                    session.setAttribute(SESSION_USER_ID, user.getId());
+                    return user.getId();
+                })
+                .orElse(null);
     }
 }

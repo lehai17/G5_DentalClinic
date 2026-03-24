@@ -12,7 +12,7 @@
         .page-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08); padding: 24px; }
         .page-title { margin: 0 0 8px; color: #1b2559; }
         .page-subtitle { margin: 0 0 24px; color: #707eae; }
-        .stats-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
         .stat-card { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06); }
         .stat-label { color: #707eae; font-size: 13px; margin-bottom: 8px; }
         .stat-value { color: #1b2559; font-size: 24px; font-weight: 700; }
@@ -30,7 +30,7 @@
         td { color: #1b2559; font-size: 14px; }
         .badge { display: inline-block; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
         .badge.DEPOSIT, .badge.REFUND { background: #e7f8ee; color: #1a7f37; }
-        .badge.WITHDRAW, .badge.PAYMENT { background: #fff0e8; color: #b45309; }
+        .badge.PAYMENT { background: #fff0e8; color: #b45309; }
         .muted { color: #707eae; font-size: 13px; }
         .empty { padding: 24px 0; text-align: center; color: #707eae; }
         .pagination { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
@@ -44,16 +44,12 @@
 
 <div class="main-content">
     <h1 class="page-title">Giao dịch ví toàn hệ thống</h1>
-    <p class="page-subtitle">Theo dõi nạp, rút, thanh toán và hoàn tiền của tất cả khách hàng.</p>
+    <p class="page-subtitle">Theo dõi nạp, thanh toán và hoàn tiền của tất cả khách hàng.</p>
 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Tổng nạp</div>
             <div class="stat-value" th:text="${#numbers.formatDecimal(overview.totalDeposits, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Tổng rút</div>
-            <div class="stat-value" th:text="${#numbers.formatDecimal(overview.totalWithdrawals, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Tổng thanh toán</div>

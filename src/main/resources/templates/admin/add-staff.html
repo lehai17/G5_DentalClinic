@@ -320,7 +320,7 @@
                         </div>
                         <div style="display: flex; gap: 20px;">
                             <div class="input-group" style="flex: 1;">
-                                <label>Date of Birth</label>
+                                <label>Ngày sinh</label>
                                 <div class="input-wrapper">
                                     <i class="far fa-calendar-alt"></i>
                                     <input type="date" th:field="*{dateOfBirth}" class="form-control"
@@ -330,13 +330,13 @@
                             </div>
 
                             <div class="input-group" style="width: 120px;">
-                                <label>Gender</label>
+                                <label>Giới tính</label>
                                 <div class="input-wrapper">
                                     <select th:field="*{gender}"
                                         style="border:none; background:transparent; width:100%; outline:none;">
-                                        <option value="MALE">Male</option>
-                                        <option value="FEMALE">Female</option>
-                                        <option value="OTHER">Other</option>
+                                        <option value="MALE">Nam</option>
+                                        <option value="FEMALE">Nữ</option>
+                                        <option value="OTHER">Khác</option>
                                     </select>
                                 </div>
                             </div>
@@ -350,20 +350,20 @@
                             <div class="icon-box" style="background: #E8F5E9; color: #4CAF50;"><i
                                     class="fas fa-shield-alt"></i></div>
                             <div>
-                                <h4 style="margin:0;">System Access</h4>
-                                <small style="opacity: 0.7;">Security and permissions</small>
+                                <h4 style="margin:0;">Quyền truy cập hệ thống</h4>
+                                <small style="opacity: 0.7;">Bảo mật và phân quyền</small>
                             </div>
                         </div>
 
                         <div class="input-group" style="margin-bottom: 20px;">
-                            <label style="color: rgba(255,255,255,0.6);">Assigned Role</label>
+                            <label style="color: rgba(255,255,255,0.6);">Vai trò được chỉ định</label>
                             <div class="input-wrapper">
                                 <input type="text" value="Staff" readonly>
                             </div>
                         </div>
 
                         <div class="input-group">
-                            <label style="color: rgba(255,255,255,0.6);">Temporary Password</label>
+                            <label style="color: rgba(255,255,255,0.6);">Mật khẩu tạm thời</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-lock"></i>
                                 <input type="password" th:field="*{tempPassword}" placeholder="••••••••" required>
@@ -372,8 +372,8 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" class="btn-discard" onclick="window.history.back()">Discard</button>
-                        <button type="submit" class="btn-create">Create Staff Profile</button>
+                        <button type="button" class="btn-discard" onclick="window.history.back()">Hủy bỏ</button>
+                        <button type="submit" class="btn-create">Tạo hồ sơ nhân viên</button>
                     </div>
                 </div>
             </div>

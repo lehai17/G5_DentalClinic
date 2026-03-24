@@ -51,6 +51,7 @@ public class DentistSessionService {
                                                        Long dentistUserId) {
         Appointment appt = appointmentRepository.findByIdWithDetails(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay lich hen"));
+        initializeAppointmentDetails(appt);
         validateAppointmentOwnership(appt, customerUserId, dentistUserId);
         return appt;
     }
@@ -286,11 +287,24 @@ public class DentistSessionService {
        ========================================================= */
 
     private Appointment mustGetAppointment(Long appointmentId, Long customerUserId, Long dentistUserId) {
-        Appointment appt = appointmentRepository.findById(appointmentId)
+        Appointment appt = appointmentRepository.findByIdWithDetails(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn"));
 
+        initializeAppointmentDetails(appt);
         validateAppointmentOwnership(appt, customerUserId, dentistUserId);
         return appt;
+    }
+
+    private void initializeAppointmentDetails(Appointment appointment) {
+        if (appointment == null || appointment.getAppointmentDetails() == null) {
+            return;
+        }
+
+        appointment.getAppointmentDetails().forEach(detail -> {
+            if (detail.getService() != null) {
+                detail.getService().getId();
+            }
+        });
     }
 
     private void validateAppointmentOwnership(Appointment appt, Long customerUserId, Long dentistUserId) {

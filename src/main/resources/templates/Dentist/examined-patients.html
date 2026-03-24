@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
@@ -119,13 +119,13 @@
                   th:attr="data-chain-id=${chain.root.id}">
                 <td th:text="${chain.root.id}">A1023</td>
                 <td>
-                  <div class="customer-name" th:text="${chain.root.customer.fullName}">Tên</div>
+                  <div class="customer-name" th:text="${chain.root.customer != null and chain.root.customer.fullName != null and !#strings.isEmpty(chain.root.customer.fullName) ? chain.root.customer.fullName : 'Bệnh nhân'}">Tên</div>
                 </td>
-                <td th:text="${chain.root.customer.phone}">-</td>
+                <td th:text="${chain.root.customer != null and chain.root.customer.phone != null and !#strings.isEmpty(chain.root.customer.phone) ? chain.root.customer.phone : '-'}">-</td>
                 <td>
                   <div th:text="${chain.root.date}">2024-03-12</div>
                   <div class="muted"
-                       th:text="${#temporals.format(chain.root.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(chain.root.endTime, 'HH:mm')}">09:30 - 10:30</div>
+                       th:text="${chain.root.startTime != null and chain.root.endTime != null ? (#temporals.format(chain.root.startTime, 'HH:mm') + ' - ' + #temporals.format(chain.root.endTime, 'HH:mm')) : '-'}">09:30 - 10:30</div>
                 </td>
                 <td>
                   <span th:text="${chain.steps[0].serviceLabel}">-</span>
@@ -170,13 +170,13 @@
                        th:attr="data-chain-id=${chain.root.id},data-step-id=${step.appointment.id}">
                     <div class="detail-header">
                       <div>
-                        <div class="detail-name" th:text="${step.appointment.customer.fullName}">Tên</div>
+                        <div class="detail-name" th:text="${step.appointment.customer != null and step.appointment.customer.fullName != null and !#strings.isEmpty(step.appointment.customer.fullName) ? step.appointment.customer.fullName : 'Bệnh nhân'}">Tên</div>
                         <div class="detail-meta">
                           <span th:text="'#' + ${step.appointment.id}">#A1023</span>
                           <span class="dot">•</span>
                           <span th:text="${step.appointment.date}">2024-03-12</span>
                           <span class="dot">•</span>
-                          <span th:text="${#temporals.format(step.appointment.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(step.appointment.endTime, 'HH:mm')}">09:30 - 10:30</span>
+                          <span th:text="${step.appointment.startTime != null and step.appointment.endTime != null ? (#temporals.format(step.appointment.startTime, 'HH:mm') + ' - ' + #temporals.format(step.appointment.endTime, 'HH:mm')) : '-'}">09:30 - 10:30</span>
                           <span class="dot">•</span>
                           <span th:text="${step.appointment.status}">WAITING_PAYMENT</span>
                         </div>
@@ -290,8 +290,8 @@
         </div>
 
         <div class="pagination">
-          <div class="page-info" th:text="'Showing ' + ${totalChains == 0 ? 0 : ((page - 1) * pageSize + 1)} + '-' + ${T(java.lang.Math).min(page * pageSize, totalChains)} + ' of ' + ${totalChains} + ' records'">
-            Showing 0-0 of 0 records
+          <div class="page-info" th:text="'Hiển thị ' + ${totalChains == 0 ? 0 : ((page - 1) * pageSize + 1)} + '-' + ${T(java.lang.Math).min(page * pageSize, totalChains)} + ' / ' + ${totalChains} + ' bản ghi'">
+            Hiển thị 0-0 / 0 bản ghi
           </div>
           <div class="page-controls">
             <a class="page-btn"

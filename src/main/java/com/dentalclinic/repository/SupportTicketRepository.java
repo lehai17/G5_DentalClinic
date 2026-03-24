@@ -40,7 +40,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Giữ tên method để khớp các service/controller đang gọi.
      */
     @Query("""
-        SELECT DISTINCT s
+        SELECT s
         FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
@@ -59,7 +59,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Lấy danh sách phiếu hỗ trợ hiển thị cho Bác sĩ.
      */
     @Query("""
-        SELECT DISTINCT s FROM SupportTicket s
+        SELECT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
         LEFT JOIN FETCH a.dentist adp
@@ -77,7 +77,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Lọc danh sách phiếu hỗ trợ theo trạng thái dành cho Bác sĩ.
      */
     @Query("""
-        SELECT DISTINCT s FROM SupportTicket s
+        SELECT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
         LEFT JOIN FETCH a.dentist adp
@@ -99,7 +99,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
      * Xem chi tiết một phiếu hỗ trợ dành cho Bác sĩ (Kiểm tra quyền sở hữu).
      */
     @Query("""
-        SELECT DISTINCT s FROM SupportTicket s
+        SELECT s FROM SupportTicket s
         LEFT JOIN FETCH s.appointment a
         LEFT JOIN FETCH a.service
         LEFT JOIN FETCH a.dentist adp

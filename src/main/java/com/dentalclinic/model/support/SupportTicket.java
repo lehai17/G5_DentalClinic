@@ -256,12 +256,20 @@ public class SupportTicket {
             this.timestamp = timestamp;
         }
 
+        public LocalDateTime getCreatedAt() {
+            return timestamp;
+        }
+
         public boolean isCustomer() {
             return customer;
         }
 
         public void setCustomer(boolean customer) {
             this.customer = customer;
+        }
+
+        public boolean isCustomerSide() {
+            return customer;
         }
     }
 }

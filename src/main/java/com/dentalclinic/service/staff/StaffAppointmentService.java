@@ -1,12 +1,17 @@
 package com.dentalclinic.service.staff;
 
+import com.dentalclinic.dto.customer.AppointmentDto;
+import com.dentalclinic.dto.customer.AppointmentInvoiceItemDto;
+import com.dentalclinic.dto.customer.AppointmentPrescriptionItemDto;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.payment.BillingNote;
 import com.dentalclinic.model.payment.BillingPerformedService;
+import com.dentalclinic.model.payment.BillingPrescriptionItem;
 import com.dentalclinic.model.payment.Invoice;
 import com.dentalclinic.model.payment.PaymentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.repository.AppointmentRepository;
 import com.dentalclinic.repository.BillingNoteRepository;
 import com.dentalclinic.repository.DentistBusyScheduleRepository;
@@ -16,6 +21,7 @@ import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.dentist.ReexamService;
 import com.dentalclinic.service.mail.EmailService;
 import com.dentalclinic.service.notification.NotificationService;
+import com.dentalclinic.service.wallet.WalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +34,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class StaffAppointmentService {
@@ -65,6 +75,12 @@ public class StaffAppointmentService {
     @Autowired
     private InvoiceRepository invoiceRepository;
 
+    @Autowired
+    private WalletService walletService;
+
+    private static final String STAFF_VIET_QR_BANK_CODE = "MB";
+    private static final String STAFF_VIET_QR_ACCOUNT_NO = "3456917112004";
+
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
@@ -84,8 +100,6 @@ public class StaffAppointmentService {
 
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointmentRepository.save(appointment);
-
-        emailService.sendAppointmentConfirmed(appointment);
 
         // Dentist inbox notification
         notificationService.notifyDentistAppointmentConfirmed(appointment);
@@ -123,12 +137,6 @@ public class StaffAppointmentService {
 
         // Dentist inbox notification (confirmed/assigned appointment)
         notificationService.notifyDentistAppointmentConfirmed(saved);
-
-        try {
-            emailService.sendAppointmentConfirmed(saved);
-        } catch (Exception e) {
-            logger.warn("Khong gui duoc email xac nhan cho appointment {}", saved.getId(), e);
-        }
 
         if (oldDentistId == null || !oldDentistId.equals(dentistId)) {
             notificationService.notifyBookingUpdated(saved, "Da doi nha si phu trach lich hen");
@@ -176,7 +184,22 @@ public class StaffAppointmentService {
             return appointmentRepository.findByService_NameContainingIgnoreCase(serviceKeyword, pageable);
         }
 
-        return appointmentRepository.findAll(pageable);
+        return appointmentRepository.findAllBy(pageable);
+    }
+
+    public Map<Long, String> buildServiceSummaries(List<Appointment> appointments) {
+        Map<Long, String> summaries = new HashMap<>();
+        if (appointments == null) {
+            return summaries;
+        }
+
+        for (Appointment appointment : appointments) {
+            if (appointment == null || appointment.getId() == null) {
+                continue;
+            }
+            summaries.put(appointment.getId(), buildServiceSummary(appointment));
+        }
+        return summaries;
     }
 
     public void checkInAppointment(Long id) {
@@ -269,6 +292,10 @@ public class StaffAppointmentService {
 
         Invoice invoice = invoiceRepository.findByAppointment_Id(id).orElseGet(Invoice::new);
         invoice.setAppointment(a);
+        invoice.setVoucher(null);
+        invoice.setVoucherUsageCounted(false);
+        invoice.setOriginalAmount(remainingAmount);
+        invoice.setDiscountAmount(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         invoice.setTotalAmount(remainingAmount);
 
         if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -277,6 +304,7 @@ public class StaffAppointmentService {
             a.setStatus(AppointmentStatus.COMPLETED);
             appointmentRepository.save(a);
             notificationService.notifyBookingUpdated(a, "Da hoan tat thanh toan");
+            emailService.sendAppointmentCompletionIfNeeded(a.getId());
             return;
         }
 
@@ -285,6 +313,205 @@ public class StaffAppointmentService {
         a.setStatus(AppointmentStatus.WAITING_PAYMENT);
         appointmentRepository.save(a);
         notificationService.notifyBookingUpdated(a, "Da tao hoa don thanh toan con lai");
+    }
+
+    @Transactional(readOnly = true)
+    public AppointmentDto getInvoicePreview(Long id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+
+        if (appointment.getStatus() != AppointmentStatus.DONE
+                && appointment.getStatus() != AppointmentStatus.WAITING_PAYMENT
+                && appointment.getStatus() != AppointmentStatus.COMPLETED) {
+            throw new RuntimeException("Chi co the xem hoa don cho lich hen da kham xong.");
+        }
+
+        BillingNote billingNote = billingNoteRepository.findByAppointment_Id(id)
+                .orElseThrow(() -> new RuntimeException("Chua co phieu dieu tri cho lich hen nay."));
+
+        AppointmentDto dto = new AppointmentDto();
+        dto.setId(appointment.getId());
+        dto.setStatus(appointment.getStatus().name());
+        dto.setDate(appointment.getDate());
+        dto.setStartTime(appointment.getStartTime());
+        dto.setEndTime(appointment.getEndTime());
+        dto.setDepositAmount(appointment.getDepositAmount() != null
+                ? appointment.getDepositAmount().setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+        dto.setBillingNoteId(billingNote.getId());
+        dto.setBillingNoteNote(billingNote.getNote());
+        dto.setBillingNoteUpdatedAt(billingNote.getUpdatedAt());
+
+        if (appointment.getDentist() != null) {
+            dto.setDentistId(appointment.getDentist().getId());
+            dto.setDentistName(appointment.getDentist().getFullName());
+        }
+
+        List<AppointmentInvoiceItemDto> invoiceItems = new ArrayList<>();
+        List<AppointmentPrescriptionItemDto> prescriptionItems = new ArrayList<>();
+        BigDecimal billedTotal = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        List<String> serviceNames = new ArrayList<>();
+
+        if (billingNote.getPerformedServices() != null) {
+            for (BillingPerformedService item : billingNote.getPerformedServices()) {
+                if (item == null || item.getService() == null) {
+                    continue;
+                }
+
+                int qty = Math.max(1, item.getQty());
+                BigDecimal unitPrice = BigDecimal.valueOf(item.getService().getPrice())
+                        .setScale(2, RoundingMode.HALF_UP);
+                BigDecimal lineAmount = unitPrice.multiply(BigDecimal.valueOf(qty))
+                        .setScale(2, RoundingMode.HALF_UP);
+
+                AppointmentInvoiceItemDto line = new AppointmentInvoiceItemDto();
+                line.setId(item.getId());
+                line.setServiceId(item.getService().getId());
+                line.setName(item.getService().getName());
+                line.setQty(qty);
+                line.setUnitPrice(unitPrice);
+                line.setAmount(lineAmount);
+                line.setToothNo(item.getToothNo());
+                invoiceItems.add(line);
+
+                if (item.getService().getName() != null && !item.getService().getName().isBlank()) {
+                    serviceNames.add(item.getService().getName().trim());
+                }
+
+                billedTotal = billedTotal.add(lineAmount);
+            }
+        }
+
+        if (billingNote.getPrescriptionItems() != null) {
+            for (BillingPrescriptionItem item : billingNote.getPrescriptionItems()) {
+                if (item == null) {
+                    continue;
+                }
+                AppointmentPrescriptionItemDto line = new AppointmentPrescriptionItemDto();
+                line.setId(item.getId());
+                line.setMedicineName(item.getMedicineName());
+                line.setDosage(item.getDosage());
+                line.setNote(item.getNote());
+                prescriptionItems.add(line);
+            }
+        }
+
+        dto.setInvoiceItems(invoiceItems);
+        dto.setPrescriptionItems(prescriptionItems);
+        dto.setBilledTotal(billedTotal);
+        dto.setServiceName(serviceNames.stream().distinct().collect(Collectors.joining(", ")));
+
+        BigDecimal originalRemainingAmount = billedTotal.subtract(dto.getDepositAmount())
+                .max(BigDecimal.ZERO)
+                .setScale(2, RoundingMode.HALF_UP);
+        dto.setOriginalRemainingAmount(originalRemainingAmount);
+        dto.setDiscountAmount(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+        dto.setRemainingAmount(originalRemainingAmount);
+        dto.setInvoiceStatus(PaymentStatus.UNPAID.name());
+
+        invoiceRepository.findByAppointment_Id(id).ifPresent(invoice -> {
+            dto.setInvoiceId(invoice.getId());
+            dto.setInvoiceStatus(invoice.getStatus() != null ? invoice.getStatus().name() : PaymentStatus.UNPAID.name());
+            dto.setOriginalRemainingAmount(invoice.getOriginalAmount() != null
+                    ? invoice.getOriginalAmount().setScale(2, RoundingMode.HALF_UP)
+                    : originalRemainingAmount);
+            dto.setDiscountAmount(invoice.getDiscountAmount() != null
+                    ? invoice.getDiscountAmount().setScale(2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            dto.setRemainingAmount(invoice.getTotalAmount() != null
+                    ? invoice.getTotalAmount().max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP)
+                    : originalRemainingAmount);
+        });
+
+        dto.setCanPayRemaining(appointment.getStatus() == AppointmentStatus.DONE);
+        return dto;
+    }
+
+    @Transactional
+    public Map<String, Object> preparePaymentOptions(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+
+        if (appointment.getStatus() == AppointmentStatus.DONE) {
+            processPayment(appointmentId);
+            appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+        }
+
+        AppointmentDto invoicePreview = getInvoicePreview(appointmentId);
+        CustomerProfile customer = appointment.getCustomer();
+        BigDecimal walletBalance = customer != null
+                ? walletService.getBalance(customer).setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+        String transferContent = invoicePreview.getInvoiceId() != null
+                ? "G5HD" + invoicePreview.getInvoiceId()
+                : "G5LH" + appointmentId;
+        String qrImageUrl = buildVietQrUrl(invoicePreview.getRemainingAmount(), transferContent);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("invoice", invoicePreview);
+        payload.put("walletBalance", walletBalance);
+        payload.put("qrImageUrl", qrImageUrl);
+        payload.put("transferContent", transferContent);
+        payload.put("bankCode", STAFF_VIET_QR_BANK_CODE);
+        payload.put("accountNo", STAFF_VIET_QR_ACCOUNT_NO);
+        return payload;
+    }
+
+    @Transactional
+    public Appointment payWithWalletByStaff(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+
+        if (appointment.getCustomer() == null
+                || appointment.getCustomer().getUser() == null
+                || appointment.getCustomer().getUser().getId() == null) {
+            throw new RuntimeException("Khong tim thay tai khoan khach hang de tru vi.");
+        }
+
+        if (appointment.getStatus() == AppointmentStatus.DONE) {
+            processPayment(appointmentId);
+        }
+
+        return customerAppointmentService.payRemainingWithWallet(
+                appointment.getCustomer().getUser().getId(),
+                appointmentId,
+                null);
+    }
+
+    @Transactional
+    public Appointment confirmManualPayment(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+
+        if (appointment.getStatus() == AppointmentStatus.DONE) {
+            processPayment(appointmentId);
+            appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+        }
+
+        Invoice invoice = invoiceRepository.findByAppointment_Id(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
+
+        return customerAppointmentService.completeFinalPayment(appointmentId, invoice.getId());
+    }
+
+    private String buildVietQrUrl(BigDecimal amount, String transferContent) {
+        BigDecimal normalizedAmount = amount == null
+                ? BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
+                : amount.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+        String encodedContent = URLEncoder.encode(
+                transferContent == null ? "" : transferContent,
+                StandardCharsets.UTF_8);
+        return "https://img.vietqr.io/image/"
+                + STAFF_VIET_QR_BANK_CODE
+                + "-"
+                + STAFF_VIET_QR_ACCOUNT_NO
+                + "-compact2.png?amount="
+                + normalizedAmount.longValue()
+                + "&addInfo="
+                + encodedContent;
     }
 
     private BigDecimal calculateBillingTotal(Appointment appointment, BillingNote billingNote) {
@@ -304,6 +531,30 @@ public class StaffAppointmentService {
         }
 
         return total.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String buildServiceSummary(Appointment appointment) {
+        if (appointment.getAppointmentDetails() != null && !appointment.getAppointmentDetails().isEmpty()) {
+            List<String> names = appointment.getAppointmentDetails().stream()
+                    .map(detail -> detail != null ? detail.getServiceNameSnapshot() : null)
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(name -> !name.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!names.isEmpty()) {
+                return String.join(", ", names);
+            }
+        }
+
+        if (appointment.getService() != null && appointment.getService().getName() != null) {
+            String serviceName = appointment.getService().getName().trim();
+            if (!serviceName.isEmpty()) {
+                return serviceName;
+            }
+        }
+
+        return "Chua co dich vu";
     }
 
 }

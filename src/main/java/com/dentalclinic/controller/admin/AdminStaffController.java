@@ -19,7 +19,7 @@ public class AdminStaffController {
     @Autowired
     private StaffService staffService;
 
-    // 1. Hiển thị danh sï¿½ch nhï¿½n viên kèm bộ lọc
+    // 1. Hiển thị danh sách nhân viên kèm bộ lọc
     @GetMapping
     public String showStaffList(
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -27,16 +27,16 @@ public class AdminStaffController {
             @RequestParam(value = "position", required = false) String position,
             Model model) {
 
-        // Gọi hàm lọc an toàn từ Service đã xử lý Enum
+        // Gọi hàm lọc an toàn từ service đã xử lý enum
         List<StaffProfile> staffs = staffService.searchStaffs(keyword, status, position);
 
         model.addAttribute("staffs", staffs);
         model.addAttribute("selectedKeyword", keyword);
-        model.addAttribute("selectedStatus", status); // Giữ trạng thï¿½i dropdown sau khi lọc
+        model.addAttribute("selectedStatus", status); // Giữ trạng thái dropdown sau khi lọc
         model.addAttribute("selectedPos", position);
         model.addAttribute("activePage", "staff");
 
-        // Cập nhật dữ liệu cho cï¿½c thẻ thống kê (Stat Cards)
+        // Cập nhật dữ liệu cho các thẻ thống kê (Stat Cards)
         model.addAttribute("totalStaff", staffService.countTotal());
         model.addAttribute("lockedStaffCount", staffService.countByStatus("LOCKED"));
         model.addAttribute("activeStaffCount", staffService.countByStatus("ACTIVE"));
@@ -55,7 +55,7 @@ public class AdminStaffController {
         return "admin/fragments/staff-table :: staff-list";
     }
 
-    // 2. Hiển thị Form thêm mới nhï¿½n viên
+    // 2. Hiển thị form thêm mới nhân viên
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("staffDTO", new StaffDTO());
@@ -76,7 +76,7 @@ public class AdminStaffController {
             ra.addFlashAttribute("success", "Thêm nhân viên thành công!");
             return "redirect:/admin/staff";
         } catch (RuntimeException e) {
-            // Giữ lại form v?  hiển thị lỗi
+            // Giữ lại form và hiển thị lỗi
             model.addAttribute("error", e.getMessage());
             model.addAttribute("activePage", "staff");
             return "admin/add-staff";
@@ -85,7 +85,7 @@ public class AdminStaffController {
 
     @PostMapping("/lock/{id}")
     public String lockStaff(@PathVariable("id") Long userId, RedirectAttributes ra) {
-        // userId n� y l�  ID của bảng User để khớp với h� m trong Service của bạn
+        // userId này là ID của bảng User để khớp với hàm trong service
         staffService.deactivateStaff(userId);
         ra.addFlashAttribute("success", "Khóa nhân viên thành công!");
         return "redirect:/admin/staff";
@@ -94,9 +94,9 @@ public class AdminStaffController {
     @PostMapping("/unlock/{id}")
     public String unlockStaff(@PathVariable("id") Long id, RedirectAttributes ra) {
         try {
-            // Gọi h� m dùng chung để đưa trạng thï¿½i về ACTIVE
+            // Gọi hàm dùng chung để đưa trạng thái về ACTIVE
             staffService.updateStaffStatus(id, UserStatus.ACTIVE);
-            ra.addFlashAttribute("success", "\u0110\u00e3 m\u1edf kh\u00f3a nh\u00e2n vi\u00ean th\u00e0nh c\u00f4ng!");
+            ra.addFlashAttribute("success", "Đã mở khóa nhân viên thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
@@ -122,7 +122,7 @@ public class AdminStaffController {
             @jakarta.validation.Valid @ModelAttribute("updateStaffDTO") com.dentalclinic.dto.admin.UpdateStaffDTO dto,
             org.springframework.validation.BindingResult bindingResult, RedirectAttributes ra) {
         if (bindingResult.hasErrors()) {
-            ra.addFlashAttribute("error", "Ki\u1ec3m tra l\u1ea1i th\u00f4ng tin c\u1eadp nh\u1eadt (c\u00f3 th\u1ec3 do l\u1ed7i \u0111\u1ecbnh d\u1ea1ng).");
+            ra.addFlashAttribute("error", "Kiểm tra lại thông tin cập nhật (có thể do lỗi định dạng).");
             return "redirect:/admin/staff";
         }
         try {

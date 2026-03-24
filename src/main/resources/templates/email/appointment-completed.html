@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hóa đơn thanh toán</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f7fb;padding:24px 12px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:720px;background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 16px 40px rgba(15,23,42,0.08);">
+                <tr>
+                    <td style="padding:26px 30px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#ffffff;">
+                        <div style="font-size:13px;letter-spacing:0.08em;text-transform:uppercase;opacity:0.9;" th:text="${clinicName}">GenZ Clinic</div>
+                        <h1 style="margin:10px 0 0;font-size:28px;line-height:1.3;">Hóa đơn thanh toán</h1>
+                        <p style="margin:10px 0 0;font-size:15px;line-height:1.6;opacity:0.95;">
+                            Ca khám của bạn đã hoàn tất và hệ thống đã ghi nhận thanh toán đầy đủ.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">
+                            Xin chào <strong th:text="${customerName}">Quý khách</strong>,
+                        </p>
+                        <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#475569;">
+                            Dưới đây là thông tin hóa đơn thanh toán tương ứng với lịch hẹn của bạn tại <span th:text="${clinicName}">GenZ Clinic</span>.
+                        </p>
+
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:separate;border-spacing:0 12px;margin-bottom:22px;">
+                            <tr>
+                                <td style="width:50%;padding-right:8px;vertical-align:top;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8fafc;border:1px solid #dbeafe;border-radius:16px;">
+                                        <tr><td style="padding:14px 16px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;">Mã hóa đơn</td></tr>
+                                        <tr><td style="padding:0 16px 16px;font-size:22px;font-weight:800;color:#0f172a;" th:text="${invoiceId != null ? '#' + invoiceId : 'Chưa có'}">#4</td></tr>
+                                    </table>
+                                </td>
+                                <td style="width:50%;padding-left:8px;vertical-align:top;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#fefce8;border:1px solid #fde68a;border-radius:16px;">
+                                        <tr><td style="padding:14px 16px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;">Trạng thái</td></tr>
+                                        <tr><td style="padding:0 16px 16px;font-size:22px;font-weight:800;color:#166534;" th:text="${invoiceStatusLabel}">Đã thanh toán</td></tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #e2e8f0;border-radius:18px;overflow:hidden;margin-bottom:24px;">
+                            <tr>
+                                <td colspan="2" style="padding:14px 18px;background:#eff6ff;font-weight:800;color:#1d4ed8;">Thông tin lịch hẹn</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;color:#64748b;width:38%;">Mã lịch hẹn</td>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;font-weight:700;" th:text="${'#' + appointmentId}">#233</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;color:#64748b;">Ngày khám</td>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;font-weight:700;" th:text="${appointmentDate}">17/03/2026</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;color:#64748b;">Khung giờ</td>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;font-weight:700;" th:text="${appointmentTime}">16:30 - 17:00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;color:#64748b;">Dịch vụ</td>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;font-weight:700;" th:text="${serviceSummary}">Nhổ răng</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;color:#64748b;">Bác sĩ phụ trách</td>
+                                <td style="padding:12px 18px;border-top:1px solid #e2e8f0;font-weight:700;" th:text="${dentistName}">Bác sĩ Minh</td>
+                            </tr>
+                        </table>
+
+                        <div style="margin-bottom:22px;">
+                            <div style="font-size:20px;font-weight:800;color:#92400e;margin-bottom:12px;">Chi tiết dịch vụ</div>
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #fde7c3;border-radius:18px;overflow:hidden;">
+                                <tr th:each="item : ${invoiceItems}">
+                                    <td style="padding:16px 18px;border-top:1px solid #f1f5f9;">
+                                        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+                                            <div>
+                                                <div style="font-size:20px;font-weight:800;color:#1e293b;" th:text="${item.name}">Nhổ răng</div>
+                                                <div style="margin-top:8px;font-size:14px;color:#64748b;line-height:1.6;">
+                                                    <span th:text="${'SL: ' + item.qty + ' • Đơn giá: ' + item.unitPrice}">SL: 1 • Đơn giá: 250.000 VND</span>
+                                                    <span th:if="${item.toothNo != null and !#strings.isEmpty(item.toothNo)}" th:text="${' • Răng: ' + item.toothNo}"></span>
+                                                </div>
+                                            </div>
+                                            <div style="font-size:18px;font-weight:800;color:#0f172a;white-space:nowrap;" th:text="${item.amount}">250.000 VND</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(invoiceItems)}">
+                                    <td style="padding:18px;color:#64748b;">Chưa có dòng hóa đơn chi tiết.</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-bottom:22px;">
+                            <div style="font-size:20px;font-weight:800;color:#92400e;margin-bottom:12px;">Tổng kết thanh toán</div>
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #fde7c3;border-radius:18px;overflow:hidden;">
+                                <tr>
+                                    <td style="padding:14px 18px;color:#334155;">Tổng billing</td>
+                                    <td style="padding:14px 18px;text-align:right;font-weight:800;color:#0f172a;" th:text="${billedTotal}">250.000 VND</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 18px 14px;color:#334155;">Đặt cọc ban đầu</td>
+                                    <td style="padding:0 18px 14px;text-align:right;font-weight:800;color:#0f172a;" th:text="${depositAmount}">125.000 VND</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 18px 14px;color:#334155;">Tạm tính sau đặt cọc</td>
+                                    <td style="padding:0 18px 14px;text-align:right;font-weight:800;color:#0f172a;" th:text="${originalRemainingAmount}">125.000 VND</td>
+                                </tr>
+                                <tr th:if="${hasDiscount}">
+                                    <td style="padding:0 18px 14px;color:#334155;" th:text="${voucherCode != null ? 'Voucher giảm giá (' + voucherCode + ')' : 'Voucher giảm giá'}">Voucher giảm giá (GENZCLINIC)</td>
+                                    <td style="padding:0 18px 14px;text-align:right;font-weight:800;color:#b91c1c;" th:text="${'-' + discountAmount}">-50.000 VND</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 18px 18px;color:#334155;">Đã thanh toán</td>
+                                    <td style="padding:0 18px 18px;text-align:right;font-weight:800;color:#0f172a;" th:text="${paidAmount}">200.000 VND</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="padding:16px 18px;border-radius:14px;background:#dcfce7;border:1px solid #86efac;color:#166534;font-weight:700;line-height:1.6;" th:text="${completionMessage}">
+                            Hóa đơn đã được thanh toán xong.
+                        </div>
+
+                        <div style="margin-top:24px;padding-top:24px;border-top:1px solid #e5e7eb;font-size:14px;line-height:1.8;color:#4b5563;">
+                            <div style="font-weight:700;color:#111827;margin-bottom:8px;" th:text="${clinicName}">GenZ Clinic</div>
+                            <div th:text="${clinicAddress}">Địa chỉ phòng khám</div>
+                            <div>Điện thoại: <span th:text="${clinicPhone}">0123456789</span></div>
+                            <div>Email: <span th:text="${clinicEmail}">contact@genzclinic.vn</span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -34,9 +34,14 @@ public class AppointmentDto {
     private LocalDateTime reviewCreatedAt;
     private Long invoiceId;
     private BigDecimal billedTotal;
+    private BigDecimal originalRemainingAmount;
+    private BigDecimal discountAmount;
     private BigDecimal remainingAmount;
     private String invoiceStatus;
     private boolean canPayRemaining;
+    private String voucherCode;
+    private String voucherDescription;
+    private List<AvailableVoucherDto> availableVouchers;
     private List<AppointmentInvoiceItemDto> invoiceItems;
     private Long billingNoteId;
     private String billingNoteNote;
@@ -44,6 +49,8 @@ public class AppointmentDto {
     private List<AppointmentPrescriptionItemDto> prescriptionItems;
     private String cancellationReason;
     private boolean depositRefunded;
+    private Integer dentistReviewRating;
+    private Integer serviceReviewRating;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -99,12 +106,22 @@ public class AppointmentDto {
     public void setInvoiceId(Long invoiceId) { this.invoiceId = invoiceId; }
     public BigDecimal getBilledTotal() { return billedTotal; }
     public void setBilledTotal(BigDecimal billedTotal) { this.billedTotal = billedTotal; }
+    public BigDecimal getOriginalRemainingAmount() { return originalRemainingAmount; }
+    public void setOriginalRemainingAmount(BigDecimal originalRemainingAmount) { this.originalRemainingAmount = originalRemainingAmount; }
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
     public BigDecimal getRemainingAmount() { return remainingAmount; }
     public void setRemainingAmount(BigDecimal remainingAmount) { this.remainingAmount = remainingAmount; }
     public String getInvoiceStatus() { return invoiceStatus; }
     public void setInvoiceStatus(String invoiceStatus) { this.invoiceStatus = invoiceStatus; }
     public boolean isCanPayRemaining() { return canPayRemaining; }
     public void setCanPayRemaining(boolean canPayRemaining) { this.canPayRemaining = canPayRemaining; }
+    public String getVoucherCode() { return voucherCode; }
+    public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
+    public String getVoucherDescription() { return voucherDescription; }
+    public void setVoucherDescription(String voucherDescription) { this.voucherDescription = voucherDescription; }
+    public List<AvailableVoucherDto> getAvailableVouchers() { return availableVouchers; }
+    public void setAvailableVouchers(List<AvailableVoucherDto> availableVouchers) { this.availableVouchers = availableVouchers; }
     public List<AppointmentInvoiceItemDto> getInvoiceItems() { return invoiceItems; }
     public void setInvoiceItems(List<AppointmentInvoiceItemDto> invoiceItems) { this.invoiceItems = invoiceItems; }
     public Long getBillingNoteId() { return billingNoteId; }
@@ -119,4 +136,8 @@ public class AppointmentDto {
     public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
     public boolean isDepositRefunded() { return depositRefunded; }
     public void setDepositRefunded(boolean depositRefunded) { this.depositRefunded = depositRefunded; }
+    public Integer getDentistReviewRating() {return dentistReviewRating;}
+    public void setDentistReviewRating(Integer dentistReviewRating) {this.dentistReviewRating = dentistReviewRating;}
+    public Integer getServiceReviewRating() {return serviceReviewRating;}
+    public void setServiceReviewRating(Integer serviceReviewRating) {this.serviceReviewRating = serviceReviewRating;}
 }
