@@ -13,7 +13,10 @@
         <div th:replace="~{staff/fragments/header :: header}"></div>
 
         <div class="content">
-          <h2>Quản lý lịch hẹn</h2>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <h2>Quản lý lịch hẹn</h2>
+            <a href="/staff/walk-in-booking" class="btn-assign" style="text-decoration:none;">Book khách vãng lai</a>
+          </div>
 
           <form method="get" th:action="@{/staff/appointments}" class="filter-form">
             <input
@@ -99,15 +102,6 @@
                   >
                     Check-in
                   </button>
-
-<!--                  <button-->
-<!--                    type="button"-->
-<!--                    class="btn-cancel"-->
-<!--                    th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}"-->
-<!--                    th:onclick="'cancelAppointment(' + ${a.id} + ')'"-->
-<!--                  >-->
-<!--                    Huy-->
-<!--                  </button>-->
 
                   <button
                     type="button"

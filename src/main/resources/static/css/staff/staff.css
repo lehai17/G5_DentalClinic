@@ -816,3 +816,85 @@ button {
         justify-content: stretch;
     }
 }
+
+/* Staff walk-in booking layout */
+.staff-walkin-page .app-wrapper {
+    align-items: flex-start;
+}
+
+.staff-walkin-page .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.staff-walkin-page .main-content {
+    min-width: 0;
+    margin-left: 260px;
+    width: calc(100% - 260px);
+}
+
+.staff-walkin-page .booking-container {
+    max-width: min(1700px, calc(100vw - 320px));
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem clamp(1.5rem, 2vw, 2.75rem) 3rem;
+}
+
+.staff-walkin-page .booking-card {
+    grid-template-columns: minmax(0, 1.75fr) minmax(360px, 0.9fr);
+    gap: 2.5rem;
+    padding: 2.25rem;
+}
+
+.staff-walkin-page .booking-left {
+    min-width: 0;
+}
+
+.staff-walkin-page .booking-summary {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+}
+
+@media (max-width: 1400px) {
+    .staff-walkin-page .booking-container {
+        max-width: min(1500px, calc(100vw - 300px));
+    }
+
+    .staff-walkin-page .booking-card {
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .staff-walkin-page .sidebar {
+        position: static;
+        height: auto;
+        overflow: visible;
+    }
+
+    .staff-walkin-page .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .staff-walkin-page .booking-container {
+        max-width: 100%;
+        padding: 1rem 0.75rem 2rem;
+    }
+
+    .staff-walkin-page .booking-card {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1.25rem;
+    }
+
+    .staff-walkin-page .booking-summary {
+        position: static;
+    }
+}
