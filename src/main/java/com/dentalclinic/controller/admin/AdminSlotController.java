@@ -119,21 +119,6 @@ public class AdminSlotController {
             for (SlotDayBadgeDto b : badges) {
                 if (b != null && b.getDate() != null) {
 
-                    // ==========================================
-                    // THÊM LOGIC: MẶC ĐỊNH KHÓA NGÀY CHỦ NHẬT
-                    // ==========================================
-                    if (b.getDate().getDayOfWeek() == DayOfWeek.SUNDAY) {
-                        /* * Nếu là Chủ Nhật VÀ sức chứa (capacity) = 0
-                         * (tức là Admin chưa tạo ca khám nào cho ngày này)
-                         * thì ép trạng thái thành CLOSED (ĐÓNG/NGHỈ).
-                         */
-                        if (b.getCapacity() == 0) {
-                            b.setDensityStatus("CLOSED");
-                            // b.setLocked(true); // Mở comment dòng này nếu DTO của bạn có thuộc tính isLocked
-                        }
-                    }
-                    // ==========================================
-
                     badgeMap.put(b.getDate().toString(), b);
                 }
             }
@@ -170,10 +155,23 @@ public class AdminSlotController {
         return "redirect:/admin/slots?date=" + fromDate;
     }
 
+    @PostMapping("/api/generate-monthly")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> apiGenerateMonthly(@RequestParam String month) {
+        try {
+            YearMonth ym = YearMonth.parse(month);
+            adminSlotService.generateMonthlySchedule(ym);
+            return ResponseEntity.ok(Map.of("message", "Đã tạo thành công ca làm việc cho toàn bộ tháng " + month));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Lỗi không xác định"));
+        }
+    }
+
     @PostMapping("/api/lock-day")
     @ResponseBody
     public ResponseEntity<Map<String, String>> apiLockDay(@RequestParam String date,
-            @RequestParam(required = false) String reason) {
+            @RequestParam String reason) {
         try {
             adminSlotService.lockDay(LocalDate.parse(date), reason);
             return ResponseEntity.ok(Map.of("message", "Success"));
