@@ -166,26 +166,26 @@ public class AIBookingServiceImpl implements AIBookingService {
 
         boolean hasMetal = response.getServices().stream()
                 .anyMatch(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
-                        "kim loai", "mac cai", "mac cai thuong", "nieng rang thuong", "thuong"));
+                        "kim loai", "mac cai", "mac cai thuong", "truyen thong"));
 
         boolean hasInvis = response.getServices().stream()
                 .anyMatch(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
-                        "invisalign", "trong suot", "khay trong", "khay trong suot"));
+                        "invisalign", "trong suot", "khay trong", "khong mac cai"));
 
         if (hasMetal && hasInvis) {
             AIServiceSuggestionDto first = response.getServices().get(0);
             boolean invisFirst = first.getName() != null && containsAnyText(normalizeText(first.getName()),
-                    "invisalign", "trong suot", "khay trong", "khay trong suot");
+                    "invisalign", "trong suot", "khay trong", "khong mac cai");
 
             AIServiceSuggestionDto metal = response.getServices().stream()
                     .filter(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
-                            "kim loai", "mac cai", "mac cai thuong", "nieng rang thuong", "thuong"))
+                            "kim loai", "mac cai", "truyen thong"))
                     .findFirst()
                     .orElse(null);
 
             AIServiceSuggestionDto invis = response.getServices().stream()
                     .filter(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
-                            "invisalign", "trong suot", "khay trong", "khay trong suot"))
+                            "invisalign", "trong suot", "khay trong", "khong mac cai"))
                     .findFirst()
                     .orElse(null);
 
@@ -194,17 +194,17 @@ public class AIBookingServiceImpl implements AIBookingService {
 
             if (invisFirst) {
                 return "Tôi gợi ý 2 lựa chọn chỉnh nha phù hợp cho bạn. "
-                        + "Invisalign có ưu điểm thẩm mỹ hơn, khay trong suốt, khó bị phát hiện, dễ tháo lắp, phù hợp người giao tiếp nhiều nhưng chi phí thường cao hơn "
+                        + "Invisalign có ưu điểm thẩm mỹ hơn, khó bị phát hiện, dễ tháo lắp, phù hợp người giao tiếp nhiều nhưng chi phí thường cao hơn "
                         + "(" + invisPrice + "). "
-                        + "Niềng răng kim loại thường phù hợp hơn với các ca phức tạp, lực kéo ổn định và chi phí thường thấp hơn "
+                        + "Niềng răng kim loại có lực kéo ổn định hơn và thường phù hợp hơn với các ca phức tạp, chi phí cũng thấp hơn "
                         + "(" + metalPrice + "). "
                         + "Bạn hãy chọn 1 trong 2 dịch vụ, sau đó chọn nhanh một khung giờ bên dưới.";
             }
 
             return "Tôi gợi ý 2 lựa chọn chỉnh nha phù hợp cho bạn. "
-                    + "Niềng răng kim loại thường phù hợp hơn với các ca phức tạp, lực kéo ổn định và chi phí thường thấp hơn "
+                    + "Niềng răng kim loại thường phù hợp hơn với các ca phức tạp, lực kéo ổn định và chi phí thấp hơn "
                     + "(" + metalPrice + "). "
-                    + "Invisalign có ưu điểm thẩm mỹ hơn, khay trong suốt, dễ tháo lắp, phù hợp người giao tiếp nhiều nhưng chi phí thường cao hơn "
+                    + "Invisalign có ưu điểm thẩm mỹ hơn, khay trong suốt, dễ tháo lắp, phù hợp người giao tiếp nhiều nhưng chi phí cao hơn "
                     + "(" + invisPrice + "). "
                     + "Bạn hãy chọn 1 trong 2 dịch vụ, sau đó chọn nhanh một khung giờ bên dưới.";
         }
@@ -323,7 +323,6 @@ public class AIBookingServiceImpl implements AIBookingService {
 
         String start = slot.getStartTime().toString();
         String end = slot.getStartTime().plusMinutes(durationMinutes).toString();
-
         return date + " | " + start + " - " + end;
     }
 
