@@ -40,6 +40,7 @@ public class DentistScheduleSeeder {
                     slot.setDate(date);
                     slot.setStartTime(LocalTime.of(hour, 0));
                     slot.setEndTime(LocalTime.of(hour + 1, 0));
+                    slot.setDayOfWeek(date.getDayOfWeek());
                     slot.setAvailable(true);
                     scheduleRepo.save(slot);
                 }

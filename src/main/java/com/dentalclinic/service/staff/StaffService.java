@@ -62,7 +62,7 @@ public class StaffService {
     }
 
     // 3. Tìm kiếm và lọc nhân viên an toàn
-    public List<StaffProfile> searchStaffs(String keyword, String statusStr, String position) {
+    public List<StaffProfile> searchStaffs(String keyword, String statusStr) {
         UserStatus status = null;
         if (statusStr != null && !statusStr.isEmpty()) {
             try {
@@ -74,10 +74,9 @@ public class StaffService {
         }
 
         // Tránh lỗi chuỗi rỗng khi lọc vị trí
-        String posParam = (position != null && !position.isEmpty()) ? position : null;
         String kwParam = (keyword != null && !keyword.isEmpty()) ? keyword : null;
 
-        return staffProfileRepository.searchStaffs(kwParam, status, posParam);
+        return staffProfileRepository.searchStaffs(kwParam, status);
     }
 
     // 4. Các phương thức bổ trợ cho Stat Cards

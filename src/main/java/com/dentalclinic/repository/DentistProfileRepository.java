@@ -27,11 +27,9 @@ public interface DentistProfileRepository extends JpaRepository<DentistProfile, 
     @Query("SELECT DISTINCT d FROM DentistProfile d " +
             "JOIN FETCH d.user u " +
             "LEFT JOIN FETCH d.schedules " +
-            "WHERE (:specialty IS NULL OR d.specialization = :specialty OR :specialty = '') " +
-            "AND (:status IS NULL OR u.status = :status) " +
+            "WHERE (:status IS NULL OR u.status = :status) " +
             "AND (:keyword IS NULL OR LOWER(d.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(d.specialization) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<DentistProfile> filterDentists(@Param("keyword") String keyword,
-            @Param("specialty") String specialty,
             @Param("status") UserStatus status);
 
     @Query("SELECT COUNT(d) FROM DentistProfile d WHERE d.user.status = :status")

@@ -27,16 +27,14 @@ public class AdminUserController {
     @GetMapping
     public String showDentistList(
             @RequestParam(value = "keyword", required = false) String keyword,
-            @RequestParam(value = "specialty", required = false) String specialty,
             @RequestParam(value = "status", required = false) String status,
             Model model) {
 
         // Gọi service xử lý lọc dữ liệu an toàn
-        List<DentistProfile> dentists = dentistService.searchDentists(keyword, specialty, status);
+        List<DentistProfile> dentists = dentistService.searchDentists(keyword, status);
 
         model.addAttribute("dentists", dentists);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("selectedSpecialty", specialty); // Giữ trạng thái Dropdown
         model.addAttribute("selectedStatus", status);
         model.addAttribute("activePage", "dentists"); // Làm sáng Menu Sidebar
 
@@ -109,11 +107,9 @@ public class AdminUserController {
     @GetMapping("/api/search")
     public String searchApi(
             @RequestParam(value = "keyword", required = false) String keyword,
-            @RequestParam(value = "specialty", required = false) String specialty,
             @RequestParam(value = "status", required = false) String status,
             Model model) {
-        List<com.dentalclinic.model.profile.DentistProfile> dentists = dentistService.searchDentists(keyword, specialty,
-                status);
+        List<com.dentalclinic.model.profile.DentistProfile> dentists = dentistService.searchDentists(keyword, status);
         model.addAttribute("dentists", dentists);
         return "admin/fragments/dentist-table :: dentist-list";
     }

@@ -180,7 +180,7 @@ public class CustomerPaymentController {
         try {
             FinalPaymentPreviewDto preview = customerAppointmentService.applyVoucherForFinalPayment(userId, id, voucherCode);
             if (preview.getPayableAmount() == null || preview.getPayableAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                customerAppointmentService.completeFinalPayment(id, preview.getInvoiceId());
+                customerAppointmentService.completeFinalPayment(id, preview.getInvoiceId(), BigDecimal.ZERO);
                 return "redirect:/customer/my-appointments?payment=success#highlight=" + id;
             }
 
@@ -401,7 +401,7 @@ public class CustomerPaymentController {
             return "redirect:/customer/my-appointments?payment=fail#highlight=" + appointmentId;
         }
 
-        customerAppointmentService.completeFinalPayment(appointmentId, invoiceId);
+        customerAppointmentService.completeFinalPayment(appointmentId, invoiceId, invoice.getTotalAmount());
 
         return "redirect:/customer/my-appointments?payment=success#highlight=" + appointmentId;
     }

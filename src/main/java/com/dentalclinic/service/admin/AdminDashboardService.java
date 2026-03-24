@@ -44,14 +44,14 @@ public class AdminDashboardService {
         List<AppointmentStatus> pendingStatuses = List.of(AppointmentStatus.PENDING, AppointmentStatus.PENDING_DEPOSIT);
         stats.setPendingAppointments(appointmentRepository.countByStatusIn(pendingStatuses));
 
-        // 2. Revenue Calculation (Sum of all completed PAYMENT transactions)
-        List<WalletTransaction> allPayments = walletTransactionRepository.findAll().stream()
-                .filter(tx -> tx.getType() == WalletTransactionType.PAYMENT
-                        && tx.getStatus() == WalletTransactionStatus.COMPLETED)
+        // 2. Revenue Calculation (Net Revenue = PAYMENT - REFUND)
+        List<WalletTransaction> allTransactions = walletTransactionRepository.findAll().stream()
+                .filter(tx -> tx.getStatus() == WalletTransactionStatus.COMPLETED)
+                .filter(tx -> tx.getType() == WalletTransactionType.PAYMENT || tx.getType() == WalletTransactionType.REFUND)
                 .collect(Collectors.toList());
 
-        BigDecimal totalRevenue = allPayments.stream()
-                .map(WalletTransaction::getAmount)
+        BigDecimal totalRevenue = allTransactions.stream()
+                .map(tx -> tx.getType() == WalletTransactionType.REFUND ? tx.getAmount().negate() : tx.getAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         stats.setTotalRevenue(totalRevenue);
 
@@ -75,9 +75,9 @@ public class AdminDashboardService {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
         for (int i = 6; i >= 0; i--) {
             LocalDate d = LocalDate.now().minusDays(i);
-            BigDecimal dayRevenue = allPayments.stream()
+            BigDecimal dayRevenue = allTransactions.stream()
                     .filter(tx -> tx.getCreatedAt().toLocalDate().equals(d))
-                    .map(WalletTransaction::getAmount)
+                    .map(tx -> tx.getType() == WalletTransactionType.REFUND ? tx.getAmount().negate() : tx.getAmount())
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             trend.put(d.format(fmt), dayRevenue);
         }

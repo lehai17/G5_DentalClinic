@@ -167,7 +167,7 @@
                     </div>
                     <div class="stat-info">
                         <div class="label">Doanh thu</div>
-                        <div class="value" th:text="${#numbers.formatCurrency(stats.totalRevenue)}">0</div>
+                        <div class="value" th:text="${#numbers.formatDecimal(stats.totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0</div>
                         <div class="trend" style="color: #05CD99;">Giao dịch thành công</div>
                     </div>
                 </div>

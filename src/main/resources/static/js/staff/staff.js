@@ -240,12 +240,17 @@ function buildQrMethodHtml() {
 
 function buildCashMethodHtml() {
     if (!activeInvoiceData) return "";
+    const remaining = activeInvoiceData.remainingAmount || 0;
     return `
         <div class="staff-payment-detail">
             <div class="staff-payment-detail__title">Thanh toan tien mat</div>
-            <div class="staff-payment-meta">So tien can thu: <strong>${formatMoney(activeInvoiceData.remainingAmount)}</strong></div>
+            <div class="staff-payment-meta">So tien can thu: <strong>${formatMoney(remaining)}</strong></div>
+            <div class="staff-payment-input-group">
+                <label for="cashPaidAmount">So tien thuc thu:</label>
+                <input type="number" id="cashPaidAmount" class="staff-payment-input" value="${remaining}" step="1000">
+            </div>
             <div class="staff-payment-actions">
-                <button type="button" class="btn-payment" onclick="confirmManualPayment(${activeInvoiceData.id}, 'CASH')">Xac nhan thanh toan bang tien mat</button>
+                <button type="button" class="btn-payment" onclick="submitManualPayment(${activeInvoiceData.id}, 'CASH')">Xac nhan thanh toan bang tien mat</button>
             </div>
         </div>
     `;
@@ -514,13 +519,20 @@ function payInvoiceWithWallet(id) {
     });
 }
 
-function confirmManualPayment(id, method) {
+function submitManualPayment(id, method) {
+    const input = document.getElementById("cashPaidAmount");
+    const paidAmount = input ? input.value : (activeInvoiceData ? activeInvoiceData.remainingAmount : 0);
+
     const confirmMessage = method === "CASH"
-        ? "Xac nhan da nhan du so tien con lai bang tien mat?"
-        : "Xac nhan da nhan chuyen khoan QR cho hoa don nay?";
+        ? `Xac nhan da nhan ${formatMoney(paidAmount)} bang tien mat?`
+        : `Xac nhan da nhan chuyen khoan ${formatMoney(paidAmount)} cho hoa don nay?`;
+
     if (!confirm(confirmMessage)) return;
 
-    fetch(`/staff/appointments/${id}/confirm-manual-payment`, {
+    const params = new URLSearchParams();
+    params.append("paidAmount", paidAmount);
+
+    fetch(`/staff/appointments/${id}/confirm-manual-payment?${params.toString()}`, {
         method: "POST"
     }).then(async (res) => {
         if (!res.ok) {

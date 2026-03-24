@@ -75,7 +75,7 @@ public class CustomerHomepageController {
 
         try {
             model.addAttribute("services", serviceRepo.findByActiveTrue());
-            model.addAttribute("dentists", dentistRepo.filterDentists(null, null, UserStatus.ACTIVE));
+            model.addAttribute("dentists", dentistRepo.filterDentists(null, UserStatus.ACTIVE));
             model.addAttribute("voucherService", customerVoucherWalletService);
 
             int safePage = Math.max(page, 0);

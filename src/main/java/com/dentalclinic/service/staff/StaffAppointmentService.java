@@ -115,7 +115,8 @@ public class StaffAppointmentService {
         }
 
         String fullName = request.getFullName() != null ? request.getFullName().trim() : "";
-        String contactChannel = request.getContactChannel() != null ? request.getContactChannel().trim().toUpperCase() : "";
+        String contactChannel = request.getContactChannel() != null ? request.getContactChannel().trim().toUpperCase()
+                : "";
         String contactValue = request.getContactValue() != null ? request.getContactValue().trim() : "";
         if (fullName.isEmpty()) {
             throw new RuntimeException("Vui long nhap ho ten khach vang lai.");
@@ -176,8 +177,7 @@ public class StaffAppointmentService {
                 appt.getDate(),
                 appt.getStartTime(),
                 appt.getEndTime(),
-                appt.getId()
-        );
+                appt.getId());
 
         if (hasOverlap) {
             throw new RuntimeException("Bac si da co lich trong khung gio nay");
@@ -204,7 +204,8 @@ public class StaffAppointmentService {
 
     @Transactional
     public void completeAppointment(Long id) {
-        throw new RuntimeException("Khong con ho tro chuyen truc tiep sang COMPLETED. Luong dung la EXAMINING -> WAITING_PAYMENT -> COMPLETED.");
+        throw new RuntimeException(
+                "Khong con ho tro chuyen truc tiep sang COMPLETED. Luong dung la EXAMINING -> WAITING_PAYMENT -> COMPLETED.");
     }
 
     @Transactional
@@ -213,9 +214,9 @@ public class StaffAppointmentService {
     }
 
     public Page<Appointment> searchAndSort(String keyword,
-                                           String serviceKeyword,
-                                           String sort,
-                                           int page) {
+            String serviceKeyword,
+            String sort,
+            int page) {
         Sort s = Sort.by("date").ascending();
 
         if ("newest".equals(sort)) {
@@ -296,8 +297,7 @@ public class StaffAppointmentService {
                     appt.getDate(),
                     appt.getStartTime(),
                     appt.getEndTime(),
-                    appt.getId()
-            );
+                    appt.getId());
             if (!hasOverlap) {
                 availableDentists.add(dentist);
             }
@@ -322,8 +322,7 @@ public class StaffAppointmentService {
                     && appointment.getDate() != null
                     && dentistBusyScheduleRepository.existsApprovedLeaveByDentistAndDate(
                             appointment.getDentist().getId(),
-                            appointment.getDate()
-                    );
+                            appointment.getDate());
             leaveFlags.put(appointment.getId(), dentistOnLeave);
         }
         return leaveFlags;
@@ -472,7 +471,8 @@ public class StaffAppointmentService {
 
         invoiceRepository.findByAppointment_Id(id).ifPresent(invoice -> {
             dto.setInvoiceId(invoice.getId());
-            dto.setInvoiceStatus(invoice.getStatus() != null ? invoice.getStatus().name() : PaymentStatus.UNPAID.name());
+            dto.setInvoiceStatus(
+                    invoice.getStatus() != null ? invoice.getStatus().name() : PaymentStatus.UNPAID.name());
             dto.setOriginalRemainingAmount(invoice.getOriginalAmount() != null
                     ? invoice.getOriginalAmount().setScale(2, RoundingMode.HALF_UP)
                     : originalRemainingAmount);
@@ -584,7 +584,7 @@ public class StaffAppointmentService {
     }
 
     @Transactional
-    public Appointment confirmManualPayment(Long appointmentId) {
+    public Appointment confirmManualPayment(Long appointmentId, BigDecimal paidAmount) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
 
@@ -597,7 +597,7 @@ public class StaffAppointmentService {
         Invoice invoice = invoiceRepository.findByAppointment_Id(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
 
-        return customerAppointmentService.completeFinalPayment(appointmentId, invoice.getId());
+        return customerAppointmentService.completeFinalPayment(appointmentId, invoice.getId(), paidAmount);
     }
 
     private BigDecimal calculateBillingTotal(Appointment appointment, BillingNote billingNote) {

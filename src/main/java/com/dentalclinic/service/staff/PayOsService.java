@@ -146,7 +146,7 @@ public class PayOsService {
             }
             if ("PAID".equalsIgnoreCase(invoice.getPayOsStatus())) {
                 invoiceRepository.save(invoice);
-                customerAppointmentService.completeFinalPayment(invoice.getAppointment().getId(), invoice.getId());
+                customerAppointmentService.completeFinalPayment(invoice.getAppointment().getId(), invoice.getId(), invoice.getTotalAmount());
                 invoice = invoiceRepository.findById(invoice.getId()).orElse(invoice);
             } else {
                 invoiceRepository.save(invoice);
@@ -194,7 +194,7 @@ public class PayOsService {
         invoiceRepository.save(invoice);
 
         if ("00".equals(readText(dataNode, "code")) || "PAID".equalsIgnoreCase(readText(dataNode, "status"))) {
-            customerAppointmentService.completeFinalPayment(invoice.getAppointment().getId(), invoice.getId());
+            customerAppointmentService.completeFinalPayment(invoice.getAppointment().getId(), invoice.getId(), invoice.getTotalAmount());
         }
     }
 

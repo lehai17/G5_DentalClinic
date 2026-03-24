@@ -164,7 +164,7 @@ public class DentistService {
         return null;
     }
 
-    public List<DentistProfile> searchDentists(String keyword, String specialty, String statusStr) {
+    public List<DentistProfile> searchDentists(String keyword, String statusStr) {
         UserStatus status = null;
         if (statusStr != null && !statusStr.isEmpty()) {
             try {
@@ -174,10 +174,9 @@ public class DentistService {
             }
         }
 
-        String specialtyParam = (specialty != null && !specialty.isEmpty()) ? specialty : null;
         String keywordParam = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
 
-        return dentistProfileRepository.filterDentists(keywordParam, specialtyParam, status);
+        return dentistProfileRepository.filterDentists(keywordParam, status);
     }
 
     public long countByStatus(String statusStr) {
@@ -205,6 +204,7 @@ public class DentistService {
         slotCapacitySyncService.syncAllFutureCapacities();
     }
 
+    @Transactional(readOnly = true)
     public DentistDTO getDentistById(Long id) {
         DentistProfile profile = dentistProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bác sĩ!"));
@@ -243,6 +243,7 @@ public class DentistService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
     public List<DentistDTO> getAllDentists() {
         List<DentistProfile> profiles = dentistProfileRepository.findAllOrderByNewest();
         return profiles.stream()
@@ -250,6 +251,7 @@ public class DentistService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public com.dentalclinic.dto.admin.UpdateDentistDTO getDentistForUpdate(Long id) {
         DentistProfile profile = dentistProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ"));
@@ -278,7 +280,9 @@ public class DentistService {
         if (profile.getSchedules() != null && !profile.getSchedules().isEmpty()) {
             List<String> days = new ArrayList<>();
             for (DentistSchedule s : profile.getSchedules()) {
-                days.add(s.getDayOfWeek().name());
+                if (s.getDayOfWeek() != null) {
+                    days.add(s.getDayOfWeek().name());
+                }
                 dto.setShiftStartTime(s.getStartTime() != null ? s.getStartTime().toString() : null);
                 dto.setShiftEndTime(s.getEndTime() != null ? s.getEndTime().toString() : null);
             }

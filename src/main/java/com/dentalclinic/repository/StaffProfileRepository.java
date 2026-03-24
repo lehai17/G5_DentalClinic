@@ -26,14 +26,9 @@ public interface StaffProfileRepository extends JpaRepository<StaffProfile, Long
         @Query("SELECT s FROM StaffProfile s JOIN s.user u WHERE " +
                         "(:keyword IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR s.phone LIKE CONCAT('%', :keyword, '%')) AND "
                         +
-                        "(:status IS NULL OR u.status = :status) AND (" +
-                        "(:position = 'Other' AND s.position != 'Receptionist') OR " +
-                        "(:position != 'Other' AND s.position = :position) OR " +
-                        "(:position IS NULL OR :position = '')" +
-                        ")")
+                        "(:status IS NULL OR u.status = :status)")
         List<StaffProfile> searchStaffs(@Param("keyword") String keyword,
-                        @Param("status") UserStatus status,
-                        @Param("position") String position);
+                        @Param("status") UserStatus status);
 
         /**
          * Đếm số lượng nhân viên dựa trên trạng thái (Dùng cho các Stat Cards)
