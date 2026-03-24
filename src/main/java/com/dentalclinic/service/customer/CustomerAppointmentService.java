@@ -1441,7 +1441,6 @@ public class CustomerAppointmentService {
                     line.setQty(qty);
                     line.setUnitPrice(unitPrice);
                     line.setAmount(lineAmount);
-                    line.setToothNo(item.getToothNo());
                     invoiceItems.add(line);
 
                     billedTotal = billedTotal.add(lineAmount);

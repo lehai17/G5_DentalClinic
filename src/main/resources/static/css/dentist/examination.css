@@ -1,49 +1,103 @@
 /* ========= PAGE BACKGROUND ========= */
 
 .exam-page {
-    background: #f1f5f9;
+    background:
+            radial-gradient(circle at top left, rgba(191, 219, 254, 0.55), transparent 28%),
+            linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
     min-height: 100vh;
-    padding: 60px 24px;
+    padding: 52px 24px 72px;
+    margin: 0;
     font-family: system-ui, -apple-system;
     overflow: auto;
 }
 
 .exam-container {
-    max-width: 1150px;
+    max-width: 1160px;
     margin: auto;
+}
+
+.exam-container > h2 {
+    display: none;
+}
+
+.page-heading {
+    margin-bottom: 24px;
+}
+
+.page-kicker {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.page-heading h1 {
+    margin: 14px 0 8px;
+    font-size: 42px;
+    line-height: 1.05;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.page-heading p {
+    max-width: 760px;
+    margin: 0;
+    color: #475569;
+    font-size: 15px;
+    line-height: 1.7;
 }
 
 /* ========= HEADER CARD ========= */
 
 .exam-header {
     background: #ffffff;
-    border-radius: 28px;
-    padding: 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border-radius: 30px;
+    padding: 34px 36px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(360px, 1fr);
+    gap: 24px;
+    align-items: stretch;
+    border: 1px solid rgba(148, 163, 184, 0.16);
 
     box-shadow:
-            0 30px 80px rgba(15, 23, 42, 0.08),
-            0 2px 6px rgba(15, 23, 42, 0.05);
+            0 20px 45px rgba(15, 23, 42, 0.06),
+            0 2px 8px rgba(15, 23, 42, 0.04);
 
-    margin-bottom: 40px;
+    margin-bottom: 28px;
 }
 
 .exam-title {
-    font-size: 28px;
+    font-size: 36px;
     font-weight: 800;
+    line-height: 1.1;
+    color: #0f172a;
 }
 
 .exam-sub {
-    margin-top: 8px;
+    margin-top: 12px;
     font-size: 14px;
     color: #64748b;
+    line-height: 1.8;
 }
 
 .exam-info {
-    display: flex;
-    gap: 60px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.exam-info > div {
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #dbe4f0;
 }
 
 .info-label {
@@ -64,21 +118,21 @@
 .section {
     background: #ffffff;
     border-radius: 24px;
-    padding: 32px;
-    margin-bottom: 28px;
+    padding: 28px 30px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
 
     box-shadow:
-            0 25px 70px rgba(15, 23, 42, 0.06),
+            0 18px 40px rgba(15, 23, 42, 0.05),
             0 1px 3px rgba(15, 23, 42, 0.04);
 
     transition: all 0.25s ease;
-    border: none;
 }
 
 .section:hover {
-    transform: translateY(-3px);
+    transform: translateY(-1px);
     box-shadow:
-            0 35px 90px rgba(15, 23, 42, 0.09),
+            0 24px 52px rgba(15, 23, 42, 0.07),
             0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
@@ -95,8 +149,9 @@ textarea,
 select {
     border-radius: 14px !important;
     border: 1px solid #e2e8f0;
-    padding: 10px 14px;
+    padding: 12px 14px;
     transition: all 0.2s ease;
+    background: #fcfdff;
 }
 
 input:focus,
@@ -110,8 +165,15 @@ select:focus {
 /* ========= BUTTON ========= */
 
 .btn.primary {
-    border-radius: 14px;
-    padding: 10px 18px;
+    border-radius: 16px;
+    padding: 12px 20px;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
 }
 
 /* ========= MEDICAL IMAGE UPLOAD ========= */
@@ -489,6 +551,19 @@ select:focus {
 }
 
 @media (max-width: 900px) {
+    .page-heading h1 {
+        font-size: 34px;
+    }
+
+    .exam-header {
+        grid-template-columns: 1fr;
+        padding: 28px;
+    }
+
+    .exam-info {
+        grid-template-columns: 1fr;
+    }
+
     .visit-history-head,
     .visit-header {
         flex-direction: column;
@@ -503,6 +578,14 @@ select:focus {
 }
 
 @media (max-width: 640px) {
+    .exam-page {
+        padding: 28px 14px 56px;
+    }
+
+    .page-heading h1 {
+        font-size: 30px;
+    }
+
     .visit-history-panel {
         padding: 18px;
         border-radius: 20px;

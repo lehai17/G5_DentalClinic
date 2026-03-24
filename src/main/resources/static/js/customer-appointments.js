@@ -367,7 +367,6 @@
             if (item.qty != null) meta.push("SL: " + item.qty);
             if (item.unitPrice != null)
               meta.push("Đơn giá: " + formatMoney(item.unitPrice));
-            if (item.toothNo) meta.push("Răng: " + item.toothNo);
             return (
               '<div class="cap-invoice-item">' +
               "<div>" +

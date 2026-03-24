@@ -5,7 +5,6 @@ import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.medical.MedicalRecord;
 import com.dentalclinic.model.medical.MedicalFinding;
 import com.dentalclinic.model.medical.MedicalImage;
-import com.dentalclinic.model.medical.MedicalProposedService;
 import com.dentalclinic.model.payment.BillingNote;
 import com.dentalclinic.model.payment.BillingPerformedService;
 import com.dentalclinic.model.payment.BillingPrescriptionItem;
@@ -136,12 +135,6 @@ public class DentistSessionService {
             }
         }
         mr.getProposedServices().clear();
-        if (form.getProposedServices() != null) {
-            for (MedicalProposedService ps : form.getProposedServices()) {
-                ps.setMedicalRecord(mr);
-                mr.getProposedServices().add(ps);
-            }
-        }
 
         medicalRecordRepository.save(mr);
     }
@@ -181,7 +174,6 @@ public class DentistSessionService {
                     ps.setBillingNote(bn);
                     ps.setService(detail.getService());
                     ps.setQty(1);
-                    ps.setToothNo("");
                     bn.getPerformedServices().add(ps);
                 }
             } else if (appt.getService() != null) {
@@ -189,7 +181,6 @@ public class DentistSessionService {
                 ps.setBillingNote(bn);
                 ps.setService(appt.getService());
                 ps.setQty(1);
-                ps.setToothNo("");
                 bn.getPerformedServices().add(ps);
             }
         }
@@ -229,6 +220,7 @@ public class DentistSessionService {
 
                 if (ps.getQty() <= 0) ps.setQty(1);
 
+                ps.setToothNo(null);
                 ps.setBillingNote(bn);
                 bn.getPerformedServices().add(ps);
             }

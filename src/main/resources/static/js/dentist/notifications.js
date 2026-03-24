@@ -178,4 +178,52 @@
     event.preventDefault();
     submitAction(formElement);
   });
+
+  document.addEventListener('click', async (event) => {
+    const link = event.target instanceof Element
+      ? event.target.closest('.open-related-link')
+      : null;
+
+    if (!(link instanceof HTMLAnchorElement)) {
+      return;
+    }
+
+    const card = link.closest('.notif-item');
+    if (!(card instanceof HTMLElement)) {
+      return;
+    }
+
+    if (card.dataset.read === 'true') {
+      return;
+    }
+
+    const readForm = card.querySelector('.action-read');
+    if (!(readForm instanceof HTMLFormElement)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const href = link.href;
+    const formData = new FormData(readForm);
+
+    try {
+      const response = await fetch(readForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      if (response.ok) {
+        setCardReadState(card, true);
+        changeSidebarBadge(-1);
+      }
+    } catch (error) {
+      // Ignore and continue navigating to the related page.
+    }
+
+    window.location.href = href;
+  });
 })();

@@ -10,7 +10,8 @@
 <div class="reexam-container">
   <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
   <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
-  <div class="reexam-header">
+  <div class="page-heading">
+    <div class="page-kicker">Dentist Workspace</div>
     <div class="reexam-title">Lịch tái khám</div>
     <div class="reexam-sub">
       <span th:if="${isUpdate}">Cập nhật lịch tái khám hiện có</span>

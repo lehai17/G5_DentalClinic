@@ -55,7 +55,6 @@ public class DentistAppointmentController {
             RedirectAttributes redirect,
             Authentication authentication
     ) {
-        model.addAttribute("services", servicesRepository.findAll());
         Long dentistUserId = resolveCurrentDentistUserId(authentication);
 
         Appointment appt;
@@ -94,14 +93,6 @@ public class DentistAppointmentController {
                 medicalRecordService.findByAppointmentId(id).orElse(new MedicalRecord());
         record.setAppointment(appt);
         model.addAttribute("medicalRecord", record);
-        model.addAttribute(
-                "selectedServiceIds",
-                record.getProposedServices()
-                        .stream()
-                        .filter(ps -> ps.getService() != null)
-                        .map(ps -> ps.getService().getId())
-                        .toList()
-        );
         model.addAttribute("historySteps", medicalRecordService.findReexamHistorySteps(id));
 
         return "Dentist/examination";

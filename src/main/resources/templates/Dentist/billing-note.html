@@ -9,6 +9,11 @@
 </head>
 <body class="billing-page">
 <div class="billing-container">
+  <div class="page-heading">
+    <div class="page-kicker">Dentist Workspace</div>
+    <h1>Dịch vụ và đơn thuốc</h1>
+    <p>Ghi nhận các dịch vụ đã thực hiện, toa thuốc và ghi chú gửi cho bệnh nhân.</p>
+  </div>
   <div class="billing-header">
     <div class="billing-title">Dịch vụ và đơn thuốc</div>
 
@@ -53,13 +58,13 @@
           <div class="billing-section-title">
             A) Dịch vụ thực hiện
           </div>
-          <div class="mini">Chọn các dịch vụ đã thực hiện (số lượng, răng là tùy chọn).</div>
+          <div class="mini">Chọn các dịch vụ đã thực hiện và số lượng.</div>
         </div>
       </div>
 
       <table class="tbl" id="performedTable">
         <thead>
-        <tr><th>Dịch vụ</th><th>Số lượng</th><th>Răng</th><th></th></tr>
+        <tr><th>Dịch vụ</th><th>Số lượng</th><th></th></tr>
         </thead>
         <tbody>
           <tr th:each="ps,stat : *{performedServices}">
@@ -77,11 +82,6 @@
                      onkeydown="return false"
                      class="svc-qty"/>
             </td>
-            <td>
-              <input th:field="*{performedServices[__${stat.index}__].toothNo}"
-                     placeholder="Răng"
-                     class="svc-tooth"/>
-            </td>
             <td><button type="button" class="icon-mini del">✕</button></td>
           </tr>
         </tbody>
@@ -90,7 +90,7 @@
     </div>
 
     <div class="billing-section">
-      <div style="font-weight:900;">B) Đơn thuốc kỹ thuật số</div>
+      <div style="font-weight:900;">B) Đơn thuốc</div>
       <div class="mini">Nhập tên thuốc, liều lượng, thời gian và ghi chú.</div>
       <table class="tbl" id="rxTable">
         <thead>
@@ -115,7 +115,7 @@
       <textarea th:field="*{note}" rows="4" placeholder="Ghi chú cho thanh toán/phát hành..."></textarea>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:14px;">
+    <div class="form-actions">
       <button class="btn-primary" type="submit"
               th:disabled="${appointmentStatus != 'EXAMINING'}">LƯU</button>
       <a class="btn-secondary"
@@ -157,11 +157,6 @@
              value="1"
              onkeydown="return false"
              class="svc-qty"/>
-    </td>
-    <td>
-      <input name="performedServices[${idx}].toothNo"
-             class="svc-tooth"
-             placeholder="Răng"/>
     </td>
     <td>
       <button type="button" class="icon-mini del">✕</button>
@@ -230,11 +225,9 @@
 
         const service = tr.querySelector('select');
         const qty = tr.querySelector('.svc-qty');
-        const tooth = tr.querySelector('.svc-tooth');
 
         if(service) service.name = `performedServices[${i}].service.id`;
         if(qty) qty.name = `performedServices[${i}].qty`;
-        if(tooth) tooth.name = `performedServices[${i}].toothNo`;
 
       });
 

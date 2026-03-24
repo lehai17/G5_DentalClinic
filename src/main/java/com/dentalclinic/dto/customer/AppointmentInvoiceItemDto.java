@@ -9,7 +9,6 @@ public class AppointmentInvoiceItemDto {
     private Integer qty;
     private BigDecimal unitPrice;
     private BigDecimal amount;
-    private String toothNo;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -23,6 +22,4 @@ public class AppointmentInvoiceItemDto {
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
-    public String getToothNo() { return toothNo; }
-    public void setToothNo(String toothNo) { this.toothNo = toothNo; }
 }
