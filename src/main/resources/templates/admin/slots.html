@@ -310,6 +310,9 @@
                             <i class="fa-regular fa-clock text-primary"></i> 08:00 - 12:00 | 13:00 - 17:00
                         </div>
                     </div>
+                    <button class="btn" style="color: #22c55e; border-color: #22c55e; margin-right: 10px;" onclick="AdminSlots.generateMonthly()">
+                        <i class="fa-solid fa-calendar-plus"></i> Tạo Lịch Tháng
+                    </button>
                     <form th:action="@{/admin/slots/reset-all}" method="post" style="margin:0;"
                         onsubmit="return confirm('Bạn có chắc muốn MỞ KHÓA tất cả các ngày? Điều này sẽ xóa bỏ toàn bộ tình trạng khóa tĩnh.')">
                         <button type="submit" class="btn" style="color: #6366f1; border-color: #6366f1;">

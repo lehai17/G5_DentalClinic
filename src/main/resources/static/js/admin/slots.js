@@ -52,25 +52,17 @@ const AdminSlots = {
         const badge = badgeMap[dateStr];
 
         let dotsHtml = '';
-        if (badge && badge.totalCapacity > 0) {
-          const density = badge.density || 0;
-          const colorClass = density >= 100 ? 'full' : (density > 50 ? 'busy' : 'available');
+        if (badge && badge.capacity > 0) {
+          const status = badge.densityStatus || 'GREEN';
+          let colorClass = 'available';
+          if (status === 'RED') colorClass = 'full';
+          else if (status === 'YELLOW') colorClass = 'busy';
           dotsHtml = `<div class="dots-container"><div class="dot ${colorClass}"></div></div>`;
         }
 
         // Lấy trạng thái mặc định từ DB
         let isActive = !badge || badge.active !== false;
 
-        // ==========================================
-        // THÊM LOGIC: KHÓA TỰ ĐỘNG CHỦ NHẬT TẠI ĐÂY
-        // ==========================================
-        // Nếu là Chủ Nhật (getDay() === 0) VÀ chưa có ca khám nào (totalCapacity = 0 hoặc trống)
-        if (date.getDay() === 0) {
-            if (!badge || !badge.totalCapacity || badge.totalCapacity === 0) {
-                isActive = false; // Ép trạng thái thành ĐÓNG
-            }
-        }
-        // ==========================================
 
         const lockIcon = isActive ? 'fa-lock-open' : 'fa-lock';
         const lockClass = isActive ? 'unlocked' : 'locked';
@@ -257,6 +249,32 @@ const AdminSlots = {
         } else {
           await this.hydrateCalendar();
         }
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi kết nối máy chủ.');
+      }
+    }
+  },
+
+  async generateMonthly() {
+    const monthStr = prompt('Nhập Tháng/Năm để sinh lịch làm việc tự động (Định dạng: YYYY-MM)\n(Lưu ý: Hệ thống sẽ tự tạo Lịch phòng khám VÀ Lịch làm việc cho TẤT CẢ bác sĩ đang Active)', STATE.currentMonth);
+    if (!monthStr) return;
+    if (!monthStr.match(/^\d{4}-\d{2}$/)) {
+      alert('Định dạng không hợp lệ. Vui lòng nhập đúng YYYY-MM (Ví dụ: 2026-05).');
+      return;
+    }
+    if (confirm(`Xác nhận TẠO TỰ ĐỘNG toàn bộ lịch cho tháng ${monthStr}?`)) {
+      try {
+        const resp = await fetch(`/admin/slots/api/generate-monthly?month=${monthStr}`, { method: 'POST' });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          alert(`THẤT BẠI: ${data.error || 'Lỗi server'}`);
+          return;
+        }
+
+        alert(`THÀNH CÔNG: ${data.message}`);
+        location.href = `/admin/slots?month=${monthStr}`;
       } catch (err) {
         console.error(err);
         alert('Lỗi kết nối máy chủ.');
