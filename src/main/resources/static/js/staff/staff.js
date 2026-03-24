@@ -258,7 +258,6 @@ function buildInvoiceHtml(data) {
             const meta = [];
             if (item.qty != null) meta.push("SL: " + item.qty);
             if (item.unitPrice != null) meta.push("Don gia: " + formatMoney(item.unitPrice));
-            if (item.toothNo) meta.push("Rang: " + item.toothNo);
             return `
                 <div class="staff-invoice-item">
                     <div>
