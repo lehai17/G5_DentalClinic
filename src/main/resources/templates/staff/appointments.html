@@ -113,7 +113,7 @@
                     type="button"
                     class="btn-payment"
                     th:if="${a.status.name() == 'DONE'}"
-                    th:onclick="'goToPayment(' + ${a.id} + ')'"
+                    th:onclick="'viewInvoice(' + ${a.id} + ')'"
                   >
                     Thanh toán
                   </button>

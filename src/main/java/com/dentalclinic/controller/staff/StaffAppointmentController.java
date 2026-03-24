@@ -1,5 +1,6 @@
 package com.dentalclinic.controller.staff;
 
+import com.dentalclinic.dto.customer.AppointmentDto;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
@@ -158,6 +159,49 @@ public class StaffAppointmentController {
         List<DentistProfile> availableDentists = staffAppointmentService
                 .getAvailableDentistsForAppointment(appointmentId);
         return ResponseEntity.ok(availableDentists);
+    }
+
+    @GetMapping("/appointments/{id}/invoice-preview")
+    @ResponseBody
+    public ResponseEntity<?> invoicePreview(@PathVariable Long id) {
+        try {
+            AppointmentDto preview = staffAppointmentService.getInvoicePreview(id);
+            return ResponseEntity.ok(preview);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/appointments/{id}/payment-options")
+    @ResponseBody
+    public ResponseEntity<?> paymentOptions(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(staffAppointmentService.preparePaymentOptions(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/appointments/{id}/pay-wallet")
+    @ResponseBody
+    public ResponseEntity<?> payWithWallet(@PathVariable Long id) {
+        try {
+            Appointment appointment = staffAppointmentService.payWithWalletByStaff(id);
+            return ResponseEntity.ok(appointment.getStatus().name());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/appointments/{id}/confirm-manual-payment")
+    @ResponseBody
+    public ResponseEntity<?> confirmManualPayment(@PathVariable Long id) {
+        try {
+            Appointment appointment = staffAppointmentService.confirmManualPayment(id);
+            return ResponseEntity.ok(appointment.getStatus().name());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/appointments/process-payment")

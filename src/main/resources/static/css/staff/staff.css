@@ -385,3 +385,268 @@ button {
 .btn-result:hover {
     background: #1d4ed8;
 }
+
+.btn-payment {
+    background: #2563eb;
+    color: white;
+}
+
+.staff-invoice-modal {
+    width: min(860px, calc(100vw - 32px));
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    padding: 0;
+}
+
+.staff-invoice-card {
+    padding: 24px;
+}
+
+.staff-invoice-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.staff-invoice-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.staff-invoice-subtitle {
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.staff-invoice-chip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.staff-invoice-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.staff-invoice-overview__item {
+    padding: 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.staff-invoice-overview__item span {
+    display: block;
+    margin-bottom: 6px;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.staff-invoice-overview__item strong {
+    color: #0f172a;
+    font-size: 15px;
+}
+
+.staff-invoice-section {
+    margin-top: 20px;
+}
+
+.staff-invoice-section__title {
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.staff-invoice-list,
+.staff-invoice-total,
+.staff-invoice-prescription-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.staff-invoice-item,
+.staff-invoice-total__line,
+.staff-invoice-prescription-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+}
+
+.staff-invoice-item__name {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.staff-invoice-item__meta,
+.staff-invoice-note-time,
+.staff-invoice-prescription-item span,
+.staff-invoice-prescription-item small {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.staff-invoice-item__amount {
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+.staff-invoice-note {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.staff-invoice-total__line--due {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.staff-invoice-total__line--due strong {
+    color: #1d4ed8;
+}
+
+.staff-invoice-empty {
+    padding: 16px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px dashed #cbd5e1;
+}
+
+.staff-invoice-actions {
+    margin-top: 24px;
+}
+
+.staff-payment-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.staff-payment-section__title,
+.staff-payment-detail__title {
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.staff-payment-method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.staff-payment-method {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #0f172a;
+    text-align: left;
+}
+
+.staff-payment-method strong {
+    font-size: 15px;
+}
+
+.staff-payment-method span {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.staff-payment-method--active {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.staff-payment-feedback {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.staff-payment-feedback--success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.staff-payment-feedback--error {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.staff-payment-detail {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.staff-payment-qr {
+    display: block;
+    width: min(280px, 100%);
+    margin: 0 auto 14px;
+    border-radius: 16px;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.staff-payment-meta {
+    margin-top: 8px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.staff-payment-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+    .staff-invoice-head,
+    .staff-invoice-item,
+    .staff-invoice-total__line,
+    .staff-invoice-prescription-item {
+        flex-direction: column;
+    }
+
+    .staff-invoice-card {
+        padding: 18px;
+    }
+
+    .staff-payment-actions {
+        justify-content: stretch;
+    }
+}
