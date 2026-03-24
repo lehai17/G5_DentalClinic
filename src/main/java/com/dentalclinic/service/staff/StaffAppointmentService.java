@@ -34,8 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +45,7 @@ import java.util.stream.Collectors;
 public class StaffAppointmentService {
 
     private static final Logger logger = LoggerFactory.getLogger(StaffAppointmentService.class);
+    private static final BigDecimal FINAL_DEPOSIT_RATE = new BigDecimal("0.50");
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -78,8 +77,8 @@ public class StaffAppointmentService {
     @Autowired
     private WalletService walletService;
 
-    private static final String STAFF_VIET_QR_BANK_CODE = "MB";
-    private static final String STAFF_VIET_QR_ACCOUNT_NO = "3456917112004";
+    @Autowired
+    private PayOsService payOsService;
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
@@ -283,9 +282,8 @@ public class StaffAppointmentService {
                 .orElseThrow(() -> new RuntimeException("Chua co phieu dieu tri cho lich hen nay."));
 
         BigDecimal billingTotal = calculateBillingTotal(a, billingNote);
-        BigDecimal depositAmount = a.getDepositAmount() != null
-                ? a.getDepositAmount().setScale(2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal depositAmount = calculateFinalDepositAmount(billingTotal);
+        a.setDepositAmount(depositAmount);
         BigDecimal remainingAmount = billingTotal.subtract(depositAmount)
                 .max(BigDecimal.ZERO)
                 .setScale(2, RoundingMode.HALF_UP);
@@ -297,6 +295,13 @@ public class StaffAppointmentService {
         invoice.setOriginalAmount(remainingAmount);
         invoice.setDiscountAmount(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         invoice.setTotalAmount(remainingAmount);
+        invoice.setPayOsOrderCode(null);
+        invoice.setPayOsPaymentLinkId(null);
+        invoice.setPayOsCheckoutUrl(null);
+        invoice.setPayOsQrCode(null);
+        invoice.setPayOsStatus(null);
+        invoice.setPayOsReference(null);
+        invoice.setPayOsPaidAt(null);
 
         if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
             invoice.setStatus(PaymentStatus.PAID);
@@ -334,9 +339,6 @@ public class StaffAppointmentService {
         dto.setDate(appointment.getDate());
         dto.setStartTime(appointment.getStartTime());
         dto.setEndTime(appointment.getEndTime());
-        dto.setDepositAmount(appointment.getDepositAmount() != null
-                ? appointment.getDepositAmount().setScale(2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         dto.setBillingNoteId(billingNote.getId());
         dto.setBillingNoteNote(billingNote.getNote());
         dto.setBillingNoteUpdatedAt(billingNote.getUpdatedAt());
@@ -397,6 +399,7 @@ public class StaffAppointmentService {
         dto.setInvoiceItems(invoiceItems);
         dto.setPrescriptionItems(prescriptionItems);
         dto.setBilledTotal(billedTotal);
+        dto.setDepositAmount(calculateFinalDepositAmount(billedTotal));
         dto.setServiceName(serviceNames.stream().distinct().collect(Collectors.joining(", ")));
 
         BigDecimal originalRemainingAmount = billedTotal.subtract(dto.getDepositAmount())
@@ -425,6 +428,13 @@ public class StaffAppointmentService {
         return dto;
     }
 
+    private BigDecimal calculateFinalDepositAmount(BigDecimal billingTotal) {
+        BigDecimal normalizedTotal = billingTotal == null
+                ? BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
+                : billingTotal.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+        return normalizedTotal.multiply(FINAL_DEPOSIT_RATE).setScale(2, RoundingMode.HALF_UP);
+    }
+
     @Transactional
     public Map<String, Object> preparePaymentOptions(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
@@ -445,15 +455,50 @@ public class StaffAppointmentService {
         String transferContent = invoicePreview.getInvoiceId() != null
                 ? "G5HD" + invoicePreview.getInvoiceId()
                 : "G5LH" + appointmentId;
-        String qrImageUrl = buildVietQrUrl(invoicePreview.getRemainingAmount(), transferContent);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("invoice", invoicePreview);
         payload.put("walletBalance", walletBalance);
-        payload.put("qrImageUrl", qrImageUrl);
         payload.put("transferContent", transferContent);
-        payload.put("bankCode", STAFF_VIET_QR_BANK_CODE);
-        payload.put("accountNo", STAFF_VIET_QR_ACCOUNT_NO);
+        return payload;
+    }
+
+    @Transactional
+    public Map<String, Object> createPayOsQr(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+
+        if (appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
+            processPayment(appointmentId);
+        }
+
+        Invoice invoice = invoiceRepository.findByAppointment_Id(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
+
+        PayOsService.PayOsLinkData linkData = payOsService.createOrReusePaymentLink(invoice);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("paymentLinkId", linkData.paymentLinkId());
+        payload.put("orderCode", linkData.orderCode());
+        payload.put("checkoutUrl", linkData.checkoutUrl());
+        payload.put("qrImageUrl", linkData.qrImageUrl());
+        payload.put("status", linkData.status());
+        return payload;
+    }
+
+    @Transactional
+    public Map<String, Object> getPayOsPaymentStatus(Long appointmentId) {
+        Invoice invoice = invoiceRepository.findByAppointment_Id(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
+
+        PayOsService.PayOsStatusData statusData = payOsService.syncStatus(invoice);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("invoiceStatus", statusData.invoiceStatus());
+        payload.put("appointmentStatus", statusData.appointmentStatus());
+        payload.put("payOsStatus", statusData.payOsStatus());
+        payload.put("paymentLinkId", statusData.paymentLinkId());
+        payload.put("orderCode", statusData.orderCode());
+        payload.put("paid", "PAID".equalsIgnoreCase(statusData.invoiceStatus())
+                || "COMPLETED".equalsIgnoreCase(statusData.appointmentStatus()));
         return payload;
     }
 
@@ -493,23 +538,6 @@ public class StaffAppointmentService {
                 .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
 
         return customerAppointmentService.completeFinalPayment(appointmentId, invoice.getId());
-    }
-
-    private String buildVietQrUrl(BigDecimal amount, String transferContent) {
-        BigDecimal normalizedAmount = amount == null
-                ? BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
-                : amount.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
-        String encodedContent = URLEncoder.encode(
-                transferContent == null ? "" : transferContent,
-                StandardCharsets.UTF_8);
-        return "https://img.vietqr.io/image/"
-                + STAFF_VIET_QR_BANK_CODE
-                + "-"
-                + STAFF_VIET_QR_ACCOUNT_NO
-                + "-compact2.png?amount="
-                + normalizedAmount.longValue()
-                + "&addInfo="
-                + encodedContent;
     }
 
     private BigDecimal calculateBillingTotal(Appointment appointment, BillingNote billingNote) {

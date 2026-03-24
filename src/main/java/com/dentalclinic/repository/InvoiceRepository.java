@@ -54,4 +54,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
             "appointment.appointmentDetails.service"
     })
     Optional<Invoice> findByIdAndAppointment_Customer_User_Id(Long invoiceId, Long customerUserId);
+
+    Optional<Invoice> findByPayOsOrderCode(Long payOsOrderCode);
+
+    Optional<Invoice> findByPayOsPaymentLinkId(String payOsPaymentLinkId);
 }

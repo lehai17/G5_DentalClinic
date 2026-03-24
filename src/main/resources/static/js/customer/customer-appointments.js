@@ -210,7 +210,7 @@
 
   function isCompletedStatus(status) {
     var key = String(status || "").toUpperCase();
-    return key === "COMPLETED" || key === "WAITING_PAYMENT";
+    return key === "COMPLETED";
   }
 
   function isSettledInvoice(data) {
@@ -1033,7 +1033,7 @@
       data.status !== "WAITING_PAYMENT" &&
       data.status !== "EXAMINING" &&
       data.status !== "IN_PROGRESS";
-    var canPayRemaining = !!data.canPayRemaining;
+    var canPayRemaining = false;
     var canReview = !!data.canReview;
     var hasDepositReceipt = toNumber(data.depositAmount) > 0;
     var paymentHistoryHtml =
@@ -1043,7 +1043,8 @@
         appointmentId +
         '"><i class="bi bi-receipt"></i> Xem biên nhận đặt cọc</a>'
       : "";
-    var invoiceReceiptHtml = data.invoiceId
+    var canViewReceiptInvoice = !!data.invoiceId && isSettledInvoice(data);
+    var invoiceReceiptHtml = canViewReceiptInvoice
       ? '<a class="cap-btn cap-btn-neutral" href="/customer/payments/invoice/' +
         escapeHtml(data.invoiceId) +
         '"><i class="bi bi-file-earmark-text"></i> Xem chi tiết thanh toán</a>'
@@ -1110,7 +1111,7 @@
     } else {
       invoicePreviewMeta.push("Đã thanh toán xong");
     }
-    var invoicePreviewHtml = data.invoiceId
+    var invoicePreviewHtml = canViewReceiptInvoice
       ? '<div class="cap-invoice-preview">' +
         '<div class="cap-invoice-preview__copy">' +
         '<div class="cap-invoice-preview__title"><i class="bi bi-file-earmark-text"></i> Hóa đơn #' +

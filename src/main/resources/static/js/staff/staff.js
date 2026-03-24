@@ -1,5 +1,6 @@
 function closeModal() {
     const modal = document.querySelector(".modal-overlay");
+    stopPayOsPolling();
     if (modal) {
         modal.remove();
     }
@@ -178,6 +179,7 @@ function formatDateTime(dateTimeStr) {
 
 let activeInvoiceData = null;
 let paymentOptionState = null;
+let payOsPollTimer = null;
 
 function buildPaymentMethodsHtml() {
     if (!paymentOptionState || !activeInvoiceData) return "";
@@ -192,7 +194,7 @@ function buildPaymentMethodsHtml() {
             <div class="staff-payment-method-grid">
                 <button type="button" class="staff-payment-method${methodClass("QR")}" onclick="selectPaymentMethod('QR')">
                     <strong>QR</strong>
-                    <span>Quet ma VietQR va xac nhan thu cong</span>
+                    <span>Quet ma payOS va tu dong xac nhan</span>
                 </button>
                 <button type="button" class="staff-payment-method${methodClass("WALLET")}" onclick="payInvoiceWithWallet(${activeInvoiceData.id})">
                     <strong>Vi customer</strong>
@@ -212,14 +214,25 @@ function buildPaymentMethodsHtml() {
 
 function buildQrMethodHtml() {
     if (!paymentOptionState) return "";
+    if (!paymentOptionState.qrImageUrl) {
+        return `
+            <div class="staff-payment-detail">
+                <div class="staff-payment-detail__title">Thanh toan QR qua payOS</div>
+                <div class="staff-payment-meta">Tao ma QR cho invoice nay va cho he thong tu dong cap nhat khi thanh toan thanh cong.</div>
+                <div class="staff-payment-actions">
+                    <button type="button" class="btn-payment" onclick="loadPayOsQr(${activeInvoiceData.id})">Tao ma QR</button>
+                </div>
+            </div>
+        `;
+    }
     return `
         <div class="staff-payment-detail">
-            <div class="staff-payment-detail__title">VietQR thanh toan so tien con lai</div>
+            <div class="staff-payment-detail__title">Thanh toan QR qua payOS</div>
             <img class="staff-payment-qr" src="${paymentOptionState.qrImageUrl}" alt="VietQR thanh toan">
-            <div class="staff-payment-meta">Noi dung chuyen khoan: <strong>${escapeHtml(paymentOptionState.transferContent)}</strong></div>
-            <div class="staff-payment-meta">Tai khoan nhan tien: <strong>${escapeHtml(paymentOptionState.accountNo)}</strong></div>
+            <div class="staff-payment-meta">Order code: <strong>${escapeHtml(paymentOptionState.orderCode || "")}</strong></div>
+            <div class="staff-payment-meta">Trang thai payOS: <strong>${escapeHtml(paymentOptionState.payOsStatus || "PENDING")}</strong></div>
             <div class="staff-payment-actions">
-                <button type="button" class="btn-payment" onclick="confirmManualPayment(${activeInvoiceData.id}, 'QR')">Xac nhan da nhan chuyen khoan</button>
+                ${paymentOptionState.checkoutUrl ? `<a class="btn-payment staff-payment-link" href="${paymentOptionState.checkoutUrl}" target="_blank" rel="noopener noreferrer">Mo trang thanh toan</a>` : ""}
             </div>
         </div>
     `;
@@ -259,12 +272,12 @@ function buildInvoiceHtml(data) {
             if (item.qty != null) meta.push("SL: " + item.qty);
             if (item.unitPrice != null) meta.push("Don gia: " + formatMoney(item.unitPrice));
             return `
-                <div class="staff-invoice-item">
+                <div class="cap-invoice-item">
                     <div>
-                        <div class="staff-invoice-item__name">${escapeHtml(item.name || "Dich vu")}</div>
-                        <div class="staff-invoice-item__meta">${escapeHtml(meta.join(" | "))}</div>
+                        <div class="cap-invoice-name">${escapeHtml(item.name || "Dich vu")}</div>
+                        <div class="cap-invoice-meta">${escapeHtml(meta.join(" | "))}</div>
                     </div>
-                    <div class="staff-invoice-item__amount">${formatMoney(item.amount)}</div>
+                    <div class="cap-invoice-amount">${formatMoney(item.amount)}</div>
                 </div>
             `;
         }).join("")
@@ -272,14 +285,14 @@ function buildInvoiceHtml(data) {
 
     const prescriptionHtml = prescriptionItems.length
         ? `
-            <div class="staff-invoice-section">
-                <div class="staff-invoice-section__title">Thuoc ke don</div>
-                <div class="staff-invoice-prescription-list">
+            <div class="cap-invoice-section">
+                <div class="cap-invoice-section__title">Thuoc ke don</div>
+                <div class="cap-invoice-prescription-list">
                     ${prescriptionItems.map((item) => `
-                        <div class="staff-invoice-prescription-item">
+                        <div class="cap-invoice-prescription-item">
                             <strong>${escapeHtml(item.medicineName || "Thuoc")}</strong>
-                            ${item.dosage ? `<span>${escapeHtml(item.dosage)}</span>` : ""}
-                            ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ""}
+                            ${item.dosage ? `<span class="cap-invoice-prescription-item__dosage">${escapeHtml(item.dosage)}</span>` : ""}
+                            ${item.note ? `<small class="cap-invoice-prescription-item__note">${escapeHtml(item.note)}</small>` : ""}
                         </div>
                     `).join("")}
                 </div>
@@ -289,50 +302,48 @@ function buildInvoiceHtml(data) {
 
     const noteHtml = data && data.billingNoteNote
         ? `
-            <div class="staff-invoice-section">
-                <div class="staff-invoice-section__title">Ghi chu tu bac si</div>
-                <div class="staff-invoice-note">${escapeHtml(data.billingNoteNote)}</div>
-                ${data.billingNoteUpdatedAt ? `<div class="staff-invoice-note-time">Cap nhat: ${escapeHtml(formatDateTime(data.billingNoteUpdatedAt))}</div>` : ""}
+            <div class="cap-invoice-section">
+                <div class="cap-invoice-section__title">Ghi chu tu bac si</div>
+                <div class="cap-invoice-note">${escapeHtml(data.billingNoteNote)}</div>
+                ${data.billingNoteUpdatedAt ? `<div class="cap-invoice-note-time">Cap nhat: ${escapeHtml(formatDateTime(data.billingNoteUpdatedAt))}</div>` : ""}
             </div>
         `
         : "";
 
     return `
-        <div class="staff-invoice-card">
-            <div class="staff-invoice-head">
-                <div>
-                    <div class="staff-invoice-title">Hoa don thanh toan</div>
-                    <div class="staff-invoice-subtitle">
-                        ${data && data.invoiceId ? `Hoa don #${escapeHtml(data.invoiceId)}` : "Hoa don se duoc tao khi xac nhan thanh toan"}
-                    </div>
-                </div>
-                <div class="staff-invoice-chip">${isPaid ? "Da thanh toan" : "Chua thanh toan"}</div>
+        <div class="cap-invoice-card">
+            <div class="cap-invoice-head">
+                <div class="cap-invoice-title"><i class="bi bi-file-earmark-text"></i> Hoa don thanh toan</div>
+                <div class="cap-invoice-chip">${isPaid ? "Da thanh toan" : "Chua thanh toan"}</div>
             </div>
 
-            <div class="staff-invoice-overview">
-                <div class="staff-invoice-overview__item"><span>Lich hen</span><strong>#${escapeHtml(data && data.id)}</strong></div>
-                <div class="staff-invoice-overview__item"><span>Dich vu</span><strong>${escapeHtml((data && data.serviceName) || "Chua cap nhat")}</strong></div>
-                <div class="staff-invoice-overview__item"><span>Bac si</span><strong>${escapeHtml((data && data.dentistName) || "Chua phan cong")}</strong></div>
-                <div class="staff-invoice-overview__item"><span>Ngay kham</span><strong>${escapeHtml(formatDate(data && data.date) || "Chua cap nhat")}</strong></div>
-                <div class="staff-invoice-overview__item"><span>Khung gio</span><strong>${escapeHtml(appointmentTime || "Chua cap nhat")}</strong></div>
+            <div class="cap-invoice-overview">
+                <div class="cap-invoice-overview__item"><span>Ma hoa don</span><strong>${data && data.invoiceId ? "#" + escapeHtml(data.invoiceId) : "Se tao khi can"}</strong></div>
+                <div class="cap-invoice-overview__item"><span>Trang thai</span><strong>${isPaid ? "Da thanh toan" : "Chua thanh toan"}</strong></div>
+                <div class="cap-invoice-overview__item"><span>Dich vu</span><strong>${escapeHtml((data && data.serviceName) || "Chua cap nhat")}</strong></div>
+                <div class="cap-invoice-overview__item"><span>Bac si</span><strong>${escapeHtml((data && data.dentistName) || "Chua phan cong")}</strong></div>
+                <div class="cap-invoice-overview__item"><span>Ngay kham</span><strong>${escapeHtml(formatDate(data && data.date) || "Chua cap nhat")}</strong></div>
+                <div class="cap-invoice-overview__item"><span>Khung gio</span><strong>${escapeHtml(appointmentTime || "Chua cap nhat")}</strong></div>
             </div>
 
-            <div class="staff-invoice-section">
-                <div class="staff-invoice-section__title">Chi tiet dich vu</div>
-                <div class="staff-invoice-list">${itemsHtml}</div>
+            <div class="cap-invoice-section">
+                <div class="cap-invoice-section__title">Chi tiet dich vu</div>
+                <div class="cap-invoice-list">${itemsHtml}</div>
             </div>
 
             ${prescriptionHtml}
             ${noteHtml}
 
-            <div class="staff-invoice-section">
-                <div class="staff-invoice-section__title">Tong ket thanh toan</div>
-                <div class="staff-invoice-total">
-                    <div class="staff-invoice-total__line"><span>Tong billing</span><strong>${formatMoney(billedTotal)}</strong></div>
-                    <div class="staff-invoice-total__line"><span>Dat coc ban dau</span><strong>${formatMoney(depositAmount)}</strong></div>
-                    <div class="staff-invoice-total__line"><span>Tam tinh sau dat coc</span><strong>${formatMoney(originalRemainingAmount)}</strong></div>
-                    ${discountAmount > 0 ? `<div class="staff-invoice-total__line"><span>Giam gia</span><strong>-${formatMoney(discountAmount)}</strong></div>` : ""}
-                    <div class="staff-invoice-total__line staff-invoice-total__line--due"><span>Con lai</span><strong>${formatMoney(remainingAmount)}</strong></div>
+            <div class="cap-invoice-section">
+                <div class="cap-invoice-section__title">Tong ket thanh toan</div>
+                <div class="cap-invoice-total">
+                    <div class="cap-invoice-total-line"><span>Tong billing</span><strong>${formatMoney(billedTotal)}</strong></div>
+                    <div class="cap-invoice-total-line"><span>Dat coc ban dau</span><strong>${formatMoney(depositAmount)}</strong></div>
+                    <div class="cap-invoice-total-line"><span>Tam tinh sau dat coc</span><strong>${formatMoney(originalRemainingAmount)}</strong></div>
+                    ${discountAmount > 0 ? `<div class="cap-invoice-total-line"><span>Giam gia</span><strong>-${formatMoney(discountAmount)}</strong></div>` : ""}
+                    ${isPaid
+                        ? `<div class="cap-invoice-settled"><i class="bi bi-patch-check-fill"></i><span>Hoa don da duoc thanh toan xong.</span></div>`
+                        : `<div class="cap-invoice-total-line cap-invoice-total-line--due"><span>Con lai</span><strong>${formatMoney(remainingAmount)}</strong></div>`}
                 </div>
             </div>
 
@@ -367,6 +378,13 @@ function rerenderInvoiceModal() {
     buildModal(buildInvoiceHtml(activeInvoiceData), "staff-invoice-modal");
 }
 
+function stopPayOsPolling() {
+    if (payOsPollTimer) {
+        clearInterval(payOsPollTimer);
+        payOsPollTimer = null;
+    }
+}
+
 function showPaymentMethods(id) {
     fetch(`/staff/appointments/${id}/payment-options`, {
         method: "POST"
@@ -380,12 +398,15 @@ function showPaymentMethods(id) {
         activeInvoiceData = payload.invoice;
         paymentOptionState = {
             walletBalance: payload.walletBalance,
-            qrImageUrl: payload.qrImageUrl,
             transferContent: payload.transferContent,
-            accountNo: payload.accountNo,
             selectedMethod: null,
-            feedback: null
+            feedback: null,
+            qrImageUrl: null,
+            checkoutUrl: null,
+            orderCode: null,
+            payOsStatus: null
         };
+        stopPayOsPolling();
         rerenderInvoiceModal();
     }).catch((err) => {
         alert("Loi: " + err.message);
@@ -396,7 +417,71 @@ function selectPaymentMethod(method) {
     if (!paymentOptionState) return;
     paymentOptionState.selectedMethod = method;
     paymentOptionState.feedback = null;
+    if (method !== "QR") {
+        stopPayOsPolling();
+    }
     rerenderInvoiceModal();
+}
+
+function loadPayOsQr(id) {
+    if (!paymentOptionState) return;
+    paymentOptionState.feedback = null;
+    rerenderInvoiceModal();
+
+    fetch(`/staff/appointments/${id}/payos-link`, {
+        method: "POST"
+    }).then(async (res) => {
+        if (!res.ok) {
+            throw new Error(await res.text() || "Khong the tao QR payOS");
+        }
+        return res.json();
+    }).then((payload) => {
+        paymentOptionState.qrImageUrl = payload.qrImageUrl;
+        paymentOptionState.checkoutUrl = payload.checkoutUrl;
+        paymentOptionState.orderCode = payload.orderCode;
+        paymentOptionState.payOsStatus = payload.status || "PENDING";
+        paymentOptionState.feedback = {
+            type: "success",
+            message: "Da tao ma QR payOS. He thong dang cho xac nhan thanh toan."
+        };
+        rerenderInvoiceModal();
+        startPayOsPolling(id);
+    }).catch((err) => {
+        paymentOptionState.feedback = {
+            type: "error",
+            message: err.message || "Khong the tao QR payOS."
+        };
+        rerenderInvoiceModal();
+    });
+}
+
+function startPayOsPolling(id) {
+    stopPayOsPolling();
+    payOsPollTimer = setInterval(() => {
+        fetch(`/staff/appointments/${id}/payos-status`)
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error(await res.text() || "Khong the kiem tra thanh toan payOS");
+                }
+                return res.json();
+            })
+            .then((payload) => {
+                if (!paymentOptionState) return;
+                paymentOptionState.payOsStatus = payload.payOsStatus || paymentOptionState.payOsStatus;
+                if (payload.paid) {
+                    stopPayOsPolling();
+                    paymentOptionState.feedback = {
+                        type: "success",
+                        message: "payOS da xac nhan thanh toan thanh cong."
+                    };
+                    activeInvoiceData.invoiceStatus = payload.invoiceStatus || "PAID";
+                    activeInvoiceData.status = payload.appointmentStatus || "COMPLETED";
+                    rerenderInvoiceModal();
+                    setTimeout(() => location.reload(), 1200);
+                }
+            })
+            .catch(() => {});
+    }, 5000);
 }
 
 function payInvoiceWithWallet(id) {

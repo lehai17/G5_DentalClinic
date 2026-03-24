@@ -138,70 +138,6 @@
   </main>
 </div>
 
-<div class="cap-payment-modal" id="cap-payment-modal" hidden>
-  <div class="cap-payment-modal__backdrop" data-payment-close></div>
-  <div class="cap-payment-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="cap-payment-title">
-    <button type="button" class="cap-payment-modal__close" id="cap-payment-close" aria-label="Đóng">
-      <i class="bi bi-x-lg"></i>
-    </button>
-    <div class="cap-payment-modal__eyebrow">Thanh toán hóa đơn</div>
-    <h3 id="cap-payment-title" class="cap-payment-modal__title">Chọn phương thức thanh toán</h3>
-    <p class="cap-payment-modal__subtitle">Hoàn tất phần còn lại để lịch hẹn được chuyển sang hoàn thành.</p>
-
-    <div class="cap-payment-modal__summary">
-      <div class="cap-payment-modal__line">
-        <span>Mã lịch hẹn</span>
-        <strong id="cap-payment-appointment-id">#0</strong>
-      </div>
-      <div class="cap-payment-modal__line">
-        <span>Mã thanh toán</span>
-        <strong id="cap-payment-invoice-id">#0</strong>
-      </div>
-      <div class="cap-payment-modal__amount">
-        <span>Số tiền cần thanh toán</span>
-        <strong id="cap-payment-amount">0 VND</strong>
-      </div>
-      <div class="cap-payment-modal__line" id="cap-payment-original-line" hidden>
-        <span>Tạm tính trước voucher</span>
-        <strong id="cap-payment-original-amount">0 VND</strong>
-      </div>
-      <div class="cap-payment-modal__line" id="cap-payment-discount-line" hidden>
-        <span>Giảm giá voucher</span>
-        <strong id="cap-payment-discount-amount">0 VND</strong>
-      </div>
-      <div class="cap-payment-voucher">
-        <label class="cap-payment-voucher__label" for="cap-payment-voucher-code">Mã voucher</label>
-        <div class="cap-payment-voucher__row">
-          <input type="text" id="cap-payment-voucher-code" maxlength="50" placeholder="Nhập mã voucher nếu có">
-          <button type="button" id="cap-payment-voucher-apply">Áp dụng</button>
-        </div>
-        <div class="cap-payment-voucher__hint" id="cap-payment-voucher-feedback"></div>
-        <div class="cap-payment-voucher__list" id="cap-payment-voucher-list"></div>
-        <div class="cap-payment-voucher__empty" id="cap-payment-voucher-empty" hidden>
-          Chưa có voucher phù hợp với hóa đơn này.
-        </div>
-      </div>
-    </div>
-
-    <div class="cap-payment-modal__methods">
-      <button type="button" class="cap-payment-method cap-payment-method--wallet" id="cap-payment-wallet">
-        <span class="cap-payment-method__icon"><i class="bi bi-wallet2"></i></span>
-        <span class="cap-payment-method__content">
-          <strong>Thanh toán bằng ví</strong>
-          <small>Trừ trực tiếp số dư ví của bạn</small>
-        </span>
-      </button>
-      <button type="button" class="cap-payment-method cap-payment-method--vnpay" id="cap-payment-vnpay">
-        <span class="cap-payment-method__icon"><i class="bi bi-credit-card-2-front"></i></span>
-        <span class="cap-payment-method__content">
-          <strong>Thanh toán qua VNPay</strong>
-          <small>Chuyển đến cổng VNPay để hoàn tất</small>
-        </span>
-      </button>
-    </div>
-  </div>
-</div>
-
 <div class="cap-payment-modal" id="cap-invoice-modal" hidden>
   <div class="cap-payment-modal__backdrop" data-invoice-close></div>
   <div class="cap-payment-modal__dialog cap-payment-modal__dialog--invoice" role="dialog" aria-modal="true" aria-labelledby="cap-invoice-title">
@@ -210,7 +146,7 @@
     </button>
     <div class="cap-payment-modal__eyebrow">Chi tiết hóa đơn</div>
     <h3 id="cap-invoice-title" class="cap-payment-modal__title">Hóa đơn thanh toán</h3>
-    <p class="cap-payment-modal__subtitle">Xem trước đầy đủ các hạng mục và số tiền còn lại trước khi thanh toán.</p>
+    <p class="cap-payment-modal__subtitle">Xem lại đầy đủ các hạng mục sau khi hóa đơn đã được thanh toán hoàn tất.</p>
     <div id="cap-invoice-modal-content"></div>
   </div>
 </div>

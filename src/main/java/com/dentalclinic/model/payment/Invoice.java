@@ -40,6 +40,27 @@ public class Invoice {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "payos_order_code")
+    private Long payOsOrderCode;
+
+    @Column(name = "payos_payment_link_id", length = 120)
+    private String payOsPaymentLinkId;
+
+    @Column(name = "payos_checkout_url", length = 1000)
+    private String payOsCheckoutUrl;
+
+    @Column(name = "payos_qr_code", length = 4000)
+    private String payOsQrCode;
+
+    @Column(name = "payos_status", length = 50)
+    private String payOsStatus;
+
+    @Column(name = "payos_reference", length = 255)
+    private String payOsReference;
+
+    @Column(name = "payos_paid_at")
+    private LocalDateTime payOsPaidAt;
+
     @PrePersist
     @PreUpdate
     private void normalizeAmounts() {
@@ -69,4 +90,18 @@ public class Invoice {
     public void setStatus(PaymentStatus status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getPayOsOrderCode() { return payOsOrderCode; }
+    public void setPayOsOrderCode(Long payOsOrderCode) { this.payOsOrderCode = payOsOrderCode; }
+    public String getPayOsPaymentLinkId() { return payOsPaymentLinkId; }
+    public void setPayOsPaymentLinkId(String payOsPaymentLinkId) { this.payOsPaymentLinkId = payOsPaymentLinkId; }
+    public String getPayOsCheckoutUrl() { return payOsCheckoutUrl; }
+    public void setPayOsCheckoutUrl(String payOsCheckoutUrl) { this.payOsCheckoutUrl = payOsCheckoutUrl; }
+    public String getPayOsQrCode() { return payOsQrCode; }
+    public void setPayOsQrCode(String payOsQrCode) { this.payOsQrCode = payOsQrCode; }
+    public String getPayOsStatus() { return payOsStatus; }
+    public void setPayOsStatus(String payOsStatus) { this.payOsStatus = payOsStatus; }
+    public String getPayOsReference() { return payOsReference; }
+    public void setPayOsReference(String payOsReference) { this.payOsReference = payOsReference; }
+    public LocalDateTime getPayOsPaidAt() { return payOsPaidAt; }
+    public void setPayOsPaidAt(LocalDateTime payOsPaidAt) { this.payOsPaidAt = payOsPaidAt; }
 }

@@ -204,6 +204,26 @@ public class StaffAppointmentController {
         }
     }
 
+    @PostMapping("/appointments/{id}/payos-link")
+    @ResponseBody
+    public ResponseEntity<?> createPayOsLink(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(staffAppointmentService.createPayOsQr(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/appointments/{id}/payos-status")
+    @ResponseBody
+    public ResponseEntity<?> payOsStatus(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(staffAppointmentService.getPayOsPaymentStatus(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/appointments/process-payment")
     @ResponseBody
     public ResponseEntity<?> processPayment(@RequestParam Long id) {
