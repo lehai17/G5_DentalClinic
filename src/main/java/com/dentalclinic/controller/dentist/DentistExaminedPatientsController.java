@@ -36,8 +36,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/dentist")
 public class DentistExaminedPatientsController {
 
-    private static final List<AppointmentStatus> DONE_STATUSES = List.of(
-            AppointmentStatus.DONE,
+    private static final List<AppointmentStatus> FINALIZED_STATUSES = List.of(
             AppointmentStatus.WAITING_PAYMENT,
             AppointmentStatus.COMPLETED
     );
@@ -104,7 +103,7 @@ public class DentistExaminedPatientsController {
         final LocalDate finalToday = today;
 
         List<Appointment> allDone = appointmentRepository
-                .findByDentist_IdAndStatusIn(dentistProfileId, DONE_STATUSES);
+                .findByDentist_IdAndStatusIn(dentistProfileId, FINALIZED_STATUSES);
 
         List<Appointment> uniqueDone = allDone.stream()
                 .filter(a -> a.getId() != null)
@@ -197,7 +196,7 @@ public class DentistExaminedPatientsController {
         model.addAttribute("fromDate", fromDate);
         model.addAttribute("toDate", toDate);
         model.addAttribute("statusFilter", statusFilter != null ? statusFilter.name() : "ALL");
-        model.addAttribute("statusOptions", List.of("ALL", "DONE", "WAITING_PAYMENT", "COMPLETED"));
+        model.addAttribute("statusOptions", List.of("ALL", "WAITING_PAYMENT", "COMPLETED"));
         model.addAttribute("totalDone", totalDone);
         model.addAttribute("todayDone", todayDone);
         model.addAttribute("singleCount", singleCount);

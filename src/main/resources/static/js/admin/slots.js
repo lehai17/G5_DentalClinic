@@ -131,7 +131,7 @@ const AdminSlots = {
         'CONFIRMED': 'ĐÃ XÁC NHẬN',
         'CHECKED_IN': 'ĐÃ ĐẾN',
         'EXAMINING': 'ĐANG KHÁM',
-        'DONE': 'CHO THANH TOÁN',
+        'WAITING_PAYMENT': 'CHỜ THANH TOÁN',
         'COMPLETED': 'HOÀN THÀNH',
         'CANCELLED': 'ĐÃ HỦY',
         'REEXAM': 'HẸN TÁI KHÁM'

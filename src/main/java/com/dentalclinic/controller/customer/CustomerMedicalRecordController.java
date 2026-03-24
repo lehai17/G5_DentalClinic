@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 public class CustomerMedicalRecordController {
 
     private static final List<AppointmentStatus> RECORD_STATUSES = List.of(
-            AppointmentStatus.DONE,
             AppointmentStatus.WAITING_PAYMENT,
             AppointmentStatus.COMPLETED
     );

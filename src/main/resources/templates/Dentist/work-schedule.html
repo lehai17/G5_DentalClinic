@@ -67,10 +67,6 @@
             <span>Đang khám</span>
           </div>
           <div class="legend-item">
-            <span class="legend-box done"></span>
-            <span>Hoàn thành khám</span>
-          </div>
-          <div class="legend-item">
             <span class="legend-box waiting-payment"></span>
             <span>Chờ thanh toán</span>
           </div>
@@ -136,10 +132,9 @@
 
                      th:classappend="
   ${ev.status == 'EXAMINING'} ? ' appt-examining' :
-  (${ev.status == 'DONE'} ? ' appt-done' :
   (${ev.status == 'WAITING_PAYMENT'} ? ' appt-waiting-payment' :
   (${ev.status == 'COMPLETED'} ? ' appt-completed' :
-  (${ev.status == 'CONFIRMED'} ? ' appt-confirmed' : ''))))
+  (${ev.status == 'CONFIRMED'} ? ' appt-confirmed' : '')))
 "
                      th:attr="
                 data-appointment-id=${ev.appointmentId},

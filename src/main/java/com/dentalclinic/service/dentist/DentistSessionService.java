@@ -243,12 +243,12 @@ public class DentistSessionService {
         }
 
         billingNoteRepository.save(bn);
-        appt.setStatus(AppointmentStatus.DONE);
+        appt.setStatus(AppointmentStatus.WAITING_PAYMENT);
         appointmentRepository.save(appt);
         appointmentRepository.flush();  // Force flush to DB
         
         // Auto-confirm any pending reexams for this appointment
-        logger.info("[SESSION] Appointment {} status changed to DONE, attempting to auto-confirm reexam", appt.getId());
+        logger.info("[SESSION] Appointment {} status changed to WAITING_PAYMENT, attempting to auto-confirm reexam", appt.getId());
         try {
             // Debug: check database directly
             var debugData = appointmentRepository.debugFindReexamByOriginalId(appt.getId());
@@ -307,11 +307,10 @@ public class DentistSessionService {
     }
 
     /**
-     * Validate that appointment is not in finalized state (DONE, COMPLETED, WAITING_PAYMENT)
+     * Validate that appointment is not in finalized state (COMPLETED, WAITING_PAYMENT)
      */
     private void validateAppointmentNotFinalized(Appointment appt) {
-        if (appt.getStatus() == AppointmentStatus.DONE
-                || appt.getStatus() == AppointmentStatus.COMPLETED
+        if (appt.getStatus() == AppointmentStatus.COMPLETED
                 || appt.getStatus() == AppointmentStatus.WAITING_PAYMENT) {
             throw new IllegalStateException("Appointment already finalized");
         }
@@ -322,7 +321,6 @@ public class DentistSessionService {
             return false;
         }
         return status == AppointmentStatus.EXAMINING
-                || status == AppointmentStatus.DONE
                 || status == AppointmentStatus.WAITING_PAYMENT
                 || status == AppointmentStatus.COMPLETED;
     }

@@ -69,7 +69,7 @@ public class AdminSlotService {
 
         List<AppointmentStatus> activeStatuses = List.of(
                 AppointmentStatus.CONFIRMED, AppointmentStatus.CHECKED_IN,
-                AppointmentStatus.EXAMINING, AppointmentStatus.DONE,
+                AppointmentStatus.EXAMINING,
                 AppointmentStatus.COMPLETED, AppointmentStatus.IN_PROGRESS,
                 AppointmentStatus.WAITING_PAYMENT, AppointmentStatus.REEXAM,
                 AppointmentStatus.PENDING);
@@ -192,7 +192,7 @@ public class AdminSlotService {
 
         List<AppointmentStatus> activeStatuses = List.of(
                 AppointmentStatus.CONFIRMED, AppointmentStatus.CHECKED_IN,
-                AppointmentStatus.EXAMINING, AppointmentStatus.DONE,
+                AppointmentStatus.EXAMINING,
                 AppointmentStatus.COMPLETED, AppointmentStatus.IN_PROGRESS,
                 AppointmentStatus.WAITING_PAYMENT, AppointmentStatus.REEXAM,
                 AppointmentStatus.PENDING);
@@ -227,7 +227,6 @@ public class AdminSlotService {
                 AppointmentStatus.CONFIRMED,
                 AppointmentStatus.CHECKED_IN,
                 AppointmentStatus.EXAMINING,
-                AppointmentStatus.DONE,
                 AppointmentStatus.COMPLETED,
                 AppointmentStatus.IN_PROGRESS,
                 AppointmentStatus.WAITING_PAYMENT,
@@ -338,7 +337,6 @@ public class AdminSlotService {
                 AppointmentStatus.CONFIRMED,
                 AppointmentStatus.CHECKED_IN,
                 AppointmentStatus.EXAMINING,
-                AppointmentStatus.DONE,
                 AppointmentStatus.COMPLETED,
                 AppointmentStatus.IN_PROGRESS,
                 AppointmentStatus.WAITING_PAYMENT,

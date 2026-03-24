@@ -603,7 +603,7 @@ public class CustomerAppointmentService {
         Appointment appointment = appointmentRepository.findByIdAndCustomer_User_Id(appointmentId, userId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Không tìm thấy lịch hẹn để đánh giá."));
 
-        if (!(appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.DONE)) {
+        if (!(appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT)) {
             throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Chỉ có thể đánh giá sau khi lịch hẹn đã hoàn thành.");
         }
 
@@ -865,7 +865,7 @@ public class CustomerAppointmentService {
 
         if (appointment.getStatus() == AppointmentStatus.CANCELLED
                 || appointment.getStatus() == AppointmentStatus.COMPLETED
-                || appointment.getStatus() == AppointmentStatus.DONE
+                || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT
                 || appointment.getStatus() == AppointmentStatus.EXAMINING
                 || appointment.getStatus() == AppointmentStatus.IN_PROGRESS) {
             throw new BookingException(BookingErrorCode.APPOINTMENT_STATUS_INVALID, "Không thể hủy lịch với trạng thái hiện tại.");
@@ -1225,7 +1225,7 @@ public class CustomerAppointmentService {
 
     private boolean isRebookEligibleStatus(AppointmentStatus status) {
         return status == AppointmentStatus.COMPLETED
-                || status == AppointmentStatus.DONE
+                || status == AppointmentStatus.WAITING_PAYMENT
                 || status == AppointmentStatus.CANCELLED
                 || status == AppointmentStatus.REEXAM;
     }
@@ -1496,7 +1496,7 @@ public class CustomerAppointmentService {
         dto.setCanReview(
                 !dto.isReviewed()
                         && appointment.getDentist() != null
-                        && (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.DONE)
+                        && (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.WAITING_PAYMENT)
         );
         return dto;
     }

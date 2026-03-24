@@ -112,7 +112,7 @@
                   <button
                     type="button"
                     class="btn-payment"
-                    th:if="${a.status.name() == 'DONE'}"
+                    th:if="${a.status.name() == 'WAITING_PAYMENT'}"
                     th:onclick="'goToPayment(' + ${a.id} + ')'"
                   >
                     Thanh toan

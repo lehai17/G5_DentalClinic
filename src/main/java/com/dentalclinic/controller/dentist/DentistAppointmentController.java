@@ -67,9 +67,8 @@ public class DentistAppointmentController {
         if (appt.getStatus() == AppointmentStatus.CONFIRMED) {
             return buildWorkScheduleRedirect(weekStart);
         }
-        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa DONE/COMPLETED/WAITING_PAYMENT 
-        if (appt.getStatus() != AppointmentStatus.DONE
-                && appt.getStatus() != AppointmentStatus.COMPLETED
+        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa COMPLETED/WAITING_PAYMENT 
+        if (appt.getStatus() != AppointmentStatus.COMPLETED
                 && appt.getStatus() != AppointmentStatus.WAITING_PAYMENT
                 && appt.getStatus() != AppointmentStatus.EXAMINING) {
 
@@ -212,7 +211,6 @@ public class DentistAppointmentController {
             return false;
         }
         return status == AppointmentStatus.EXAMINING
-                || status == AppointmentStatus.DONE
                 || status == AppointmentStatus.WAITING_PAYMENT
                 || status == AppointmentStatus.COMPLETED;
     }

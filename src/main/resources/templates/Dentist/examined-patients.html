@@ -133,7 +133,7 @@
                 <td>
                   <span class="badge status-badge"
                         th:classappend="${chain.root.status != null ? chain.root.status.name().toLowerCase() : ''}"
-                        th:text="${chain.root.status}">DONE</span>
+                        th:text="${chain.root.status}">WAITING_PAYMENT</span>
                 </td>
                 <td>
                 <div class="chain-pills">
@@ -178,7 +178,7 @@
                           <span class="dot">•</span>
                           <span th:text="${#temporals.format(step.appointment.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(step.appointment.endTime, 'HH:mm')}">09:30 - 10:30</span>
                           <span class="dot">•</span>
-                          <span th:text="${step.appointment.status}">DONE</span>
+                          <span th:text="${step.appointment.status}">WAITING_PAYMENT</span>
                         </div>
                       </div>
                     </div>

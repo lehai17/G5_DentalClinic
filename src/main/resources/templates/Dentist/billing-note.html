@@ -207,7 +207,7 @@
   ========================= */
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
-    if (status === 'DONE' || status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
+    if (status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
       document.querySelectorAll('input, textarea, select, button')
               .forEach(el => el.disabled = true);
 

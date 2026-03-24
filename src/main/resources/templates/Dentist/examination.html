@@ -129,7 +129,7 @@
               </div>
               <div class="visit-info-box">
                 <div class="visit-info-label">Trang thai</div>
-                <div class="visit-info-value" th:text="${step.status != null ? step.status : 'N/A'}">DONE</div>
+                <div class="visit-info-value" th:text="${step.status != null ? step.status : 'N/A'}">WAITING_PAYMENT</div>
               </div>
               <div class="visit-info-box">
                 <div class="visit-info-label">Dich vu</div>
@@ -514,7 +514,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
 
-    if (status === 'DONE' || status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
+    if (status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
       document.querySelectorAll('input, textarea, select, button')
               .forEach(el => el.disabled = true);
       const saveBtn = document.querySelector('button[type="submit"]');

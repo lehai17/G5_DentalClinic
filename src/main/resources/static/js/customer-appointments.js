@@ -156,7 +156,6 @@
         className: "waiting-payment",
       },
       COMPLETED: { label: "Đã hoàn thành", className: "completed" },
-      DONE: { label: "Hoàn tất ca khám", className: "completed" },
       CANCELLED: { label: "Đã hủy", className: "cancelled" },
       REEXAM: { label: "Tái khám", className: "reexam" },
     };
@@ -188,7 +187,7 @@
 
   function isCompletedStatus(status) {
     var key = String(status || "").toUpperCase();
-    return key === "COMPLETED" || key === "DONE";
+    return key === "COMPLETED" || key === "WAITING_PAYMENT";
   }
 
   function isSettledInvoice(data) {
@@ -723,7 +722,6 @@
       data.status !== "CANCELLED" &&
       data.status !== "COMPLETED" &&
       data.status !== "WAITING_PAYMENT" &&
-      data.status !== "DONE" &&
       data.status !== "EXAMINING" &&
       data.status !== "IN_PROGRESS";
     var canPayRemaining = !!data.canPayRemaining;
@@ -765,7 +763,6 @@
       data.status === "CONFIRMED" ||
       data.status === "CHECKED_IN" ||
       data.status === "EXAMINING" ||
-      data.status === "DONE" ||
       data.status === "WAITING_PAYMENT" ||
       data.status === "REEXAM" ||
       data.status === "IN_PROGRESS"
