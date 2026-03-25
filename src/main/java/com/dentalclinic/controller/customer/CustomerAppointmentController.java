@@ -1,6 +1,8 @@
 package com.dentalclinic.controller.customer;
 
 import com.dentalclinic.dto.customer.AppointmentDto;
+import com.dentalclinic.dto.customer.BookingPricePreviewDto;
+import com.dentalclinic.dto.customer.BookingPricePreviewRequest;
 import com.dentalclinic.dto.customer.CreateAppointmentRequest;
 import com.dentalclinic.dto.customer.CreateReviewRequest;
 import com.dentalclinic.dto.customer.SlotDto;
@@ -90,6 +92,15 @@ public class CustomerAppointmentController {
 
         AppointmentDto created = customerAppointmentService.createAppointment(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/appointments/preview")
+    public ResponseEntity<?> previewAppointmentBooking(@RequestBody BookingPricePreviewRequest request, HttpSession session) {
+        Long userId = getCurrentUserId(session);
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+
+        BookingPricePreviewDto preview = customerAppointmentService.previewBooking(userId, request);
+        return ResponseEntity.ok(preview);
     }
 
     @PostMapping("/appointments/{id}/confirm")
@@ -213,8 +224,12 @@ public class CustomerAppointmentController {
             data.put("serviceIds", dto.getServiceIds());
             data.put("services", dto.getServices());
             data.put("totalDurationMinutes", dto.getTotalDurationMinutes());
+            data.put("originalTotalAmount", dto.getOriginalTotalAmount());
             data.put("totalAmount", dto.getTotalAmount());
+            data.put("discountAmount", dto.getDiscountAmount());
             data.put("depositAmount", dto.getDepositAmount());
+            data.put("voucherCode", dto.getVoucherCode());
+            data.put("voucherDescription", dto.getVoucherDescription());
             data.put("billedTotal", dto.getBilledTotal());
             data.put("remainingAmount", dto.getRemainingAmount());
             data.put("invoiceId", dto.getInvoiceId());

@@ -1,8 +1,10 @@
 package com.dentalclinic.service.customer;
 
+import com.dentalclinic.dto.customer.BookingPricePreviewDto;
 import com.dentalclinic.dto.customer.FinalPaymentPreviewDto;
 import com.dentalclinic.exception.BookingErrorCode;
 import com.dentalclinic.exception.BookingException;
+import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.payment.Invoice;
 import com.dentalclinic.model.promotion.DiscountType;
 import com.dentalclinic.model.promotion.Voucher;
@@ -32,16 +34,44 @@ public class CustomerVoucherService {
     }
 
     @Transactional(readOnly = true)
+    public BookingPricePreviewDto buildBookingPreview(Long userId, BigDecimal originalAmount, String voucherCode) {
+        VoucherApplication application = resolveVoucherApplication(userId, originalAmount, voucherCode, true);
+        return toBookingPreview(userId, application);
+    }
+
+    @Transactional(readOnly = true)
+    public VoucherQuote quoteForBooking(Long userId, BigDecimal originalAmount, String voucherCode) {
+        VoucherApplication application = resolveVoucherApplication(userId, originalAmount, voucherCode, true);
+        return new VoucherQuote(
+                application.voucher(),
+                application.originalAmount(),
+                application.discountAmount(),
+                application.payableAmount(),
+                application.normalizedCode()
+        );
+    }
+
+    @Transactional(readOnly = true)
     public FinalPaymentPreviewDto buildPreview(Long userId, Invoice invoice, String voucherCode) {
-        VoucherApplication application = resolveVoucherApplication(userId, invoice, voucherCode, false);
-        return toPreview(userId, invoice, application);
+        VoucherApplication application = resolveVoucherApplication(
+                userId,
+                invoice.getOriginalAmount() != null ? invoice.getOriginalAmount() : invoice.getTotalAmount(),
+                voucherCode,
+                false
+        );
+        return toInvoicePreview(userId, invoice, application);
     }
 
     @Transactional
     public FinalPaymentPreviewDto applyVoucherToInvoice(Long userId, Invoice invoice, String voucherCode) {
-        VoucherApplication application = resolveVoucherApplication(userId, invoice, voucherCode, true);
+        VoucherApplication application = resolveVoucherApplication(
+                userId,
+                invoice.getOriginalAmount() != null ? invoice.getOriginalAmount() : invoice.getTotalAmount(),
+                voucherCode,
+                true
+        );
         applyToInvoice(invoice, application);
-        return toPreview(userId, invoice, application);
+        return toInvoicePreview(userId, invoice, application);
     }
 
     @Transactional
@@ -49,24 +79,39 @@ public class CustomerVoucherService {
         if (invoice == null || invoice.isVoucherUsageCounted() || invoice.getVoucher() == null) {
             return;
         }
-
-        Voucher voucher = voucherRepository.findByIdAndDeletedFalseForUpdate(invoice.getVoucher().getId())
-                .orElseThrow(() -> new BookingException(BookingErrorCode.VALIDATION_ERROR, "Voucher áp dụng không còn khả dụng."));
-
-        int usedCount = voucher.getUsedCount() == null ? 0 : voucher.getUsedCount();
-        if (voucher.getUsageLimit() != null && usedCount >= voucher.getUsageLimit()) {
-            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Voucher đã hết lượt sử dụng.");
-        }
-
-        voucher.setUsedCount(usedCount + 1);
+        incrementVoucherUsage(invoice.getVoucher());
         invoice.setVoucherUsageCounted(true);
     }
 
-    private VoucherApplication resolveVoucherApplication(Long userId, Invoice invoice, String voucherCode, boolean strictValidate) {
-        BigDecimal originalAmount = normalizeMoney(invoice.getOriginalAmount() != null ? invoice.getOriginalAmount() : invoice.getTotalAmount());
+    @Transactional
+    public void incrementVoucherUsageIfNeeded(Appointment appointment) {
+        if (appointment == null || appointment.isVoucherUsageCounted() || appointment.getVoucher() == null) {
+            return;
+        }
+        incrementVoucherUsage(appointment.getVoucher());
+        appointment.setVoucherUsageCounted(true);
+    }
+
+    private void incrementVoucherUsage(Voucher voucher) {
+        Voucher lockedVoucher = voucherRepository.findByIdAndDeletedFalseForUpdate(voucher.getId())
+                .orElseThrow(() -> new BookingException(BookingErrorCode.VALIDATION_ERROR, "Voucher áp dụng không còn khả dụng."));
+
+        int usedCount = lockedVoucher.getUsedCount() == null ? 0 : lockedVoucher.getUsedCount();
+        if (lockedVoucher.getUsageLimit() != null && usedCount >= lockedVoucher.getUsageLimit()) {
+            throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Voucher đã hết lượt sử dụng.");
+        }
+
+        lockedVoucher.setUsedCount(usedCount + 1);
+    }
+
+    private VoucherApplication resolveVoucherApplication(Long userId,
+                                                         BigDecimal rawOriginalAmount,
+                                                         String voucherCode,
+                                                         boolean strictValidate) {
+        BigDecimal originalAmount = normalizeMoney(rawOriginalAmount);
 
         if (!StringUtils.hasText(voucherCode)) {
-            return new VoucherApplication(null, originalAmount, BigDecimal.ZERO, originalAmount, null);
+            return new VoucherApplication(null, originalAmount, BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), originalAmount, null);
         }
 
         String normalizedCode = voucherCode.trim().toUpperCase();
@@ -138,7 +183,20 @@ public class CustomerVoucherService {
         invoice.setVoucherUsageCounted(false);
     }
 
-    private FinalPaymentPreviewDto toPreview(Long userId, Invoice invoice, VoucherApplication application) {
+    private BookingPricePreviewDto toBookingPreview(Long userId, VoucherApplication application) {
+        BookingPricePreviewDto dto = new BookingPricePreviewDto();
+        dto.setOriginalTotalAmount(application.originalAmount());
+        dto.setDiscountAmount(application.discountAmount());
+        dto.setFinalTotalAmount(application.payableAmount());
+        dto.setDepositAmount(calculateDepositAmount(application.payableAmount()));
+        dto.setVoucherApplied(application.voucher() != null);
+        dto.setVoucherCode(application.normalizedCode());
+        dto.setVoucherDescription(application.voucher() != null ? application.voucher().getDescription() : null);
+        dto.setAvailableVouchers(customerVoucherWalletService.getApplicableVoucherOptions(userId, application.originalAmount()));
+        return dto;
+    }
+
+    private FinalPaymentPreviewDto toInvoicePreview(Long userId, Invoice invoice, VoucherApplication application) {
         FinalPaymentPreviewDto dto = new FinalPaymentPreviewDto();
         dto.setAppointmentId(invoice.getAppointment() != null ? invoice.getAppointment().getId() : null);
         dto.setInvoiceId(invoice.getId());
@@ -152,11 +210,25 @@ public class CustomerVoucherService {
         return dto;
     }
 
+    private BigDecimal calculateDepositAmount(BigDecimal finalTotalAmount) {
+        return normalizeMoney(finalTotalAmount).multiply(new BigDecimal("0.50"))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
     private BigDecimal normalizeMoney(BigDecimal value) {
         if (value == null) {
             return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
         return value.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public record VoucherQuote(
+            Voucher voucher,
+            BigDecimal originalAmount,
+            BigDecimal discountAmount,
+            BigDecimal payableAmount,
+            String normalizedCode
+    ) {
     }
 
     private record VoucherApplication(

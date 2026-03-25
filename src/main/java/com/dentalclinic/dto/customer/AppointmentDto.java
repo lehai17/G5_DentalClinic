@@ -14,6 +14,7 @@ public class AppointmentDto {
     private List<Long> serviceIds;
     private List<AppointmentServiceItemDto> services;
     private Integer totalDurationMinutes;
+    private BigDecimal originalTotalAmount;
     private BigDecimal totalAmount;
     private BigDecimal depositAmount;
     private Long dentistId;
@@ -67,6 +68,8 @@ public class AppointmentDto {
     public void setServices(List<AppointmentServiceItemDto> services) { this.services = services; }
     public Integer getTotalDurationMinutes() { return totalDurationMinutes; }
     public void setTotalDurationMinutes(Integer totalDurationMinutes) { this.totalDurationMinutes = totalDurationMinutes; }
+    public BigDecimal getOriginalTotalAmount() { return originalTotalAmount; }
+    public void setOriginalTotalAmount(BigDecimal originalTotalAmount) { this.originalTotalAmount = originalTotalAmount; }
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
     public BigDecimal getDepositAmount() { return depositAmount; }

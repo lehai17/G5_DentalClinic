@@ -2,6 +2,7 @@ package com.dentalclinic.model.appointment;
 
 import com.dentalclinic.model.profile.CustomerProfile;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.model.promotion.Voucher;
 import com.dentalclinic.model.schedule.DentistSchedule;
 import com.dentalclinic.model.service.Services;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -71,8 +72,21 @@ public class Appointment {
     @Column(name = "total_amount", precision = 18, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "original_amount", precision = 18, scale = 2)
+    private BigDecimal originalAmount;
+
+    @Column(name = "discount_amount", precision = 18, scale = 2)
+    private BigDecimal discountAmount;
+
     @Column(name = "deposit_amount", precision = 18, scale = 2)
     private BigDecimal depositAmount;
+
+    @ManyToOne
+    @JoinColumn(name = "voucher_id")
+    private Voucher voucher;
+
+    @Column(name = "voucher_usage_counted", nullable = false, columnDefinition = "bit default 0")
+    private boolean voucherUsageCounted = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name="status")
@@ -119,6 +133,12 @@ public class Appointment {
     protected void onCreate() {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
+        }
+        if (this.discountAmount == null) {
+            this.discountAmount = BigDecimal.ZERO;
+        }
+        if (this.originalAmount == null && this.totalAmount != null) {
+            this.originalAmount = this.totalAmount;
         }
     }
 
@@ -183,8 +203,16 @@ public class Appointment {
     public void setTotalDurationMinutes(Integer totalDurationMinutes) { this.totalDurationMinutes = totalDurationMinutes; }
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getOriginalAmount() { return originalAmount; }
+    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
     public BigDecimal getDepositAmount() { return depositAmount; }
     public void setDepositAmount(BigDecimal depositAmount) { this.depositAmount = depositAmount; }
+    public Voucher getVoucher() { return voucher; }
+    public void setVoucher(Voucher voucher) { this.voucher = voucher; }
+    public boolean isVoucherUsageCounted() { return voucherUsageCounted; }
+    public void setVoucherUsageCounted(boolean voucherUsageCounted) { this.voucherUsageCounted = voucherUsageCounted; }
     public AppointmentStatus getStatus() { return status; }
     public void setStatus(AppointmentStatus status) { this.status = status; }
     public String getNotes() { return notes; }
