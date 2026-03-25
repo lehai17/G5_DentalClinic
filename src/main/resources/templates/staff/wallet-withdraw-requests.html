@@ -1,0 +1,111 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Yêu cầu rút tiền ví</title>
+    <link rel="stylesheet" href="/css/staff/staff.css" />
+    <script src="/js/staff/staff.js" defer></script>
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div th:replace="~{staff/fragments/sidebar :: sidebar}"></div>
+
+      <div class="main-content">
+        <div th:replace="~{staff/fragments/header :: header}"></div>
+
+        <div class="content">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <div>
+              <h2>Yêu cầu rút tiền ví</h2>
+              <p style="margin-top:8px;color:#64748b;">
+                Staff xác nhận sau khi đã hoàn tiền mặt thủ công cho khách.
+              </p>
+            </div>
+            <a href="/staff/appointments" class="btn-assign" style="text-decoration:none;">Quay lại lịch hẹn</a>
+          </div>
+
+          <section class="staff-withdraw-section" style="margin-top:24px;">
+            <div class="staff-withdraw-empty" th:if="${#lists.isEmpty(pendingWithdrawRequests)}">
+              Hiện chưa có yêu cầu rút tiền nào đang chờ duyệt.
+            </div>
+
+            <div class="staff-withdraw-grid" th:if="${!#lists.isEmpty(pendingWithdrawRequests)}">
+              <article class="staff-withdraw-card" th:each="request : ${pendingWithdrawRequests}">
+                <div class="staff-withdraw-card__top">
+                  <div>
+                    <div class="staff-withdraw-card__name"
+                         th:text="${request.wallet != null and request.wallet.customer != null ? request.wallet.customer.fullName : 'Khách hàng'}">
+                      Nguyễn Văn A
+                    </div>
+                    <div class="staff-withdraw-card__meta"
+                         th:text="${request.wallet != null and request.wallet.customer != null and request.wallet.customer.user != null ? request.wallet.customer.user.email : '--'}">
+                      customer@example.com
+                    </div>
+                    <div class="staff-withdraw-card__meta"
+                         th:text="${request.wallet != null and request.wallet.customer != null and request.wallet.customer.phone != null ? request.wallet.customer.phone : 'Không có số điện thoại'}">
+                      0900000000
+                    </div>
+                  </div>
+                  <span class="staff-withdraw-badge">Chờ duyệt</span>
+                </div>
+
+                <div class="staff-withdraw-amount"
+                     th:text="${#numbers.formatDecimal(request.amount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                  500,000 VND
+                </div>
+                <div class="staff-withdraw-card__meta"
+                     th:text="'Tạo lúc: ' + ${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}">
+                  Tạo lúc: 25/03/2026 10:00
+                </div>
+                <div class="staff-withdraw-card__note"
+                     th:text="${request.description != null and !#strings.isEmpty(request.description) ? request.description : 'Khách không để lại ghi chú.'}">
+                  Ghi chú của khách
+                </div>
+                <div class="staff-action-group">
+                  <button
+                    type="button"
+                    class="btn-payment"
+                    th:onclick="'approveWithdrawRequest(' + ${request.id} + ')'"
+                  >
+                    Duyệt chi tiền mặt
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-cancel"
+                    th:onclick="'rejectWithdrawRequest(' + ${request.id} + ')'"
+                  >
+                    Từ chối
+                  </button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <div class="pagination" th:if="${totalPages > 1}">
+            <a
+              th:if="${currentPage > 1}"
+              th:href="@{/staff/wallet/withdraw-requests(page=${currentPage - 1})}"
+            >
+              Trước
+            </a>
+
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+              <a
+                th:href="@{/staff/wallet/withdraw-requests(page=${i})}"
+                th:text="${i}"
+                th:classappend="${i == currentPage} ? 'active'"
+              >
+              </a>
+            </span>
+
+            <a
+              th:if="${currentPage < totalPages}"
+              th:href="@{/staff/wallet/withdraw-requests(page=${currentPage + 1})}"
+            >
+              Sau
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
