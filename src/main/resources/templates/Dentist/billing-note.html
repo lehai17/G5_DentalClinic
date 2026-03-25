@@ -48,8 +48,7 @@
         th:action="@{/dentist/appointments/{id}/billing-transfer(id=${appointmentId})}">
     <input type="hidden" name="customerUserId" th:value="${customerUserId}"/>
     <input type="hidden" name="dentistUserId" th:value="${dentistUserId}"/>
-    <input type="hidden" id="appointmentStatus"
-           th:value="${appointmentStatus}">
+    <input type="hidden" id="appointmentStatus" th:value="${appointmentStatus}">
     <input type="hidden" name="weekStart" th:value="${weekStart}">
 
     <div class="billing-section">
@@ -58,13 +57,13 @@
           <div class="billing-section-title">
             A) Dịch vụ thực hiện
           </div>
-          <div class="mini">Chọn các dịch vụ đã thực hiện và số lượng.</div>
+          <div class="mini">Chọn các dịch vụ đã thực hiện.</div>
         </div>
       </div>
 
       <table class="tbl" id="performedTable">
         <thead>
-        <tr><th>Dịch vụ</th><th>Số lượng</th><th></th></tr>
+        <tr><th>Dịch vụ</th><th></th></tr>
         </thead>
         <tbody>
           <tr th:each="ps,stat : *{performedServices}">
@@ -72,14 +71,9 @@
               <select th:field="*{performedServices[__${stat.index}__].service.id}">
                 <option th:each="s: ${services}" th:value="${s.id}" th:text="${s.name}"></option>
               </select>
-            </td>
-            <td>
-              <input type="number"
+              <input type="hidden"
                      th:field="*{performedServices[__${stat.index}__].qty}"
-                     min="1"
-                     step="1"
                      value="1"
-                     onkeydown="return false"
                      class="svc-qty"/>
             </td>
             <td><button type="button" class="icon-mini del">✕</button></td>
@@ -111,7 +105,7 @@
     </div>
 
     <div class="billing-section">
-      <div style="font-weight:900;">C) Ghi chú cho bệnh nhân </div>
+      <div style="font-weight:900;">C) Ghi chú cho bệnh nhân</div>
       <textarea th:field="*{note}" rows="4" placeholder="Ghi chú cho thanh toán/phát hành..."></textarea>
     </div>
 
@@ -122,7 +116,6 @@
          th:href="@{/dentist/work-schedule(weekStart=${weekStart},dentistUserId=${dentistUserId})}">
         Quay lại
       </a>
-
     </div>
   </form>
 </div>
@@ -132,9 +125,6 @@
     return document.querySelectorAll(tableId + ' tbody tr').length;
   }
 
-  /* =========================
-     THÊM DỊCH VỤ
-  ========================= */
   document.getElementById('btnAddService').addEventListener('click', () => {
     const tbody = document.querySelector('#performedTable tbody');
     const idx = getNextIndex('#performedTable');
@@ -148,14 +138,9 @@
       <select name="performedServices[${idx}].service.id">
         ${optionsHtml}
       </select>
-    </td>
-    <td>
-      <input type="number"
+      <input type="hidden"
              name="performedServices[${idx}].qty"
-             min="1"
-             step="1"
              value="1"
-             onkeydown="return false"
              class="svc-qty"/>
     </td>
     <td>
@@ -164,20 +149,9 @@
   `;
 
     tr.querySelector('.del').addEventListener('click', () => tr.remove());
-
-    const qtyInput = tr.querySelector('.svc-qty');
-    qtyInput.addEventListener('change', () => {
-      if (!qtyInput.value || qtyInput.value < 1) {
-        qtyInput.value = 1;
-      }
-    });
-
     tbody.appendChild(tr);
   });
 
-  /* =========================
-     THÊM ĐƠN THUỐC
-  ========================= */
   document.getElementById('btnAddRx').addEventListener('click', () => {
     const tbody = document.querySelector('#rxTable tbody');
     const idx = getNextIndex('#rxTable');
@@ -194,17 +168,11 @@
     tbody.appendChild(tr);
   });
 
-  /* =========================
-     XÓA HÀNG CÓ SẴN
-  ========================= */
   document.querySelectorAll('#performedTable tbody .del, #rxTable tbody .del')
           .forEach(btn => {
             btn.addEventListener('click', () => btn.closest('tr').remove());
           });
 
-  /* =========================
-     KHÓA KHI HOÀN THÀNH
-  ========================= */
   document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('appointmentStatus')?.value;
     if (status === 'COMPLETED' || status === 'WAITING_PAYMENT') {
@@ -216,21 +184,18 @@
       document.querySelector('#btnAddRx')?.remove();
     }
   });
+
   document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('billingForm').addEventListener('submit', () => {
-
       const rows = document.querySelectorAll('#performedTable tbody tr');
 
       rows.forEach((tr, i) => {
-
         const service = tr.querySelector('select');
         const qty = tr.querySelector('.svc-qty');
 
-        if(service) service.name = `performedServices[${i}].service.id`;
-        if(qty) qty.name = `performedServices[${i}].qty`;
-
+        if (service) service.name = `performedServices[${i}].service.id`;
+        if (qty) qty.name = `performedServices[${i}].qty`;
       });
-
     });
   });
 </script>
