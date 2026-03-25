@@ -1,86 +1,86 @@
 ﻿<aside
-  th:fragment="sidebar"
-  id="sidebar"
-  class="patient-sidebar"
-  xmlns:th="http://www.w3.org/1999/xhtml"
+        th:fragment="sidebar"
+        id="sidebar"
+        class="patient-sidebar"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 >
-  <div class="sidebar-header">
-    <a th:href="@{/homepage}" class="logo-link" aria-label="Về trang chủ">
-      <div class="logo-wrapper">
-        <div class="logo-icon"></div>
-        <span class="logo-text"
-          >GENZ CLINIC</span
+    <div class="sidebar-header">
+        <a th:href="@{/homepage}" class="logo-link" aria-label="Về trang chủ">
+            <div class="logo-wrapper">
+                <div class="logo-icon"></div>
+                <span class="logo-text">GENZ CLINIC</span>
+            </div>
+        </a>
+        <button type="button" class="toggle-btn" id="customer-sidebar-toggle" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a
+                th:href="@{/customer/book}"
+                th:classappend="${active == 'booking'} ? ' active'"
+                class="menu-item"
         >
-      </div>
-    </a>
-    <button type="button" class="toggle-btn" id="customer-sidebar-toggle" onclick="toggleSidebar()">
-      <i class="bi bi-list"></i>
-    </button>
-  </div>
+            <i class="bi bi-calendar-plus"></i>
+            <span>Đặt lịch khám</span>
+        </a>
 
-  <nav class="sidebar-nav">
-    <a
-      th:href="@{/customer/book}"
-      th:classappend="${active == 'booking'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-calendar-plus"></i>
-      <span>Đặt lịch khám</span>
-    </a>
+        <a
+                th:href="@{/customer/my-appointments}"
+                th:classappend="${active == 'appointments'} ? ' active'"
+                class="menu-item"
+        >
+            <i class="bi bi-calendar2-check"></i>
+            <span>Lịch hẹn của tôi</span>
+        </a>
 
-    <a
-      th:href="@{/customer/my-appointments}"
-      th:classappend="${active == 'appointments'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-calendar2-check"></i>
-      <span>Lịch hẹn của tôi</span>
-    </a>
+        <a
+                th:href="@{/customer/payments}"
+                th:classappend="${active == 'payments'} ? ' active'"
+                class="menu-item"
+        >
+            <i class="bi bi-receipt"></i>
+            <span>Lịch sử thanh toán</span>
+        </a>
 
-    <a
-      th:href="@{/customer/payments}"
-      th:classappend="${active == 'payments'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-receipt"></i>
-      <span>Lịch sử thanh toán</span>
-    </a>
+        <a
+                th:href="@{/customer/vouchers}"
+                th:classappend="${active == 'vouchers'} ? ' active'"
+                class="menu-item"
+        >
+            <i class="bi bi-ticket-perforated"></i>
+            <span>Ví voucher</span>
+        </a>
 
-    <a
-      th:href="@{/customer/vouchers}"
-      th:classappend="${active == 'vouchers'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-ticket-perforated"></i>
-      <span>Ví voucher</span>
-    </a>
+        <a
+                th:href="@{/patient/medical-records}"
+                th:classappend="${active == 'records'} ? ' active'"
+                class="menu-item"
+        >
+            <i class="bi bi-file-medical"></i>
+            <span>Hồ sơ bệnh án</span>
+        </a>
 
-    <a
-      th:href="@{/patient/medical-records}"
-      th:classappend="${active == 'records'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-file-medical"></i>
-      <span>Hồ sơ bệnh án</span>
-    </a>
+        <a
+                th:href="@{/support/my}"
+                th:classappend="${active == 'support'} ? ' active'"
+                class="menu-item"
+        >
+            <i class="bi bi-headset"></i>
+            <span>Hỗ trợ chuyên môn</span>
+        </a>
+    </nav>
 
-    <a
-      th:href="@{/support/my}"
-      th:classappend="${active == 'support'} ? ' active'"
-      class="menu-item"
-    >
-      <i class="bi bi-headset"></i>
-      <span>Hỗ trợ chuyên môn</span>
-    </a>
-  </nav>
-
-
-  <div class="sidebar-footer">
-    <a th:href="@{/logout}" class="menu-item logout">
-      <i class="bi bi-box-arrow-right"></i>
-      <span>Đăng xuất</span>
-    </a>
-  </div>
+    <div class="sidebar-footer" sec:authorize="isAuthenticated()">
+        <form th:action="@{/logout}" method="post" style="margin: 0;">
+            <button type="submit" class="menu-item logout" style="width: 100%; border: none; background: none;">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Đăng xuất</span>
+            </button>
+        </form>
+    </div>
 </aside>
 
 <script>

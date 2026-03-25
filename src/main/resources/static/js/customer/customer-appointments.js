@@ -668,23 +668,15 @@
     );
   }
 
-    function closeReviewModal() {
+    function openReviewModal(appointmentId) {
         if (!reviewModalEl) return;
-
-        reviewModalEl.hidden = true;
-        reviewSelection = {
-            appointmentId: null,
-            dentistRating: 0,
-            serviceRating: 0
-        };
-
+        reviewSelection = { appointmentId: appointmentId, dentistRating: 0, serviceRating: 0 };
         if (reviewCommentEl) reviewCommentEl.value = "";
         updateDentistReviewStars(0);
         updateServiceReviewStars(0);
-
-        document.body.classList.remove("cap-payment-modal-open");
-
-        if (reviewSubmitEl) reviewSubmitEl.disabled = false;
+        reviewModalEl.hidden = false;
+        document.body.classList.add("cap-payment-modal-open");
+        if (reviewCommentEl) reviewCommentEl.focus();
     }
 
     function updateDentistReviewStars(rating) {
@@ -715,16 +707,25 @@
         }
     }
 
-    function openReviewModal(appointmentId) {
+    function closeReviewModal() {
         if (!reviewModalEl) return;
-        reviewSelection = { appointmentId: appointmentId, dentistRating: 0, serviceRating: 0 };
+
+        reviewModalEl.hidden = true;
+        reviewSelection = {
+            appointmentId: null,
+            dentistRating: 0,
+            serviceRating: 0
+        };
+
         if (reviewCommentEl) reviewCommentEl.value = "";
         updateDentistReviewStars(0);
         updateServiceReviewStars(0);
-        reviewModalEl.hidden = false;
-        document.body.classList.add("cap-payment-modal-open");
-        if (reviewCommentEl) reviewCommentEl.focus();
+
+        document.body.classList.remove("cap-payment-modal-open");
+
+        if (reviewSubmitEl) reviewSubmitEl.disabled = false;
     }
+
 
     function bindReviewModal() {
         if (!reviewModalEl) return;
@@ -780,7 +781,7 @@
                 return;
             }
 
-            reviewSubmitEl.disabled = true;
+            reviewSubmitEl.disabled = true; //khóa nút submit khi gửi để tránh trừng hợp ấn nhều làm gửi nhiều lần
 
             fetch("/customer/appointments/" + reviewSelection.appointmentId + "/review", {
                 method: "POST",
@@ -791,7 +792,7 @@
                     serviceRating: reviewSelection.serviceRating,
                     comment: reviewCommentEl ? reviewCommentEl.value : ""
                 })
-            })
+            })//xử lý response từ backend
                 .then(function (res) {
                     if (res.status === 401) {
                         throw new Error("Bạn cần đăng nhập.");
@@ -802,7 +803,7 @@
                         }
                         return payload;
                     });
-                })
+                })//nếu gửi thành công
                 .then(function (payload) {
                     var reviewedAppointmentId = reviewSelection.appointmentId;
                     closeReviewModal();
@@ -814,7 +815,7 @@
                     loadAppointments(function () {
                         openInlineDetail(reviewedAppointmentId, true);
                     }, state.page);
-                })
+                })//gửi that bại
                 .catch(function (err) {
                     if (reviewSubmitEl) reviewSubmitEl.disabled = false;
                     showAlert(

@@ -25,9 +25,11 @@ public class AIBookingServiceImpl implements AIBookingService {
     private final ServiceMatcher serviceMatcher;
     private final CustomerAppointmentService customerAppointmentService;
 
+
     @Value("${ai.booking.max-suggestions:5}")
     private int maxSuggestions;
 
+    // Khởi tạo service AI booking với bộ phân tích LLM, bộ match dịch vụ và service lấy lịch trống
     public AIBookingServiceImpl(LLMService llmService,
                                 ServiceMatcher serviceMatcher,
                                 CustomerAppointmentService customerAppointmentService) {
@@ -37,6 +39,7 @@ public class AIBookingServiceImpl implements AIBookingService {
     }
 
     @Override
+    // Xử lý toàn bộ luồng AI booking: hiểu nhu cầu, match dịch vụ, lấy slot và trả gợi ý cuối cùng
     public AIBookingSuggestionResponse suggest(Long userId, AIBookingRequest request) {
         LLMBookingInterpretation interpretation = llmService.interpretBookingRequest(request.getMessage());
 
@@ -51,8 +54,18 @@ public class AIBookingServiceImpl implements AIBookingService {
                 ? List.of()
                 : List.of(primaryService.getId());
 
-        LocalDate preferredDate = resolvePreferredDate(interpretation.getPreferredDate());
+        LocalDate preferredDate = resolvePreferredDate(interpretation.getPreferredDate(), request.getMessage());
         List<SlotDto> slots = customerAppointmentService.getAvailableSlots(userId, primaryServiceIds, preferredDate);
+
+        // Nếu user muốn khám sớm nhất/gần nhất/ngay mà ngày hiện tại chưa có slot,
+        // thì thử các ngày gần nhất, ưu tiên hôm nay rồi đến ngày mai
+        if (slots.isEmpty() && isEarliestRequest(request.getMessage(), interpretation)) {
+            LocalDate fallbackDate = findNearestAvailableDate(userId, primaryServiceIds, 3);
+            if (fallbackDate != null) {
+                preferredDate = fallbackDate;
+                slots = customerAppointmentService.getAvailableSlots(userId, primaryServiceIds, preferredDate);
+            }
+        }
 
         List<SlotDto> filteredSlots = filterByTimePreference(slots, interpretation.getTimePreference());
         if (filteredSlots.isEmpty()) {
@@ -98,16 +111,18 @@ public class AIBookingServiceImpl implements AIBookingService {
         );
 
         int primaryDurationMinutes = getPrimaryDurationMinutes(primaryService);
+        final LocalDate finalPreferredDate = preferredDate;
+        final int finalPrimaryDurationMinutes = primaryDurationMinutes;
 
         response.setSlotOptions(
                 filteredSlots.stream()
                         .limit(maxSuggestions)
                         .map(slot -> new AIBookingOptionDto(
                                 slot.getId(),
-                                preferredDate.toString(),
+                                finalPreferredDate.toString(),
                                 slot.getStartTime() == null ? "" : slot.getStartTime().toString(),
-                                calculateSuggestedEndTime(slot, primaryDurationMinutes),
-                                buildDisplayText(preferredDate, slot, primaryDurationMinutes)
+                                calculateSuggestedEndTime(slot, finalPrimaryDurationMinutes),
+                                buildDisplayText(finalPreferredDate, slot, finalPrimaryDurationMinutes)
                         ))
                         .collect(Collectors.toList())
         );
@@ -121,7 +136,8 @@ public class AIBookingServiceImpl implements AIBookingService {
         return response;
     }
 
-    private LocalDate resolvePreferredDate(String preferredDate) {
+    // Chuẩn hóa ngày mong muốn: nếu user muốn lịch sớm nhất thì ưu tiên hôm nay, nếu không thì dùng ngày AI trả về hoặc mặc định ngày mai
+    private LocalDate resolvePreferredDate(String preferredDate, String originalMessage) {
         try {
             if (preferredDate != null && !preferredDate.isBlank()) {
                 LocalDate parsed = LocalDate.parse(preferredDate);
@@ -131,9 +147,15 @@ public class AIBookingServiceImpl implements AIBookingService {
             }
         } catch (Exception ignored) {
         }
+
+        if (isEarliestText(originalMessage)) {
+            return LocalDate.now();
+        }
+
         return LocalDate.now().plusDays(1);
     }
 
+    // Lọc danh sách slot theo buổi người dùng mong muốn: sáng, chiều, tối hoặc bất kỳ
     private List<SlotDto> filterByTimePreference(List<SlotDto> slots, String timePreference) {
         if (slots == null || slots.isEmpty()) return List.of();
         if (timePreference == null || timePreference.isBlank() || "any".equalsIgnoreCase(timePreference)) {
@@ -155,6 +177,7 @@ public class AIBookingServiceImpl implements AIBookingService {
                 .collect(Collectors.toList());
     }
 
+    // Tạo câu trả lời hiển thị cho người dùng dựa trên dịch vụ và khung giờ AI đã gợi ý
     private String buildAssistantMessage(AIBookingSuggestionResponse response) {
         if (response.getServices().isEmpty()) {
             return "Tôi chưa xác định rõ dịch vụ phù hợp. Bạn có thể mô tả chi tiết hơn nhu cầu khám.";
@@ -171,6 +194,21 @@ public class AIBookingServiceImpl implements AIBookingService {
         boolean hasInvis = response.getServices().stream()
                 .anyMatch(s -> s.getName() != null && containsAnyText(normalizeText(s.getName()),
                         "invisalign", "trong suot", "khay trong", "khong mac cai"));
+
+        boolean onlyGeneralExam = response.getServices().size() == 1
+                && response.getServices().get(0).getName() != null
+                && containsAnyText(
+                normalizeText(response.getServices().get(0).getName()),
+                "kham tong quat", "tham kham tong quat", "kham rang tong quat"
+        );
+
+        String serviceName = response.getServices().get(0).getName();
+
+        if (onlyGeneralExam) {
+            return "Tôi gợi ý dịch vụ: " + serviceName
+                    + ". Với mô tả hiện tại, tôi chưa đủ cơ sở để xác định chính xác dịch vụ chuyên biệt hơn. "
+                    + "Vui lòng liên hệ với phòng khám để được tư vấn chi tiết hơn về tình trạng hiện tại và dịch vụ phù hợp nhất, sau đó chọn nhanh một khung giờ bên dưới.";
+        }
 
         if (hasMetal && hasInvis) {
             AIServiceSuggestionDto first = response.getServices().get(0);
@@ -217,6 +255,7 @@ public class AIBookingServiceImpl implements AIBookingService {
                 + ". Bạn hãy chọn 1 dịch vụ phù hợp nhất, sau đó chọn nhanh một khung giờ bên dưới.";
     }
 
+    // Chuẩn hóa text: bỏ dấu, viết thường để so khớp từ khóa dễ hơn
     private String normalizeText(String input) {
         if (input == null) return "";
         return java.text.Normalizer.normalize(input, java.text.Normalizer.Form.NFD)
@@ -227,10 +266,12 @@ public class AIBookingServiceImpl implements AIBookingService {
                 .trim();
     }
 
+    // Định dạng giá tiền để hiển thị thân thiện hơn trong câu trả lời
     private String formatPrice(double price) {
         return String.format("%,.0f VNĐ", price);
     }
 
+    // Tìm đúng slot trùng với giờ người dùng yêu cầu, nếu có
     private SlotDto findExactRequestedSlot(List<SlotDto> slots, String preferredTime) {
         if (slots == null || slots.isEmpty()) return null;
         if (preferredTime == null || preferredTime.isBlank()) return null;
@@ -249,6 +290,7 @@ public class AIBookingServiceImpl implements AIBookingService {
         }
     }
 
+    // Ưu tiên các slot gần giờ yêu cầu và có thể loại trừ đúng giờ đã bị đặt nếu cần
     private List<SlotDto> prioritizeAndExcludeRequestedTime(List<SlotDto> slots,
                                                             String preferredTime,
                                                             boolean excludeExactRequestedTime) {
@@ -270,6 +312,7 @@ public class AIBookingServiceImpl implements AIBookingService {
         }
     }
 
+    // Sắp xếp slot theo độ gần với giờ mong muốn để ưu tiên các giờ phù hợp nhất
     private List<SlotDto> prioritizeByPreferredTime(List<SlotDto> slots, String preferredTime) {
         if (slots == null || slots.isEmpty()) return List.of();
         if (preferredTime == null || preferredTime.isBlank()) return slots;
@@ -288,6 +331,7 @@ public class AIBookingServiceImpl implements AIBookingService {
         }
     }
 
+    // Kiểm tra một slot có thực sự còn khả dụng để đặt lịch hay không
     private boolean isSelectableSlot(SlotDto slot) {
         if (slot == null) return false;
         if (slot.isDisabled()) return false;
@@ -299,6 +343,7 @@ public class AIBookingServiceImpl implements AIBookingService {
         return slot.isAvailable();
     }
 
+    // Giữ lại chỉ những slot còn đặt được, loại bỏ slot disabled hoặc hết chỗ
     private List<SlotDto> keepSelectableSlots(List<SlotDto> slots) {
         if (slots == null || slots.isEmpty()) return List.of();
         return slots.stream()
@@ -306,6 +351,7 @@ public class AIBookingServiceImpl implements AIBookingService {
                 .collect(Collectors.toList());
     }
 
+    // Lấy thời lượng mặc định của dịch vụ chính để tính giờ kết thúc gợi ý
     private int getPrimaryDurationMinutes(Services primaryService) {
         if (primaryService == null || primaryService.getDurationMinutes() <= 0) {
             return 30;
@@ -313,11 +359,13 @@ public class AIBookingServiceImpl implements AIBookingService {
         return primaryService.getDurationMinutes();
     }
 
+    // Tính giờ kết thúc dự kiến dựa trên giờ bắt đầu slot và thời lượng dịch vụ
     private String calculateSuggestedEndTime(SlotDto slot, int durationMinutes) {
         if (slot == null || slot.getStartTime() == null) return "";
         return slot.getStartTime().plusMinutes(durationMinutes).toString();
     }
 
+    // Tạo chuỗi hiển thị đẹp cho 1 gợi ý slot, ví dụ: ngày + giờ bắt đầu + giờ kết thúc
     private String buildDisplayText(LocalDate date, SlotDto slot, int durationMinutes) {
         if (slot == null || slot.getStartTime() == null) return String.valueOf(date);
 
@@ -326,6 +374,7 @@ public class AIBookingServiceImpl implements AIBookingService {
         return date + " | " + start + " - " + end;
     }
 
+    // Kiểm tra text có chứa một trong các từ khóa được truyền vào hay không
     private boolean containsAnyText(String text, String... tokens) {
         if (text == null) return false;
         for (String token : tokens) {
@@ -334,5 +383,60 @@ public class AIBookingServiceImpl implements AIBookingService {
             }
         }
         return false;
+    }
+
+    // Kiểm tra đây có phải yêu cầu đặt lịch sớm nhất/gần nhất/ngay hay không
+    private boolean isEarliestRequest(String originalMessage, LLMBookingInterpretation interpretation) {
+        if (isEarliestText(originalMessage)) {
+            return true;
+        }
+
+        if (interpretation == null) {
+            return false;
+        }
+
+        String preferredTime = interpretation.getPreferredTime();
+        String preferredDate = interpretation.getPreferredDate();
+
+        return (preferredDate == null || preferredDate.isBlank())
+                && (preferredTime == null || preferredTime.isBlank())
+                && "high".equalsIgnoreCase(interpretation.getUrgency());
+    }
+
+    private boolean isEarliestText(String input) {
+        String text = normalizeText(input);
+
+        return containsAnyText(text,
+                "som nhat",
+                "som nhat co the",
+                "gan nhat",
+                "cang som cang tot",
+                "kham som",
+                "kham som nhat",
+                "dat lich som nhat",
+                "kham gan nhat",
+                "kham ngay",
+                "dat ngay",
+                "bay gio",
+                "ngay bay gio",
+                "hom nay cang som cang tot",
+                "trong ngay hom nay");
+    }
+
+    // Tìm ngày gần nhất còn slot khả dụng, ưu tiên hôm nay rồi đến các ngày tiếp theo
+    private LocalDate findNearestAvailableDate(Long userId, List<Long> serviceIds, int maxDaysToCheck) {
+        LocalDate today = LocalDate.now();
+
+        for (int i = 0; i <= maxDaysToCheck; i++) {
+            LocalDate candidate = today.plusDays(i);
+            List<SlotDto> candidateSlots = customerAppointmentService.getAvailableSlots(userId, serviceIds, candidate);
+            List<SlotDto> selectable = keepSelectableSlots(candidateSlots);
+
+            if (!selectable.isEmpty()) {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 }

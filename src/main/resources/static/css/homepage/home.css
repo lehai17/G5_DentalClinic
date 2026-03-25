@@ -152,6 +152,11 @@ body {
 
 .homepage-blog-title {
     white-space: normal !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    letter-spacing: 0 !important;
+    word-spacing: normal !important;
+    font-kerning: normal !important;
+    text-rendering: optimizeLegibility;
 }
 
 .section-subtitle {
