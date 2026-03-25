@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Controller
 @RequestMapping("/dentist/appointments")
 public class DentistAppointmentController {
@@ -35,8 +34,7 @@ public class DentistAppointmentController {
             MedicalRecordService medicalRecordService,
             AppointmentRepository appointmentRepository,
             DentistSessionService dentistSessionService,
-            UserRepository userRepository
-    ) {
+            UserRepository userRepository) {
         this.servicesRepository = servicesRepository;
         this.medicalRecordService = medicalRecordService;
         this.appointmentRepository = appointmentRepository;
@@ -48,13 +46,12 @@ public class DentistAppointmentController {
 
     @GetMapping("/{id}/examination")
     public String examinationPage(
-            @PathVariable Long id,
-            @RequestParam Long customerUserId,
-            @RequestParam(required = false) String weekStart,
+            @PathVariable("id") Long id,
+            @RequestParam("customerUserId") Long customerUserId,
+            @RequestParam(value = "weekStart", required = false) String weekStart,
             Model model,
             RedirectAttributes redirect,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         Long dentistUserId = resolveCurrentDentistUserId(authentication);
 
         Appointment appt;
@@ -67,7 +64,7 @@ public class DentistAppointmentController {
         if (appt.getStatus() == AppointmentStatus.CONFIRMED) {
             return buildWorkScheduleRedirect(weekStart);
         }
-        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa COMPLETED/WAITING_PAYMENT 
+        // ðŸ”¥ Chỉ chuyển sang EXAMINING nếu chưa COMPLETED/WAITING_PAYMENT
         if (appt.getStatus() != AppointmentStatus.COMPLETED
                 && appt.getStatus() != AppointmentStatus.WAITING_PAYMENT
                 && appt.getStatus() != AppointmentStatus.EXAMINING) {
@@ -88,8 +85,7 @@ public class DentistAppointmentController {
         model.addAttribute("appointmentNote", appt.getNotes());
         model.addAttribute("appointmentStatus", appt.getStatus().name());
 
-        MedicalRecord record =
-                medicalRecordService.findByAppointmentId(id).orElse(new MedicalRecord());
+        MedicalRecord record = medicalRecordService.findByAppointmentId(id).orElse(new MedicalRecord());
         record.setAppointment(appt);
         model.addAttribute("medicalRecord", record);
         model.addAttribute("historySteps", medicalRecordService.findReexamHistorySteps(id));
@@ -99,20 +95,18 @@ public class DentistAppointmentController {
 
     @PostMapping("/{id}/examination")
     public String saveExamination(
-            @PathVariable Long id,
-            @RequestParam Long customerUserId,
+            @PathVariable("id") Long id,
+            @RequestParam("customerUserId") Long customerUserId,
             @ModelAttribute MedicalRecord medicalRecord,
             @RequestParam(required = false) String weekStart, // âœ… THÊM
             RedirectAttributes redirect,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         try {
             dentistSessionService.saveExam(
                     id,
                     customerUserId,
                     resolveCurrentDentistUserId(authentication),
-                    medicalRecord
-            );
+                    medicalRecord);
         } catch (IllegalArgumentException ex) {
             redirect.addFlashAttribute("errorMessage", ex.getMessage());
             return buildWorkScheduleRedirect(weekStart);
@@ -128,13 +122,12 @@ public class DentistAppointmentController {
 
     @GetMapping("/{id}/billing-transfer")
     public String billingPage(
-            @PathVariable Long id,
-            @RequestParam Long customerUserId,
-            @RequestParam(required = false) String weekStart,
+            @PathVariable("id") Long id,
+            @RequestParam("customerUserId") Long customerUserId,
+            @RequestParam(value = "weekStart", required = false) String weekStart,
             Model model,
             RedirectAttributes redirect,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         Long dentistUserId = resolveCurrentDentistUserId(authentication);
         Appointment appt;
         try {
@@ -167,13 +160,12 @@ public class DentistAppointmentController {
 
     @PostMapping("/{id}/billing-transfer")
     public String saveBillingTransfer(
-            @PathVariable Long id,
-            @RequestParam Long customerUserId,
+            @PathVariable("id") Long id,
+            @RequestParam("customerUserId") Long customerUserId,
             @ModelAttribute BillingNote billingNote,
-            @RequestParam String weekStart,
+            @RequestParam("weekStart") String weekStart,
             RedirectAttributes redirect,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         Long dentistUserId = resolveCurrentDentistUserId(authentication);
         Appointment appt;
         try {
@@ -190,8 +182,7 @@ public class DentistAppointmentController {
                 id,
                 customerUserId,
                 dentistUserId,
-                billingNote
-        );
+                billingNote);
         redirect.addFlashAttribute("successMessage", "Billing saved");
         return "redirect:/dentist/work-schedule?weekStart=" + weekStart;
     }
@@ -225,8 +216,7 @@ public class DentistAppointmentController {
             String joined = details.stream()
                     .sorted(Comparator.comparing(
                             AppointmentDetail::getDetailOrder,
-                            Comparator.nullsLast(Integer::compareTo)
-                    ))
+                            Comparator.nullsLast(Integer::compareTo)))
                     .map(detail -> {
                         String name = detail.getServiceNameSnapshot();
                         if (name == null || name.isBlank()) {
@@ -252,4 +242,3 @@ public class DentistAppointmentController {
         return "";
     }
 }
-

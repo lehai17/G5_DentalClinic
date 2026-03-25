@@ -25,7 +25,7 @@ public class CustomerDetailController {
     }
 
     @GetMapping("/services/{id}")
-    public String serviceDetail(@PathVariable Long id, Model model) {
+    public String serviceDetail(@PathVariable("id") Long id, Model model) {
         Services service = serviceRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found"));
 
@@ -39,7 +39,7 @@ public class CustomerDetailController {
     }
 
     @GetMapping("/dentists/{id}")
-    public String dentistDetail(@PathVariable Long id, Model model) {
+    public String dentistDetail(@PathVariable("id") Long id, Model model) {
         DentistProfile dentist = dentistRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Dentist not found"));
 

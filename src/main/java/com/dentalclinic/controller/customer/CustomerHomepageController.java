@@ -42,13 +42,13 @@ public class CustomerHomepageController {
     private final CustomerVoucherWalletService customerVoucherWalletService;
 
     public CustomerHomepageController(CustomerProfileService profileService,
-                                      ServiceRepository serviceRepo,
-                                      DentistProfileRepository dentistRepo,
-                                      BlogRepository blogRepo,
-                                      UserRepository userRepository,
-                                      CustomerAppointmentService customerAppointmentService,
-                                      ReviewMarketingService reviewMarketingService,
-                                      CustomerVoucherWalletService customerVoucherWalletService) {
+            ServiceRepository serviceRepo,
+            DentistProfileRepository dentistRepo,
+            BlogRepository blogRepo,
+            UserRepository userRepository,
+            CustomerAppointmentService customerAppointmentService,
+            ReviewMarketingService reviewMarketingService,
+            CustomerVoucherWalletService customerVoucherWalletService) {
         this.profileService = profileService;
         this.serviceRepo = serviceRepo;
         this.dentistRepo = dentistRepo;
@@ -59,15 +59,15 @@ public class CustomerHomepageController {
         this.customerVoucherWalletService = customerVoucherWalletService;
     }
 
-    @GetMapping({"/", "/index", "/home"})
+    @GetMapping({ "/", "/index", "/home" })
     public String redirectToHomepage() {
         return "redirect:/homepage";
     }
 
-    @GetMapping({"/homepage", "/customer/homepage"})
-    public String showHomepage(@RequestParam(defaultValue = "0") int page,
-                               Authentication authentication,
-                               Model model) {
+    @GetMapping({ "/homepage", "/customer/homepage" })
+    public String showHomepage(@RequestParam(value = "page", defaultValue = "0") int page,
+            Authentication authentication,
+            Model model) {
         model.addAttribute("active", "homepage");
         model.addAttribute("featuredReviews", reviewMarketingService.getHomepageFeaturedReviews());
 
@@ -127,10 +127,10 @@ public class CustomerHomepageController {
     }
 
     @GetMapping("/customer/book")
-    public String bookingPage(@RequestParam(required = false) String status,
-                              @RequestParam(required = false) Long id,
-                              Authentication authentication,
-                              Model model) {
+    public String bookingPage(@RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "id", required = false) Long id,
+            Authentication authentication,
+            Model model) {
         Long currentUserId = resolveCurrentUserId(authentication);
         prepareBookingPage(model, null, currentUserId);
         applyBookingReturnStatus(model, currentUserId, status, id);
@@ -139,18 +139,20 @@ public class CustomerHomepageController {
 
     @GetMapping("/customer/appointments/{id}/rebook")
     public String rebookAppointment(@PathVariable("id") Long appointmentId,
-                                    Authentication authentication,
-                                    Model model,
-                                    RedirectAttributes redirectAttributes) {
+            Authentication authentication,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         Long currentUserId = resolveCurrentUserId(authentication);
         if (currentUserId == null) {
             return "redirect:/login";
         }
 
         try {
-            RebookPrefillDto rebookPrefill = customerAppointmentService.prepareRebookPrefill(currentUserId, appointmentId);
+            RebookPrefillDto rebookPrefill = customerAppointmentService.prepareRebookPrefill(currentUserId,
+                    appointmentId);
             prepareBookingPage(model, rebookPrefill, currentUserId);
-            model.addAttribute("infoMessage", "Đã điền sẵn thông tin từ lịch hẹn cũ. Vui lòng chọn ngày và giờ khám mới.");
+            model.addAttribute("infoMessage",
+                    "Đã điền sẵn thông tin từ lịch hẹn cũ. Vui lòng chọn ngày và giờ khám mới.");
             if (rebookPrefill.getWarningMessage() != null && !rebookPrefill.getWarningMessage().isBlank()) {
                 model.addAttribute("warningMessage", rebookPrefill.getWarningMessage());
             }
@@ -176,11 +178,13 @@ public class CustomerHomepageController {
     }
 
     private String resolveBookingContactChannel(Long currentUserId, RebookPrefillDto rebookPrefill) {
-        if (rebookPrefill != null && rebookPrefill.getContactChannel() != null && !rebookPrefill.getContactChannel().isBlank()) {
+        if (rebookPrefill != null && rebookPrefill.getContactChannel() != null
+                && !rebookPrefill.getContactChannel().isBlank()) {
             return rebookPrefill.getContactChannel().trim().toUpperCase();
         }
 
-        CustomerProfile profile = currentUserId != null ? profileService.getCurrentCustomerProfile(currentUserId) : null;
+        CustomerProfile profile = currentUserId != null ? profileService.getCurrentCustomerProfile(currentUserId)
+                : null;
         if (profile != null && profile.getPhone() != null && !profile.getPhone().isBlank()) {
             return "PHONE";
         }
@@ -197,11 +201,13 @@ public class CustomerHomepageController {
     }
 
     private String resolveBookingContactValue(Long currentUserId, RebookPrefillDto rebookPrefill) {
-        if (rebookPrefill != null && rebookPrefill.getContactValue() != null && !rebookPrefill.getContactValue().isBlank()) {
+        if (rebookPrefill != null && rebookPrefill.getContactValue() != null
+                && !rebookPrefill.getContactValue().isBlank()) {
             return rebookPrefill.getContactValue().trim();
         }
 
-        CustomerProfile profile = currentUserId != null ? profileService.getCurrentCustomerProfile(currentUserId) : null;
+        CustomerProfile profile = currentUserId != null ? profileService.getCurrentCustomerProfile(currentUserId)
+                : null;
         if (profile != null && profile.getPhone() != null && !profile.getPhone().isBlank()) {
             return profile.getPhone().trim();
         }
@@ -243,14 +249,16 @@ public class CustomerHomepageController {
         if ("fail".equals(normalizedStatus) && appointmentId != null) {
             model.addAttribute("bookingReturnType", "warning");
             model.addAttribute("bookingReturnTitle", "Thanh toán chưa hoàn tất");
-            model.addAttribute("bookingReturnMessage", "Thanh toán không thành công hoặc giao dịch không làm thay đổi lịch hẹn.");
+            model.addAttribute("bookingReturnMessage",
+                    "Thanh toán không thành công hoặc giao dịch không làm thay đổi lịch hẹn.");
             model.addAttribute("bookingReturnAppointmentId", appointmentId);
             return;
         }
 
         model.addAttribute("bookingReturnType", "info");
         model.addAttribute("bookingReturnTitle", "Không ghi nhận thay đổi");
-        model.addAttribute("bookingReturnMessage", "Không ghi nhận kết quả đặt lịch hợp lệ từ liên kết này. Có thể bạn đã mở lại liên kết cũ hoặc đường dẫn không hợp lệ.");
+        model.addAttribute("bookingReturnMessage",
+                "Không ghi nhận kết quả đặt lịch hợp lệ từ liên kết này. Có thể bạn đã mở lại liên kết cũ hoặc đường dẫn không hợp lệ.");
         model.addAttribute("bookingReturnAppointmentId", appointmentId);
     }
 

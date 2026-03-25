@@ -677,7 +677,13 @@ Tin nhắn khách hàng:
     // Kiểm tra đây có phải ca chỉnh nha phức tạp cần ưu tiên niềng truyền thống hay không
     private boolean isComplexOrthodonticCase(String raw) {
         return containsAnyLoose(raw,
-                "mom", "rang mom", "can sau", "can ho", "can cheo", "lech ham",
+                "mom", "rang mom",
+                "rang ho", "ho rang", "ho ham",
+                "rang vau", "vau", "bi vau",
+                "rang cua dua ra ngoai", "rang tren dua ra ngoai", "ham tren dua ra",
+                "overjet", "muon chinh ho", "muon chinh vau",
+
+                "can sau", "can ho", "can cheo", "lech ham",
                 "sai khop can", "khop can lech", "khop can nguoc", "underbite",
                 "overbite", "open bite", "crossbite", "chen chuc nang",
                 "rang moc ngam", "rang moc ket", "rang moc sai vi tri nhieu",
@@ -691,8 +697,14 @@ Tin nhắn khách hàng:
                 "rang lech", "khap khenh", "chen chuc", "rang khong deu", "rang lon xon",
                 "rang xoay", "rang chong len nhau", "rang thua", "khe ho", "khe thua",
                 "muon rang deu hon", "keo deu rang", "sap deu rang",
+
+                "rang ho", "ho rang", "ho ham",
+                "rang vau", "vau", "bi vau",
+                "rang cua dua ra ngoai", "rang tren dua ra ngoai", "ham tren dua ra",
+                "muon chinh ho", "muon chinh vau", "overjet",
+
                 "chinh khop can", "sai khop can", "can sau", "can ho", "can cheo",
-                "ho", "mom", "rang cua chia ra ngoai", "ham duoi dua ra truoc");
+                "mom", "rang mom", "ham duoi dua ra truoc");
     }
 
     // Kiểm tra text có chứa một trong các từ khóa đơn giản được truyền vào hay không

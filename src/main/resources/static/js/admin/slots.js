@@ -280,6 +280,32 @@ const AdminSlots = {
         alert('Lỗi kết nối máy chủ.');
       }
     }
+  },
+
+  async deleteMonthly() {
+    const monthStr = prompt('Nhập Tháng/Năm để HỦY lịch làm việc (Định dạng: YYYY-MM)\n(Lưu ý: Hệ thống chỉ cho phép hủy nếu CHƯA có bất kỳ lịch hẹn nào trong tháng này)', STATE.currentMonth);
+    if (!monthStr) return;
+    if (!monthStr.match(/^\d{4}-\d{2}$/)) {
+      alert('Định dạng không hợp lệ. Vui lòng nhập đúng YYYY-MM (Ví dụ: 2026-05).');
+      return;
+    }
+    if (confirm(`Xác nhận HỦY TOÀN BỘ lịch cho tháng ${monthStr}?\nHành động này sẽ xóa sạch Slots và Lịch làm việc bác sĩ!`)) {
+      try {
+        const resp = await fetch(`/admin/slots/api/delete-monthly?month=${monthStr}`, { method: 'POST' });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          alert(`THẤT BẠI: ${data.error || 'Lỗi server'}`);
+          return;
+        }
+
+        alert(`THÀNH CÔNG: ${data.message}`);
+        location.href = `/admin/slots?month=${monthStr}`;
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi kết nối máy chủ.');
+      }
+    }
   }
 };
 

@@ -46,17 +46,17 @@ public class AdminBlogController {
     private final BlogWorkflowService workflowService;
 
     public AdminBlogController(BlogRepository blogRepository,
-                               UserRepository userRepository,
-                               BlogWorkflowService workflowService) {
+            UserRepository userRepository,
+            BlogWorkflowService workflowService) {
         this.blogRepository = blogRepository;
         this.userRepository = userRepository;
         this.workflowService = workflowService;
     }
 
     @GetMapping
-    public String dashboard(@RequestParam(defaultValue = "PENDING") BlogStatus status,
-                            @RequestParam(defaultValue = "0") int page,
-                            Model model) {
+    public String dashboard(@RequestParam(value = "status", defaultValue = "PENDING") BlogStatus status,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            Model model) {
         Pageable pageable = PageRequest.of(page, 10);
 
         model.addAttribute("blogPage", blogRepository.findByStatusOrderByUpdatedAtDesc(status, pageable));
@@ -71,7 +71,7 @@ public class AdminBlogController {
     }
 
     @GetMapping("/{id}")
-    public String detail(@PathVariable Long id, Model model) {
+    public String detail(@PathVariable("id") Long id, Model model) {
         Blog blog = blogRepository.findById(id).orElseThrow();
         model.addAttribute("blog", blog);
         model.addAttribute("activePage", "blogs");
@@ -79,7 +79,7 @@ public class AdminBlogController {
     }
 
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model) {
+    public String editForm(@PathVariable("id") Long id, Model model) {
         Blog blog = blogRepository.findById(id).orElseThrow();
 
         if (!(blog.getStatus() == BlogStatus.PENDING || blog.getStatus() == BlogStatus.APPROVED)) {
@@ -92,10 +92,10 @@ public class AdminBlogController {
     }
 
     @PostMapping("/{id}/update")
-    public String update(@PathVariable Long id,
-                         @RequestParam String title,
-                         @RequestParam String summary,
-                         @RequestParam String content) {
+    public String update(@PathVariable("id") Long id,
+            @RequestParam("title") String title,
+            @RequestParam("summary") String summary,
+            @RequestParam("content") String content) {
 
         Blog blog = blogRepository.findById(id).orElseThrow();
 
@@ -113,7 +113,7 @@ public class AdminBlogController {
     }
 
     @PostMapping("/{id}/approve")
-    public String approve(@PathVariable Long id, Authentication authentication) {
+    public String approve(@PathVariable("id") Long id, Authentication authentication) {
         User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
         Blog blog = blogRepository.findById(id).orElseThrow();
         workflowService.approve(blog, admin);
@@ -121,10 +121,10 @@ public class AdminBlogController {
     }
 
     @PostMapping("/{id}/reject")
-    public String reject(@PathVariable Long id,
-                         @RequestParam String rejectionReason,
-                         @RequestParam(required = false) BlogStatus returnStatus,
-                         Authentication authentication) {
+    public String reject(@PathVariable("id") Long id,
+            @RequestParam("rejectionReason") String rejectionReason,
+            @RequestParam(value = "returnStatus", required = false) BlogStatus returnStatus,
+            Authentication authentication) {
 
         User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
         Blog blog = blogRepository.findById(id).orElseThrow();
@@ -144,10 +144,10 @@ public class AdminBlogController {
 
     @PostMapping("/create")
     public String create(@ModelAttribute Blog form,
-                         @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
-                         @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
-                         Authentication authentication,
-                         Model model) throws IOException {
+            @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
+            @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
+            Authentication authentication,
+            Model model) throws IOException {
 
         User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
 

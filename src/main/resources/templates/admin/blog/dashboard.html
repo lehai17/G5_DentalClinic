@@ -139,7 +139,7 @@
                     <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
 
                         <!-- Approve: hiện cho PENDING hoặc REJECTED -->
-                        <form th:if="${b.status.name() == 'PENDING' or b.status.name() == 'REJECTED'}"
+                        <form th:if="${b.status.name() == 'PENDING' }"
                               th:action="@{'/admin/blogs/' + ${b.id} + '/approve'}"
                               method="post"
                               style="display:inline-flex; align-items:center;">
