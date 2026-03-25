@@ -26,7 +26,7 @@
       return window.CustomerFeedback.alert({
         message: String(message || ''),
         type: type || 'info',
-        title: String(title || 'Thong bao')
+        title: String(title || 'Thông báo')
       });
     }
     alert(String(message || ''));
@@ -72,20 +72,20 @@
 
     if (channel === 'EMAIL') {
       labelEl.innerHTML = 'Email <span class="required">*</span>';
-      inputEl.placeholder = 'Nhap email lien he';
+      inputEl.placeholder = 'Nhập email liên hệ';
       inputEl.type = 'email';
       return;
     }
 
     if (channel === 'PHONE') {
-      labelEl.innerHTML = 'So dien thoai <span class="required">*</span>';
-      inputEl.placeholder = 'Nhap so dien thoai lien he';
+      labelEl.innerHTML = 'Số điện thoại <span class="required">*</span>';
+      inputEl.placeholder = 'Nhập số điện thoại liên hệ';
       inputEl.type = 'text';
       return;
     }
 
-    labelEl.innerHTML = 'So dien thoai / Email <span class="required">*</span>';
-    inputEl.placeholder = 'Nhap so dien thoai hoac email';
+    labelEl.innerHTML = 'Số điện thoại / Email <span class="required">*</span>';
+    inputEl.placeholder = 'Nhập số điện thoại hoặc email';
     inputEl.type = 'text';
   }
 

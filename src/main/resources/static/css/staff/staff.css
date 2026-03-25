@@ -239,6 +239,65 @@ button {
     color: white;
 }
 
+.staff-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.appointment-summary-row {
+    cursor: pointer;
+}
+
+.appointment-summary-row:hover {
+    background: #f8fafc;
+}
+
+.appointment-detail-row {
+    display: none;
+}
+
+.appointment-detail-row.is-open {
+    display: table-row;
+}
+
+.appointment-detail-row td {
+    background: #f8fafc;
+    padding-top: 0;
+}
+
+.appointment-detail-card {
+    margin-top: 4px;
+    padding: 16px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.appointment-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.appointment-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.appointment-detail-item--wide {
+    grid-column: 1 / -1;
+}
+
+.appointment-detail-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
 /* ===============================
    RESPONSIVE
 ================================ */
