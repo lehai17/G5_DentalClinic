@@ -596,7 +596,7 @@ public class AdminSlotService {
         if (activeDentists.isEmpty())
             return;
 
-        // 3. Quét từng Bác Sĩ qua các ng y
+        // 3. Quét từng Bác Sĩ qua các ngày
         LocalDate d = start;
         while (!d.isAfter(end)) {
             if (d.getDayOfWeek() != DayOfWeek.SUNDAY) {
@@ -618,6 +618,83 @@ public class AdminSlotService {
                                 s.setAvailable(true);
                                 dentistScheduleRepository.save(s);
                                 totalSaves++;
+                            }
+                        }
+                    }
+                }
+            }
+            d = d.plusDays(1);
+        }
+    }
+
+    @Transactional
+    public void deleteMonthlySchedule(YearMonth ym) {
+        LocalDate start = ym.atDay(1);
+        LocalDate end = ym.atEndOfMonth();
+
+        // Check for active appointments
+        List<AppointmentStatus> activeStatuses = List.of(
+                AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING,
+                AppointmentStatus.PENDING_DEPOSIT, AppointmentStatus.CHECKED_IN,
+                AppointmentStatus.EXAMINING, AppointmentStatus.IN_PROGRESS,
+                AppointmentStatus.WAITING_PAYMENT, AppointmentStatus.REEXAM,
+                AppointmentStatus.COMPLETED);
+
+        long appCount = appointmentRepository.countByDateBetweenAndStatusIn(start, end, activeStatuses);
+        if (appCount > 0) {
+            throw new RuntimeException("Không thể hủy lịch tháng " + ym + " vì đang có " + appCount
+                    + " lịch hẹn (bao gồm cả lịch đã hoàn thành).");
+        }
+
+        // Delete DentistSchedule
+        dentistScheduleRepository.deleteByDateBetween(start, end);
+
+        // Delete Slots
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd = end.atTime(LocalTime.MAX);
+        List<Slot> slots = slotRepository.findAllSlotsInRange(rangeStart, rangeEnd);
+        if (slots != null && !slots.isEmpty()) {
+            slotRepository.deleteAll(slots);
+        }
+    }
+
+    @Transactional
+    public void ensureRollingSchedule(int days) {
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(days);
+
+        // Ensure Slots exist
+        generateSlots(start, end, 3); // Default capacity 3
+
+        // Ensure DentistSchedules exist
+        List<DentistProfile> activeDentists = dentistProfileRepository.findAll().stream()
+                .filter(d -> d.getUser() != null
+                        && d.getUser().getStatus() == com.dentalclinic.model.user.UserStatus.ACTIVE)
+                .toList();
+
+        if (activeDentists.isEmpty())
+            return;
+
+        LocalDate d = start;
+        while (!d.isAfter(end)) {
+            if (d.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                final LocalDate currentDay = d;
+                for (DentistProfile dentist : activeDentists) {
+                    List<com.dentalclinic.model.schedule.DentistSchedule> existing = dentistScheduleRepository
+                            .findByDentist_IdAndDate(dentist.getId(), currentDay);
+
+                    if (existing == null || existing.isEmpty()) {
+                        int[][] shifts = { { 8, 12 }, { 13, 17 } };
+                        for (int[] shift : shifts) {
+                            for (int hour = shift[0]; hour < shift[1]; hour++) {
+                                com.dentalclinic.model.schedule.DentistSchedule s = new com.dentalclinic.model.schedule.DentistSchedule();
+                                s.setDentist(dentist);
+                                s.setDate(currentDay);
+                                s.setDayOfWeek(currentDay.getDayOfWeek());
+                                s.setStartTime(LocalTime.of(hour, 0));
+                                s.setEndTime(LocalTime.of(hour + 1, 0));
+                                s.setAvailable(true);
+                                dentistScheduleRepository.save(s);
                             }
                         }
                     }

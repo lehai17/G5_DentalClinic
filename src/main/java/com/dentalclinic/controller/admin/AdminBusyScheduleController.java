@@ -21,8 +21,8 @@ public class AdminBusyScheduleController {
 
     @GetMapping
     public String listRequests(
-            @RequestParam(required = false) String dentistName,
-            @RequestParam(required = false, defaultValue = "newest") String sort,
+            @RequestParam(value = "dentistName", required = false) String dentistName,
+            @RequestParam(value = "sort", required = false, defaultValue = "newest") String sort,
             Model model) {
 
         model.addAttribute("activePage", "busy-schedule");
@@ -39,7 +39,7 @@ public class AdminBusyScheduleController {
     }
 
     @PostMapping("/approve")
-    public String approveRequest(@RequestParam Long id, RedirectAttributes ra) {
+    public String approveRequest(@RequestParam("id") Long id, RedirectAttributes ra) {
         try {
             busyScheduleService.updateStatus(id, "APPROVED");
             ra.addFlashAttribute("message", "Đã phê duyệt đơn nghỉ thành công.");
@@ -50,7 +50,7 @@ public class AdminBusyScheduleController {
     }
 
     @PostMapping("/reject")
-    public String rejectRequest(@RequestParam Long id, RedirectAttributes ra) {
+    public String rejectRequest(@RequestParam("id") Long id, RedirectAttributes ra) {
         try {
             busyScheduleService.updateStatus(id, "REJECTED");
             ra.addFlashAttribute("message", "Đã từ chối đơn nghỉ.");
@@ -59,6 +59,5 @@ public class AdminBusyScheduleController {
         }
         return "redirect:/admin/busy-schedule";
     }
-
 
 }

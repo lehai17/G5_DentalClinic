@@ -37,7 +37,7 @@ public class CustomerAppointmentController {
     private final UserRepository userRepository;
 
     public CustomerAppointmentController(CustomerAppointmentService customerAppointmentService,
-                                         UserRepository userRepository) {
+            UserRepository userRepository) {
         this.customerAppointmentService = customerAppointmentService;
         this.userRepository = userRepository;
     }
@@ -45,19 +45,23 @@ public class CustomerAppointmentController {
     private Long getCurrentUserId(HttpSession session) {
         Object uid = session.getAttribute(SESSION_USER_ID);
         Long userId = null;
-        if (uid instanceof Long) userId = (Long) uid;
-        else if (uid instanceof Number) userId = ((Number) uid).longValue();
-        if (userId == null || !userRepository.existsById(userId)) return null;
+        if (uid instanceof Long)
+            userId = (Long) uid;
+        else if (uid instanceof Number)
+            userId = ((Number) uid).longValue();
+        if (userId == null || !userRepository.existsById(userId))
+            return null;
         return userId;
     }
 
     @GetMapping("/slots")
-    public ResponseEntity<?> getSlots(@RequestParam(required = false) Long serviceId,
-                                      @RequestParam(required = false) List<Long> serviceIds,
-                                      @RequestParam(required = false) String date,
-                                      HttpSession session) {
+    public ResponseEntity<?> getSlots(@RequestParam(value = "serviceId", required = false) Long serviceId,
+            @RequestParam(value = "serviceIds", required = false) List<Long> serviceIds,
+            @RequestParam(value = "date", required = false) String date,
+            HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         LocalDate parsedDate = (date != null && !date.isBlank()) ? LocalDate.parse(date) : LocalDate.now();
 
@@ -76,9 +80,10 @@ public class CustomerAppointmentController {
     }
 
     @GetMapping("/slots/all")
-    public ResponseEntity<?> getAllSlots(@RequestParam String date, HttpSession session) {
+    public ResponseEntity<?> getAllSlots(@RequestParam("date") String date, HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         LocalDate parsedDate = LocalDate.parse(date);
         List<SlotDto> slots = customerAppointmentService.getAllSlotsForDate(parsedDate);
@@ -86,49 +91,57 @@ public class CustomerAppointmentController {
     }
 
     @PostMapping("/appointments")
-    public ResponseEntity<?> createAppointment(@Valid @RequestBody CreateAppointmentRequest request, HttpSession session) {
+    public ResponseEntity<?> createAppointment(@Valid @RequestBody CreateAppointmentRequest request,
+            HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         AppointmentDto created = customerAppointmentService.createAppointment(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PostMapping("/appointments/preview")
-    public ResponseEntity<?> previewAppointmentBooking(@RequestBody BookingPricePreviewRequest request, HttpSession session) {
+    public ResponseEntity<?> previewAppointmentBooking(@RequestBody BookingPricePreviewRequest request,
+            HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         BookingPricePreviewDto preview = customerAppointmentService.previewBooking(userId, request);
         return ResponseEntity.ok(preview);
     }
 
     @PostMapping("/appointments/{id}/confirm")
-    public ResponseEntity<?> confirmAppointment(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> confirmAppointment(@PathVariable("id") Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         AppointmentDto confirmed = customerAppointmentService.confirmAppointment(id);
         return ResponseEntity.ok(confirmed);
     }
 
     @GetMapping("/appointments")
-    public ResponseEntity<?> getMyAppointments(@RequestParam(required = false) Integer page,
-                                               @RequestParam(required = false) Integer size,
-                                               @RequestParam(required = false) String keyword,
-                                               @RequestParam(required = false, defaultValue = "date_desc") String sort,
-                                               @RequestParam(required = false, defaultValue = "default") String view,
-                                               HttpSession session) {
+    public ResponseEntity<?> getMyAppointments(@RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "sort", required = false, defaultValue = "date_desc") String sort,
+            @RequestParam(value = "view", required = false, defaultValue = "default") String view,
+            HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         String normalizedSort = customerAppointmentService.normalizeAppointmentSort(sort);
         String normalizedView = customerAppointmentService.normalizeAppointmentView(view);
 
-        if (page != null || size != null || (keyword != null && !keyword.isBlank()) || (sort != null && !sort.isBlank()) || (view != null && !view.isBlank())) {
+        if (page != null || size != null || (keyword != null && !keyword.isBlank()) || (sort != null && !sort.isBlank())
+                || (view != null && !view.isBlank())) {
             int p = page == null ? 0 : page;
             int s = size == null ? 5 : size;
-            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, normalizedSort, normalizedView);
+            var resultPage = customerAppointmentService.getMyAppointmentsPage(userId, p, s, keyword, normalizedSort,
+                    normalizedView);
             return ResponseEntity.ok(Map.of(
                     "content", resultPage.getContent(),
                     "page", resultPage.getNumber(),
@@ -136,8 +149,7 @@ public class CustomerAppointmentController {
                     "totalPages", resultPage.getTotalPages(),
                     "totalElements", resultPage.getTotalElements(),
                     "sort", normalizedSort,
-                    "view", normalizedView
-            ));
+                    "view", normalizedView));
         }
 
         List<AppointmentDto> list = customerAppointmentService.getMyAppointments(userId, normalizedView);
@@ -145,54 +157,56 @@ public class CustomerAppointmentController {
     }
 
     @GetMapping("/appointments/{id}")
-    public ResponseEntity<?> getAppointmentDetail(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> getAppointmentDetail(@PathVariable("id") Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         Optional<AppointmentDto> detail = customerAppointmentService.getAppointmentDetail(userId, id);
         return detail.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/appointments/{id}/checkin")
-    public ResponseEntity<?> checkIn(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> checkIn(@PathVariable("id") Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
         try {
             customerAppointmentService.checkIn(userId, id);
             return ResponseEntity.badRequest().body(Map.of(
                     "error", "CHECKIN_NOT_ALLOWED",
-                    "message", "Luồng hiện tại không sử dụng bước check-in."
-            ));
+                    "message", "Luồng hiện tại không sử dụng bước check-in."));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", "CHECKIN_NOT_ALLOWED",
-                    "message", ex.getMessage() != null ? ex.getMessage() : "Không thể check-in ở bước này."
-            ));
+                    "message", ex.getMessage() != null ? ex.getMessage() : "Không thể check-in ở bước này."));
         }
     }
 
     @PostMapping("/appointments/{id}/cancel")
-    public ResponseEntity<?> cancel(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> cancel(@PathVariable("id") Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         AppointmentDto result = customerAppointmentService.cancelAppointment(userId, id);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/appointments/{id}/hide")
-    public ResponseEntity<?> hideCancelledAppointment(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> hideCancelledAppointment(@PathVariable("id") Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         customerAppointmentService.hideCancelledAppointmentFromHistory(userId, id);
         return ResponseEntity.ok(Map.of("success", true, "message", "Đã ẩn lịch hẹn đã hủy khỏi danh sách chính."));
     }
 
     @PostMapping("/appointments/{id}/review")
-    public ResponseEntity<?> createReview(@PathVariable Long id,
-                                          @Valid @RequestBody CreateReviewRequest request,
-                                          HttpSession session) {
+    public ResponseEntity<?> createReview(@PathVariable("id") Long id,
+            @Valid @RequestBody CreateReviewRequest request,
+            HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -206,14 +220,14 @@ public class CustomerAppointmentController {
                 "message", "Đã gửi đánh giá bác sĩ và dịch vụ thành công.",
                 "dentistRating", review.getDentistRating(),
                 "serviceRating", review.getServiceRating(),
-                "comment", review.getComment() == null ? "" : review.getComment()
-        ));
+                "comment", review.getComment() == null ? "" : review.getComment()));
     }
 
     @GetMapping("/appointments/detail/{id}")
-    public ResponseEntity<?> getAppointmentDetailForSuccess(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> getAppointmentDetailForSuccess(@PathVariable("id") Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập."));
 
         Optional<AppointmentDto> detail = customerAppointmentService.getAppointmentDetail(userId, id);
 

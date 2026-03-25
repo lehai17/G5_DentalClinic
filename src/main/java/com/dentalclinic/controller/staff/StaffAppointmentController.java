@@ -38,7 +38,7 @@ public class StaffAppointmentController {
     private ServiceRepository serviceRepository;
 
     @GetMapping("/dashboard")
-    public String dashboard(@RequestParam(required = false, defaultValue = "today") String view,
+    public String dashboard(@RequestParam(value = "view", required = false, defaultValue = "today") String view,
             Model model) {
 
         var appointments = staffAppointmentService.getAllAppointments();
@@ -98,10 +98,10 @@ public class StaffAppointmentController {
     }
 
     @GetMapping("/appointments")
-    public String appointments(@RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "") String serviceKeyword,
-            @RequestParam(required = false) String sort,
-            @RequestParam(defaultValue = "0") int page,
+    public String appointments(@RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "serviceKeyword", defaultValue = "") String serviceKeyword,
+            @RequestParam(value = "sort", required = false) String sort,
+            @RequestParam(value = "page", defaultValue = "0") int page,
             Model model) {
 
         model.addAttribute("pageTitle", "Quản lý lịch hẹn");
@@ -125,7 +125,7 @@ public class StaffAppointmentController {
     }
 
     @GetMapping("/wallet/withdraw-requests")
-    public String walletWithdrawRequests(@RequestParam(defaultValue = "1") int page, Model model) {
+    public String walletWithdrawRequests(@RequestParam(value = "page", defaultValue = "1") int page, Model model) {
         List<WalletTransaction> requests = staffAppointmentService.getPendingWithdrawalRequests();
         int pageSize = 3;
         int totalItems = requests.size();
@@ -152,9 +152,9 @@ public class StaffAppointmentController {
 
     @GetMapping("/walk-in/slots")
     @ResponseBody
-    public ResponseEntity<?> getWalkInSlots(@RequestParam(required = false) Long serviceId,
-            @RequestParam(required = false) List<Long> serviceIds,
-            @RequestParam String date) {
+    public ResponseEntity<?> getWalkInSlots(@RequestParam(value = "serviceId", required = false) Long serviceId,
+            @RequestParam(value = "serviceIds", required = false) List<Long> serviceIds,
+            @RequestParam("date") String date) {
         LocalDate parsedDate = LocalDate.parse(date);
         List<Long> resolvedServiceIds = new ArrayList<>();
         if (serviceIds != null) {
@@ -169,7 +169,7 @@ public class StaffAppointmentController {
 
     @GetMapping("/walk-in/slots/all")
     @ResponseBody
-    public ResponseEntity<?> getAllWalkInSlots(@RequestParam String date) {
+    public ResponseEntity<?> getAllWalkInSlots(@RequestParam("date") String date) {
         return ResponseEntity.ok(staffAppointmentService.getAllWalkInSlotsForDate(LocalDate.parse(date)));
     }
 
@@ -195,15 +195,15 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/confirm")
     @ResponseBody
-    public void confirm(@RequestParam Long id) {
+    public void confirm(@RequestParam("id") Long id) {
         staffAppointmentService.confirmAppointment(id);
     }
 
     @PostMapping("/appointments/assign")
     @ResponseBody
     public ResponseEntity<?> assign(
-            @RequestParam Long appointmentId,
-            @RequestParam Long dentistId) {
+            @RequestParam("appointmentId") Long appointmentId,
+            @RequestParam("dentistId") Long dentistId) {
 
         try {
             staffAppointmentService.assignDentist(appointmentId, dentistId);
@@ -215,27 +215,28 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/complete")
     @ResponseBody
-    public void complete(@RequestParam Long id) {
+    public void complete(@RequestParam("id") Long id) {
         staffAppointmentService.completeAppointment(id);
     }
 
     @PostMapping("/appointments/cancel")
     @ResponseBody
     public void cancel(
-            @RequestParam Long id,
-            @RequestParam String reason) {
+            @RequestParam("id") Long id,
+            @RequestParam("reason") String reason) {
         staffAppointmentService.cancelAppointment(id, reason);
     }
 
     @PostMapping("/appointments/checkin")
     @ResponseBody
-    public void checkin(@RequestParam Long id) {
+    public void checkin(@RequestParam("id") Long id) {
         staffAppointmentService.checkInAppointment(id);
     }
 
     @GetMapping("/appointments/available-dentists") // Thêm /appointments vào đây
     @ResponseBody
-    public ResponseEntity<List<DentistProfile>> getAvailableDentists(@RequestParam Long appointmentId) {
+    public ResponseEntity<List<DentistProfile>> getAvailableDentists(
+            @RequestParam("appointmentId") Long appointmentId) {
         List<DentistProfile> availableDentists = staffAppointmentService
                 .getAvailableDentistsForAppointment(appointmentId);
         return ResponseEntity.ok(availableDentists);
@@ -243,7 +244,7 @@ public class StaffAppointmentController {
 
     @GetMapping("/appointments/{id}/invoice-preview")
     @ResponseBody
-    public ResponseEntity<?> invoicePreview(@PathVariable Long id) {
+    public ResponseEntity<?> invoicePreview(@PathVariable("id") Long id) {
         try {
             AppointmentDto preview = staffAppointmentService.getInvoicePreview(id);
             return ResponseEntity.ok(preview);
@@ -254,7 +255,7 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/{id}/payment-options")
     @ResponseBody
-    public ResponseEntity<?> paymentOptions(@PathVariable Long id) {
+    public ResponseEntity<?> paymentOptions(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(staffAppointmentService.preparePaymentOptions(id));
         } catch (RuntimeException e) {
@@ -264,7 +265,7 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/{id}/pay-wallet")
     @ResponseBody
-    public ResponseEntity<?> payWithWallet(@PathVariable Long id) {
+    public ResponseEntity<?> payWithWallet(@PathVariable("id") Long id) {
         try {
             Appointment appointment = staffAppointmentService.payWithWalletByStaff(id);
             return ResponseEntity.ok(appointment.getStatus().name());
@@ -275,7 +276,8 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/{id}/confirm-manual-payment")
     @ResponseBody
-    public ResponseEntity<?> confirmManualPayment(@PathVariable Long id, @RequestParam BigDecimal paidAmount) {
+    public ResponseEntity<?> confirmManualPayment(@PathVariable("id") Long id,
+            @RequestParam("paidAmount") BigDecimal paidAmount) {
         try {
             Appointment appointment = staffAppointmentService.confirmManualPayment(id, paidAmount);
             return ResponseEntity.ok(appointment.getStatus().name());
@@ -286,7 +288,7 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/{id}/payos-link")
     @ResponseBody
-    public ResponseEntity<?> createPayOsLink(@PathVariable Long id) {
+    public ResponseEntity<?> createPayOsLink(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(staffAppointmentService.createPayOsQr(id));
         } catch (RuntimeException e) {
@@ -296,7 +298,7 @@ public class StaffAppointmentController {
 
     @GetMapping("/appointments/{id}/payos-status")
     @ResponseBody
-    public ResponseEntity<?> payOsStatus(@PathVariable Long id) {
+    public ResponseEntity<?> payOsStatus(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(staffAppointmentService.getPayOsPaymentStatus(id));
         } catch (RuntimeException e) {
@@ -306,7 +308,7 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/process-payment")
     @ResponseBody
-    public ResponseEntity<?> processPayment(@RequestParam Long id) {
+    public ResponseEntity<?> processPayment(@RequestParam("id") Long id) {
         try {
             staffAppointmentService.processPayment(id);
             return ResponseEntity.ok().build();
@@ -317,13 +319,12 @@ public class StaffAppointmentController {
 
     @PostMapping("/wallet/withdraw-requests/{id}/approve")
     @ResponseBody
-    public ResponseEntity<?> approveWithdrawRequest(@PathVariable Long id) {
+    public ResponseEntity<?> approveWithdrawRequest(@PathVariable("id") Long id) {
         try {
             WalletTransaction transaction = staffAppointmentService.approveWithdrawalRequest(id);
             return ResponseEntity.ok(Map.of(
                     "id", transaction.getId(),
-                    "status", transaction.getStatus().name()
-            ));
+                    "status", transaction.getStatus().name()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -331,13 +332,12 @@ public class StaffAppointmentController {
 
     @PostMapping("/wallet/withdraw-requests/{id}/reject")
     @ResponseBody
-    public ResponseEntity<?> rejectWithdrawRequest(@PathVariable Long id, @RequestParam String reason) {
+    public ResponseEntity<?> rejectWithdrawRequest(@PathVariable("id") Long id, @RequestParam("reason") String reason) {
         try {
             WalletTransaction transaction = staffAppointmentService.rejectWithdrawalRequest(id, reason);
             return ResponseEntity.ok(Map.of(
                     "id", transaction.getId(),
-                    "status", transaction.getStatus().name()
-            ));
+                    "status", transaction.getStatus().name()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

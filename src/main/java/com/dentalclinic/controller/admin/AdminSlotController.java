@@ -30,19 +30,19 @@ public class AdminSlotController {
     }
 
     @GetMapping
-    public String slotDashboard(@RequestParam(required = false) String month,
-            @RequestParam(required = false) String date,
-            @RequestParam(required = false, defaultValue = "dentists") String mode,
-            @RequestParam(required = false) Long dentistId,
+    public String slotDashboard(@RequestParam(value = "month", required = false) String month,
+            @RequestParam(value = "date", required = false) String date,
+            @RequestParam(value = "mode", required = false, defaultValue = "dentists") String mode,
+            @RequestParam(value = "dentistId", required = false) Long dentistId,
             Model model) {
         return renderSlotPage(month, date, mode, dentistId, model);
     }
 
     @GetMapping("/{date:[0-9]{4}-[0-9]{2}-[0-9]{2}}")
-    public String slotDashboardByDate(@PathVariable String date,
-            @RequestParam(required = false) String month,
-            @RequestParam(required = false, defaultValue = "dentists") String mode,
-            @RequestParam(required = false) Long dentistId,
+    public String slotDashboardByDate(@PathVariable("date") String date,
+            @RequestParam(value = "month", required = false) String month,
+            @RequestParam(value = "mode", required = false, defaultValue = "dentists") String mode,
+            @RequestParam(value = "dentistId", required = false) Long dentistId,
             Model model) {
         return renderSlotPage(month, date, mode, dentistId, model);
     }
@@ -91,8 +91,8 @@ public class AdminSlotController {
 
     @GetMapping("/api/agenda")
     @ResponseBody
-    public List<AdminAgendaItemDto> apiAgenda(@RequestParam String date,
-            @RequestParam(required = false) Long dentistId) {
+    public List<AdminAgendaItemDto> apiAgenda(@RequestParam("date") String date,
+            @RequestParam(value = "dentistId", required = false) Long dentistId) {
         return adminSlotService.getAgenda(LocalDate.parse(date), dentistId);
     }
 
@@ -104,7 +104,7 @@ public class AdminSlotController {
 
     @GetMapping("/api/calendar")
     @ResponseBody
-    public Map<String, SlotDayBadgeDto> apiCalendar(@RequestParam String month) {
+    public Map<String, SlotDayBadgeDto> apiCalendar(@RequestParam("month") String month) {
         YearMonth ym = YearMonth.parse(month, YM_FMT);
         LocalDate gridStart = ym.atDay(1);
         while (gridStart.getDayOfWeek() != DayOfWeek.MONDAY) {
@@ -127,7 +127,8 @@ public class AdminSlotController {
     }
 
     @PostMapping("/lock-day")
-    public String lockDay(@RequestParam String date, @RequestParam(required = false) String reason,
+    public String lockDay(@RequestParam("date") String date,
+            @RequestParam(value = "reason", required = false) String reason,
             RedirectAttributes ra) {
         try {
             adminSlotService.lockDay(LocalDate.parse(date), reason);
@@ -139,16 +140,16 @@ public class AdminSlotController {
     }
 
     @PostMapping("/unlock-day")
-    public String unlockDay(@RequestParam String date, RedirectAttributes ra) {
+    public String unlockDay(@RequestParam("date") String date, RedirectAttributes ra) {
         adminSlotService.unlockDay(LocalDate.parse(date));
         ra.addFlashAttribute("message", "Đã mở khóa toàn bộ các ca khám ngày " + date);
         return "redirect:/admin/slots?date=" + date;
     }
 
     @PostMapping("/generate")
-    public String generateSlots(@RequestParam String fromDate,
-            @RequestParam String toDate,
-            @RequestParam int capacity,
+    public String generateSlots(@RequestParam("fromDate") String fromDate,
+            @RequestParam("toDate") String toDate,
+            @RequestParam("capacity") int capacity,
             RedirectAttributes ra) {
         int count = adminSlotService.generateSlots(LocalDate.parse(fromDate), LocalDate.parse(toDate), capacity);
         ra.addFlashAttribute("message", "Đã tạo/khôi phục " + count + " slots.");
@@ -157,7 +158,7 @@ public class AdminSlotController {
 
     @PostMapping("/api/generate-monthly")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> apiGenerateMonthly(@RequestParam String month) {
+    public ResponseEntity<Map<String, String>> apiGenerateMonthly(@RequestParam("month") String month) {
         try {
             YearMonth ym = YearMonth.parse(month);
             adminSlotService.generateMonthlySchedule(ym);
@@ -168,10 +169,23 @@ public class AdminSlotController {
         }
     }
 
+    @PostMapping("/api/delete-monthly")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> apiDeleteMonthly(@RequestParam("month") String month) {
+        try {
+            YearMonth ym = YearMonth.parse(month);
+            adminSlotService.deleteMonthlySchedule(ym);
+            return ResponseEntity.ok(Map.of("message", "Đã hủy toàn bộ lịch làm việc của tháng " + month));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Lỗi không xác định"));
+        }
+    }
+
     @PostMapping("/api/lock-day")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> apiLockDay(@RequestParam String date,
-            @RequestParam String reason) {
+    public ResponseEntity<Map<String, String>> apiLockDay(@RequestParam("date") String date,
+            @RequestParam("reason") String reason) {
         try {
             adminSlotService.lockDay(LocalDate.parse(date), reason);
             return ResponseEntity.ok(Map.of("message", "Success"));
@@ -182,7 +196,7 @@ public class AdminSlotController {
 
     @PostMapping("/api/unlock-day")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> apiUnlockDay(@RequestParam String date) {
+    public ResponseEntity<Map<String, String>> apiUnlockDay(@RequestParam("date") String date) {
         try {
             adminSlotService.unlockDay(LocalDate.parse(date));
             return ResponseEntity.ok(Map.of("message", "Success"));

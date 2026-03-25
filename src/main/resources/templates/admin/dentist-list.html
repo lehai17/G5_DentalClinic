@@ -80,7 +80,7 @@
         /* Statistics Cards */
         .stats-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -450,11 +450,6 @@
             <div class="stat-card">
                 <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">Trực hôm nay</div>
                 <div class="stat-value" th:text="${onDutyCount}">0</div>
-            </div>
-            <div class="stat-card">
-                <div style="color: #A3AED0; font-size: 12px; margin-bottom: 10px; font-weight: 700;">Đánh giá
-                </div>
-                <div class="stat-value">4.8/5.0</div>
             </div>
         </div>
 
@@ -894,14 +889,14 @@
         function performSearch() {
             const keyword = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
             const status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
- 
+
             const loader = document.getElementById('searchLoader');
             if (loader) loader.style.display = 'inline-block';
- 
+
             const params = new URLSearchParams();
             if (keyword) params.append('keyword', keyword);
             if (status) params.append('status', status);
- 
+
             fetch(`/admin/dentists/api/search?${params.toString()}`)
                 .then(response => {
                     if (!response.ok) throw new Error('Network error');

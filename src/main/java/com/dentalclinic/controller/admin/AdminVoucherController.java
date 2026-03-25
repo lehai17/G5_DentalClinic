@@ -51,9 +51,9 @@ public class AdminVoucherController {
 
     @PostMapping("/create")
     public String create(@Valid @ModelAttribute("voucherForm") VoucherForm voucherForm,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
             model.addAttribute("activePage", "vouchers");
@@ -72,7 +72,7 @@ public class AdminVoucherController {
     }
 
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+    public String editForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
             if (!model.containsAttribute("voucherForm")) {
                 model.addAttribute("voucherForm", adminVoucherService.getVoucherFormById(id));
@@ -88,11 +88,11 @@ public class AdminVoucherController {
     }
 
     @PostMapping("/{id}/edit")
-    public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("voucherForm") VoucherForm voucherForm,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+    public String update(@PathVariable("id") Long id,
+            @Valid @ModelAttribute("voucherForm") VoucherForm voucherForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("assignableCustomers", adminVoucherService.getAssignableCustomers());
             model.addAttribute("voucherId", id);
@@ -113,7 +113,7 @@ public class AdminVoucherController {
     }
 
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             adminVoucherService.deleteVoucher(id);
             redirectAttributes.addFlashAttribute("success", "Đã xóa voucher.");
@@ -124,9 +124,9 @@ public class AdminVoucherController {
     }
 
     @PostMapping("/{id}/toggle-status")
-    public String toggleStatus(@PathVariable Long id,
-                               @RequestParam("active") boolean active,
-                               RedirectAttributes redirectAttributes) {
+    public String toggleStatus(@PathVariable("id") Long id,
+            @RequestParam("active") boolean active,
+            RedirectAttributes redirectAttributes) {
         try {
             adminVoucherService.updateVoucherStatus(id, active);
             redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái voucher thành công.");
