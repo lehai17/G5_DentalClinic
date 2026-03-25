@@ -593,6 +593,117 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+function approveWithdrawRequest(id) {
+    buildModal(`
+        <h3>Duyệt chi tiền mặt</h3>
+        <p class="modal-text">Xác nhận rằng bạn đã chi tiền mặt cho khách. Sau bước này, số dư ví của khách sẽ bị khấu trừ ngay.</p>
+        <div id="withdrawApproveError" class="modal-error" style="display:none;"></div>
+        <div class="wallet-security-box">
+            <div class="wallet-security-line"><strong>Lưu ý:</strong> thao tác này sẽ đánh dấu yêu cầu đã duyệt và trừ tiền trong ví.</div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-payment" onclick="submitApproveWithdrawRequest(${id})">Xác nhận duyệt</button>
+            <button type="button" class="btn-secondary" onclick="closeModal()">Đóng</button>
+        </div>
+    `);
+}
+
+function submitApproveWithdrawRequest(id) {
+    const errorBox = document.getElementById("withdrawApproveError");
+
+    fetch(`/staff/wallet/withdraw-requests/${id}/approve`, {
+        method: "POST"
+    })
+        .then(async (res) => {
+            if (!res.ok) {
+                throw new Error(await res.text() || "Không thể duyệt yêu cầu rút tiền");
+            }
+            closeModal();
+            location.reload();
+        })
+        .catch((err) => {
+            if (errorBox) {
+                errorBox.innerText = err.message || "Không thể duyệt yêu cầu rút tiền.";
+                errorBox.style.display = "block";
+            } else {
+                alert("Lỗi: " + err.message);
+            }
+        });
+}
+
+function legacyApproveWithdrawRequest(id) {
+    if (!confirm("Xác nhận bạn đã hoàn tiền mặt cho khách và muốn khấu trừ ví?")) return;
+
+    fetch(`/staff/wallet/withdraw-requests/${id}/approve`, {
+        method: "POST"
+    })
+        .then(async (res) => {
+            if (!res.ok) {
+                throw new Error(await res.text() || "Không thể duyệt yêu cầu rút tiền");
+            }
+            location.reload();
+        })
+        .catch((err) => alert("Lỗi: " + err.message));
+}
+function rejectWithdrawRequest(id) {
+    buildModal(`
+        <h3>Từ chối yêu cầu rút tiền</h3>
+        <p class="modal-text">Nhập lý do để khách hàng biết vì sao yêu cầu này không được duyệt.</p>
+        <div id="withdrawRejectError" class="modal-error" style="display:none;"></div>
+        <div class="modal-field">
+            <label class="modal-label" for="withdrawRejectReason">Lý do từ chối</label>
+            <textarea id="withdrawRejectReason" class="modal-textarea" rows="4" placeholder="Ví dụ: Thông tin nhận tiền chưa đầy đủ, vui lòng liên hệ quầy lễ tân để xác nhận lại."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="submitRejectWithdrawRequest(${id})">Xác nhận từ chối</button>
+            <button type="button" class="btn-secondary" onclick="closeModal()">Đóng</button>
+        </div>
+    `);
+
+    const reasonInput = document.getElementById("withdrawRejectReason");
+    if (reasonInput) {
+        reasonInput.focus();
+    }
+}
+
+function submitRejectWithdrawRequest(id) {
+    const reasonInput = document.getElementById("withdrawRejectReason");
+    const errorBox = document.getElementById("withdrawRejectError");
+    const reason = reasonInput ? String(reasonInput.value || "").trim() : "";
+
+    if (!reason) {
+        if (errorBox) {
+            errorBox.innerText = "Vui lòng nhập lý do từ chối.";
+            errorBox.style.display = "block";
+        }
+        if (reasonInput) {
+            reasonInput.focus();
+        }
+        return;
+    }
+
+    const params = new URLSearchParams();
+    params.append("reason", reason);
+
+    fetch(`/staff/wallet/withdraw-requests/${id}/reject?${params.toString()}`, {
+        method: "POST"
+    })
+        .then(async (res) => {
+            if (!res.ok) {
+                throw new Error(await res.text() || "Không thể từ chối yêu cầu rút tiền");
+            }
+            closeModal();
+            location.reload();
+        })
+        .catch((err) => {
+            if (errorBox) {
+                errorBox.innerText = err.message || "Không thể từ chối yêu cầu rút tiền.";
+                errorBox.style.display = "block";
+            } else {
+                alert("Lỗi: " + err.message);
+            }
+        });
+}
 function toggleAppointmentDetails(id, button) {
     const detailRow = document.getElementById(`appointment-detail-${id}`);
     if (!detailRow) return;

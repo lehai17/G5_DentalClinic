@@ -130,6 +130,7 @@ public class AdminWalletService {
             case PAYMENT -> "Thanh toan";
             case REFUND -> "Hoan tien";
             case ADJUSTMENT -> "Dieu chinh";
+            case WITHDRAWAL -> "Rut tien";
         };
     }
 
