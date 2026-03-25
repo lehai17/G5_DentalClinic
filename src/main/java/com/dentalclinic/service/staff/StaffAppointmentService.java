@@ -30,6 +30,7 @@ import com.dentalclinic.service.dentist.ReexamService;
 import com.dentalclinic.service.mail.EmailService;
 import com.dentalclinic.service.notification.NotificationService;
 import com.dentalclinic.service.wallet.WalletService;
+import com.dentalclinic.model.wallet.WalletTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,6 +99,10 @@ public class StaffAppointmentService {
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
+    }
+
+    public List<WalletTransaction> getPendingWithdrawalRequests() {
+        return walletService.getPendingWithdrawalRequests();
     }
 
     public List<SlotDto> getWalkInAvailableSlots(List<Long> serviceIds, LocalDate date) {
@@ -600,6 +605,16 @@ public class StaffAppointmentService {
                 .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don thanh toan."));
 
         return customerAppointmentService.completeFinalPayment(appointmentId, invoice.getId(), paidAmount);
+    }
+
+    @Transactional
+    public WalletTransaction approveWithdrawalRequest(Long transactionId) {
+        return walletService.approveWithdrawalRequest(transactionId);
+    }
+
+    @Transactional
+    public WalletTransaction rejectWithdrawalRequest(Long transactionId, String reason) {
+        return walletService.rejectWithdrawalRequest(transactionId, reason);
     }
 
     private BigDecimal calculateBillingTotal(Appointment appointment, BillingNote billingNote) {

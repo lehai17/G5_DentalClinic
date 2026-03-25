@@ -40,9 +40,18 @@
           <div class="wallet-card">
             <div class="wallet-balance">Số dư hiện tại</div>
             <div class="wallet-amount" id="wallet-balance">0 VND</div>
-            <a href="#" class="wallet-action" id="wallet-open-topup">
-              <i class="bi bi-plus-circle"></i> Nạp tiền
-            </a>
+            <div class="wallet-balance-meta">
+              <span id="wallet-available-balance">Khả dụng: 0 VND</span>
+              <span id="wallet-pending-withdrawal">Đang chờ rút: 0 VND</span>
+            </div>
+            <div class="wallet-actions">
+              <a href="#" class="wallet-action" id="wallet-open-topup">
+                <i class="bi bi-plus-circle"></i> Nạp tiền
+              </a>
+              <a href="#" class="wallet-action wallet-action-secondary" id="wallet-open-withdraw">
+                <i class="bi bi-cash-stack"></i> Rút tiền
+              </a>
+            </div>
           </div>
 
           <div class="wallet-transactions-card">
@@ -121,6 +130,69 @@
           id="wallet-topup-submit"
         >
           Tiếp tục với VNPay
+        </button>
+      </div>
+    </div>
+
+    <div class="wallet-modal" id="wallet-withdraw-modal" hidden>
+      <div class="wallet-modal-backdrop" data-wallet-close-withdraw></div>
+      <div
+        class="wallet-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wallet-withdraw-title"
+      >
+        <button
+          type="button"
+          class="wallet-modal-close"
+          id="wallet-withdraw-close"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <h3 id="wallet-withdraw-title" class="wallet-modal-title">Tạo yêu cầu rút tiền</h3>
+        <p class="wallet-modal-subtitle">
+          Khách tạo yêu cầu, nhân viên sẽ xác nhận đã hoàn tiền thủ công bằng tiền mặt.
+          Số dư ví chỉ bị khấu trừ sau khi yêu cầu được duyệt.
+        </p>
+
+        <div class="wallet-input-group">
+          <label class="wallet-input-label" for="wallet-withdraw-amount">Số tiền muốn rút</label>
+          <input
+            id="wallet-withdraw-amount"
+            class="wallet-amount-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="Ví dụ: 500.000"
+          />
+          <div class="wallet-amount-presets">
+            <button type="button" class="wallet-preset-btn" data-withdraw-amount="100000">100.000</button>
+            <button type="button" class="wallet-preset-btn" data-withdraw-amount="200000">200.000</button>
+            <button type="button" class="wallet-preset-btn" data-withdraw-amount="500000">500.000</button>
+            <button type="button" class="wallet-preset-btn" data-withdraw-amount="1000000">1.000.000</button>
+            <button type="button" class="wallet-preset-btn" data-withdraw-amount="2000000">2.000.000</button>
+            <button type="button" class="wallet-preset-btn" data-withdraw-amount="5000000">5.000.000</button>
+          </div>
+          <div class="wallet-helper" id="wallet-withdraw-available-preview">
+            Số dư khả dụng để rút: 0 VND.
+          </div>
+        </div>
+
+        <div class="wallet-input-group">
+          <label class="wallet-input-label" for="wallet-withdraw-description">Ghi chú cho staff (tuỳ chọn)</label>
+          <textarea
+            id="wallet-withdraw-description"
+            class="wallet-textarea"
+            rows="3"
+            placeholder="Ví dụ: Tôi sẽ nhận tiền mặt tại quầy vào chiều nay."
+          ></textarea>
+        </div>
+
+        <button
+          type="button"
+          class="wallet-modal-submit wallet-modal-submit--withdraw"
+          id="wallet-withdraw-submit"
+        >
+          Gửi yêu cầu rút tiền
         </button>
       </div>
     </div>

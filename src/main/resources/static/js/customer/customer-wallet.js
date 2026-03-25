@@ -2,8 +2,15 @@ const WALLET_TOPUP_MIN = 10000;
 const WALLET_TOPUP_MAX = 100000000;
 const WALLET_TRANSACTIONS_PER_PAGE = 15;
 
+let walletState = {
+  balance: 0,
+  availableBalance: 0,
+  pendingWithdrawalAmount: 0,
+};
+
 document.addEventListener("DOMContentLoaded", function () {
   bindTopupModal();
+  bindWithdrawModal();
   showWalletStatusFromQuery();
   loadWalletData();
 });
@@ -52,9 +59,26 @@ function loadWalletData() {
     .then((data) => {
       if (!data) return;
 
+      walletState = {
+        balance: Number(data.balance || 0),
+        availableBalance: Number(data.availableBalance || 0),
+        pendingWithdrawalAmount: Number(data.pendingWithdrawalAmount || 0),
+      };
+
       const balanceEl = document.getElementById("wallet-balance");
+      const availableBalanceEl = document.getElementById("wallet-available-balance");
+      const pendingWithdrawalEl = document.getElementById("wallet-pending-withdrawal");
+
       if (balanceEl) {
-        balanceEl.textContent = formatCurrency(data.balance);
+        balanceEl.textContent = formatCurrency(walletState.balance);
+      }
+      if (availableBalanceEl) {
+        availableBalanceEl.textContent =
+          "Khả dụng: " + formatCurrency(walletState.availableBalance);
+      }
+      if (pendingWithdrawalEl) {
+        pendingWithdrawalEl.textContent =
+          "Đang chờ rút: " + formatCurrency(walletState.pendingWithdrawalAmount);
       }
 
       if (loading) loading.style.display = "none";
@@ -82,6 +106,14 @@ function loadWalletData() {
 function createTransactionHTML(transaction) {
   const typeInfo = getTypeInfo(transaction.type);
   const date = new Date(transaction.createdAt);
+  const statusLabel = getStatusLabel(transaction.status);
+  const isNonDeductedWithdrawal =
+    transaction.type === "WITHDRAWAL" &&
+    (transaction.status === "PENDING" || transaction.status === "CANCELLED");
+  const amountPrefix = isNonDeductedWithdrawal ? "" : typeInfo.prefix;
+  const amountClass = isNonDeductedWithdrawal
+    ? "transaction-amount transaction-amount--neutral"
+    : `transaction-amount ${typeInfo.class}`;
 
   return `
     <div class="transaction-item">
@@ -93,10 +125,13 @@ function createTransactionHTML(transaction) {
           <h4>${typeInfo.name}</h4>
           <p>${transaction.description || ""}</p>
           <p>${formatDate(date)}</p>
+          <span class="transaction-status transaction-status--${String(
+            transaction.status || "",
+          ).toLowerCase()}">${statusLabel}</span>
         </div>
       </div>
-      <div class="transaction-amount ${typeInfo.class}">
-        ${typeInfo.prefix}${formatCurrency(transaction.amount)}
+      <div class="${amountClass}">
+        ${amountPrefix}${formatCurrency(transaction.amount)}
       </div>
     </div>
   `;
@@ -190,6 +225,12 @@ function getTypeInfo(type) {
       class: "deposit",
       prefix: "",
     },
+    WITHDRAWAL: {
+      name: "Rút tiền",
+      icon: "bi bi-cash-stack",
+      class: "withdrawal",
+      prefix: "-",
+    },
   };
 
   return (
@@ -200,6 +241,16 @@ function getTypeInfo(type) {
       prefix: "",
     }
   );
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    PENDING: "Đang chờ duyệt",
+    COMPLETED: "Hoàn tất",
+    FAILED: "Thất bại",
+    CANCELLED: "Đã hủy",
+  };
+  return labels[status] || status || "Không xác định";
 }
 
 function formatCurrency(amount) {
@@ -354,6 +405,155 @@ function bindTopupModal() {
             "error",
             "Nạp tiền thất bại",
           );
+        });
+    });
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && modal && !modal.hidden) {
+      closeModal();
+    }
+  });
+}
+
+function bindWithdrawModal() {
+  const openBtn = document.getElementById("wallet-open-withdraw");
+  const modal = document.getElementById("wallet-withdraw-modal");
+  const closeBtn = document.getElementById("wallet-withdraw-close");
+  const amountInput = document.getElementById("wallet-withdraw-amount");
+  const descriptionInput = document.getElementById("wallet-withdraw-description");
+  const availablePreview = document.getElementById("wallet-withdraw-available-preview");
+  const submitBtn = document.getElementById("wallet-withdraw-submit");
+
+  function updateAvailablePreview() {
+    if (!availablePreview) return;
+    availablePreview.textContent =
+      "Số dư khả dụng để rút: " +
+      formatCurrency(walletState.availableBalance) +
+      ".";
+  }
+
+  function openModal() {
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    updateAvailablePreview();
+    if (amountInput) amountInput.focus();
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  if (openBtn) {
+    openBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+      openModal();
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeModal);
+  }
+
+  document.querySelectorAll("[data-wallet-close-withdraw]").forEach((node) => {
+    node.addEventListener("click", closeModal);
+  });
+
+  document.querySelectorAll("[data-withdraw-amount]").forEach((node) => {
+    node.addEventListener("click", function () {
+      if (amountInput) {
+        amountInput.value = formatVndInput(this.getAttribute("data-withdraw-amount"));
+      }
+    });
+  });
+
+  if (amountInput) {
+    amountInput.addEventListener("input", function () {
+      this.value = formatVndInput(this.value);
+    });
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", function () {
+      const amount = parseVndInput(amountInput ? amountInput.value : 0);
+      const description = descriptionInput ? descriptionInput.value.trim() : "";
+
+      if (!amount) {
+        showAlert(
+          "Vui lòng nhập số tiền muốn rút.",
+          "warning",
+          "Số tiền không hợp lệ",
+        );
+        return;
+      }
+
+      if (amount < WALLET_TOPUP_MIN) {
+        showAlert(
+          "Vui lòng nhập số tiền từ 10.000 VND trở lên.",
+          "warning",
+          "Số tiền không hợp lệ",
+        );
+        return;
+      }
+
+      if (amount > walletState.availableBalance) {
+        showAlert(
+          "Số tiền yêu cầu vượt quá số dư khả dụng hiện tại.",
+          "warning",
+          "Không đủ số dư khả dụng",
+        );
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Đang gửi yêu cầu...";
+
+      fetch("/customer/wallet/withdraw-requests", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: new URLSearchParams({
+          amount: String(amount),
+          description: description,
+        }).toString(),
+      })
+        .then((response) =>
+          response
+            .json()
+            .catch(() => ({}))
+            .then((data) => {
+              if (!response.ok) {
+                throw new Error(data.message || "Không thể tạo yêu cầu rút tiền.");
+              }
+              return data;
+            }),
+        )
+        .then((data) => {
+          showToast(
+            data.message || "Đã tạo yêu cầu rút tiền.",
+            "success",
+            "Gửi yêu cầu thành công",
+          );
+          if (amountInput) amountInput.value = "";
+          if (descriptionInput) descriptionInput.value = "";
+          closeModal();
+          loadWalletData();
+        })
+        .catch((error) => {
+          showAlert(
+            error.message || "Không thể tạo yêu cầu rút tiền.",
+            "error",
+            "Gửi yêu cầu thất bại",
+          );
+        })
+        .finally(() => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Gửi yêu cầu rút tiền";
         });
     });
   }

@@ -355,6 +355,36 @@ button {
     margin-bottom: 16px;
 }
 
+.modal-field {
+    margin-bottom: 16px;
+}
+
+.modal-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.modal-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+}
+
+.modal-textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
 .modal-error {
     color: #b91c1c;
     font-size: 13px;
@@ -408,6 +438,95 @@ button {
 .filter-form button {
     padding: 6px 14px;
     cursor: pointer;
+}
+
+.staff-withdraw-section {
+    margin: 22px 0 8px;
+    padding: 20px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.staff-withdraw-section__head h3 {
+    margin: 0;
+    color: #0f172a;
+}
+
+.staff-withdraw-section__head p {
+    margin: 8px 0 0;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.staff-withdraw-grid {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.staff-withdraw-card {
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid #fed7aa;
+    background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.staff-withdraw-card__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.staff-withdraw-card__name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #9a3412;
+}
+
+.staff-withdraw-card__meta {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.staff-withdraw-badge {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #ffedd5;
+    color: #c2410c;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.staff-withdraw-amount {
+    font-size: 24px;
+    font-weight: 800;
+    color: #c2410c;
+}
+
+.staff-withdraw-card__note {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #334155;
+    border: 1px solid rgba(251, 146, 60, 0.2);
+    line-height: 1.6;
+}
+
+.staff-withdraw-empty {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
 }
 
 .pagination {

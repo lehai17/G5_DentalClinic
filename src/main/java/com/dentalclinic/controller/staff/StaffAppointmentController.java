@@ -6,6 +6,7 @@ import com.dentalclinic.dto.customer.SlotDto;
 import com.dentalclinic.model.appointment.Appointment;
 import com.dentalclinic.model.appointment.AppointmentStatus;
 import com.dentalclinic.model.profile.DentistProfile;
+import com.dentalclinic.model.wallet.WalletTransaction;
 import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.service.mail.EmailService;
 import com.dentalclinic.service.staff.StaffAppointmentService;
@@ -121,6 +122,24 @@ public class StaffAppointmentController {
         model.addAttribute("sort", sort);
 
         return "staff/appointments";
+    }
+
+    @GetMapping("/wallet/withdraw-requests")
+    public String walletWithdrawRequests(@RequestParam(defaultValue = "1") int page, Model model) {
+        List<WalletTransaction> requests = staffAppointmentService.getPendingWithdrawalRequests();
+        int pageSize = 3;
+        int totalItems = requests.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+        int currentPage = Math.min(Math.max(page, 1), totalPages);
+        int fromIndex = Math.min((currentPage - 1) * pageSize, totalItems);
+        int toIndex = Math.min(fromIndex + pageSize, totalItems);
+
+        model.addAttribute("pageTitle", "Yeu cau rut tien vi");
+        model.addAttribute("staffName", "Staff");
+        model.addAttribute("pendingWithdrawRequests", requests.subList(fromIndex, toIndex));
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", totalPages);
+        return "staff/wallet-withdraw-requests";
     }
 
     @GetMapping("/walk-in-booking")
@@ -291,6 +310,34 @@ public class StaffAppointmentController {
         try {
             staffAppointmentService.processPayment(id);
             return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/wallet/withdraw-requests/{id}/approve")
+    @ResponseBody
+    public ResponseEntity<?> approveWithdrawRequest(@PathVariable Long id) {
+        try {
+            WalletTransaction transaction = staffAppointmentService.approveWithdrawalRequest(id);
+            return ResponseEntity.ok(Map.of(
+                    "id", transaction.getId(),
+                    "status", transaction.getStatus().name()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/wallet/withdraw-requests/{id}/reject")
+    @ResponseBody
+    public ResponseEntity<?> rejectWithdrawRequest(@PathVariable Long id, @RequestParam String reason) {
+        try {
+            WalletTransaction transaction = staffAppointmentService.rejectWithdrawalRequest(id, reason);
+            return ResponseEntity.ok(Map.of(
+                    "id", transaction.getId(),
+                    "status", transaction.getStatus().name()
+            ));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
