@@ -8,7 +8,10 @@
     selectedDate: null,
     selectedSlot: null,
     currentStep: 1,
-    renderedSlots: []
+    renderedSlots: [],
+    bookingPricing: createEmptyPricing(),
+    appliedVoucherCode: '',
+    previewRequestId: 0
   };
   var paymentSelection = null;
 
@@ -54,6 +57,7 @@
     renderCalendar();
     setStep(1);
     updateSummary();
+    refreshBookingPricing(true, false);
 
     var returnState = getVerifiedReturnState();
     var status = returnState.type;
@@ -161,11 +165,21 @@
       ? formatTime(data.startTime) + ' - ' + formatTime(data.endTime)
       : '';
 
+    var originalTotal = Number(data.originalTotalAmount || data.totalAmount || 0);
+    var discountAmount = Number(data.discountAmount || 0);
+    var finalTotal = Number(data.totalAmount || originalTotal);
+
     summaryEl.innerHTML =
       '<p><strong>Mã lịch hẹn:</strong> #' + (data.id || '') + '</p>' +
       '<p><strong>Dịch vụ:</strong> ' + (data.serviceName || 'N/A') + '</p>' +
       '<p><strong>Ngày:</strong> ' + dateText + '</p>' +
       '<p><strong>Giờ:</strong> ' + timeText + '</p>' +
+      '<p><strong>Tổng tiền gốc:</strong> ' + formatVnd(originalTotal) + '</p>' +
+      '<p><strong>Giảm giá:</strong> ' + formatVnd(discountAmount) + '</p>' +
+      '<p><strong>Tổng sau giảm:</strong> ' + formatVnd(finalTotal) + '</p>' +
+      (data.voucherCode
+        ? '<p><strong>Voucher:</strong> ' + data.voucherCode + '</p>'
+        : '') +
       '<p><span style="color:green;font-weight:bold;">✓ Đã thanh toán tiền cọc</span></p>';
   }
 
@@ -184,6 +198,254 @@
 
   function formatVnd(amount) {
     return Number(amount || 0).toLocaleString('vi-VN') + ' VNĐ';
+  }
+
+  function createEmptyPricing() {
+    return {
+      originalTotalAmount: 0,
+      discountAmount: 0,
+      finalTotalAmount: 0,
+      depositAmount: 0,
+      voucherApplied: false,
+      voucherCode: '',
+      voucherDescription: '',
+      availableVouchers: []
+    };
+  }
+
+  function buildBasePricingFromSelection() {
+    var totalAmount = getSelectedServices().reduce(function (sum, item) {
+      return sum + (item.price || 0);
+    }, 0);
+    return {
+      originalTotalAmount: totalAmount,
+      discountAmount: 0,
+      finalTotalAmount: totalAmount,
+      depositAmount: totalAmount * 0.5,
+      voucherApplied: false,
+      voucherCode: '',
+      voucherDescription: '',
+      availableVouchers: []
+    };
+  }
+
+  function setVoucherFeedback(message, type) {
+    var feedback = document.getElementById('booking-voucher-feedback');
+    if (!feedback) return;
+
+    if (!message) {
+      feedback.hidden = true;
+      feedback.textContent = '';
+      feedback.classList.remove('is-error', 'is-success');
+      return;
+    }
+
+    feedback.hidden = false;
+    feedback.textContent = normalizeText(message);
+    feedback.classList.remove('is-error', 'is-success');
+    if (type === 'error') {
+      feedback.classList.add('is-error');
+    } else if (type === 'success') {
+      feedback.classList.add('is-success');
+    }
+  }
+
+  function renderVoucherSelection() {
+    var selectedEl = document.getElementById('booking-voucher-selected');
+    var listEl = document.getElementById('booking-voucher-list');
+    var inputEl = document.getElementById('customer-booking-voucher-code');
+    if (inputEl && state.bookingPricing && state.bookingPricing.voucherApplied) {
+      inputEl.value = state.bookingPricing.voucherCode || '';
+    }
+
+    if (selectedEl) {
+      if (state.bookingPricing && state.bookingPricing.voucherApplied) {
+        selectedEl.hidden = false;
+        selectedEl.innerHTML =
+          '<div>' +
+          '<strong>' + (state.bookingPricing.voucherCode || '') + '</strong>' +
+          '<small>' + normalizeText(state.bookingPricing.voucherDescription || 'Voucher đã được áp dụng cho lịch hẹn này.') + '</small>' +
+          '</div>' +
+          '<button type="button" class="btn-secondary" id="customer-booking-clear-voucher">Bỏ chọn</button>';
+
+        var clearBtn = document.getElementById('customer-booking-clear-voucher');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', function () {
+            clearAppliedVoucher(true);
+          });
+        }
+      } else {
+        selectedEl.hidden = true;
+        selectedEl.innerHTML = '';
+      }
+    }
+
+    if (!listEl) return;
+    var vouchers = state.bookingPricing && Array.isArray(state.bookingPricing.availableVouchers)
+      ? state.bookingPricing.availableVouchers
+      : [];
+
+    if (!vouchers.length) {
+      listEl.innerHTML = '<div class="summary-voucher__empty">' +
+        (getSelectedServices().length
+          ? 'Hiện chưa có voucher nào phù hợp với đơn khám này.'
+          : 'Chọn dịch vụ để xem voucher khả dụng cho đơn khám này.') +
+        '</div>';
+      return;
+    }
+
+    listEl.innerHTML = vouchers.map(function (voucher) {
+      var isActive = state.bookingPricing && state.bookingPricing.voucherApplied
+        && String(state.bookingPricing.voucherCode || '') === String(voucher.code || '');
+      return '' +
+        '<div class="summary-voucher__item">' +
+        '  <div>' +
+        '    <div class="summary-voucher__item-title">' +
+        '      <strong>' + normalizeText(voucher.code || '') + '</strong>' +
+        '      <span>' + normalizeText(voucher.discountLabel || '') + '</span>' +
+        '    </div>' +
+        '    <div class="summary-voucher__item-desc">' + normalizeText(voucher.description || 'Voucher ưu đãi cho lịch khám của bạn.') + '</div>' +
+        '    <div class="summary-voucher__item-meta">' +
+        '      ' + normalizeText(voucher.minOrderAmountLabel || '') +
+        (voucher.validPeriodLabel ? ' • ' + normalizeText(voucher.validPeriodLabel) : '') +
+        '    </div>' +
+        '  </div>' +
+        '  <button type="button" class="btn-secondary customer-booking-select-voucher" data-voucher-code="' + normalizeText(voucher.code || '') + '">' +
+        (isActive ? 'Đang áp dụng' : 'Dùng ngay') +
+        '  </button>' +
+        '</div>';
+    }).join('');
+
+    Array.from(listEl.querySelectorAll('.customer-booking-select-voucher')).forEach(function (button) {
+      button.addEventListener('click', function () {
+        var voucherCode = this.getAttribute('data-voucher-code') || '';
+        if (!voucherCode) return;
+        var input = document.getElementById('customer-booking-voucher-code');
+        if (input) {
+          input.value = voucherCode;
+        }
+        applyVoucherCode(voucherCode, false);
+      });
+    });
+  }
+
+  function clearAppliedVoucher(showMessage) {
+    state.appliedVoucherCode = '';
+    var input = document.getElementById('customer-booking-voucher-code');
+    if (input) {
+      input.value = '';
+    }
+    if (showMessage) {
+      setVoucherFeedback('Đã bỏ áp dụng voucher cho lịch hẹn này.', 'success');
+    } else {
+      setVoucherFeedback('', '');
+    }
+    refreshBookingPricing(true, false);
+  }
+
+  function refreshBookingPricing(silent, keepFeedback) {
+    var selectedServices = getSelectedServices();
+    if (!selectedServices.length) {
+      state.appliedVoucherCode = '';
+      state.bookingPricing = createEmptyPricing();
+      renderVoucherSelection();
+      updateSummary();
+      if (!keepFeedback) {
+        setVoucherFeedback('', '');
+      }
+      return Promise.resolve(state.bookingPricing);
+    }
+
+    var requestId = ++state.previewRequestId;
+    var payload = {
+      serviceIds: selectedServices.map(function (service) { return service.id; }),
+      voucherCode: state.appliedVoucherCode || null
+    };
+
+    return fetch('/customer/appointments/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(payload)
+    })
+      .then(function (response) {
+        return response.json().catch(function () {
+          return {};
+        }).then(function (data) {
+          if (!response.ok) {
+            throw new Error(normalizeText(data.message || 'Không thể tính toán ưu đãi cho lịch hẹn.'));
+          }
+          return data;
+        });
+      })
+      .then(function (data) {
+        if (requestId !== state.previewRequestId) return data;
+        state.bookingPricing = data || createEmptyPricing();
+        if (!state.bookingPricing.voucherApplied) {
+          state.appliedVoucherCode = '';
+        } else {
+          state.appliedVoucherCode = state.bookingPricing.voucherCode || '';
+        }
+        renderVoucherSelection();
+        updateSummary();
+        if (!keepFeedback && state.bookingPricing.voucherApplied) {
+          setVoucherFeedback('Voucher đã được áp dụng vào bước đặt cọc.', 'success');
+        } else if (!keepFeedback && !state.bookingPricing.voucherApplied) {
+          setVoucherFeedback('', '');
+        }
+        return data;
+      })
+      .catch(function (error) {
+        if (requestId !== state.previewRequestId) return null;
+        var hadVoucherCode = !!payload.voucherCode;
+        if (hadVoucherCode) {
+          state.appliedVoucherCode = '';
+          if (!keepFeedback) {
+            setVoucherFeedback(error.message || 'Voucher chưa hợp lệ.', 'error');
+          }
+          if (!silent) {
+            showAlert(error.message || 'Không thể tính ưu đãi booking.', 'warning', 'Voucher chưa hợp lệ');
+          }
+          return refreshBookingPricing(true, true).then(function () {
+            return null;
+          });
+        }
+        state.bookingPricing = buildBasePricingFromSelection();
+        renderVoucherSelection();
+        updateSummary();
+        if (!silent) {
+          showAlert(error.message || 'Không thể tính ưu đãi booking.', 'warning', 'Voucher chưa hợp lệ');
+        }
+        if (!keepFeedback) {
+          setVoucherFeedback(error.message || 'Voucher chưa hợp lệ.', 'error');
+        }
+        return null;
+      });
+  }
+
+  function applyVoucherCode(voucherCode, silent) {
+    var selectedServices = getSelectedServices();
+    if (!selectedServices.length) {
+      showAlert('Vui lòng chọn ít nhất một dịch vụ trước khi áp voucher.', 'warning', 'Thiếu thông tin');
+      return;
+    }
+
+    state.appliedVoucherCode = (voucherCode || '').trim().toUpperCase();
+    if (!state.appliedVoucherCode) {
+      clearAppliedVoucher(false);
+      return;
+    }
+
+    refreshBookingPricing(!!silent, false)
+      .then(function (pricing) {
+        if (!pricing) return;
+        if (!pricing.voucherApplied) {
+          state.appliedVoucherCode = '';
+          if (!silent) {
+            setVoucherFeedback('Voucher chưa được áp dụng cho booking này.', 'error');
+          }
+        }
+      });
   }
 
   function calculateSlotsNeeded(durationMinutes) {
@@ -308,6 +570,8 @@
     var nextStepBtn = document.getElementById('btn-next');
     var backStepBtn = document.getElementById('btn-back');
     var serviceCheckboxes = document.querySelectorAll('.customer-service-checkbox');
+    var applyVoucherBtn = document.getElementById('customer-booking-apply-voucher');
+    var voucherCodeInput = document.getElementById('customer-booking-voucher-code');
     bindPaymentModalEvents();
 
     if (prevBtn) {
@@ -372,11 +636,29 @@
         checkbox.addEventListener('change', function () {
           state.selectedSlot = null;
           document.getElementById('customer-booking-slot-id').value = '';
+          state.bookingPricing = getSelectedServices().length ? buildBasePricingFromSelection() : createEmptyPricing();
+          setVoucherFeedback('', '');
+          refreshBookingPricing(true, false);
           updateSummary();
           if (state.currentStep === 2 && state.selectedDate) {
             loadSlotsForDate(state.selectedDate);
           }
         });
+      });
+    }
+
+    if (applyVoucherBtn) {
+      applyVoucherBtn.addEventListener('click', function () {
+        applyVoucherCode((voucherCodeInput && voucherCodeInput.value) || '', false);
+      });
+    }
+
+    if (voucherCodeInput) {
+      voucherCodeInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          applyVoucherCode(voucherCodeInput.value || '', false);
+        }
       });
     }
   }
@@ -606,6 +888,7 @@
 
   function setStep(step) {
     state.currentStep = step;
+    var aiPanel = document.getElementById('booking-ai-panel');
 
     for (var i = 1; i <= 4; i++) {
       var panel = document.getElementById('booking-step-' + i);
@@ -623,6 +906,7 @@
 
     if (actions) actions.style.display = step >= 4 ? 'none' : 'flex';
     if (backBtn) backBtn.style.display = step > 1 && step < 4 ? '' : 'none';
+    if (aiPanel) aiPanel.hidden = step >= 2;
     if (nextBtn) {
       nextBtn.textContent = step === 3 ? 'Đặt cọc' : 'Tiếp tục';
       updateNextButtonState();
@@ -654,14 +938,17 @@
     var selectedServices = getSelectedServices();
     var totalServices = selectedServices.length;
     var totalDuration = selectedServices.reduce(function (sum, item) { return sum + (item.duration || 0); }, 0);
-    var totalAmount = selectedServices.reduce(function (sum, item) { return sum + (item.price || 0); }, 0);
-    var depositAmount = totalAmount * 0.5;
+    var pricing = totalServices > 0
+      ? (state.bookingPricing || buildBasePricingFromSelection())
+      : createEmptyPricing();
 
     var dateEl = document.getElementById('summary-date');
     var timeEl = document.getElementById('summary-time');
     var serviceEl = document.getElementById('summary-service');
     var durationEl = document.getElementById('summary-duration');
     var totalEl = document.getElementById('summary-total');
+    var discountEl = document.getElementById('summary-discount');
+    var finalTotalEl = document.getElementById('summary-final-total');
     var depositEl = document.getElementById('summary-deposit');
     var incomplete = document.getElementById('summary-incomplete');
 
@@ -683,9 +970,15 @@
     }
 
     if (durationEl) durationEl.innerHTML = totalDuration > 0 ? (totalDuration + ' phút') : '<span class="empty">--</span>';
-    if (totalEl) totalEl.innerHTML = totalAmount > 0 ? formatVnd(totalAmount) : '<span class="empty">--</span>';
-    if (depositEl) depositEl.innerHTML = totalAmount > 0
-      ? '<span style="color:#e67e22;font-weight:bold;">' + formatVnd(depositAmount) + '</span>'
+    if (totalEl) totalEl.innerHTML = totalServices > 0 ? formatVnd(pricing.originalTotalAmount) : '<span class="empty">--</span>';
+    if (discountEl) discountEl.innerHTML = totalServices > 0
+      ? '<span style="color:#16a34a;font-weight:bold;">-' + formatVnd(pricing.discountAmount) + '</span>'
+      : '<span class="empty">--</span>';
+    if (finalTotalEl) finalTotalEl.innerHTML = totalServices > 0
+      ? formatVnd(pricing.finalTotalAmount)
+      : '<span class="empty">--</span>';
+    if (depositEl) depositEl.innerHTML = totalServices > 0
+      ? '<span style="color:#e67e22;font-weight:bold;">' + formatVnd(pricing.depositAmount) + '</span>'
       : '<span class="empty">--</span>';
 
     if (incomplete) {
@@ -703,6 +996,7 @@
     var contactChannel = (document.getElementById('customer-booking-contact-channel') || {}).value;
     var contactValue = (document.getElementById('customer-booking-contact-value') || {}).value.trim();
     var note = (document.getElementById('customer-booking-note') || {}).value;
+    var pricing = state.bookingPricing || buildBasePricingFromSelection();
 
     if (!slotId || serviceIds.length === 0 || !contactChannel || !contactValue) {
       showAlert('Vui lòng điền đầy đủ thông tin và chọn ít nhất một dịch vụ.', 'warning', 'Thiếu thông tin');
@@ -722,7 +1016,9 @@
         serviceIds: serviceIds,
         patientNote: note || null,
         contactChannel: contactChannel,
-        contactValue: contactValue
+        contactValue: contactValue,
+        voucherCode: state.appliedVoucherCode || null,
+        depositAmount: pricing.depositAmount || 0
       })
     })
       .then(function (response) {
@@ -754,13 +1050,24 @@
     paymentSelection = {
       appointmentId: appointment.id,
       depositAmount: appointment && appointment.depositAmount ? appointment.depositAmount : 0,
+      originalTotalAmount: appointment && appointment.originalTotalAmount ? appointment.originalTotalAmount : (appointment && appointment.totalAmount ? appointment.totalAmount : 0),
+      discountAmount: appointment && appointment.discountAmount ? appointment.discountAmount : 0,
+      voucherCode: appointment && appointment.voucherCode ? appointment.voucherCode : '',
       nextStepBtn: nextStepBtn,
       originalText: originalText
     };
 
     var amountEl = document.getElementById('booking-payment-deposit-amount');
+    var originalEl = document.getElementById('booking-payment-original-total');
+    var discountEl = document.getElementById('booking-payment-discount');
+    var voucherRow = document.getElementById('booking-payment-voucher-row');
+    var voucherCodeEl = document.getElementById('booking-payment-voucher-code');
     var modal = document.getElementById('booking-payment-modal');
     if (amountEl) amountEl.textContent = formatVnd(paymentSelection.depositAmount);
+    if (originalEl) originalEl.textContent = formatVnd(paymentSelection.originalTotalAmount);
+    if (discountEl) discountEl.textContent = '-' + formatVnd(paymentSelection.discountAmount);
+    if (voucherRow) voucherRow.hidden = !paymentSelection.voucherCode;
+    if (voucherCodeEl) voucherCodeEl.textContent = paymentSelection.voucherCode || '-';
     if (modal) modal.hidden = false;
     document.body.style.overflow = 'hidden';
   }
@@ -797,7 +1104,10 @@
           chooseDepositMethod(
             {
               id: paymentSelection.appointmentId,
-              depositAmount: paymentSelection.depositAmount
+              depositAmount: paymentSelection.depositAmount,
+              originalTotalAmount: paymentSelection.originalTotalAmount,
+              discountAmount: paymentSelection.discountAmount,
+              voucherCode: paymentSelection.voucherCode
             },
             nextStepBtn,
             originalText
@@ -957,6 +1267,7 @@
             }
 
             renderCalendar();
+            refreshBookingPricing(true, false);
             updateSummary();
 
             setStep(3);

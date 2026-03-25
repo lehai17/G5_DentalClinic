@@ -32,6 +32,8 @@ public class CreateAppointmentRequest {
     // Optional client-side value; server always validates and decides real deposit.
     private Double depositAmount;
 
+    private String voucherCode;
+
     // Optional client-side status; server only accepts PENDING/CONFIRMED and still enforces status itself.
     private String status;
 
@@ -53,6 +55,8 @@ public class CreateAppointmentRequest {
     public void setContactValue(String contactValue) { this.contactValue = contactValue; }
     public Double getDepositAmount() { return depositAmount; }
     public void setDepositAmount(Double depositAmount) { this.depositAmount = depositAmount; }
+    public String getVoucherCode() { return voucherCode; }
+    public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 

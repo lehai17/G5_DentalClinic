@@ -1,7 +1,7 @@
 package com.dentalclinic.controller.customer;
 
-import com.dentalclinic.dto.customer.RebookPrefillDto;
 import com.dentalclinic.dto.customer.AppointmentDto;
+import com.dentalclinic.dto.customer.RebookPrefillDto;
 import com.dentalclinic.model.blog.Blog;
 import com.dentalclinic.model.blog.BlogStatus;
 import com.dentalclinic.model.profile.CustomerProfile;
@@ -12,8 +12,8 @@ import com.dentalclinic.repository.ServiceRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.customer.CustomerAppointmentService;
 import com.dentalclinic.service.customer.CustomerProfileService;
-import com.dentalclinic.service.review.ReviewMarketingService;
 import com.dentalclinic.service.customer.CustomerVoucherWalletService;
+import com.dentalclinic.service.review.ReviewMarketingService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -131,8 +131,9 @@ public class CustomerHomepageController {
                               @RequestParam(required = false) Long id,
                               Authentication authentication,
                               Model model) {
-        prepareBookingPage(model, null);
-        applyBookingReturnStatus(model, resolveCurrentUserId(authentication), status, id);
+        Long currentUserId = resolveCurrentUserId(authentication);
+        prepareBookingPage(model, null, currentUserId);
+        applyBookingReturnStatus(model, currentUserId, status, id);
         return "customer/booking";
     }
 
@@ -148,7 +149,7 @@ public class CustomerHomepageController {
 
         try {
             RebookPrefillDto rebookPrefill = customerAppointmentService.prepareRebookPrefill(currentUserId, appointmentId);
-            prepareBookingPage(model, rebookPrefill);
+            prepareBookingPage(model, rebookPrefill, currentUserId);
             model.addAttribute("infoMessage", "Đã điền sẵn thông tin từ lịch hẹn cũ. Vui lòng chọn ngày và giờ khám mới.");
             if (rebookPrefill.getWarningMessage() != null && !rebookPrefill.getWarningMessage().isBlank()) {
                 model.addAttribute("warningMessage", rebookPrefill.getWarningMessage());
@@ -166,10 +167,54 @@ public class CustomerHomepageController {
         return "customer/appointments";
     }
 
-    private void prepareBookingPage(Model model, RebookPrefillDto rebookPrefill) {
+    private void prepareBookingPage(Model model, RebookPrefillDto rebookPrefill, Long currentUserId) {
         model.addAttribute("services", serviceRepo.findByActiveTrue());
         model.addAttribute("active", "booking");
         model.addAttribute("rebookPrefill", rebookPrefill != null ? rebookPrefill : new RebookPrefillDto());
+        model.addAttribute("bookingContactChannel", resolveBookingContactChannel(currentUserId, rebookPrefill));
+        model.addAttribute("bookingContactValue", resolveBookingContactValue(currentUserId, rebookPrefill));
+    }
+
+    private String resolveBookingContactChannel(Long currentUserId, RebookPrefillDto rebookPrefill) {
+        if (rebookPrefill != null && rebookPrefill.getContactChannel() != null && !rebookPrefill.getContactChannel().isBlank()) {
+            return rebookPrefill.getContactChannel().trim().toUpperCase();
+        }
+
+        CustomerProfile profile = currentUserId != null ? profileService.getCurrentCustomerProfile(currentUserId) : null;
+        if (profile != null && profile.getPhone() != null && !profile.getPhone().isBlank()) {
+            return "PHONE";
+        }
+
+        if (currentUserId == null) {
+            return "";
+        }
+
+        return userRepository.findById(currentUserId)
+                .map(user -> user.getEmail())
+                .filter(email -> email != null && !email.isBlank())
+                .map(email -> "EMAIL")
+                .orElse("");
+    }
+
+    private String resolveBookingContactValue(Long currentUserId, RebookPrefillDto rebookPrefill) {
+        if (rebookPrefill != null && rebookPrefill.getContactValue() != null && !rebookPrefill.getContactValue().isBlank()) {
+            return rebookPrefill.getContactValue().trim();
+        }
+
+        CustomerProfile profile = currentUserId != null ? profileService.getCurrentCustomerProfile(currentUserId) : null;
+        if (profile != null && profile.getPhone() != null && !profile.getPhone().isBlank()) {
+            return profile.getPhone().trim();
+        }
+
+        if (currentUserId == null) {
+            return "";
+        }
+
+        return userRepository.findById(currentUserId)
+                .map(user -> user.getEmail())
+                .filter(email -> email != null && !email.isBlank())
+                .map(String::trim)
+                .orElse("");
     }
 
     private void applyBookingReturnStatus(Model model, Long userId, String status, Long appointmentId) {
@@ -236,4 +281,3 @@ public class CustomerHomepageController {
                 .orElse(null);
     }
 }
-

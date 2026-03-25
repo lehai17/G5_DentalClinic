@@ -71,31 +71,31 @@
             </div>
           </div>
 
-            <div class="ai-booking-box" style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #f9fafb; width: 100%;">
-                <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem; font-weight: 700;">
-                    Đặt lịch nhanh bằng AI
-                </h3>
+	            <div id="booking-ai-panel" class="ai-booking-box booking-ai-panel">
+	                <h3 class="booking-ai-panel__title">
+	                    Đặt lịch nhanh bằng AI
+	                </h3>
 
-                <p style="margin-bottom: 0.75rem; color: #6b7280;">
-                    Ví dụ: “Tôi muốn cạo vôi răng chiều mai”, “Tôi đau răng và muốn khám sớm nhất”
-                </p>
+	                <p class="booking-ai-panel__hint">
+	                    Ví dụ: “Tôi muốn cạo vôi răng chiều mai”, “Tôi đau răng và muốn khám sớm nhất”
+	                </p>
 
                 <textarea
-                        id="ai-booking-message"
-                        class="form-textarea"
-                        placeholder="Nhập nhu cầu khám của bạn để AI gợi ý dịch vụ và khung giờ phù hợp"
-                        style="width: 100%; min-height: 120px; resize: vertical; box-sizing: border-box; display: block;"
-                ></textarea>
+	                        id="ai-booking-message"
+	                        class="form-textarea"
+	                        placeholder="Nhập nhu cầu khám của bạn để AI gợi ý dịch vụ và khung giờ phù hợp"
+	                        style="width: 100%; min-height: 120px; resize: vertical; box-sizing: border-box; display: block;"
+	                ></textarea>
 
-                <div style="margin-top: 0.75rem; display: flex; gap: 0.75rem; align-items: center; width: 100%;">
-                    <button type="button" id="btn-ai-suggest" class="btn-primary">
-                        AI gợi ý lịch
-                    </button>
-                    <span id="ai-booking-loading" style="display:none; color:#6b7280;">Đang phân tích...</span>
-                </div>
+	                <div class="booking-ai-panel__actions">
+	                    <button type="button" id="btn-ai-suggest" class="btn-primary">
+	                        AI gợi ý lịch
+	                    </button>
+	                    <span id="ai-booking-loading" class="booking-ai-panel__loading" style="display:none;">Đang phân tích...</span>
+	                </div>
 
-                <div id="ai-booking-result" style="margin-top: 1rem; display:none; width: 100%;"></div>
-            </div>
+	                <div id="ai-booking-result" class="booking-ai-panel__result" style="margin-top: 1rem; display:none; width: 100%;"></div>
+	            </div>
 
           <!-- Main Booking Card -->
           <div class="booking-card">
@@ -238,8 +238,8 @@
                 </div>
               </div>
 
-              <!-- Step 3: Contact Information -->
-              <div id="booking-step-3" class="booking-step">
+	              <!-- Step 3: Contact Information -->
+	              <div id="booking-step-3" class="booking-step">
                 <h2
                   style="
                     font-size: 1.5rem;
@@ -247,37 +247,40 @@
                     color: var(--gray-600);
                     margin-bottom: 1.5rem;
                   "
-                >
-                  Thông tin liên hệ
-                </h2>
-                <form class="contact-form">
-                  <div class="form-group">
+	                >
+	                  Thông tin liên hệ
+	                </h2>
+	                <p class="empty-state-text" style="margin-bottom: 1.25rem">
+	                  Hệ thống đã điền sẵn thông tin liên hệ từ hồ sơ của bạn. Bạn có thể chỉnh sửa trước khi xác nhận đặt cọc.
+	                </p>
+	                <form class="contact-form">
+	                  <div class="form-group">
                     <label class="form-label">
                       Kênh liên hệ <span class="required">*</span>
                     </label>
-	                    <select
-	                      id="customer-booking-contact-channel"
-	                      class="form-select"
-	                    >
-	                      <option value="">-- Chọn kênh --</option>
-	                      <option value="ZALO" th:selected="${rebookPrefill != null and rebookPrefill.contactChannel == 'ZALO'}">Zalo</option>
-	                      <option value="EMAIL" th:selected="${rebookPrefill != null and rebookPrefill.contactChannel == 'EMAIL'}">Email</option>
-	                      <option value="PHONE" th:selected="${rebookPrefill != null and rebookPrefill.contactChannel == 'PHONE'}">Điện thoại</option>
-	                    </select>
-	                  </div>
+		                    <select
+		                      id="customer-booking-contact-channel"
+		                      class="form-select"
+		                    >
+		                      <option value="">-- Chọn kênh --</option>
+		                      <option value="ZALO" th:selected="${bookingContactChannel == 'ZALO'}">Zalo</option>
+		                      <option value="EMAIL" th:selected="${bookingContactChannel == 'EMAIL'}">Email</option>
+		                      <option value="PHONE" th:selected="${bookingContactChannel == 'PHONE'}">Điện thoại</option>
+		                    </select>
+		                  </div>
 
                   <div class="form-group">
                     <label class="form-label">
                       Số / Email / Zalo <span class="required">*</span>
                     </label>
                     <input
-	                      type="text"
-	                      id="customer-booking-contact-value"
-	                      class="form-input"
-	                      th:value="${rebookPrefill != null ? rebookPrefill.contactValue : ''}"
-	                      placeholder="Nhập số điện thoại, email hoặc ID Zalo"
-	                    />
-                  </div>
+		                      type="text"
+		                      id="customer-booking-contact-value"
+		                      class="form-input"
+		                      th:value="${bookingContactValue}"
+		                      placeholder="Nhập số điện thoại, email hoặc ID Zalo"
+		                    />
+	                  </div>
 
                   <div class="form-group">
                     <label class="form-label">Ghi chú (tùy chọn)</label>
@@ -405,17 +408,57 @@
                 </div>
               </div>
 
-              <div class="summary-divider"></div>
+	              <div class="summary-divider"></div>
 
-                  <div class="summary-item">
-                    <div class="summary-item-label">Tổng tiền dịch vụ</div>
-                    <div class="summary-item-value" id="summary-total">
-                      <span class="empty">--</span>
-                    </div>
-                  </div>
+	                  <div class="summary-voucher">
+	                    <div class="summary-voucher__header">
+	                      <div class="summary-item-label">
+	                        <i class="bi bi-ticket-perforated"></i> Voucher
+	                      </div>
+	                      <span class="summary-voucher__hint">Áp dụng trước khi thanh toán cọc</span>
+	                    </div>
+	                    <div class="summary-voucher__form">
+	                      <input
+	                        type="text"
+	                        id="customer-booking-voucher-code"
+	                        class="form-input summary-voucher__input"
+	                        placeholder="Nhập mã voucher"
+	                        autocomplete="off"
+	                      />
+	                      <button type="button" class="btn-secondary summary-voucher__button" id="customer-booking-apply-voucher">
+	                        Áp dụng
+	                      </button>
+	                    </div>
+	                    <div id="booking-voucher-feedback" class="summary-voucher__feedback" hidden></div>
+	                    <div id="booking-voucher-selected" class="summary-voucher__selected" hidden></div>
+	                    <div id="booking-voucher-list" class="summary-voucher__list"></div>
+	                  </div>
 
-                  <!-- Phí đặt cọc -->
-                  <div class="summary-item">
+	                  <div class="summary-divider"></div>
+
+	                  <div class="summary-item">
+	                    <div class="summary-item-label">Tổng tiền gốc</div>
+	                    <div class="summary-item-value" id="summary-total">
+	                      <span class="empty">--</span>
+	                    </div>
+	                  </div>
+
+	                  <div class="summary-item">
+	                    <div class="summary-item-label">Giảm giá voucher</div>
+	                    <div class="summary-item-value" id="summary-discount">
+	                      <span class="empty">--</span>
+	                    </div>
+	                  </div>
+
+	                  <div class="summary-item">
+	                    <div class="summary-item-label">Tổng sau giảm</div>
+	                    <div class="summary-item-value" id="summary-final-total">
+	                      <span class="empty">--</span>
+	                    </div>
+	                  </div>
+
+	                  <!-- Phí đặt cọc -->
+	                  <div class="summary-item">
                     <div class="summary-item-label">Phí đặt cọc</div>
                 <div class="summary-item-value" id="summary-deposit">
                   <span class="empty">--</span>
@@ -478,10 +521,24 @@
           Hoàn tất tiền cọc để giữ chỗ cho lịch hẹn của bạn.
         </p>
 
-        <div class="booking-payment-modal__amount">
-          <span>Tiền cọc cần thanh toán</span>
-          <strong id="booking-payment-deposit-amount">0 VNĐ</strong>
-        </div>
+	        <div class="booking-payment-modal__amount">
+	          <div class="booking-payment-modal__amount-row">
+	            <span>Tổng tiền gốc</span>
+	            <strong id="booking-payment-original-total">0 VNĐ</strong>
+	          </div>
+	          <div class="booking-payment-modal__amount-row">
+	            <span>Giảm giá</span>
+	            <strong id="booking-payment-discount">0 VNĐ</strong>
+	          </div>
+	          <div class="booking-payment-modal__amount-row" id="booking-payment-voucher-row" hidden>
+	            <span>Voucher áp dụng</span>
+	            <strong id="booking-payment-voucher-code">-</strong>
+	          </div>
+	          <div class="booking-payment-modal__amount-row booking-payment-modal__amount-row--deposit">
+	            <span>Tiền cọc cần thanh toán</span>
+	            <strong id="booking-payment-deposit-amount">0 VNĐ</strong>
+	          </div>
+	        </div>
 
         <div class="booking-payment-modal__methods">
           <button type="button" class="booking-payment-method" id="booking-payment-vnpay">
