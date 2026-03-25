@@ -95,6 +95,9 @@ public class CustomerWalletController {
             emptyResponse.put("balance", 0.0);
             emptyResponse.put("availableBalance", 0.0);
             emptyResponse.put("pendingWithdrawalAmount", 0.0);
+            emptyResponse.put("dailyWithdrawalLimit", WalletService.DAILY_WITHDRAWAL_LIMIT.doubleValue());
+            emptyResponse.put("withdrawnToday", 0.0);
+            emptyResponse.put("remainingDailyWithdrawalLimit", WalletService.DAILY_WITHDRAWAL_LIMIT.doubleValue());
             emptyResponse.put("transactions", List.of());
             return ResponseEntity.ok(emptyResponse);
         }
@@ -106,6 +109,9 @@ public class CustomerWalletController {
         response.put("balance", wallet.getBalance().doubleValue());
         response.put("availableBalance", walletService.getAvailableBalance(wallet.getCustomer()).doubleValue());
         response.put("pendingWithdrawalAmount", walletService.getPendingWithdrawalAmount(wallet.getCustomer()).doubleValue());
+        response.put("dailyWithdrawalLimit", WalletService.DAILY_WITHDRAWAL_LIMIT.doubleValue());
+        response.put("withdrawnToday", walletService.getWithdrawnToday(wallet.getCustomer()).doubleValue());
+        response.put("remainingDailyWithdrawalLimit", walletService.getRemainingDailyWithdrawalLimit(wallet.getCustomer()).doubleValue());
         response.put("transactions", transactions.stream().map(t -> Map.of(
                 "id", t.getId(),
                 "type", t.getType().toString(),

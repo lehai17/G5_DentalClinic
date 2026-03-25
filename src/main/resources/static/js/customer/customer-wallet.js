@@ -1,4 +1,4 @@
-const WALLET_TOPUP_MIN = 10000;
+﻿const WALLET_TOPUP_MIN = 10000;
 const WALLET_TOPUP_MAX = 100000000;
 const WALLET_TRANSACTIONS_PER_PAGE = 15;
 
@@ -6,6 +6,9 @@ let walletState = {
   balance: 0,
   availableBalance: 0,
   pendingWithdrawalAmount: 0,
+  dailyWithdrawalLimit: 0,
+  withdrawnToday: 0,
+  remainingDailyWithdrawalLimit: 0,
 };
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -63,11 +66,15 @@ function loadWalletData() {
         balance: Number(data.balance || 0),
         availableBalance: Number(data.availableBalance || 0),
         pendingWithdrawalAmount: Number(data.pendingWithdrawalAmount || 0),
+        dailyWithdrawalLimit: Number(data.dailyWithdrawalLimit || 0),
+        withdrawnToday: Number(data.withdrawnToday || 0),
+        remainingDailyWithdrawalLimit: Number(data.remainingDailyWithdrawalLimit || 0),
       };
 
       const balanceEl = document.getElementById("wallet-balance");
       const availableBalanceEl = document.getElementById("wallet-available-balance");
       const pendingWithdrawalEl = document.getElementById("wallet-pending-withdrawal");
+      const dailyWithdrawalRemainingEl = document.getElementById("wallet-daily-withdrawal-remaining");
 
       if (balanceEl) {
         balanceEl.textContent = formatCurrency(walletState.balance);
@@ -79,6 +86,11 @@ function loadWalletData() {
       if (pendingWithdrawalEl) {
         pendingWithdrawalEl.textContent =
           "Đang chờ rút: " + formatCurrency(walletState.pendingWithdrawalAmount);
+      }
+      if (dailyWithdrawalRemainingEl) {
+        dailyWithdrawalRemainingEl.textContent =
+          "Hạn mức rút hôm nay còn lại: " +
+          formatCurrency(walletState.remainingDailyWithdrawalLimit);
       }
 
       if (loading) loading.style.display = "none";
@@ -423,6 +435,7 @@ function bindWithdrawModal() {
   const amountInput = document.getElementById("wallet-withdraw-amount");
   const descriptionInput = document.getElementById("wallet-withdraw-description");
   const availablePreview = document.getElementById("wallet-withdraw-available-preview");
+  const limitPreview = document.getElementById("wallet-withdraw-limit-preview");
   const submitBtn = document.getElementById("wallet-withdraw-submit");
 
   function updateAvailablePreview() {
@@ -433,11 +446,24 @@ function bindWithdrawModal() {
       ".";
   }
 
+  function updateLimitPreview() {
+    if (!limitPreview) return;
+    limitPreview.textContent =
+      "Hạn mức rút hôm nay còn lại: " +
+      formatCurrency(walletState.remainingDailyWithdrawalLimit) +
+      " / " +
+      formatCurrency(walletState.dailyWithdrawalLimit) +
+      ". Đã ghi nhận hôm nay: " +
+      formatCurrency(walletState.withdrawnToday) +
+      ".";
+  }
+
   function openModal() {
     if (!modal) return;
     modal.hidden = false;
     document.body.style.overflow = "hidden";
     updateAvailablePreview();
+    updateLimitPreview();
     if (amountInput) amountInput.focus();
   }
 
@@ -504,6 +530,15 @@ function bindWithdrawModal() {
           "Số tiền yêu cầu vượt quá số dư khả dụng hiện tại.",
           "warning",
           "Không đủ số dư khả dụng",
+        );
+        return;
+      }
+
+      if (amount > walletState.remainingDailyWithdrawalLimit) {
+        showAlert(
+          "Số tiền yêu cầu vượt quá hạn mức rút tiền còn lại trong hôm nay.",
+          "warning",
+          "Vượt hạn mức hôm nay",
         );
         return;
       }

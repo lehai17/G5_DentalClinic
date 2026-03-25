@@ -171,6 +171,21 @@ public class WalletService {
         return balance.subtract(pendingWithdrawal).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
     }
 
+    public BigDecimal getWithdrawnToday(CustomerProfile customer) {
+        if (customer == null) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+        Wallet wallet = getOrCreateWallet(customer);
+        return getWithdrawnToday(wallet);
+    }
+
+    public BigDecimal getRemainingDailyWithdrawalLimit(CustomerProfile customer) {
+        BigDecimal withdrawnToday = getWithdrawnToday(customer);
+        return DAILY_WITHDRAWAL_LIMIT.subtract(withdrawnToday)
+                .max(BigDecimal.ZERO)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
     @Transactional
     public WalletTransaction createWithdrawalRequest(Long userId, BigDecimal amount, String description) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -279,20 +294,7 @@ public class WalletService {
             return;
         }
 
-        LocalDate today = LocalDate.now();
-        LocalDateTime from = today.atStartOfDay();
-        LocalDateTime to = today.plusDays(1).atStartOfDay().minusNanos(1);
-        BigDecimal withdrawnToday = walletTransactionRepository
-                .sumAmountByWalletAndTypeAndStatusesAndCreatedAtBetween(
-                        wallet.getId(),
-                        WalletTransactionType.WITHDRAWAL,
-                        Set.of(WalletTransactionStatus.PENDING, WalletTransactionStatus.COMPLETED),
-                        from,
-                        to);
-
-        BigDecimal normalizedToday = (withdrawnToday == null ? BigDecimal.ZERO : withdrawnToday)
-                .max(BigDecimal.ZERO)
-                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal normalizedToday = getWithdrawnToday(wallet);
         BigDecimal projectedTotal = normalizedToday.add(requestedAmount).setScale(2, RoundingMode.HALF_UP);
 
         if (projectedTotal.compareTo(DAILY_WITHDRAWAL_LIMIT) > 0) {
@@ -306,5 +308,26 @@ public class WalletService {
 
     public List<WalletTransaction> getTransactionsByAppointment(Long appointmentId) {
         return walletTransactionRepository.findByAppointmentId(appointmentId);
+    }
+
+    private BigDecimal getWithdrawnToday(Wallet wallet) {
+        if (wallet == null || wallet.getId() == null) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime from = today.atStartOfDay();
+        LocalDateTime to = today.plusDays(1).atStartOfDay().minusNanos(1);
+        BigDecimal withdrawnToday = walletTransactionRepository
+                .sumAmountByWalletAndTypeAndStatusesAndCreatedAtBetween(
+                        wallet.getId(),
+                        WalletTransactionType.WITHDRAWAL,
+                        Set.of(WalletTransactionStatus.PENDING, WalletTransactionStatus.COMPLETED),
+                        from,
+                        to);
+
+        return (withdrawnToday == null ? BigDecimal.ZERO : withdrawnToday)
+                .max(BigDecimal.ZERO)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 }

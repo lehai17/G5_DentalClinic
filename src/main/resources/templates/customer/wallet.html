@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -43,6 +43,7 @@
             <div class="wallet-balance-meta">
               <span id="wallet-available-balance">Khả dụng: 0 VND</span>
               <span id="wallet-pending-withdrawal">Đang chờ rút: 0 VND</span>
+              <span id="wallet-daily-withdrawal-remaining">Hạn mức rút hôm nay còn lại: 0 VND</span>
             </div>
             <div class="wallet-actions">
               <a href="#" class="wallet-action" id="wallet-open-topup">
@@ -174,6 +175,9 @@
           </div>
           <div class="wallet-helper" id="wallet-withdraw-available-preview">
             Số dư khả dụng để rút: 0 VND.
+          </div>
+          <div class="wallet-helper" id="wallet-withdraw-limit-preview">
+            Hạn mức rút hôm nay còn lại: 0 VND.
           </div>
         </div>
 
