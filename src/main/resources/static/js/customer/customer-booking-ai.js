@@ -1,10 +1,12 @@
 (function () {
     'use strict';
 
+    // Lấy nhanh 1 phần tử theo id
     function qs(id) {
         return document.getElementById(id);
     }
 
+    // Chuyển text thường thành text an toàn để hiển thị HTML
     function escapeHtml(str) {
         return String(str || '')
             .replace(/&/g, '&amp;')
@@ -14,15 +16,18 @@
             .replace(/'/g, '&#039;');
     }
 
+    // Chuyển text an toàn để gán vào thuộc tính HTML
     function escapeAttr(str) {
         return escapeHtml(str);
     }
 
+    // Định dạng giờ từ HH:mm:ss về HH:mm
     function formatTime(value) {
         if (!value) return '';
         return String(value).slice(0, 5);
     }
 
+    // Đổi ngày từ yyyy-MM-dd sang dd/MM/yyyy để dễ nhìn
     function toDateDisplay(value) {
         if (!value) return '';
         var parts = String(value).split('-');
@@ -30,12 +35,14 @@
         return parts[2] + '/' + parts[1] + '/' + parts[0];
     }
 
+    // Bỏ chọn toàn bộ dịch vụ trong form booking chính
     function uncheckAllServices() {
         document.querySelectorAll('.customer-service-checkbox').forEach(function (cb) {
             cb.checked = false;
         });
     }
 
+    // Chỉ chọn đúng 1 dịch vụ theo serviceId và kích hoạt sự kiện change
     function checkOnlyOneService(serviceId) {
         uncheckAllServices();
 
@@ -47,6 +54,7 @@
         }
     }
 
+    // Lấy id dịch vụ AI đang được chọn từ radio hoặc từ dịch vụ duy nhất
     function getSelectedAIServiceId(data) {
         var checked = document.querySelector('input[name="ai-service-choice"]:checked');
         if (checked) {
@@ -62,6 +70,7 @@
         return null;
     }
 
+    // Lấy đầy đủ thông tin dịch vụ AI đang được chọn
     function getSelectedServiceMeta(data) {
         var selectedId = getSelectedAIServiceId(data);
         if (!selectedId || !Array.isArray(data.services)) return null;
@@ -70,6 +79,7 @@
         }) || null;
     }
 
+    // Tạo khung HTML cơ bản để hiển thị kết quả AI: message, dịch vụ, khu vực slot
     function buildBaseResult(data) {
         var html = '';
         html += '<div style="padding:12px;border:1px solid #dbeafe;background:#eff6ff;border-radius:10px;">';
@@ -85,24 +95,29 @@
                 html += '<div style="margin-top:10px;padding:10px;border:1px solid #bfdbfe;border-radius:10px;background:#fff;">';
                 html += '<strong>' + escapeHtml(one.name) + '</strong>';
                 if (one.durationMinutes) {
-                    html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Thời lượng: ' + escapeHtml(String(one.durationMinutes)) + ' phút</div>';
+                    html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Thời lượng: '
+                        + escapeHtml(String(one.durationMinutes)) + ' phút</div>';
                 }
                 if (one.price) {
-                    html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Giá tham khảo: ' + escapeHtml(Number(one.price).toLocaleString('vi-VN')) + ' VNĐ</div>';
+                    html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Giá tham khảo: '
+                        + escapeHtml(Number(one.price).toLocaleString('vi-VN')) + ' VNĐ</div>';
                 }
                 html += '</div>';
             } else {
                 html += '<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;" id="ai-service-choice-list">';
                 data.services.forEach(function (service, index) {
                     html += '<label style="display:flex;align-items:flex-start;gap:8px;padding:10px;border:1px solid #bfdbfe;border-radius:10px;background:#fff;cursor:pointer;">';
-                    html += '<input type="radio" name="ai-service-choice" value="' + escapeAttr(service.id) + '" ' + (index === 0 ? 'checked' : '') + ' style="margin-top:3px;">';
+                    html += '<input type="radio" name="ai-service-choice" value="' + escapeAttr(service.id) + '" '
+                        + (index === 0 ? 'checked' : '') + ' style="margin-top:3px;">';
                     html += '<span>';
                     html += '<strong>' + escapeHtml(service.name) + '</strong>';
                     if (service.durationMinutes) {
-                        html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Thời lượng: ' + escapeHtml(String(service.durationMinutes)) + ' phút</div>';
+                        html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Thời lượng: '
+                            + escapeHtml(String(service.durationMinutes)) + ' phút</div>';
                     }
                     if (service.price) {
-                        html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Giá tham khảo: ' + escapeHtml(Number(service.price).toLocaleString('vi-VN')) + ' VNĐ</div>';
+                        html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">Giá tham khảo: '
+                            + escapeHtml(Number(service.price).toLocaleString('vi-VN')) + ' VNĐ</div>';
                     }
                     html += '</span>';
                     html += '</label>';
@@ -112,6 +127,7 @@
             }
             html += '</div>';
         }
+
         if (!Array.isArray(data.services) || data.services.length === 0) {
             html += '</div>';
             return html;
@@ -119,7 +135,7 @@
 
         html += '<div>';
         html += '<strong>Khung giờ gợi ý:</strong>';
-        html += '<div id="ai-slot-loading" style="display:none;margin-top:8px;color:#6b7280;">Đang tải khung giờ phù hợp...</div>';
+        html += '<div id="ai-slot-loading" style="display:none;margin-top:8px;color:#6b7280;">Đang tải khung giờ phù hợp.</div>';
         html += '<div id="ai-slot-error" style="display:none;margin-top:8px;color:#dc2626;"></div>';
         html += '<div id="ai-slot-options" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>';
         html += '</div>';
@@ -127,7 +143,7 @@
         return html;
     }
 
-
+    // Hiển thị kết quả AI ra màn hình rồi bind sự kiện đổi dịch vụ và tải slot
     function renderResult(data) {
         var container = qs('ai-booking-result');
         if (!container) return;
@@ -139,6 +155,7 @@
         refreshSlotsForSelectedService(data);
     }
 
+    // Gắn sự kiện khi người dùng đổi dịch vụ AI để tải lại slot tương ứng
     function bindServiceChange(data) {
         document.querySelectorAll('input[name="ai-service-choice"]').forEach(function (radio) {
             radio.addEventListener('change', function () {
@@ -147,6 +164,7 @@
         });
     }
 
+    // Tải lại các khung giờ phù hợp theo dịch vụ AI đang chọn
     function refreshSlotsForSelectedService(data) {
         var serviceId = getSelectedAIServiceId(data);
         var loadingEl = qs('ai-slot-loading');
@@ -183,13 +201,19 @@
             .then(function (slots) {
                 var serviceMeta = getSelectedServiceMeta(data);
                 var durationMinutes = serviceMeta && serviceMeta.durationMinutes ? Number(serviceMeta.durationMinutes) : 30;
-                var slotOptions = buildAiSlotOptions(Array.isArray(slots) ? slots : [], preferredDate, durationMinutes, timePreference, preferredTime);
+                var slotOptions = buildAiSlotOptions(
+                    Array.isArray(slots) ? slots : [],
+                    preferredDate,
+                    durationMinutes,
+                    timePreference,
+                    preferredTime
+                );
                 renderSlotButtons(data, slotOptions, optionsEl);
             })
             .catch(function (err) {
                 console.error(err);
                 if (errorEl) {
-                    errorEl.textContent = err.message || 'Không thể tải khung giờ phù hợp.';
+                    errorEl.textContent = 'Không thể tải khung giờ phù hợp.';
                     errorEl.style.display = 'block';
                 }
             })
@@ -198,36 +222,40 @@
             });
     }
 
+    // Tạo danh sách slot AI ưu tiên theo ngày, buổi và giờ mong muốn
     function buildAiSlotOptions(slots, date, durationMinutes, timePreference, preferredTime) {
-        var selectable = slots.filter(function (slot) {
-            if (!slot || !slot.startTime) return false;
-            if (slot.disabled === true) return false;
-            if (slot.available === false && Number(slot.availableSpots || 0) <= 0) return false;
-            return true;
-        });
-
-        var filtered = selectable.filter(function (slot) {
-            var hour = parseInt(String(slot.startTime).slice(0, 2), 10);
-            if (Number.isNaN(hour) || !timePreference || timePreference === 'any') return true;
-            if (timePreference === 'morning') return hour < 12;
-            if (timePreference === 'afternoon') return hour >= 12 && hour < 17;
-            if (timePreference === 'evening') return hour >= 17;
-            return true;
-        });
-
-        if (!filtered.length) {
-            filtered = selectable;
-        }
-
         var preferredMinutes = parseTimeToMinutes(preferredTime);
 
-        return filtered
+        var availableSlots = slots.filter(function (slot) {
+            if (!slot || !slot.startTime) return false;
+            if (slot.disabled) return false;
+            if (slot.available === false) return false;
+            if (typeof slot.availableSpots === 'number' && slot.availableSpots <= 0) return false;
+            return true;
+        });
+
+        var filteredByPreference = availableSlots.filter(function (slot) {
+            var startMinutes = parseTimeToMinutes(slot.startTime);
+            if (startMinutes === null) return false;
+
+            if (timePreference === 'morning') return startMinutes < 12 * 60;
+            if (timePreference === 'afternoon') return startMinutes >= 12 * 60 && startMinutes < 17 * 60;
+            if (timePreference === 'evening') return startMinutes >= 17 * 60;
+            return true;
+        });
+
+        var finalSlots = filteredByPreference.length ? filteredByPreference : availableSlots;
+
+        return finalSlots
             .map(function (slot) {
                 var startMinutes = parseTimeToMinutes(slot.startTime);
-                var endTime = addMinutes(slot.startTime, durationMinutes || 30);
-                var distance = preferredMinutes === null ? 0 : Math.abs(startMinutes - preferredMinutes);
+                var endTime = addMinutes(slot.startTime, durationMinutes);
+                var distance = preferredMinutes === null || startMinutes === null
+                    ? 999999
+                    : Math.abs(startMinutes - preferredMinutes);
+
                 return {
-                    slotId: slot.id,
+                    slotId: slot.slotId || slot.id || '',
                     date: date,
                     startTime: slot.startTime,
                     endTime: endTime,
@@ -245,6 +273,7 @@
             .slice(0, 5);
     }
 
+    // Hiển thị các nút khung giờ để người dùng bấm chọn
     function renderSlotButtons(data, slotOptions, optionsEl) {
         if (!slotOptions.length) {
             optionsEl.innerHTML = '<div style="font-size:13px;color:#6b7280;">Ngày này chưa còn khung giờ phù hợp cho dịch vụ bạn vừa chọn.</div>';
@@ -261,10 +290,12 @@
                 + 'style="padding:10px 12px;border:1px solid #bfdbfe;border-radius:10px;background:white;cursor:pointer;">'
                 + escapeHtml(slot.displayText) + '</button>';
         });
+
         optionsEl.innerHTML = html;
         bindApplySuggestion(data);
     }
 
+    // Gắn sự kiện cho từng nút slot để áp dụng gợi ý AI vào form booking chính
     function bindApplySuggestion(data) {
         document.querySelectorAll('.ai-slot-option').forEach(function (btn) {
             btn.addEventListener('click', function () {
@@ -294,6 +325,7 @@
         });
     }
 
+    // Đổi chuỗi giờ HH:mm thành tổng số phút để tiện so sánh
     function parseTimeToMinutes(value) {
         if (!value) return null;
         var parts = String(value).split(':');
@@ -304,6 +336,7 @@
         return (hour * 60) + minute;
     }
 
+    // Cộng thêm số phút vào 1 giờ bắt đầu để tính giờ kết thúc
     function addMinutes(timeValue, minutesToAdd) {
         var total = parseTimeToMinutes(timeValue);
         if (total === null) return timeValue;
@@ -313,6 +346,7 @@
         return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
     }
 
+    // Gửi yêu cầu lên backend để AI phân tích nhu cầu và trả về gợi ý
     function requestSuggestion() {
         var messageEl = qs('ai-booking-message');
         var loadingEl = qs('ai-booking-loading');
@@ -352,6 +386,7 @@
             });
     }
 
+    // Gắn sự kiện click cho nút AI gợi ý lịch
     function bindEvents() {
         var btn = qs('btn-ai-suggest');
         if (btn) {
@@ -359,5 +394,6 @@
         }
     }
 
+    // Chạy khởi tạo sau khi trang tải xong
     document.addEventListener('DOMContentLoaded', bindEvents);
 })();

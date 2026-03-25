@@ -31,10 +31,12 @@ public class ServiceMatcher {
 
     private final ServiceRepository serviceRepository;
 
+    // Khởi tạo bộ matcher dùng để map keyword AI sang dịch vụ thật trong database
     public ServiceMatcher(ServiceRepository serviceRepository) {
         this.serviceRepository = serviceRepository;
     }
 
+    // Tìm danh sách dịch vụ phù hợp nhất từ keyword AI và câu người dùng
     public List<Services> matchServices(List<String> keywords, String rawMessage) {
         List<Services> activeServices = serviceRepository.findByActiveTrue();
         if (activeServices == null || activeServices.isEmpty()) {
@@ -75,6 +77,7 @@ public class ServiceMatcher {
         return fallbackGeneralExam(activeServices);
     }
 
+    // Suy ra thứ tự ưu tiên các nhóm dịch vụ từ câu người dùng và keyword AI
     private LinkedHashSet<String> inferOrderedGroups(String raw, List<String> keywords) {
         LinkedHashSet<String> ordered = new LinkedHashSet<>();
 
@@ -104,6 +107,7 @@ public class ServiceMatcher {
         return ordered;
     }
 
+    // Chấm điểm các nhóm dịch vụ để ưu tiên nhóm phù hợp nhất với triệu chứng
     private Map<String, Integer> buildGroupScores(String raw, List<String> keywords) {
         Map<String, Integer> scores = new LinkedHashMap<>();
         putScore(scores, GROUP_GENERAL_EXAM, isGeneralExamSymptom(raw), 7);
@@ -128,12 +132,14 @@ public class ServiceMatcher {
         return scores;
     }
 
+    // Cộng điểm cho một nhóm dịch vụ nếu điều kiện triệu chứng thỏa mãn
     private void putScore(Map<String, Integer> scores, String group, boolean matched, int value) {
         if (matched) {
             scores.put(group, scores.getOrDefault(group, 0) + value);
         }
     }
 
+    // Xác định nhóm dịch vụ chính từ câu người dùng hoặc từ kết quả LLM
     private String decidePrimaryGroupFromRawOrLlm(String raw, List<String> keywords) {
         if (isToothJewelrySymptom(raw)) return GROUP_TOOTH_JEWELRY;
         if (isWisdomToothSymptom(raw)) return GROUP_WISDOM_TOOTH;
@@ -152,6 +158,7 @@ public class ServiceMatcher {
         return null;
     }
 
+    // Lấy nhóm dịch vụ đặc hiệu đầu tiên, bỏ qua nhóm khám tổng quát nếu có nhóm rõ hơn
     private String firstSpecificGroup(List<String> keywords) {
         if (keywords == null || keywords.isEmpty()) {
             return null;
@@ -166,6 +173,7 @@ public class ServiceMatcher {
         return null;
     }
 
+    // Lấy nhóm chỉnh nha đầu tiên nếu keyword có liên quan tới niềng răng
     private String firstOrthodonticGroup(List<String> keywords) {
         if (keywords == null || keywords.isEmpty()) {
             return null;
@@ -180,6 +188,7 @@ public class ServiceMatcher {
         return null;
     }
 
+    // Phân loại ý định chỉnh nha để quyết định route sang niềng kim loại hay invisalign
     private String classifyOrthodonticIntent(String raw, List<String> keywords) {
         String llmOrtho = firstOrthodonticGroup(keywords);
 
@@ -195,6 +204,7 @@ public class ServiceMatcher {
         return null;
     }
 
+    // Điều hướng riêng cho nhóm chỉnh nha để trả ra dịch vụ phù hợp đúng thứ tự ưu tiên
     private List<Services> routeOrthodonticServices(List<Services> activeServices, String orthoIntent) {
         return switch (orthoIntent) {
             case ORTHO_EXACT_METAL -> matchOrthodonticServices(activeServices, false, true);
@@ -206,6 +216,7 @@ public class ServiceMatcher {
         };
     }
 
+    // Xếp hạng dịch vụ theo mức độ khớp tự do giữa câu người dùng, keyword AI và mô tả dịch vụ
     private List<Services> rankByFreeText(List<Services> services, String raw, List<String> keywords) {
         Map<Services, Integer> scores = new LinkedHashMap<>();
 
@@ -253,6 +264,7 @@ public class ServiceMatcher {
                 .collect(Collectors.toList());
     }
 
+    // Match đúng một dịch vụ đại diện cho một nhóm mục tiêu
     private List<Services> matchSingleGroup(List<Services> services, String targetGroup) {
         if (services == null || services.isEmpty() || targetGroup == null || targetGroup.isBlank()) {
             return List.of();
@@ -266,6 +278,7 @@ public class ServiceMatcher {
                 .collect(Collectors.toList());
     }
 
+        // Tự nhận diện một dịch vụ trong DB thuộc những nhóm nào dựa trên tên và mô tả
     private Set<String> detectServiceGroups(Services service) {
         Set<String> groups = new LinkedHashSet<>();
         if (service == null) {
@@ -296,7 +309,9 @@ public class ServiceMatcher {
             groups.add(GROUP_FILLING);
         }
 
-        if (containsAnyLoose(text, "dieu tri tuy", "chua tuy", "lay tuy", "tuy rang")) {
+        if (containsAnyLoose(text,
+                "dieu tri tuy", "chua tuy", "lay tuy", "tuy rang",
+                "noi nha", "dieu tri noi nha", "endodontic", "root canal")) {
             groups.add(GROUP_ROOT_CANAL);
         }
 
@@ -323,6 +338,7 @@ public class ServiceMatcher {
         return groups;
     }
 
+    // Fallback về dịch vụ khám tổng quát khi không match được nhóm cụ thể nào
     private List<Services> fallbackGeneralExam(List<Services> services) {
         return services.stream()
                 .filter(Objects::nonNull)
@@ -332,6 +348,7 @@ public class ServiceMatcher {
                 .collect(Collectors.toList());
     }
 
+    // Lấy danh sách dịch vụ chỉnh nha theo thứ tự ưu tiên: invisalign trước hoặc kim loại trước
     private List<Services> matchOrthodonticServices(List<Services> activeServices, boolean invisalignFirst, boolean onlyOne) {
         Services metal = activeServices.stream()
                 .filter(s -> detectServiceGroups(s).contains(GROUP_METAL_BRACES))
@@ -354,6 +371,7 @@ public class ServiceMatcher {
         return result;
     }
 
+    // Chuẩn hóa keyword thô thành mã nhóm dịch vụ chuẩn của hệ thống
     private String canonicalKeyword(String rawKeyword) {
         String keyword = normalize(rawKeyword);
         if (keyword.isBlank()) {
@@ -397,6 +415,7 @@ public class ServiceMatcher {
         return null;
     }
 
+    // Kiểm tra triệu chứng có nghiêng về khám tổng quát hay không
     private boolean isGeneralExamSymptom(String raw) {
         return containsAnyLoose(raw,
                 "kham rang", "kham tong quat", "kiem tra rang", "kiem tra rang mieng", "tu van rang",
@@ -407,12 +426,14 @@ public class ServiceMatcher {
         );
     }
 
+    // Kiểm tra triệu chứng có nghiêng về cạo vôi, lấy cao răng hay không
     private boolean isScalingSymptom(String raw) {
         return containsAnyLoose(raw,
                 "cao voi", "cao voi rang", "lay cao rang", "cao rang",
                 "ve sinh rang mieng", "ve sinh rang", "voi rang", "cao mang bam");
     }
 
+    // Kiểm tra triệu chứng có liên quan tới răng khôn hay không
     private boolean isWisdomToothSymptom(String raw) {
         return containsAnyLoose(raw,
                 "rang khon", "rang so 8", "nho rang khon", "nho rang so 8",
@@ -421,6 +442,7 @@ public class ServiceMatcher {
                 "ha mieng bi dau vi rang khon", "viem quanh rang khon", "phia trong cung cua ham");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới tẩy trắng răng hay không
     private boolean isWhiteningSymptom(String raw) {
         return containsAnyLoose(raw,
                 "tay trang rang", "lam trang rang", "whitening",
@@ -428,6 +450,7 @@ public class ServiceMatcher {
                 "rang khong con trang", "muon rang trang hon", "trang sang hon", "cai thien mau rang");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới trám răng hay không
     private boolean isFillingSymptom(String raw) {
         return containsAnyLoose(raw,
                 "tram rang", "tram tham my", "sau rang", "lo sau", "lo nho tren rang",
@@ -435,14 +458,20 @@ public class ServiceMatcher {
                 "den mat nhai", "thuc an mac vao lo", "tram cho sau rang");
     }
 
+    // Kiểm tra triệu chứng có nghiêng về điều trị tủy hay không
     private boolean isRootCanalSymptom(String raw) {
         return containsAnyLoose(raw,
                 "dau rang du doi", "dau rang ve dem", "mat ngu vi dau rang",
                 "e buot keo dai", "viem tuy", "chua tuy", "lay tuy",
+                "dieu tri tuy", "tuy rang", "tuy co van de", "tuy rang co van de",
+                "rang bi van de tuy", "co van de ve tuy", "viem tuy rang",
+                "chay mau tuy", "chay mau tuy rang",
+                "noi nha", "dieu tri noi nha", "endodontic",
                 "dau sau ben trong rang", "dau rang theo con giat", "go vao rang thay dau",
                 "ap xe rang", "sung mu", "dau rang tu phat", "chet tuy", "dau buot lien tuc");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới implant hay không
     private boolean isImplantSymptom(String raw) {
         return containsAnyLoose(raw,
                 "mat rang", "muon trong rang", "cay implant", "cay ghep implant", "lam implant",
@@ -452,6 +481,7 @@ public class ServiceMatcher {
                 "rang co dinh sau khi mat rang");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới bọc răng sứ Cercon hay không
     private boolean isCerconCrownSymptom(String raw) {
         return containsAnyLoose(raw,
                 "boc rang su", "lam rang su", "boc su cercon", "phuc hinh rang su",
@@ -461,6 +491,7 @@ public class ServiceMatcher {
                 "nhiem mau nang", "lam mao su", "phuc hinh bang cercon");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới đính đá răng hay không
     private boolean isToothJewelrySymptom(String raw) {
         return containsAnyLoose(raw,
                 "dinh da rang", "gan da rang", "lam dep rang bang da", "gan charm len rang",
@@ -468,6 +499,7 @@ public class ServiceMatcher {
                 "trang tri rang bang da", "gan mot vien da len rang cua", "tooth jewelry");
     }
 
+    // Kiểm tra người dùng có nói rõ niềng kim loại hay không
     private boolean isExactMetalCase(String raw) {
         return containsAnyLoose(raw,
                 "nieng rang kim loai", "nieng mac cai kim loai", "nieng mac cai thuong",
@@ -475,6 +507,7 @@ public class ServiceMatcher {
                 "nieng kim loai vi chi phi thap", "nieng kim loai cho rang lech");
     }
 
+    // Kiểm tra người dùng có nói rõ niềng Invisalign hay không
     private boolean isExactInvisalignCase(String raw) {
         return containsAnyLoose(raw,
                 "nieng invisalign", "nieng rang invisalign", "nieng rang trong suot",
@@ -484,6 +517,7 @@ public class ServiceMatcher {
                 "nieng rang nhung khong muon lo");
     }
 
+    // Kiểm tra người dùng có ưu tiên tính thẩm mỹ khi chỉnh nha hay không
     private boolean isAestheticOrthodonticCase(String raw) {
         return containsAnyLoose(raw,
                 "hay gap khach hang", "giao tiep nhieu", "muon tham my hon", "khong muon lo",
@@ -491,6 +525,7 @@ public class ServiceMatcher {
                 "tu tin hon khi giao tiep", "gap khach hang khong bi lo");
     }
 
+    // Kiểm tra đây có phải ca chỉnh nha phức tạp cần ưu tiên niềng truyền thống hay không
     private boolean isComplexOrthodonticCase(String raw) {
         return containsAnyLoose(raw,
                 "mom", "rang mom", "can sau", "can ho", "can cheo", "lech ham",
@@ -500,6 +535,7 @@ public class ServiceMatcher {
                 "ham tren va ham duoi lech nhau", "can vao nuou khi ngam mieng");
     }
 
+    // Kiểm tra đây có phải nhu cầu chỉnh nha chung chung, chưa nêu rõ loại niềng hay không
     private boolean isGeneralOrthodonticCase(String raw) {
         return containsAnyLoose(raw,
                 "nieng rang", "chinh nha",
@@ -510,6 +546,7 @@ public class ServiceMatcher {
                 "ho", "mom", "rang cua chia ra ngoai", "ham duoi dua ra truoc");
     }
 
+    // Kiểm tra text có chứa một trong các từ khóa đơn giản hay không
     private boolean containsAny(String text, String... tokens) {
         String normalized = normalize(text);
         for (String t : tokens) {
@@ -520,6 +557,7 @@ public class ServiceMatcher {
         return false;
     }
 
+    // Kiểm tra text có chứa một trong các cụm từ gần đúng sau khi chuẩn hóa hay không
     private boolean containsAnyLoose(String text, String... phrases) {
         for (String phrase : phrases) {
             if (containsPhraseLoose(text, phrase)) {
@@ -529,6 +567,7 @@ public class ServiceMatcher {
         return false;
     }
 
+    // Kiểm tra một cụm từ có xuất hiện gần đúng trong câu sau khi chuẩn hóa hay không
     private boolean containsPhraseLoose(String text, String phrase) {
         List<String> textTokens = tokenizeLoose(text);
         List<String> phraseTokens = tokenizeLoose(phrase);
@@ -546,6 +585,7 @@ public class ServiceMatcher {
         return true;
     }
 
+    // Tách câu thành các token đơn giản để phục vụ việc so khớp mềm
     private List<String> tokenizeLoose(String input) {
         String normalized = normalize(input).replaceAll("[^a-z0-9\\s]", " ");
         if (normalized.isBlank()) {
@@ -557,6 +597,7 @@ public class ServiceMatcher {
                 .toList();
     }
 
+    // Chuẩn hóa text: bỏ dấu, về chữ thường và loại bỏ nhiễu để match dễ hơn
     private String normalize(String input) {
         if (input == null) return "";
         return Normalizer.normalize(input, Normalizer.Form.NFD)

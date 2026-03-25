@@ -55,6 +55,7 @@ public class OpenAILLMService implements LLMService {
     @Value("${ai.openai.model}")
     private String model;
 
+    // Khởi tạo service gọi OpenAI và truy vấn danh sách dịch vụ từ database
     public OpenAILLMService(RestTemplate restTemplate, ServiceRepository serviceRepository) {
         this.restTemplate = restTemplate;
         this.objectMapper = new ObjectMapper();
@@ -62,6 +63,7 @@ public class OpenAILLMService implements LLMService {
     }
 
     @Override
+    // Gọi OpenAI để phân tích câu người dùng thành dữ liệu có cấu trúc cho AI booking
     public LLMBookingInterpretation interpretBookingRequest(String userMessage) {
         try {
             String today = LocalDate.now().toString();
@@ -198,6 +200,7 @@ Tin nhắn khách hàng:
         }
     }
 
+    // Tạo phần prompt mô tả danh mục dịch vụ hiện có để AI suy luận chính xác hơn
     private String buildServiceCatalogPrompt() {
         List<Services> services = serviceRepository.findByActiveTrue();
         if (services == null || services.isEmpty()) {
@@ -210,10 +213,12 @@ Tin nhắn khách hàng:
                 .collect(Collectors.joining("\n"));
     }
 
+    // Làm sạch text đầu vào để tránh null và loại bỏ khoảng trắng thừa
     private String safeText(String value) {
         return value == null ? "" : value.trim();
     }
 
+    // Tách phần nội dung JSON mà mô hình trả về từ response của OpenAI
     private String extractContent(String rawResponse) throws Exception {
         JsonNode root = objectMapper.readTree(rawResponse);
         JsonNode contentNode = root.path("choices").get(0).path("message").path("content");
@@ -223,6 +228,7 @@ Tin nhắn khách hàng:
         return contentNode.asText();
     }
 
+    // Chuẩn hóa toàn bộ dữ liệu AI trả về: ngày, giờ, buổi, độ khẩn cấp và nhóm dịch vụ
     private void sanitizeInterpretation(LLMBookingInterpretation interpretation, String originalMessage) {
         if (interpretation == null) {
             return;
@@ -245,6 +251,7 @@ Tin nhắn khách hàng:
         interpretation.setServiceKeywords(refineKeywordsBySymptoms(normalizedKeywords, originalMessage));
     }
 
+    // Chuẩn hóa ngày mong muốn, ưu tiên lấy từ AI rồi fallback sang phân tích câu người dùng
     private String safeDate(String preferredDate, String originalMessage) {
         if (preferredDate != null && preferredDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
             return preferredDate;
@@ -252,6 +259,7 @@ Tin nhắn khách hàng:
         return resolveRelativeDate(normalize(originalMessage));
     }
 
+    // Chuẩn hóa giờ mong muốn, ưu tiên lấy từ AI rồi fallback sang phân tích câu người dùng
     private String safeTime(String preferredTime, String originalMessage) {
         if (preferredTime != null && preferredTime.matches("([01]\\d|2[0-3]):[0-5]\\d")) {
             return preferredTime;
@@ -259,6 +267,7 @@ Tin nhắn khách hàng:
         return resolvePreferredTime(normalize(originalMessage));
     }
 
+    // Chuẩn hóa buổi mong muốn về các giá trị hợp lệ: morning, afternoon, evening hoặc any
     private String safeTimePreference(String timePreference, String originalMessage) {
         if (timePreference != null) {
             String value = timePreference.trim().toLowerCase(Locale.ROOT);
@@ -269,6 +278,7 @@ Tin nhắn khách hàng:
         return inferTimePreference(normalize(originalMessage));
     }
 
+    // Chuẩn hóa mức độ khẩn cấp của nhu cầu: low, medium hoặc high
     private String safeUrgency(String urgency, String originalMessage) {
         if (urgency != null) {
             String value = urgency.trim().toLowerCase(Locale.ROOT);
@@ -289,6 +299,7 @@ Tin nhắn khách hàng:
         return "low";
     }
 
+    // Làm sạch danh sách keyword dịch vụ AI trả về: bỏ trùng, chuẩn hóa tên và giới hạn số lượng
     private List<String> sanitizeKeywords(List<String> serviceKeywords, String originalMessage) {
         List<String> cleaned = new ArrayList<>();
         if (serviceKeywords != null) {
@@ -310,6 +321,7 @@ Tin nhắn khách hàng:
         return cleaned;
     }
 
+    // Tinh chỉnh lại keyword dịch vụ dựa trên triệu chứng thực tế trong câu người dùng
     private List<String> refineKeywordsBySymptoms(List<String> llmKeywords, String originalMessage) {
         String raw = normalize(originalMessage);
 
@@ -338,6 +350,7 @@ Tin nhắn khách hàng:
         return List.of(KEY_GENERAL_EXAM);
     }
 
+    // Fallback rule-based khi OpenAI lỗi để hệ thống vẫn có thể suy ra gợi ý cơ bản
     private LLMBookingInterpretation fallbackInterpretation(String userMessage) {
         LLMBookingInterpretation fallback = new LLMBookingInterpretation();
         fallback.setIntent("BOOK_APPOINTMENT");
@@ -352,6 +365,7 @@ Tin nhắn khách hàng:
         return fallback;
     }
 
+    // Phân tích các cụm ngày tương đối như mai, ngày kia, tuần sau thành ngày cụ thể
     private String resolveRelativeDate(String lower) {
         LocalDate today = LocalDate.now();
 
@@ -396,6 +410,7 @@ Tin nhắn khách hàng:
         return "";
     }
 
+    // Phân tích giờ mong muốn từ câu tự nhiên như 8h, 14:30, chiều 2 giờ
     private String resolvePreferredTime(String lower) {
         if (lower == null || lower.isBlank()) {
             return "";
@@ -429,6 +444,7 @@ Tin nhắn khách hàng:
         return "";
     }
 
+    // Suy ra buổi mong muốn từ câu người dùng nếu không có giờ cụ thể
     private String inferTimePreference(String lower) {
         if (lower == null || lower.isBlank()) {
             return "any";
@@ -440,6 +456,7 @@ Tin nhắn khách hàng:
         return "any";
     }
 
+    // Xác định keyword dịch vụ chính dựa trên câu người dùng và kết quả LLM
     private String decidePrimaryServiceKeyword(String raw, List<String> llmKeywords) {
         if (isToothJewelrySymptom(raw)) return KEY_TOOTH_JEWELRY;
         if (isWisdomToothSymptom(raw)) return KEY_WISDOM_TOOTH;
@@ -458,6 +475,7 @@ Tin nhắn khách hàng:
         return null;
     }
 
+    // Lấy keyword dịch vụ đầu tiên có tính đặc hiệu cao, bỏ qua nhóm khám tổng quát nếu có nhóm rõ hơn
     private String firstSpecificKeyword(List<String> llmKeywords) {
         if (llmKeywords == null || llmKeywords.isEmpty()) {
             return null;
@@ -472,6 +490,7 @@ Tin nhắn khách hàng:
         return null;
     }
 
+    // Lấy keyword chỉnh nha đầu tiên nếu người dùng đang hỏi về niềng răng
     private String firstOrthodonticKeyword(List<String> llmKeywords) {
         if (llmKeywords == null || llmKeywords.isEmpty()) {
             return null;
@@ -486,6 +505,7 @@ Tin nhắn khách hàng:
         return null;
     }
 
+    // Phân loại ý định chỉnh nha để tách giữa niềng kim loại, invisalign, ca phức tạp hay thẩm mỹ
     private String classifyOrthodonticIntent(String raw, List<String> llmKeywords) {
         String llmOrtho = firstOrthodonticKeyword(llmKeywords);
 
@@ -501,6 +521,7 @@ Tin nhắn khách hàng:
         return null;
     }
 
+    // Chuẩn hóa keyword thô về tên nhóm dịch vụ chuẩn của hệ thống
     private String canonicalKeyword(String rawKeyword) {
         String keyword = normalize(rawKeyword);
         if (keyword.isBlank()) {
@@ -543,6 +564,7 @@ Tin nhắn khách hàng:
         return null;
     }
 
+    // Kiểm tra triệu chứng có nghiêng về nhu cầu khám tổng quát hay không
     private boolean isGeneralExamSymptom(String raw) {
         return containsAnyLoose(raw,
                 "kham rang", "kham tong quat", "kiem tra rang", "kiem tra rang mieng", "tu van rang",
@@ -553,12 +575,14 @@ Tin nhắn khách hàng:
         );
     }
 
+    // Kiểm tra triệu chứng có nghiêng về cạo vôi, lấy cao răng hay không
     private boolean isScalingSymptom(String raw) {
         return containsAnyLoose(raw,
                 "cao voi", "cao voi rang", "lay cao rang", "cao rang",
                 "ve sinh rang mieng", "ve sinh rang", "voi rang", "cao mang bam");
     }
 
+    // Kiểm tra triệu chứng có liên quan tới răng khôn hay nhổ răng khôn hay không
     private boolean isWisdomToothSymptom(String raw) {
         return containsAnyLoose(raw,
                 "rang khon", "rang so 8", "nho rang khon", "nho rang so 8",
@@ -567,6 +591,7 @@ Tin nhắn khách hàng:
                 "ha mieng bi dau vi rang khon", "viem quanh rang khon", "phia trong cung cua ham");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới tẩy trắng răng hay không
     private boolean isWhiteningSymptom(String raw) {
         return containsAnyLoose(raw,
                 "tay trang rang", "lam trang rang", "whitening",
@@ -574,6 +599,7 @@ Tin nhắn khách hàng:
                 "rang khong con trang", "muon rang trang hon", "trang sang hon", "cai thien mau rang");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới trám răng hay không
     private boolean isFillingSymptom(String raw) {
         return containsAnyLoose(raw,
                 "tram rang", "tram tham my", "sau rang", "lo sau", "lo nho tren rang",
@@ -581,14 +607,20 @@ Tin nhắn khách hàng:
                 "den mat nhai", "thuc an mac vao lo", "tram cho sau rang");
     }
 
+    // Kiểm tra triệu chứng có nghiêng về điều trị tủy hay không
     private boolean isRootCanalSymptom(String raw) {
         return containsAnyLoose(raw,
                 "dau rang du doi", "dau rang ve dem", "mat ngu vi dau rang",
                 "e buot keo dai", "viem tuy", "chua tuy", "lay tuy",
+                "dieu tri tuy", "tuy rang", "tuy co van de", "tuy rang co van de",
+                "rang bi van de tuy", "co van de ve tuy", "viem tuy rang",
+                "chay mau tuy", "chay mau tuy rang",
+                "noi nha", "dieu tri noi nha", "endodontic",
                 "dau sau ben trong rang", "dau rang theo con giat", "go vao rang thay dau",
                 "ap xe rang", "sung mu", "dau rang tu phat", "chet tuy", "dau buot lien tuc");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới trồng răng implant hay không
     private boolean isImplantSymptom(String raw) {
         return containsAnyLoose(raw,
                 "mat rang", "muon trong rang", "cay implant", "cay ghep implant", "lam implant",
@@ -598,6 +630,7 @@ Tin nhắn khách hàng:
                 "rang co dinh sau khi mat rang");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới bọc răng sứ Cercon hay không
     private boolean isCerconCrownSymptom(String raw) {
         return containsAnyLoose(raw,
                 "boc rang su", "lam rang su", "boc su cercon", "phuc hinh rang su",
@@ -607,6 +640,7 @@ Tin nhắn khách hàng:
                 "nhiem mau nang", "lam mao su", "phuc hinh bang cercon");
     }
 
+    // Kiểm tra nhu cầu có liên quan tới đính đá răng hay không
     private boolean isToothJewelrySymptom(String raw) {
         return containsAnyLoose(raw,
                 "dinh da rang", "gan da rang", "lam dep rang bang da", "gan charm len rang",
@@ -614,6 +648,7 @@ Tin nhắn khách hàng:
                 "trang tri rang bang da", "gan mot vien da len rang cua", "tooth jewelry");
     }
 
+    // Kiểm tra người dùng có nói rõ đích danh niềng kim loại hay không
     private boolean isExactMetalCase(String raw) {
         return containsAnyLoose(raw,
                 "nieng rang kim loai", "nieng mac cai kim loai", "nieng mac cai thuong",
@@ -621,6 +656,7 @@ Tin nhắn khách hàng:
                 "nieng kim loai vi chi phi thap", "nieng kim loai cho rang lech");
     }
 
+    // Kiểm tra người dùng có nói rõ đích danh niềng Invisalign hay không
     private boolean isExactInvisalignCase(String raw) {
         return containsAnyLoose(raw,
                 "nieng invisalign", "nieng rang invisalign", "nieng rang trong suot",
@@ -630,6 +666,7 @@ Tin nhắn khách hàng:
                 "nieng rang nhung khong muon lo");
     }
 
+    // Kiểm tra người dùng có ưu tiên tính thẩm mỹ khi chỉnh nha hay không
     private boolean isAestheticOrthodonticCase(String raw) {
         return containsAnyLoose(raw,
                 "hay gap khach hang", "giao tiep nhieu", "muon tham my hon", "khong muon lo",
@@ -637,6 +674,7 @@ Tin nhắn khách hàng:
                 "tu tin hon khi giao tiep", "gap khach hang khong bi lo");
     }
 
+    // Kiểm tra đây có phải ca chỉnh nha phức tạp cần ưu tiên niềng truyền thống hay không
     private boolean isComplexOrthodonticCase(String raw) {
         return containsAnyLoose(raw,
                 "mom", "rang mom", "can sau", "can ho", "can cheo", "lech ham",
@@ -646,6 +684,7 @@ Tin nhắn khách hàng:
                 "ham tren va ham duoi lech nhau", "can vao nuou khi ngam mieng");
     }
 
+    // Kiểm tra đây có phải nhu cầu chỉnh nha chung chung, chưa chỉ rõ loại niềng hay không
     private boolean isGeneralOrthodonticCase(String raw) {
         return containsAnyLoose(raw,
                 "nieng rang", "chinh nha",
@@ -656,6 +695,7 @@ Tin nhắn khách hàng:
                 "ho", "mom", "rang cua chia ra ngoai", "ham duoi dua ra truoc");
     }
 
+    // Kiểm tra text có chứa một trong các từ khóa đơn giản được truyền vào hay không
     private boolean containsAny(String text, String... tokens) {
         String normalizedText = normalize(text);
         for (String token : tokens) {
@@ -666,6 +706,7 @@ Tin nhắn khách hàng:
         return false;
     }
 
+    // Kiểm tra text có chứa một trong các cụm từ gần đúng sau khi đã chuẩn hóa hay không
     private boolean containsAnyLoose(String text, String... phrases) {
         for (String phrase : phrases) {
             if (containsPhraseLoose(text, phrase)) {
@@ -675,6 +716,7 @@ Tin nhắn khách hàng:
         return false;
     }
 
+    // Kiểm tra một cụm từ có xuất hiện gần đúng trong câu sau khi chuẩn hóa hay không
     private boolean containsPhraseLoose(String text, String phrase) {
         List<String> textTokens = tokenizeLoose(text);
         List<String> phraseTokens = tokenizeLoose(phrase);
@@ -692,6 +734,7 @@ Tin nhắn khách hàng:
         return true;
     }
 
+    // Tách câu thành các token đơn giản để phục vụ so khớp mềm
     private List<String> tokenizeLoose(String input) {
         String normalized = normalize(input).replaceAll("[^a-z0-9\\s]", " ");
         if (normalized.isBlank()) {
@@ -703,6 +746,7 @@ Tin nhắn khách hàng:
                 .toList();
     }
 
+    // Chuẩn hóa text: bỏ dấu, về chữ thường và loại bỏ ký tự không cần thiết
     private String normalize(String input) {
         if (input == null) {
             return "";
