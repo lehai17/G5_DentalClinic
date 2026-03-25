@@ -10,11 +10,10 @@
 <body>
 <div class="app-shell">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar"
          style="display:flex;flex-direction:column;height:100vh;">
 
-  <div class="sidebar-top">
+    <div class="sidebar-top">
       <div class="brand-mini">
         <div class="brand-badge">D+</div>
         <div style="font-weight:800">DentalPlus</div>
@@ -39,20 +38,15 @@
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main">
-
     <div class="topbar">
       <div style="color:var(--muted);font-size:12px;">Chuyên mục › Lịch làm việc</div>
     </div>
 
     <div class="content">
-
-
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <h2 style="margin:0;">Lịch hàng tuần</h2>
 
-        <!-- STATUS LEGEND -->
         <div class="schedule-legend">
           <div class="legend-item">
             <span class="legend-box confirmed"></span>
@@ -83,7 +77,6 @@
         <span th:text="${#temporals.format(weekEnd,'dd/MM/yyyy')}"></span>
       </div>
 
-      <!-- WEEK SELECT -->
       <div class="filter">
         <div class="field">
           <label>Tuần</label>
@@ -94,14 +87,11 @@
                     th:selected="${w.value == selectedWeekStart}">
             </option>
           </select>
-          <input type="hidden" id="weekStartHidden"
-                 th:value="${selectedWeekStart}">
-
+          <input type="hidden" id="weekStartHidden" th:value="${selectedWeekStart}">
         </div>
         <input type="hidden" id="dentistUserIdHidden" th:value="${dentistUserId}">
       </div>
 
-      <!-- SCHEDULE GRID -->
       <div class="schedule-grid">
         <div class="grid-head">
           <div class="time-col"></div>
@@ -112,105 +102,168 @@
         </div>
 
         <div class="grid-body">
-
           <th:block th:each="t : ${timeSlots}">
+            <div class="time-col" th:text="${#temporals.format(t,'HH:mm')}"></div>
 
-            <!-- Time column -->
-            <div class="time-col"
-                 th:text="${#temporals.format(t,'HH:mm')}">
-            </div>
-
-            <!-- 7 days -->
             <div class="cell" th:each="d : ${days}">
               <th:block th:with="
-        key=${d.toString() + '_' + #temporals.format(t,'HH:mm')},
-        ev=${eventMap.get(key)}
-      ">
+                key=${d.toString() + '_' + #temporals.format(t,'HH:mm')},
+                ev=${eventMap.get(key)}
+              ">
                 <div th:if="${ev != null}"
                      class="appt"
                      th:style="'height:' + (${ev.span} * 48 - 4) + 'px; z-index:10;'"
-
                      th:classappend="
-  ${ev.status == 'EXAMINING'} ? ' appt-examining' :
-  (${ev.status == 'WAITING_PAYMENT'} ? ' appt-waiting-payment' :
-  (${ev.status == 'COMPLETED'} ? ' appt-completed' :
-  (${ev.status == 'CONFIRMED'} ? ' appt-confirmed' : '')))
-"
+                      ${ev.status == 'EXAMINING'} ? ' appt-examining' :
+                      (${ev.status == 'WAITING_PAYMENT'} ? ' appt-waiting-payment' :
+                      (${ev.status == 'COMPLETED'} ? ' appt-completed' :
+                      (${ev.status == 'CONFIRMED'} ? ' appt-confirmed' : '')))
+                     "
                      th:attr="
-                data-appointment-id=${ev.appointmentId},
-                data-patient-name=${ev.patientName},
-                data-service-name=${ev.serviceName},
-                data-customer-user-id=${ev.customerUserId},
-                data-dentist-user-id=${dentistUserId},
-                data-status=${ev.status},
-                data-date=${d}
-                ">
-<!--                  <div style="font-size:11px;color:red;"-->
-<!--                       th:text="${ev.startTime} + ' - ' + ${ev.endTime} + ' | span=' + ${ev.span}">-->
-<!--                  </div>-->
+                      data-appointment-id=${ev.appointmentId},
+                      data-patient-name=${ev.patientName},
+                      data-service-name=${ev.serviceName},
+                      data-customer-user-id=${ev.customerUserId},
+                      data-dentist-user-id=${dentistUserId},
+                      data-status=${ev.status},
+                      data-note=${ev.notes},
+                      data-date=${d},
+                      data-start-time=${#temporals.format(ev.startTime,'HH:mm')},
+                      data-end-time=${#temporals.format(ev.endTime,'HH:mm')}
+                     ">
                   <div class="appt-name" th:text="${ev.patientName}"></div>
                   <div class="appt-sub" th:text="${ev.serviceName}"></div>
-
                 </div>
               </th:block>
             </div>
-
           </th:block>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-
+<div id="apptModalBackdrop" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="appointment-modal-header">
+      <div class="appointment-modal-heading">
+        <div class="appointment-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21a8 8 0 0 0-16 0"></path>
+            <circle cx="12" cy="8" r="4"></circle>
+          </svg>
+        </div>
+        <div class="appointment-heading-copy">
+          <div class="appointment-title-row">
+            <div id="apptModalTitle" class="modal-title">Lịch hẹn</div>
+            <span id="apptModalStatus" class="status-pill">Đã xác nhận</span>
           </div>
+          <div id="apptModalSub" class="modal-sub">Chọn hành động</div>
+        </div>
+      </div>
+      <button id="btnCloseModal" class="icon-btn" type="button" aria-label="Đóng">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="appointment-meta-grid">
+      <div class="appointment-meta-card">
+        <div class="appointment-meta-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v5l3 2"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="appointment-meta-label">Thời gian</div>
+          <div id="apptModalTime" class="appointment-meta-value">00:00 - 00:00</div>
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
-
-<!-- ================= MODAL ================= -->
-<div id="apptModalBackdrop" class="modal-backdrop" hidden>
-  <div class="modal" role="dialog" aria-modal="true">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div id="apptModalTitle" class="modal-title">Lịch hẹn</div>
-        <div id="apptModalSub" class="modal-sub">Chọn hành động</div>
+      <div class="appointment-meta-card">
+        <div class="appointment-meta-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v4M16 2v4"></path>
+            <rect x="3" y="5" width="18" height="16" rx="3"></rect>
+            <path d="M3 10h18"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="appointment-meta-label">Ngày hẹn</div>
+          <div id="apptModalDate" class="appointment-meta-value">--/--/----</div>
+        </div>
       </div>
-      <button id="btnCloseModal" class="icon-btn">✕</button>
     </div>
 
-    <div class="modal-actions"
-         style="
-       display:flex;
-       gap:12px;
-       justify-content:space-between;
-       align-items:center;
-       width:100%;
-       box-sizing:border-box;
-     ">
+    <div id="apptModalNoteWrap" class="appointment-note-card" hidden>
+      <div class="appointment-note-label">Ghi chú khách hàng</div>
+      <div id="apptModalNote" class="appointment-note-value"></div>
+    </div>
 
-      <a id="btnExamination"
-         class="btn primary"
-         style="width:auto;white-space:nowrap;">
-        Khám Bệnh
-      </a><a id="btnAAAAA"
-             class="btn"
-             style="width:auto;white-space:nowrap;display:none;">
-      Tạo lịch tái khám
-    </a>
-      <a id="btnBillingTransfer"
-         class="btn"
-         style="width:auto;white-space:nowrap;">
-        Dịch vụ và đơn thuốc
+    <div class="modal-section-label">Thao tác tiếp theo</div>
+
+    <div class="modal-actions">
+      <a id="btnExamination" class="action-card action-card-primary">
+        <span class="action-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 14v5a2 2 0 0 1-2 2h-1"></path>
+            <path d="M5 10V5a2 2 0 0 1 2-2h1"></path>
+            <path d="M12 5v14"></path>
+            <path d="M8 9h8"></path>
+            <path d="M7 14a3 3 0 0 0 6 0v-1"></path>
+            <path d="M11 14a3 3 0 0 0 6 0V9"></path>
+          </svg>
+        </span>
+        <span class="action-card-copy">
+          <span class="action-card-title">Bắt đầu khám bệnh</span>
+          <span class="action-card-sub">Mở hồ sơ bệnh án và bắt đầu điều trị</span>
+        </span>
+        <span class="action-card-arrow" aria-hidden="true">›</span>
       </a>
 
+      <a id="btnAAAAA" class="action-card" style="display:none;">
+        <span class="action-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v4M16 2v4"></path>
+            <rect x="3" y="5" width="18" height="16" rx="3"></rect>
+            <path d="M3 10h18"></path>
+            <path d="M12 12v5"></path>
+            <path d="M9.5 14.5h5"></path>
+          </svg>
+        </span>
+        <span class="action-card-copy">
+          <span class="action-card-title">Tạo lịch tái khám</span>
+          <span class="action-card-sub">Hẹn lịch cho lần điều trị tiếp theo</span>
+        </span>
+        <span class="action-card-arrow" aria-hidden="true">›</span>
+      </a>
+
+      <a id="btnBillingTransfer" class="action-card">
+        <span class="action-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="3" width="12" height="18" rx="2"></rect>
+            <path d="M9 7h6"></path>
+            <path d="M9 12h6"></path>
+            <path d="M9 16h4"></path>
+          </svg>
+        </span>
+        <span class="action-card-copy">
+          <span class="action-card-title">Dịch vụ &amp; đơn thuốc</span>
+          <span class="action-card-sub">Kê đơn hoặc thêm dịch vụ phát sinh</span>
+        </span>
+        <span class="action-card-arrow" aria-hidden="true">›</span>
+      </a>
     </div>
 
+    <div class="appointment-doctor-line">
+      <span>Bác sĩ phụ trách:</span>
+      <strong th:text="${dentistName}">Bác sĩ</strong>
+    </div>
   </div>
 </div>
 
-<!-- ================= JS INLINE  ================= -->
 <script src="/js/dentist/app.js"></script>
-
-
 </body>
 </html>

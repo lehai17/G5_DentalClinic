@@ -13,6 +13,7 @@ public class ScheduleEventResponse {
     private LocalTime startTime;
     private LocalTime endTime;
     private String status;
+    private String notes;
     private int span;
 
     public ScheduleEventResponse(
@@ -24,6 +25,7 @@ public class ScheduleEventResponse {
             LocalTime startTime,
             LocalTime endTime,
             String status,
+            String notes,
             int span
     ) {
         this.appointmentId = appointmentId;
@@ -34,6 +36,7 @@ public class ScheduleEventResponse {
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
+        this.notes = notes;
         this.span = span;
     }
 
@@ -45,5 +48,6 @@ public class ScheduleEventResponse {
     public LocalTime getStartTime() { return startTime; }
     public LocalTime getEndTime() { return endTime; }
     public String getStatus() { return status; }
+    public String getNotes() { return notes; }
     public int getSpan() { return span; }
 }

@@ -58,10 +58,11 @@ public class DentistWebController {
 
         Long dentistUserId = user.getId();
 
-        Long dentistProfileId = dentistProfileRepository
+        var dentistProfile = dentistProfileRepository
                 .findByUser_Id(dentistUserId)
-                .orElseThrow(() -> new RuntimeException("Dentist profile not found"))
-                .getId();
+                .orElseThrow(() -> new RuntimeException("Dentist profile not found"));
+
+        Long dentistProfileId = dentistProfile.getId();
 
         LocalDate base = (weekStart != null)
                 ? weekStart
@@ -143,12 +144,16 @@ public class DentistWebController {
                     a.getStartTime(),
                     a.getEndTime(),
                     status,
+                    a.getNotes(),
                     span
             ));
         }
 
         model.addAttribute("dentistUserId", dentistUserId);
-        model.addAttribute("dentistName", "Dentist");
+        model.addAttribute("dentistName",
+                dentistProfile.getFullName() != null && !dentistProfile.getFullName().isBlank()
+                        ? dentistProfile.getFullName()
+                        : "Bác sĩ");
         model.addAttribute("weekStart", start);
         model.addAttribute("weekEnd", end);
         model.addAttribute("weekOptions", weekOptions);
