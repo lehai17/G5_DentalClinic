@@ -31,6 +31,9 @@ public class Invoice {
     @Column(name = "total_amount", precision = 18, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "paid_amount", precision = 18, scale = 2)
+    private BigDecimal paidAmount;
+
     @Column(name = "voucher_usage_counted", nullable = false, columnDefinition = "bit default 0")
     private boolean voucherUsageCounted = false;
 
@@ -72,36 +75,139 @@ public class Invoice {
         }
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Appointment getAppointment() { return appointment; }
-    public void setAppointment(Appointment appointment) { this.appointment = appointment; }
-    public Voucher getVoucher() { return voucher; }
-    public void setVoucher(Voucher voucher) { this.voucher = voucher; }
-    public BigDecimal getOriginalAmount() { return originalAmount; }
-    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
-    public BigDecimal getDiscountAmount() { return discountAmount; }
-    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-    public boolean isVoucherUsageCounted() { return voucherUsageCounted; }
-    public void setVoucherUsageCounted(boolean voucherUsageCounted) { this.voucherUsageCounted = voucherUsageCounted; }
-    public PaymentStatus getStatus() { return status; }
-    public void setStatus(PaymentStatus status) { this.status = status; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public Long getPayOsOrderCode() { return payOsOrderCode; }
-    public void setPayOsOrderCode(Long payOsOrderCode) { this.payOsOrderCode = payOsOrderCode; }
-    public String getPayOsPaymentLinkId() { return payOsPaymentLinkId; }
-    public void setPayOsPaymentLinkId(String payOsPaymentLinkId) { this.payOsPaymentLinkId = payOsPaymentLinkId; }
-    public String getPayOsCheckoutUrl() { return payOsCheckoutUrl; }
-    public void setPayOsCheckoutUrl(String payOsCheckoutUrl) { this.payOsCheckoutUrl = payOsCheckoutUrl; }
-    public String getPayOsQrCode() { return payOsQrCode; }
-    public void setPayOsQrCode(String payOsQrCode) { this.payOsQrCode = payOsQrCode; }
-    public String getPayOsStatus() { return payOsStatus; }
-    public void setPayOsStatus(String payOsStatus) { this.payOsStatus = payOsStatus; }
-    public String getPayOsReference() { return payOsReference; }
-    public void setPayOsReference(String payOsReference) { this.payOsReference = payOsReference; }
-    public LocalDateTime getPayOsPaidAt() { return payOsPaidAt; }
-    public void setPayOsPaidAt(LocalDateTime payOsPaidAt) { this.payOsPaidAt = payOsPaidAt; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Appointment getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
+    }
+
+    public Voucher getVoucher() {
+        return voucher;
+    }
+
+    public void setVoucher(Voucher voucher) {
+        this.voucher = voucher;
+    }
+
+    public BigDecimal getOriginalAmount() {
+        return originalAmount;
+    }
+
+    public void setOriginalAmount(BigDecimal originalAmount) {
+        this.originalAmount = originalAmount;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
+    }
+
+    public void setPaidAmount(BigDecimal paidAmount) {
+        this.paidAmount = paidAmount;
+    }
+
+    public boolean isVoucherUsageCounted() {
+        return voucherUsageCounted;
+    }
+
+    public void setVoucherUsageCounted(boolean voucherUsageCounted) {
+        this.voucherUsageCounted = voucherUsageCounted;
+    }
+
+    public PaymentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(PaymentStatus status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getPayOsOrderCode() {
+        return payOsOrderCode;
+    }
+
+    public void setPayOsOrderCode(Long payOsOrderCode) {
+        this.payOsOrderCode = payOsOrderCode;
+    }
+
+    public String getPayOsPaymentLinkId() {
+        return payOsPaymentLinkId;
+    }
+
+    public void setPayOsPaymentLinkId(String payOsPaymentLinkId) {
+        this.payOsPaymentLinkId = payOsPaymentLinkId;
+    }
+
+    public String getPayOsCheckoutUrl() {
+        return payOsCheckoutUrl;
+    }
+
+    public void setPayOsCheckoutUrl(String payOsCheckoutUrl) {
+        this.payOsCheckoutUrl = payOsCheckoutUrl;
+    }
+
+    public String getPayOsQrCode() {
+        return payOsQrCode;
+    }
+
+    public void setPayOsQrCode(String payOsQrCode) {
+        this.payOsQrCode = payOsQrCode;
+    }
+
+    public String getPayOsStatus() {
+        return payOsStatus;
+    }
+
+    public void setPayOsStatus(String payOsStatus) {
+        this.payOsStatus = payOsStatus;
+    }
+
+    public String getPayOsReference() {
+        return payOsReference;
+    }
+
+    public void setPayOsReference(String payOsReference) {
+        this.payOsReference = payOsReference;
+    }
+
+    public LocalDateTime getPayOsPaidAt() {
+        return payOsPaidAt;
+    }
+
+    public void setPayOsPaidAt(LocalDateTime payOsPaidAt) {
+        this.payOsPaidAt = payOsPaidAt;
+    }
 }

@@ -467,25 +467,7 @@
                         style="padding-left: 40px; min-width: 250px;" placeholder="Tìm theo tên hoặc chuyên khoa..."
                         th:value="${keyword}">
                 </div>
-                <div class="filter-item">
-                    <span class="filter-label">CHUYÊN KHOA:</span>
-                    <select id="specialtyFilter">
-                        <option value="">Tất cả chuyên khoa</option>
-                        <option value="Orthodontics" th:selected="${selectedSpecialty == 'Orthodontics'}">
-                            Chỉnh nha (Niềng răng)</option>
-                        <option value="Endodontics" th:selected="${selectedSpecialty == 'Endodontics'}">Nội nha</option>
-                        <option value="Periodontics" th:selected="${selectedSpecialty == 'Periodontics'}">Chu nha
-                        </option>
-                        <option value="Prosthodontics" th:selected="${selectedSpecialty == 'Prosthodontics'}">Phục hình
-                        </option>
-                        <option value="Oral Surgery" th:selected="${selectedSpecialty == 'Oral Surgery'}">Phẫu thuật
-                            miệng</option>
-                        <option value="General Dentistry" th:selected="${selectedSpecialty == 'General Dentistry'}">Nha
-                            khoa tổng quát</option>
-                        <option value="Pediatric Dentistry" th:selected="${selectedSpecialty == 'Pediatric Dentistry'}">
-                            Nha khoa trẻ em</option>
-                    </select>
-                </div>
+
                 <div class="filter-item">
                     <span class="filter-label">Trạng thái:</span>
                     <select id="statusFilter">
@@ -911,17 +893,15 @@
 
         function performSearch() {
             const keyword = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
-            const specialty = document.getElementById('specialtyFilter') ? document.getElementById('specialtyFilter').value : '';
             const status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
-
+ 
             const loader = document.getElementById('searchLoader');
             if (loader) loader.style.display = 'inline-block';
-
+ 
             const params = new URLSearchParams();
             if (keyword) params.append('keyword', keyword);
-            if (specialty) params.append('specialty', specialty);
             if (status) params.append('status', status);
-
+ 
             fetch(`/admin/dentists/api/search?${params.toString()}`)
                 .then(response => {
                     if (!response.ok) throw new Error('Network error');
@@ -950,9 +930,6 @@
         // Add event listeners
         if (document.getElementById('searchInput')) {
             document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
-        }
-        if (document.getElementById('specialtyFilter')) {
-            document.getElementById('specialtyFilter').addEventListener('change', performSearch);
         }
         if (document.getElementById('statusFilter')) {
             document.getElementById('statusFilter').addEventListener('change', performSearch);

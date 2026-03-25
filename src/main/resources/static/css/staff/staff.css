@@ -859,6 +859,35 @@ button {
     text-decoration: none;
 }
 
+.staff-payment-input-group {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.staff-payment-input-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.staff-payment-input {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.staff-payment-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 @media (max-width: 640px) {
     .staff-invoice-head,
     .staff-invoice-item,

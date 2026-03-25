@@ -226,9 +226,9 @@ public class CustomerAppointmentService {
 
     @Transactional
     public AppointmentDto createAppointmentForWalkIn(CustomerProfile customer,
-                                                     CreateAppointmentRequest request,
-                                                     AppointmentStatus initialStatus,
-                                                     BigDecimal depositAmountOverride) {
+            CreateAppointmentRequest request,
+            AppointmentStatus initialStatus,
+            BigDecimal depositAmountOverride) {
         validateCreateRequest(request);
         if (customer == null) {
             throw new BookingException(BookingErrorCode.USER_NOT_ALLOWED, "Khach vang lai khong hop le.");
@@ -471,11 +471,11 @@ public class CustomerAppointmentService {
                     appointment.getId());
         }
 
-        return completeFinalPayment(appointment.getId(), invoice.getId());
+        return completeFinalPayment(appointment.getId(), invoice.getId(), null);
     }
 
     @Transactional
-    public Appointment completeFinalPayment(Long appointmentId, Long invoiceId) {
+    public Appointment completeFinalPayment(Long appointmentId, Long invoiceId, BigDecimal paidAmount) {
         Appointment appointment = appointmentRepository.findByIdForUpdate(appointmentId)
                 .orElseThrow(
                         () -> new BookingException(BookingErrorCode.APPOINTMENT_NOT_FOUND, "Lịch hẹn không tồn tại."));
@@ -495,6 +495,19 @@ public class CustomerAppointmentService {
 
         if (invoice.getStatus() != PaymentStatus.PAID) {
             invoice.setStatus(PaymentStatus.PAID);
+        }
+        if (paidAmount != null && paidAmount.compareTo(BigDecimal.ZERO) > 0) {
+            invoice.setPaidAmount(paidAmount);
+            // Create a WalletTransaction record so it counts as revenue
+            walletTransactionRepository.save(
+                    com.dentalclinic.model.wallet.WalletTransaction.builder()
+                            .wallet(walletService.getOrCreateWallet(appointment.getCustomer()))
+                            .type(com.dentalclinic.model.wallet.WalletTransactionType.PAYMENT)
+                            .amount(paidAmount)
+                            .status(com.dentalclinic.model.wallet.WalletTransactionStatus.COMPLETED)
+                            .description("Thanh toán còn lại (Nhân viên xác nhận) - Lịch hẹn #" + appointment.getId())
+                            .appointmentId(appointment.getId())
+                            .build());
         }
         customerVoucherService.incrementVoucherUsageIfNeeded(invoice);
         invoiceRepository.save(invoice);

@@ -48,6 +48,7 @@ public class UpdateDentistDTO {
     private String shiftEndTime;
 
     // Các trường phục vụ upload ảnh Avatar
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private MultipartFile avatarFile;
     private String avatarPath;
 

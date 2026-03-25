@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -443,14 +443,7 @@
                         style="padding-left: 40px; min-width: 250px;" placeholder="Tìm theo tên hoặc vị trí..."
                         th:value="${selectedKeyword}">
                 </div>
-                <div class="filter-item">
-                    <span class="filter-label">VỊ TRÍ:</span>
-                    <select id="positionFilter">
-                        <option value="">Tất cả vị trí</option>
-                        <option value="Receptionist" th:selected="${selectedPos == 'Receptionist'}">Lễ tân</option>
-                        <option value="Other" th:selected="${selectedPos == 'Other'}">Khác</option>
-                    </select>
-                </div>
+
                 <div class="filter-item">
                     <span class="filter-label">TRẠNG THÁI:</span>
                     <select id="statusFilter">
@@ -696,7 +689,6 @@
 
         function performSearch() {
             const keyword = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
-            const position = document.getElementById('positionFilter') ? document.getElementById('positionFilter').value : '';
             const status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
 
             const loader = document.getElementById('searchLoader');
@@ -704,7 +696,6 @@
 
             const params = new URLSearchParams();
             if (keyword) params.append('keyword', keyword);
-            if (position) params.append('position', position);
             if (status) params.append('status', status);
 
             fetch(`/admin/staff/api/search?${params.toString()}`)
@@ -731,7 +722,6 @@
 
         // Add event listeners
         document.getElementById('searchInput').addEventListener('input', debounce(performSearch, 500));
-        document.getElementById('positionFilter').addEventListener('change', performSearch);
         document.getElementById('statusFilter').addEventListener('change', performSearch);
         /*]]>*/
     </script>

@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
@@ -133,8 +134,8 @@ public class StaffAppointmentController {
     @GetMapping("/walk-in/slots")
     @ResponseBody
     public ResponseEntity<?> getWalkInSlots(@RequestParam(required = false) Long serviceId,
-                                            @RequestParam(required = false) List<Long> serviceIds,
-                                            @RequestParam String date) {
+            @RequestParam(required = false) List<Long> serviceIds,
+            @RequestParam String date) {
         LocalDate parsedDate = LocalDate.parse(date);
         List<Long> resolvedServiceIds = new ArrayList<>();
         if (serviceIds != null) {
@@ -168,7 +169,8 @@ public class StaffAppointmentController {
             payload.put("status", created.getStatus());
             return ResponseEntity.status(201).body(payload);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Khong the tao lich hen."));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Khong the tao lich hen."));
         }
     }
 
@@ -254,9 +256,9 @@ public class StaffAppointmentController {
 
     @PostMapping("/appointments/{id}/confirm-manual-payment")
     @ResponseBody
-    public ResponseEntity<?> confirmManualPayment(@PathVariable Long id) {
+    public ResponseEntity<?> confirmManualPayment(@PathVariable Long id, @RequestParam BigDecimal paidAmount) {
         try {
-            Appointment appointment = staffAppointmentService.confirmManualPayment(id);
+            Appointment appointment = staffAppointmentService.confirmManualPayment(id, paidAmount);
             return ResponseEntity.ok(appointment.getStatus().name());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

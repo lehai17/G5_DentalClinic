@@ -255,6 +255,7 @@ function buildQrMethodHtml() {
 
 function buildCashMethodHtml() {
     if (!activeInvoiceData) return "";
+    const remaining = activeInvoiceData.remainingAmount || 0;
     return `
         <div class="staff-payment-detail">
             <div class="staff-payment-detail__title">Thanh toán tiền mặt</div>
@@ -554,13 +555,19 @@ function payInvoiceWithWallet(id) {
     });
 }
 
-function confirmManualPayment(id, method) {
+function submitManualPayment(id, method) {
+    const input = document.getElementById("cashPaidAmount");
+    const paidAmount = input ? input.value : (activeInvoiceData ? activeInvoiceData.remainingAmount : 0);
+
     const confirmMessage = method === "CASH"
         ? "Xác nhận đã nhận đủ số tiền còn lại bằng tiền mặt?"
         : "Xác nhận đã nhận chuyển khoản QR cho hóa đơn này?";
     if (!confirm(confirmMessage)) return;
 
-    fetch(`/staff/appointments/${id}/confirm-manual-payment`, {
+    const params = new URLSearchParams();
+    params.append("paidAmount", paidAmount);
+
+    fetch(`/staff/appointments/${id}/confirm-manual-payment?${params.toString()}`, {
         method: "POST"
     }).then(async (res) => {
         if (!res.ok) {

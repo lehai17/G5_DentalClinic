@@ -149,6 +149,8 @@ public class AdminSlotService {
             boolean hasActive = dayHasActiveSlotsMap.getOrDefault(d, false);
             if (hasSlots && !hasActive) {
                 badge.setActive(false);
+            } else if (!hasSlots && d.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                badge.setActive(false);
             } else {
                 badge.setActive(true);
             }
@@ -221,6 +223,19 @@ public class AdminSlotService {
         }
 
         SlotDayBadgeDto summary = new SlotDayBadgeDto(date, booked, totalCapacity);
+
+        List<Slot> todaySlots = slotRepository.findAllSlotsInRange(dayStart, dayEnd);
+        boolean hasSlots = (todaySlots != null && !todaySlots.isEmpty());
+        boolean hasActive = activeCapacityInDb > 0;
+
+        if (hasSlots && !hasActive) {
+            summary.setActive(false);
+        } else if (!hasSlots && date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            summary.setActive(false);
+        } else {
+            summary.setActive(true);
+        }
+
         summary.calculateDensity();
         return summary;
     }
@@ -445,13 +460,19 @@ public class AdminSlotService {
                     Slot newSlot = new Slot(cur, cap);
                     if (d.getDayOfWeek() == DayOfWeek.SUNDAY) {
                         newSlot.setActive(false);
+                        newSlot.setLockReason("Nghỉ Chủ Nhật");
                     }
                     slotRepository.save(newSlot);
                     created++;
                 } else {
                     boolean changed = false;
-                    // Note: generateSlots is often used to RESET state,
-                    // but for auto-seeding during lockDay, we just want to ensure existence.
+                    // Proactively lock Sundays even if they already exist, if they have no bookings
+                    if (d.getDayOfWeek() == java.time.DayOfWeek.SUNDAY && slot.isActive()
+                            && slot.getBookedCount() == 0) {
+                        slot.setActive(false);
+                        slot.setLockReason("Nghỉ Chủ Nhật");
+                        changed = true;
+                    }
                     if (slot.getCapacity() != cap) {
                         slot.setCapacity(cap);
                         changed = true;

@@ -24,16 +24,14 @@ public class AdminStaffController {
     public String showStaffList(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "position", required = false) String position,
             Model model) {
 
         // Gọi hàm lọc an toàn từ service đã xử lý enum
-        List<StaffProfile> staffs = staffService.searchStaffs(keyword, status, position);
+        List<StaffProfile> staffs = staffService.searchStaffs(keyword, status);
 
         model.addAttribute("staffs", staffs);
         model.addAttribute("selectedKeyword", keyword);
         model.addAttribute("selectedStatus", status); // Giữ trạng thái dropdown sau khi lọc
-        model.addAttribute("selectedPos", position);
         model.addAttribute("activePage", "staff");
 
         // Cập nhật dữ liệu cho các thẻ thống kê (Stat Cards)
@@ -48,9 +46,8 @@ public class AdminStaffController {
     public String searchApi(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "position", required = false) String position,
             Model model) {
-        List<StaffProfile> staffs = staffService.searchStaffs(keyword, status, position);
+        List<StaffProfile> staffs = staffService.searchStaffs(keyword, status);
         model.addAttribute("staffs", staffs);
         return "admin/fragments/staff-table :: staff-list";
     }

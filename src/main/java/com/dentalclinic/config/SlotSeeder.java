@@ -30,7 +30,7 @@ public class SlotSeeder {
      */
     @Bean
     public ApplicationRunner seedSlotsIfNeeded(SlotRepository slotRepository,
-                                               SlotCapacitySyncService slotCapacitySyncService) {
+            SlotCapacitySyncService slotCapacitySyncService) {
         return (ApplicationArguments args) -> {
             LocalDate today = LocalDate.now();
 
@@ -53,13 +53,28 @@ public class SlotSeeder {
 
                     if (existing.isPresent()) {
                         Slot slot = existing.get();
+                        boolean updated = false;
                         if (slot.getBookedCount() < 0) {
                             slot.setBookedCount(0);
+                            updated = true;
+                        }
+                        if (date.getDayOfWeek() == java.time.DayOfWeek.SUNDAY && slot.isActive()
+                                && slot.getBookedCount() == 0) {
+                            slot.setActive(false);
+                            slot.setLockReason("Nghỉ Chủ Nhật");
+                            updated = true;
+                        }
+                        if (updated) {
                             slotRepository.save(slot);
                             totalSlotsUpdated++;
                         }
                     } else {
-                        slotRepository.save(new Slot(current, DEFAULT_CAPACITY));
+                        Slot newSlot = new Slot(current, DEFAULT_CAPACITY);
+                        if (current.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) {
+                            newSlot.setActive(false);
+                            newSlot.setLockReason("Nghỉ Chủ Nhật");
+                        }
+                        slotRepository.save(newSlot);
                         totalSlotsCreated++;
                     }
 
@@ -104,8 +119,22 @@ public class SlotSeeder {
             while (slotTime.isBefore(dayEnd)) {
                 Optional<Slot> existingSlot = slotRepository.findBySlotTime(slotTime);
 
-                if (existingSlot.isEmpty()) {
-                    slotRepository.save(new Slot(slotTime, DEFAULT_CAPACITY));
+                if (existingSlot.isPresent()) {
+                    Slot slot = existingSlot.get();
+                    if (currentDay.getDayOfWeek() == java.time.DayOfWeek.SUNDAY && slot.isActive()
+                            && slot.getBookedCount() == 0) {
+                        slot.setActive(false);
+                        slot.setLockReason("Nghỉ Chủ Nhật");
+                        slotRepository.save(slot);
+                        slotsAdded++;
+                    }
+                } else {
+                    Slot newSlot = new Slot(slotTime, DEFAULT_CAPACITY);
+                    if (slotTime.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) {
+                        newSlot.setActive(false);
+                        newSlot.setLockReason("Nghỉ Chủ Nhật");
+                    }
+                    slotRepository.save(newSlot);
                     slotsAdded++;
                 }
 
