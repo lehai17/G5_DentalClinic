@@ -42,7 +42,6 @@
               <select id="appointmentId"
                       th:field="*{appointmentId}"
                       class="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white">
-                <option value="">Hỗ trợ khác</option>
                 <option th:each="appt : ${appointments}"
                         th:value="${appt.id}"
                         th:text="'#' + ${appt.id} + ' - ' + ${#temporals.format(appt.date, 'dd/MM/yyyy')} + ' - ' + ${appt.startTime} + ' - ' + (${appt.service != null ? appt.service.name : 'Dịch vụ'})">
