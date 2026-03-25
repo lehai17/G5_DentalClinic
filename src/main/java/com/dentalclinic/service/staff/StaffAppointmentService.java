@@ -508,6 +508,7 @@ public class StaffAppointmentService {
 
         AppointmentDto invoicePreview = getInvoicePreview(appointmentId);
         CustomerProfile customer = appointment.getCustomer();
+        boolean allowWalletPayment = !isWalkInAppointment(appointment);
         BigDecimal walletBalance = customer != null
                 ? walletService.getBalance(customer).setScale(2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
@@ -518,7 +519,8 @@ public class StaffAppointmentService {
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("invoice", invoicePreview);
-        payload.put("walletBalance", walletBalance);
+        payload.put("walletBalance", allowWalletPayment ? walletBalance : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+        payload.put("allowWalletPayment", allowWalletPayment);
         payload.put("transferContent", transferContent);
         return payload;
     }
@@ -641,6 +643,14 @@ public class StaffAppointmentService {
         }
 
         return "Chua co dich vu";
+    }
+
+    private boolean isWalkInAppointment(Appointment appointment) {
+        if (appointment == null || appointment.getCustomer() == null || appointment.getCustomer().getUser() == null) {
+            return false;
+        }
+        String email = appointment.getCustomer().getUser().getEmail();
+        return email != null && email.toLowerCase(java.util.Locale.ROOT).endsWith("@guest.local");
     }
 
     private CustomerProfile createWalkInCustomerProfile(String fullName, String phone) {

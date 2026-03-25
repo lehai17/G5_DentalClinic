@@ -628,7 +628,7 @@
       '<div class="cap-invoice-total-line"><span>Đặt cọc ban đầu</span><strong>' +
       escapeHtml(formatMoney(depositAmount)) +
       "</strong></div>" +
-      '<div class="cap-invoice-total-line"><span>Tạm tính sau đặt cọc</span><strong>' +
+      '<div class="cap-invoice-total-line"><span>Trả sau đặt cọc</span><strong>' +
       escapeHtml(formatMoney(originalRemaining)) +
       "</strong></div>" +
       (discountAmount > 0
