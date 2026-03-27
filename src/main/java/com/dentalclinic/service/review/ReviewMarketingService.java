@@ -10,6 +10,9 @@ import com.dentalclinic.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,29 @@ public class ReviewMarketingService {
     @Transactional(readOnly = true)
     public List<StaffReviewManagementDto> getAllReviewsForStaff() {
         return reviewRepository.findAllOrderByCreatedAtDesc()
+                .stream()
+                .map(this::toStaffDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<StaffReviewManagementDto> searchReviewsForStaff(
+            String customerName,
+            String serviceName,
+            String dentistName,
+            LocalDate fromDate,
+            LocalDate toDate
+    ) {
+        LocalDateTime fromDateTime = fromDate != null ? fromDate.atStartOfDay() : null;
+        LocalDateTime toDateTime = toDate != null ? toDate.atTime(LocalTime.MAX) : null;
+
+        return reviewRepository.searchReviewsForStaff(
+                        normalize(customerName),
+                        normalize(serviceName),
+                        normalize(dentistName),
+                        fromDateTime,
+                        toDateTime
+                )
                 .stream()
                 .map(this::toStaffDto)
                 .collect(Collectors.toList());
@@ -121,5 +147,13 @@ public class ReviewMarketingService {
             }
         }
         return sb.toString();
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

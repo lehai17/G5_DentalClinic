@@ -214,7 +214,7 @@
                         <div class="form-group full">
                             <label for="content">Nội dung bài viết <span style="color:#dc2626">*</span></label>
                             <textarea id="content" name="content" rows="12"
-                                      th:text="${blog.content}"></textarea>
+                                      th:utext="${blog.content}"></textarea>
                             <div class="editor-note">
                             </div>
                         </div>
@@ -243,6 +243,7 @@
 
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>
+    const form = document.querySelector('form');
     const thumbnailInput = document.getElementById('thumbnailFile');
     const thumbnailPreviewNew = document.getElementById('thumbnailPreviewNew');
 
@@ -251,6 +252,7 @@
             const file = e.target.files && e.target.files[0];
             if (!file) {
                 thumbnailPreviewNew.style.display = 'none';
+                thumbnailPreviewNew.removeAttribute('src');
                 return;
             }
             thumbnailPreviewNew.src = URL.createObjectURL(file);
@@ -259,6 +261,7 @@
     }
 
     let blogEditor;
+    let pendingActions;
 
     function BlogUploadAdapter(loader) {
         this.loader = loader;
@@ -284,12 +287,14 @@
             xhr.addEventListener('load', () => {
                 const response = xhr.response;
 
-                if (!response || xhr.status >= 400) {
+                if (!response || xhr.status >= 400 || !response.url) {
                     reject((response && response.message) || 'Upload ảnh thất bại.');
                     return;
                 }
 
-                resolve({ default: response.url });
+                resolve({
+                    default: response.url
+                });
             });
 
             xhr.send(data);
@@ -321,15 +326,22 @@
         })
         .then(editor => {
             blogEditor = editor;
+            pendingActions = editor.plugins.get('PendingActions');
         })
         .catch(error => {
             console.error(error);
         });
 
-    document.querySelector('form').addEventListener('submit', function (e) {
+    form.addEventListener('submit', function (e) {
         const title = document.getElementById('title').value.trim();
         const summary = document.getElementById('summary').value.trim();
         const content = blogEditor ? blogEditor.getData().trim() : '';
+
+        if (pendingActions && pendingActions.hasAny) {
+            e.preventDefault();
+            alert('Ảnh trong nội dung đang tải lên. Vui lòng đợi upload xong rồi hãy lưu hoặc gửi duyệt.');
+            return;
+        }
 
         if (blogEditor) {
             document.getElementById('content').value = content;
