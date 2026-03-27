@@ -159,7 +159,7 @@ public class ChatService {
                 NotificationType.TICKET_STATUS_CHANGED,
                 "Lễ tân đã phản hồi tin nhắn",
                 "Bạn có tin nhắn mới từ lễ tân.",
-                "/customer/chat",
+                buildCustomerChatUrl(thread.getId()),
                 NotificationReferenceType.TICKET,
                 thread.getId()
         );
@@ -245,6 +245,13 @@ public class ChatService {
         }
         message.setRead(false);
         return chatMessageRepository.save(message);
+    }
+
+    private String buildCustomerChatUrl(Long threadId) {
+        if (threadId == null) {
+            return "/homepage?openChat=1";
+        }
+        return "/homepage?openChat=1&threadId=" + threadId;
     }
 
     private AttachmentMetadata storeAttachment(MultipartFile attachment) {
