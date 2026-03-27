@@ -117,54 +117,141 @@
 
 <body>
 
-    <th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
+<th:block th:replace="~{admin/sidebar :: sidebar}"></th:block>
 
-    <div class="main-content">
+<div class="main-content">
 
-        <div class="card" style="margin-bottom:14px;">
-            <h2 style="margin:0; color:var(--text);">Chỉnh sửa bài viết</h2>
-            <div class="muted">Quản trị chỉ được sửa khi bài viết ở trạng thái <b>PENDING</b> hoặc <b>APPROVED</b>. Ảnh
-                được giữ nguyên.</div>
-        </div>
+    <div class="card" style="margin-bottom:14px;">
+        <h2 style="margin:0; color:var(--text);">Chỉnh sửa bài viết</h2>
+        <div class="muted">Quản trị chỉ được sửa khi bài viết ở trạng thái <b>PENDING</b> hoặc <b>APPROVED</b>. Ảnh
+            được giữ nguyên.</div>
+    </div>
 
-        <!-- Chặn UI nếu không hợp lệ (phòng trường hợp ai đó gõ URL) -->
-        <div class="warn" th:if="${blog.status.name() != 'PENDING' and blog.status.name() != 'APPROVED'}">
-            Bài viết đang ở trạng thái <b th:text="${blog.status}">REJECTED</b> nên không thể chỉnh sửa.
-            <div style="margin-top:10px;">
-                <a class="btn btn-light" th:href="@{/admin/blogs(status=${blog.status})}">← Quay lại</a>
-                <a class="btn btn-primary" th:href="@{'/admin/blogs/' + ${blog.id}}">Xem chi tiết</a>
-            </div>
-        </div>
-
-        <div class="grid" th:if="${blog.status.name() == 'PENDING' or blog.status.name() == 'APPROVED'}">
-            <div class="card preview">
-                <div class="label">Xem trước ảnh (chỉ đọc)</div>
-                <img th:src="${blog.imageUrl}" alt="Ảnh bài viết" onerror="this.style.display='none'">
-                <div class="label">URL ảnh (chỉ đọc)</div>
-                <input class="input" th:value="${blog.imageUrl}" readonly>
-            </div>
-
-            <div class="card">
-                <form th:action="@{'/admin/blogs/' + ${blog.id} + '/update'}" method="post">
-                    <div class="label">Tiêu đề</div>
-                    <input class="input" type="text" name="title" th:value="${blog.title}" required>
-
-                    <div class="label">Tóm tắt</div>
-                    <textarea class="input" name="summary" rows="4" required th:text="${blog.summary}"></textarea>
-
-                    <div class="label">Nội dung</div>
-                    <textarea class="input" name="content" rows="10" required th:text="${blog.content}"></textarea>
-
-                    <div class="btn-row">
-                        <a class="btn btn-light" th:href="@{'/admin/blogs/' + ${blog.id}}">Hủy</a>
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi
-                        </button>
-                    </div>
-                </form>
-            </div>
+    <!-- Chặn UI nếu không hợp lệ (phòng trường hợp ai đó gõ URL) -->
+    <div class="warn" th:if="${blog.status.name() != 'PENDING' and blog.status.name() != 'APPROVED'}">
+        Bài viết đang ở trạng thái <b th:text="${blog.status}">REJECTED</b> nên không thể chỉnh sửa.
+        <div style="margin-top:10px;">
+            <a class="btn btn-light" th:href="@{/admin/blogs(status=${blog.status})}">← Quay lại</a>
+            <a class="btn btn-primary" th:href="@{'/admin/blogs/' + ${blog.id}}">Xem chi tiết</a>
         </div>
     </div>
+
+    <div class="grid" th:if="${blog.status.name() == 'PENDING' or blog.status.name() == 'APPROVED'}">
+        <div class="card preview">
+            <div class="label">Xem trước ảnh (chỉ đọc)</div>
+            <img th:src="${blog.imageUrl}" alt="Ảnh bài viết" onerror="this.style.display='none'">
+            <div class="label">URL ảnh (chỉ đọc)</div>
+            <input class="input" th:value="${blog.imageUrl}" readonly>
+        </div>
+
+        <div class="card">
+            <form th:action="@{'/admin/blogs/' + ${blog.id} + '/update'}" method="post" enctype="multipart/form-data">
+                <div class="label">Tiêu đề</div>
+                <input class="input" type="text" name="title" th:value="${blog.title}" required>
+
+                <div class="label">Tóm tắt</div>
+                <textarea class="input" name="summary" rows="4" required th:text="${blog.summary}"></textarea>
+
+                <div class="label">Nội dung</div>
+                <textarea class="input" id="content" name="content" rows="10" required th:utext="${blog.content}"></textarea>
+
+                <div class="btn-row">
+                    <a class="btn btn-light" th:href="@{'/admin/blogs/' + ${blog.id}}">Hủy</a>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script>
+    const form = document.querySelector('form');
+    let blogEditor;
+    let pendingActions;
+
+    function BlogUploadAdapter(loader) {
+        this.loader = loader;
+    }
+
+    BlogUploadAdapter.prototype.upload = function () {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+            const data = new FormData();
+            data.append('upload', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/admin/blogs/upload-inline-image', true);
+
+            const csrfInput = document.querySelector('input[name="_csrf"]');
+            if (csrfInput) {
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrfInput.value);
+            }
+
+            xhr.responseType = 'json';
+
+            xhr.addEventListener('error', () => reject('Không thể upload ảnh.'));
+            xhr.addEventListener('abort', () => reject('Upload ảnh đã bị hủy.'));
+            xhr.addEventListener('load', () => {
+                const response = xhr.response;
+
+                if (!response || xhr.status >= 400 || !response.url) {
+                    reject((response && response.message) || 'Upload ảnh thất bại.');
+                    return;
+                }
+
+                resolve({
+                    default: response.url
+                });
+            });
+
+            xhr.send(data);
+        }));
+    };
+
+    BlogUploadAdapter.prototype.abort = function () {};
+
+    function BlogUploadAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return new BlogUploadAdapter(loader);
+        };
+    }
+
+    ClassicEditor
+        .create(document.querySelector('#content'), {
+            extraPlugins: [BlogUploadAdapterPlugin],
+            toolbar: [
+                'heading',
+                '|',
+                'bold', 'italic', 'link',
+                '|',
+                'bulletedList', 'numberedList',
+                '|',
+                'insertTable', 'blockQuote', 'imageUpload',
+                '|',
+                'undo', 'redo'
+            ]
+        })
+        .then(editor => {
+            blogEditor = editor;
+            pendingActions = editor.plugins.get('PendingActions');
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+    form.addEventListener('submit', function (e) {
+        if (pendingActions && pendingActions.hasAny) {
+            e.preventDefault();
+            alert('Ảnh trong nội dung đang tải lên. Vui lòng đợi upload xong rồi hãy lưu.');
+            return;
+        }
+
+        if (blogEditor) {
+            document.getElementById('content').value = blogEditor.getData().trim();
+        }
+    });
+</script>
 </body>
 
 </html>

@@ -8,7 +8,6 @@ import com.dentalclinic.repository.BlogRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -193,27 +192,51 @@ public class BlogWorkflowService {
 
         Document dirty = Jsoup.parseBodyFragment(html);
 
+        // Xóa các tag nguy hiểm
+        dirty.select("script, iframe, object, embed").remove();
+
+        // Xóa các event handler kiểu onclick, onerror...
+        for (Element element : dirty.getAllElements()) {
+            element.attributes().asList().forEach(attr -> {
+                String key = attr.getKey();
+                if (key != null && key.toLowerCase().startsWith("on")) {
+                    element.removeAttr(key);
+                }
+            });
+        }
+
+        // Giữ lại src của ảnh nếu là ảnh blog nội bộ hoặc link hợp lệ
         for (Element img : dirty.select("img")) {
             String src = img.attr("src");
             if (src != null) {
                 src = src.trim();
-                img.attr("src", src);
             }
+
+            if (src == null || src.isBlank()) {
+                img.remove();
+                continue;
+            }
+
+            boolean allowed =
+                    src.startsWith("/uploads/blog/") ||
+                            src.startsWith("http://") ||
+                            src.startsWith("https://") ||
+                            src.startsWith("data:image/");
+
+            if (!allowed) {
+                img.remove();
+                continue;
+            }
+
+            img.attr("src", src);
         }
 
-        Safelist safelist = Safelist.relaxed()
-                .addTags("img", "figure", "figcaption", "section", "article")
-                .addAttributes("img", "src", "alt", "title", "width", "height", "style")
-                .addAttributes(":all", "class", "style");
-
-        safelist.preserveRelativeLinks(true);
-
-        String cleaned = Jsoup.clean(dirty.body().html(), "", safelist, new Document.OutputSettings().prettyPrint(false));
+        String cleaned = dirty.body().html();
 
         if (cleaned == null || cleaned.isBlank()) {
             throw new BlogValidationException("Content must not be blank");
         }
 
-        return cleaned;
+        return cleaned.trim();
     }
 }

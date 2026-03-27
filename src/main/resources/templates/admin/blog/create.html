@@ -266,7 +266,7 @@
                           th:text="${blog.summary}"></textarea>
 
                 <div class="label">Nội dung bài viết <span class="required">*</span></div>
-                <textarea id="content" name="content" th:text="${blog.content}"></textarea>
+                <textarea id="content" name="content" th:utext="${blog.content}"></textarea>
                 <div class="editor-note" style="margin-top:8px;">
                     Bạn có thể bấm nút chèn ảnh trong editor để đưa ảnh vào giữa các đoạn như bài báo.
                 </div>
@@ -294,25 +294,26 @@
 
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>
+    const form = document.querySelector('form');
     const thumbnailInput = document.getElementById('thumbnailFile');
-    const thumbnailPreviewNew = document.getElementById('thumbnailPreviewNew');
+    const thumbnailPreview = document.getElementById('thumbnailPreview');
 
-    if (thumbnailInput) {
-        thumbnailInput.addEventListener('change', (e) => {
+    if (thumbnailInput && thumbnailPreview) {
+        thumbnailInput.addEventListener('change', function (e) {
             const file = e.target.files && e.target.files[0];
-
             if (!file) {
-                thumbnailPreviewNew.classList.add('hidden');
-                thumbnailPreviewNew.removeAttribute('src');
+                thumbnailPreview.style.display = 'none';
+                thumbnailPreview.removeAttribute('src');
                 return;
             }
 
-            thumbnailPreviewNew.src = URL.createObjectURL(file);
-            thumbnailPreviewNew.classList.remove('hidden');
+            thumbnailPreview.src = URL.createObjectURL(file);
+            thumbnailPreview.style.display = 'block';
         });
     }
 
     let blogEditor;
+    let pendingActions;
 
     function BlogUploadAdapter(loader) {
         this.loader = loader;
@@ -333,27 +334,36 @@
 
             xhr.responseType = 'json';
 
-            xhr.addEventListener('error', () => reject('Không thể upload ảnh.'));
-            xhr.addEventListener('abort', () => reject('Upload ảnh đã bị hủy.'));
-            xhr.addEventListener('load', () => {
+            xhr.addEventListener('error', function () {
+                reject('Không thể upload ảnh.');
+            });
+
+            xhr.addEventListener('abort', function () {
+                reject('Upload ảnh đã bị hủy.');
+            });
+
+            xhr.addEventListener('load', function () {
                 const response = xhr.response;
 
-                if (!response || xhr.status >= 400) {
+                if (!response || xhr.status >= 400 || !response.url) {
                     reject((response && response.message) || 'Upload ảnh thất bại.');
                     return;
                 }
 
-                resolve({ default: response.url });
+                resolve({
+                    default: response.url
+                });
             });
 
             xhr.send(data);
         }));
     };
 
-    BlogUploadAdapter.prototype.abort = function () {};
+    BlogUploadAdapter.prototype.abort = function () {
+    };
 
     function BlogUploadAdapterPlugin(editor) {
-        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+        editor.plugins.get('FileRepository').createUploadAdapter = function (loader) {
             return new BlogUploadAdapter(loader);
         };
     }
@@ -373,46 +383,52 @@
                 'undo', 'redo'
             ]
         })
-        .then(editor => {
+        .then(function (editor) {
             blogEditor = editor;
+            pendingActions = editor.plugins.get('PendingActions');
         })
-        .catch(error => {
+        .catch(function (error) {
             console.error(error);
         });
 
-    document.querySelector('form').addEventListener('submit', function (e) {
-        const title = document.getElementById('title').value.trim();
-        const summary = document.getElementById('summary').value.trim();
-        const content = blogEditor ? blogEditor.getData().trim() : '';
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            const titleInput = document.getElementById('title');
+            const summaryInput = document.getElementById('summary');
+            const contentTextarea = document.getElementById('content');
 
-        if (blogEditor) {
-            document.getElementById('content').value = content;
-        }
+            const title = titleInput ? titleInput.value.trim() : '';
+            const summary = summaryInput ? summaryInput.value.trim() : '';
+            const content = blogEditor ? blogEditor.getData().trim() : '';
 
-        if (!title) {
-            e.preventDefault();
-            alert('Vui lòng nhập tiêu đề.');
-            return;
-        }
+            if (pendingActions && pendingActions.hasAny) {
+                e.preventDefault();
+                alert('Ảnh trong nội dung đang tải lên. Vui lòng đợi upload xong rồi hãy lưu.');
+                return;
+            }
 
-        if (!summary) {
-            e.preventDefault();
-            alert('Vui lòng nhập tóm tắt.');
-            return;
-        }
+            if (contentTextarea && blogEditor) {
+                contentTextarea.value = content;
+            }
 
-        if (!thumbnailInput || !thumbnailInput.files || thumbnailInput.files.length === 0) {
-            e.preventDefault();
-            alert('Vui lòng chọn ảnh thumbnail cho bài viết.');
-            return;
-        }
+            if (!title) {
+                e.preventDefault();
+                alert('Vui lòng nhập tiêu đề.');
+                return;
+            }
 
-        if (!content) {
-            e.preventDefault();
-            alert('Vui lòng nhập nội dung bài viết.');
-        }
-    });
+            if (!summary) {
+                e.preventDefault();
+                alert('Vui lòng nhập tóm tắt.');
+                return;
+            }
+
+            if (!content) {
+                e.preventDefault();
+                alert('Vui lòng nhập nội dung bài viết.');
+            }
+        });
+    }
 </script>
-
 </body>
 </html>
