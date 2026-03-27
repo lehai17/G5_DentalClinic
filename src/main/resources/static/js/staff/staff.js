@@ -714,3 +714,134 @@ function toggleAppointmentDetails(id, button) {
         button.setAttribute("aria-expanded", isOpen ? "true" : "false");
     }
 }
+
+function cancelAppointment(id) {
+    buildModal(`
+        <h3>Hủy lịch hẹn</h3>
+        <p class="modal-text">Nhập lý do hủy lịch. Chỉ áp dụng cho lịch ở trạng thái PENDING hoặc CONFIRMED và trước giờ khám ít nhất 12 tiếng.</p>
+        <div id="appointmentCancelError" class="modal-error" style="display:none;"></div>
+        <div class="modal-field">
+            <label class="modal-label" for="appointmentCancelReason">Lý do hủy</label>
+            <textarea id="appointmentCancelReason" class="modal-textarea" rows="4" placeholder="Ví dụ: Mất điện, bảo trì phòng khám, khách cần đổi lịch..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="submitStaffCancelAppointment(${id})">Xác nhận hủy</button>
+            <button type="button" class="btn-secondary" onclick="closeModal()">Đóng</button>
+        </div>
+    `);
+
+    const reasonInput = document.getElementById("appointmentCancelReason");
+    if (reasonInput) {
+        reasonInput.focus();
+    }
+}
+
+function submitStaffCancelAppointment(id) {
+    const reasonInput = document.getElementById("appointmentCancelReason");
+    const errorBox = document.getElementById("appointmentCancelError");
+    const reason = reasonInput ? String(reasonInput.value || "").trim() : "";
+
+    if (!reason) {
+        if (errorBox) {
+            errorBox.innerText = "Vui lòng nhập lý do hủy lịch.";
+            errorBox.style.display = "block";
+        }
+        return;
+    }
+
+    const params = new URLSearchParams();
+    params.append("id", id);
+    params.append("reason", reason);
+
+    fetch(`/staff/appointments/cancel?${params.toString()}`, {
+        method: "POST"
+    })
+        .then(async (res) => {
+            if (!res.ok) {
+                throw new Error(await res.text() || "Không thể hủy lịch hẹn");
+            }
+            closeModal();
+            location.reload();
+        })
+        .catch((err) => {
+            if (errorBox) {
+                errorBox.innerText = err.message || "Không thể hủy lịch hẹn.";
+                errorBox.style.display = "block";
+            }
+        });
+}
+
+function cancelAppointmentBySystem(id) {
+    const reason = "Không còn nha sĩ có khung giờ trống này. Vui lòng đặt lại lịch khác";
+    const params = new URLSearchParams();
+    params.append("id", id);
+    params.append("reason", reason);
+
+    fetch(`/staff/appointments/cancel-system?${params.toString()}`, {
+        method: "POST"
+    })
+        .then(async (res) => {
+            if (!res.ok) {
+                throw new Error(await res.text() || "Không thể hủy lịch");
+            }
+            closeModal();
+            location.reload();
+        })
+        .catch((err) => alert("Lỗi: " + err.message));
+}
+
+function approveWithdrawRequest(id) {
+    buildModal(`
+        <h3>Duyệt chi tiền mặt</h3>
+        <p class="modal-text">Xác nhận rằng bạn đã chi tiền mặt cho khách. Cần upload ảnh bằng chứng trước khi duyệt.</p>
+        <div id="withdrawApproveError" class="modal-error" style="display:none;"></div>
+        <div class="wallet-security-box">
+            <div class="wallet-security-line"><strong>Lưu ý:</strong> thao tác này sẽ đánh dấu yêu cầu đã duyệt và trừ tiền trong ví.</div>
+        </div>
+        <div class="modal-field">
+            <label class="modal-label" for="withdrawProofImage">Ảnh bằng chứng</label>
+            <input id="withdrawProofImage" class="staff-file-input" type="file" accept="image/*" />
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-payment" onclick="submitApproveWithdrawRequest(${id})">Xác nhận duyệt</button>
+            <button type="button" class="btn-secondary" onclick="closeModal()">Đóng</button>
+        </div>
+    `);
+}
+
+function submitApproveWithdrawRequest(id) {
+    const errorBox = document.getElementById("withdrawApproveError");
+    const fileInput = document.getElementById("withdrawProofImage");
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    if (!file) {
+        if (errorBox) {
+            errorBox.innerText = "Vui lòng chọn ảnh bằng chứng trước khi duyệt.";
+            errorBox.style.display = "block";
+        }
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("proofImage", file);
+
+    fetch(`/staff/wallet/withdraw-requests/${id}/approve`, {
+        method: "POST",
+        body: formData
+    })
+        .then(async (res) => {
+            if (!res.ok) {
+                throw new Error(await res.text() || "Không thể duyệt yêu cầu rút tiền");
+            }
+            closeModal();
+            location.reload();
+        })
+        .catch((err) => {
+            if (errorBox) {
+                errorBox.innerText = err.message || "Không thể duyệt yêu cầu rút tiền.";
+                errorBox.style.display = "block";
+            } else {
+                alert("Lỗi: " + err.message);
+            }
+        });
+}

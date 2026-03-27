@@ -9,21 +9,31 @@ import com.dentalclinic.repository.CustomerProfileRepository;
 import com.dentalclinic.repository.WalletRepository;
 import com.dentalclinic.repository.WalletTransactionRepository;
 import com.dentalclinic.service.notification.NotificationService;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class WalletService {
     public static final BigDecimal WALLET_TOPUP_CREDIT_RATE = BigDecimal.ONE;
     public static final BigDecimal DAILY_WITHDRAWAL_LIMIT = new BigDecimal("5000000.00");
+    private static final Path WITHDRAW_PROOF_UPLOAD_DIR = Paths.get("uploads", "wallet-withdraw-proofs");
 //    public static final BigDecimal WALLET_TOPUP_CREDIT_RATE = new BigDecimal("0.95");
 //    public static final BigDecimal WALLET_TOPUP_FIXED_FEE = BigDecimal.valueOf(5_000L);
 
@@ -225,8 +235,16 @@ public class WalletService {
                 WalletTransactionStatus.PENDING);
     }
 
+    @Transactional(readOnly = true)
+    public List<WalletTransaction> getWithdrawalRequestsByStatus(WalletTransactionStatus status) {
+        WalletTransactionStatus resolvedStatus = status == null ? WalletTransactionStatus.PENDING : status;
+        return walletTransactionRepository.findByTypeAndStatusOrderByCreatedAtDesc(
+                WalletTransactionType.WITHDRAWAL,
+                resolvedStatus);
+    }
+
     @Transactional
-    public WalletTransaction approveWithdrawalRequest(Long transactionId) {
+    public WalletTransaction approveWithdrawalRequest(Long transactionId, MultipartFile proofImage) {
         WalletTransaction transaction = walletTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay yeu cau rut tien"));
 
@@ -249,10 +267,13 @@ public class WalletService {
             throw new IllegalArgumentException("So du vi hien tai khong du de duyet yeu cau rut tien");
         }
 
+        String proofImageUrl = storeWithdrawProofImage(proofImage, transactionId);
+
         wallet.setBalance(wallet.getBalance().subtract(amount));
         walletRepository.save(wallet);
 
         transaction.setStatus(WalletTransactionStatus.COMPLETED);
+        transaction.setProofImageUrl(proofImageUrl);
         if (transaction.getDescription() == null || transaction.getDescription().isBlank()) {
             transaction.setDescription("Da chi tra tien mat cho khach va tru vi");
         }
@@ -329,5 +350,45 @@ public class WalletService {
         return (withdrawnToday == null ? BigDecimal.ZERO : withdrawnToday)
                 .max(BigDecimal.ZERO)
                 .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String storeWithdrawProofImage(MultipartFile proofImage, Long transactionId) {
+        if (proofImage == null || proofImage.isEmpty()) {
+            throw new IllegalArgumentException("Vui long upload anh bang chung khi duyet yeu cau.");
+        }
+
+        String contentType = proofImage.getContentType();
+        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+            throw new IllegalArgumentException("File bang chung phai la hinh anh.");
+        }
+
+        try {
+            Files.createDirectories(WITHDRAW_PROOF_UPLOAD_DIR);
+
+            String extension = resolveFileExtension(proofImage.getOriginalFilename());
+            String fileName = "withdraw-proof-" + transactionId + "-" + UUID.randomUUID() + extension;
+            Path filePath = WITHDRAW_PROOF_UPLOAD_DIR.resolve(fileName);
+
+            try (InputStream inputStream = proofImage.getInputStream()) {
+                Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            return "/uploads/wallet-withdraw-proofs/" + fileName;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Khong the luu anh bang chung: " + e.getMessage());
+        }
+    }
+
+    private String resolveFileExtension(String originalFilename) {
+        if (originalFilename == null) {
+            return ".jpg";
+        }
+
+        int dotIndex = originalFilename.lastIndexOf('.');
+        if (dotIndex < 0 || dotIndex == originalFilename.length() - 1) {
+            return ".jpg";
+        }
+
+        return originalFilename.substring(dotIndex);
     }
 }
