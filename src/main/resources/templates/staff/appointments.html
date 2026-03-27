@@ -52,7 +52,7 @@
                 <th>Dịch vụ</th>
                 <th>Nha sĩ</th>
                 <th>Trạng thái</th>
-                <th>Thao tác</th>
+                <th>Thao tac</th>
               </tr>
             </thead>
 
@@ -115,6 +115,25 @@
                         Thanh toán
                       </button>
 
+                      <button
+                        type="button"
+                        class="btn-cancel"
+                        th:if="${(a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED') and staffCancelableFlags != null and staffCancelableFlags[a.id]}"
+                        th:onclick="'cancelAppointment(' + ${a.id} + ')'"
+                      >
+                        Hủy lịch
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn-cancel btn-disabled"
+                        disabled
+                        th:if="${(a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED') and (staffCancelableFlags == null or !staffCancelableFlags[a.id])}"
+                        title="Chỉ được hủy trước giờ khám ít nhất 12 tiếng"
+                      >
+                        Hủy lịch
+                      </button>
+
                       <a
                         class="btn-result"
                         th:if="${a.status.name() == 'COMPLETED'}"
@@ -144,6 +163,11 @@
                         <div class="appointment-detail-item appointment-detail-item--wide">
                           <span class="appointment-detail-label">Ghi chú</span>
                           <strong th:text="${a.notes != null and !#strings.isEmpty(a.notes) ? a.notes : 'Không có ghi chú'}"></strong>
+                        </div>
+                        <div class="appointment-detail-item appointment-detail-item--wide"
+                             th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}">
+                          <span class="appointment-detail-label">Quy định hủy lịch</span>
+                          <strong>Staff chỉ được hủy khi còn cách giờ khám ít nhất 12 tiếng.</strong>
                         </div>
                       </div>
                     </div>

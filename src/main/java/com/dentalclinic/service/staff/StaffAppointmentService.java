@@ -31,6 +31,7 @@ import com.dentalclinic.service.mail.EmailService;
 import com.dentalclinic.service.notification.NotificationService;
 import com.dentalclinic.service.wallet.WalletService;
 import com.dentalclinic.model.wallet.WalletTransaction;
+import com.dentalclinic.model.wallet.WalletTransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +41,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +61,7 @@ public class StaffAppointmentService {
 
     private static final Logger logger = LoggerFactory.getLogger(StaffAppointmentService.class);
     private static final BigDecimal FINAL_DEPOSIT_RATE = new BigDecimal("0.50");
+    private static final ZoneId CLINIC_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -105,6 +110,10 @@ public class StaffAppointmentService {
         return walletService.getPendingWithdrawalRequests();
     }
 
+    public List<WalletTransaction> getWithdrawalRequestsByStatus(WalletTransactionStatus status) {
+        return walletService.getWithdrawalRequestsByStatus(status);
+    }
+
     public List<SlotDto> getWalkInAvailableSlots(List<Long> serviceIds, LocalDate date) {
         return customerAppointmentService.getAvailableSlotsForWalkIn(serviceIds, date);
     }
@@ -138,6 +147,7 @@ public class StaffAppointmentService {
 
         request.setContactChannel(contactChannel);
         request.setContactValue(contactValue);
+        validateWalkInContactNotExists(contactChannel, contactValue);
         String phone = "PHONE".equals(contactChannel) ? contactValue : null;
 
         CustomerProfile walkInCustomer = createWalkInCustomerProfile(fullName, phone);
@@ -216,6 +226,34 @@ public class StaffAppointmentService {
     @Transactional
     public void cancelAppointment(Long appointmentId, String reason) {
         customerAppointmentService.cancelAppointmentByStaff(appointmentId, reason);
+    }
+
+    @Transactional
+    public void cancelAppointmentByStaffWithRules(Long appointmentId, String reason) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay lich hen"));
+
+        if (appointment.getStatus() != AppointmentStatus.PENDING
+                && appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new RuntimeException("Chi duoc huy lich o trang thai PENDING hoac CONFIRMED.");
+        }
+
+        LocalDateTime appointmentStart = resolveAppointmentStart(appointment);
+        if (appointmentStart == null) {
+            throw new RuntimeException("Khong the xac dinh thoi gian lich hen de huy.");
+        }
+
+        LocalDateTime latestAllowedCancelTime = appointmentStart.minusHours(12);
+        if (LocalDateTime.now(CLINIC_ZONE).isAfter(latestAllowedCancelTime)) {
+            throw new RuntimeException("Chi duoc huy lich truoc gio kham it nhat 12 tieng.");
+        }
+
+        String normalizedReason = reason == null ? "" : reason.trim();
+        if (normalizedReason.isBlank()) {
+            throw new RuntimeException("Vui long nhap ly do huy lich.");
+        }
+
+        customerAppointmentService.cancelAppointmentByStaff(appointmentId, normalizedReason);
     }
 
     public Page<Appointment> searchAndSort(String keyword,
@@ -608,8 +646,8 @@ public class StaffAppointmentService {
     }
 
     @Transactional
-    public WalletTransaction approveWithdrawalRequest(Long transactionId) {
-        return walletService.approveWithdrawalRequest(transactionId);
+    public WalletTransaction approveWithdrawalRequest(Long transactionId, MultipartFile proofImage) {
+        return walletService.approveWithdrawalRequest(transactionId, proofImage);
     }
 
     @Transactional
@@ -690,6 +728,65 @@ public class StaffAppointmentService {
             email = "walkin-" + UUID.randomUUID() + "@guest.local";
         } while (userRepository.existsByEmail(email));
         return email;
+    }
+
+    private void validateWalkInContactNotExists(String contactChannel, String contactValue) {
+        if (contactChannel == null || contactValue == null) {
+            return;
+        }
+
+        String normalizedChannel = contactChannel.trim().toUpperCase();
+        String normalizedValue = contactValue.trim();
+        if (normalizedValue.isBlank()) {
+            return;
+        }
+
+        if ("EMAIL".equals(normalizedChannel)
+                && customerProfileRepository.existsSystemCustomerByEmail(normalizedValue)) {
+            throw new RuntimeException("Email da ton tai trong danh sach khach hang he thong. Vui long dat lich cho khach nay bang tai khoan co san.");
+        }
+
+        if ("PHONE".equals(normalizedChannel)
+                && customerProfileRepository.existsSystemCustomerByPhone(normalizedValue)) {
+            throw new RuntimeException("So dien thoai da ton tai trong danh sach khach hang he thong. Vui long dat lich cho khach nay bang tai khoan co san.");
+        }
+    }
+
+    public Map<Long, Boolean> buildStaffCancelableFlags(List<Appointment> appointments) {
+        Map<Long, Boolean> cancelableFlags = new HashMap<>();
+        if (appointments == null) {
+            return cancelableFlags;
+        }
+
+        for (Appointment appointment : appointments) {
+            if (appointment == null || appointment.getId() == null) {
+                continue;
+            }
+            cancelableFlags.put(appointment.getId(), isStaffCancelable(appointment));
+        }
+        return cancelableFlags;
+    }
+
+    private boolean isStaffCancelable(Appointment appointment) {
+        if (appointment == null) {
+            return false;
+        }
+
+        if (appointment.getStatus() != AppointmentStatus.PENDING
+                && appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            return false;
+        }
+
+        LocalDateTime appointmentStart = resolveAppointmentStart(appointment);
+        return appointmentStart != null
+                && LocalDateTime.now(CLINIC_ZONE).isBefore(appointmentStart.minusHours(12));
+    }
+
+    private LocalDateTime resolveAppointmentStart(Appointment appointment) {
+        if (appointment == null || appointment.getDate() == null || appointment.getStartTime() == null) {
+            return null;
+        }
+        return LocalDateTime.of(appointment.getDate(), appointment.getStartTime());
     }
 
 }

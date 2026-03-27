@@ -31,6 +31,10 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
                                                                    WalletTransactionStatus status);
 
     @EntityGraph(attributePaths = {"wallet", "wallet.customer", "wallet.customer.user"})
+    List<WalletTransaction> findByTypeAndStatusOrderByCreatedAtDesc(WalletTransactionType type,
+                                                                    WalletTransactionStatus status);
+
+    @EntityGraph(attributePaths = {"wallet", "wallet.customer", "wallet.customer.user"})
     List<WalletTransaction> findByWallet_Customer_User_IdAndAppointmentIdIsNotNullOrderByCreatedAtDesc(Long userId);
 
     @EntityGraph(attributePaths = {"wallet", "wallet.customer", "wallet.customer.user"})
