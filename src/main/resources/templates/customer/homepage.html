@@ -522,7 +522,8 @@
                       <div class="testimonial-card" th:each="review : ${featuredReviews}">
                           <div class="quote-icon">“</div>
 
-                          <p class="testimonial-comment" th:text="${review.comment}"></p>
+                          <p class="testimonial-comment"
+                             th:text="${review.comment != null and !#strings.isEmpty(review.comment) ? review.comment : 'Khách hàng đánh giá bằng sao'}"></p>
 
                           <div class="testimonial-meta">
                               <div><strong th:text="${review.customerName}"></strong></div>
