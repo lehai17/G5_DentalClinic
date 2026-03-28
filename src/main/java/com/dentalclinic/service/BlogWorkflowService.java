@@ -6,7 +6,8 @@ import com.dentalclinic.model.blog.BlogStatus;
 import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.BlogRepository;
 import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,9 +21,6 @@ public class BlogWorkflowService {
         this.blogRepository = blogRepository;
     }
 
-    /**
-     * Staff/Admin tạo mới ở trạng thái DRAFT
-     */
     public Blog createDraft(Blog formData, User author) {
         Blog blog = new Blog();
         applyEditableFields(blog, formData);
@@ -35,9 +33,6 @@ public class BlogWorkflowService {
         return blogRepository.save(blog);
     }
 
-    /**
-     * Staff chỉnh sửa bài của chính mình khi bài đang ở DRAFT hoặc REJECTED
-     */
     public Blog updateByStaff(Blog existingBlog, Blog formData, User staff) {
         validateOwner(existingBlog, staff);
 
@@ -47,7 +42,6 @@ public class BlogWorkflowService {
 
         applyEditableFields(existingBlog, formData);
 
-        // Staff sửa lại bài bị reject thì xóa thông tin reject cũ
         if (existingBlog.getStatus() == BlogStatus.REJECTED) {
             existingBlog.setRejectionReason(null);
             existingBlog.setApprovedBy(null);
@@ -58,9 +52,6 @@ public class BlogWorkflowService {
         return blogRepository.save(existingBlog);
     }
 
-    /**
-     * Admin tạo bài và xuất bản ngay, không cần duyệt
-     */
     public Blog createAndApprove(Blog formData, User admin) {
         Blog blog = new Blog();
         applyEditableFields(blog, formData);
@@ -75,10 +66,6 @@ public class BlogWorkflowService {
         return blogRepository.save(blog);
     }
 
-    /**
-     * Admin chỉnh sửa bài rồi vẫn giữ published
-     * Dùng khi admin muốn sửa nội dung bài PENDING/APPROVED mà không đổi ảnh nếu controller không truyền ảnh mới
-     */
     public Blog updateAndApprove(Blog existingBlog, Blog formData, User admin) {
         applyEditableFields(existingBlog, formData);
 
@@ -90,9 +77,6 @@ public class BlogWorkflowService {
         return blogRepository.save(existingBlog);
     }
 
-    /**
-     * Staff gửi duyệt
-     */
     public Blog submitForReview(Blog blog, User staff) {
         validateOwner(blog, staff);
 
@@ -108,9 +92,6 @@ public class BlogWorkflowService {
         return blogRepository.save(blog);
     }
 
-    /**
-     * Staff rút bài đang chờ duyệt về draft
-     */
     public Blog withdrawPending(Blog blog, User staff) {
         validateOwner(blog, staff);
 
@@ -126,11 +107,6 @@ public class BlogWorkflowService {
         return blogRepository.save(blog);
     }
 
-    /**
-     * Admin duyệt bài
-     * Cho phép duyệt từ PENDING, và cũng cho phép duyệt trực tiếp từ DRAFT
-     * để hỗ trợ luồng admin tạo bài không cần qua bước review.
-     */
     public Blog approve(Blog blog, User admin) {
         if (!(blog.getStatus() == BlogStatus.PENDING || blog.getStatus() == BlogStatus.DRAFT)) {
             throw new IllegalStateException("Only PENDING/DRAFT blog can be approved.");
@@ -144,9 +120,6 @@ public class BlogWorkflowService {
         return blogRepository.save(blog);
     }
 
-    /**
-     * Admin từ chối bài
-     */
     public Blog reject(Blog blog, User admin, String reason) {
         if (!(blog.getStatus() == BlogStatus.PENDING || blog.getStatus() == BlogStatus.APPROVED)) {
             throw new IllegalStateException("Only PENDING/APPROVED blog can be rejected.");
@@ -182,7 +155,6 @@ public class BlogWorkflowService {
         target.setContent(cleanHtmlContent(source.getContent()));
         target.setImageUrl(cleanOptional(source.getImageUrl()));
 
-        // Giữ đồng bộ nếu sau này bạn dùng thumbnailUrl riêng
         if (hasThumbnailField(target)) {
             target.setThumbnailUrl(cleanOptional(source.getThumbnailUrl()));
         }
@@ -218,12 +190,53 @@ public class BlogWorkflowService {
             throw new BlogValidationException("Content must not be blank");
         }
 
-        Safelist safelist = Safelist.relaxed()
-                .addTags("img", "figure", "figcaption", "section", "article")
-                .addAttributes("img", "src", "alt", "title", "width", "height", "style")
-                .addAttributes(":all", "class", "style")
-                .addProtocols("img", "src", "http", "https");
+        Document dirty = Jsoup.parseBodyFragment(html);
 
-        return Jsoup.clean(html, safelist);
+        // Xóa các tag nguy hiểm
+        dirty.select("script, iframe, object, embed").remove();
+
+        // Xóa các event handler kiểu onclick, onerror...
+        for (Element element : dirty.getAllElements()) {
+            element.attributes().asList().forEach(attr -> {
+                String key = attr.getKey();
+                if (key != null && key.toLowerCase().startsWith("on")) {
+                    element.removeAttr(key);
+                }
+            });
+        }
+
+        // Giữ lại src của ảnh nếu là ảnh blog nội bộ hoặc link hợp lệ
+        for (Element img : dirty.select("img")) {
+            String src = img.attr("src");
+            if (src != null) {
+                src = src.trim();
+            }
+
+            if (src == null || src.isBlank()) {
+                img.remove();
+                continue;
+            }
+
+            boolean allowed =
+                    src.startsWith("/uploads/blog/") ||
+                            src.startsWith("http://") ||
+                            src.startsWith("https://") ||
+                            src.startsWith("data:image/");
+
+            if (!allowed) {
+                img.remove();
+                continue;
+            }
+
+            img.attr("src", src);
+        }
+
+        String cleaned = dirty.body().html();
+
+        if (cleaned == null || cleaned.isBlank()) {
+            throw new BlogValidationException("Content must not be blank");
+        }
+
+        return cleaned.trim();
     }
 }

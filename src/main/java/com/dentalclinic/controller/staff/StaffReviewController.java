@@ -2,11 +2,13 @@ package com.dentalclinic.controller.staff;
 
 import com.dentalclinic.dto.review.UpdateReviewFeatureRequest;
 import com.dentalclinic.service.review.ReviewMarketingService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @Controller
@@ -20,8 +22,33 @@ public class StaffReviewController {
     }
 
     @GetMapping
-    public String reviewManagementPage(Model model) {
-        model.addAttribute("reviews", reviewMarketingService.getAllReviewsForStaff());
+    public String reviewManagementPage(
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String serviceName,
+            @RequestParam(required = false) String dentistName,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            Model model
+    ) {
+        model.addAttribute(
+                "reviews",
+                reviewMarketingService.searchReviewsForStaff(
+                        customerName,
+                        serviceName,
+                        dentistName,
+                        fromDate,
+                        toDate
+                )
+        );
+
+        model.addAttribute("customerName", customerName);
+        model.addAttribute("serviceName", serviceName);
+        model.addAttribute("dentistName", dentistName);
+        model.addAttribute("fromDate", fromDate);
+        model.addAttribute("toDate", toDate);
+
         return "staff/reviews";
     }
 

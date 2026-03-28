@@ -23,13 +23,30 @@
             <a href="/staff/appointments" class="btn-assign" style="text-decoration:none;">Quay lại lịch hẹn</a>
           </div>
 
+          <div class="staff-withdraw-tabs">
+            <a th:href="@{/staff/wallet/withdraw-requests(status='PENDING')}"
+               th:classappend="${selectedStatus == 'PENDING'} ? ' active'">
+              Đang chờ
+            </a>
+            <a th:href="@{/staff/wallet/withdraw-requests(status='COMPLETED')}"
+               th:classappend="${selectedStatus == 'COMPLETED'} ? ' active'">
+              Đã duyệt
+            </a>
+            <a th:href="@{/staff/wallet/withdraw-requests(status='CANCELLED')}"
+               th:classappend="${selectedStatus == 'CANCELLED'} ? ' active'">
+              Đã hủy
+            </a>
+          </div>
+
           <section class="staff-withdraw-section" style="margin-top:24px;">
-            <div class="staff-withdraw-empty" th:if="${#lists.isEmpty(pendingWithdrawRequests)}">
-              Hiện chưa có yêu cầu rút tiền nào đang chờ duyệt.
+            <div class="staff-withdraw-empty" th:if="${#lists.isEmpty(withdrawRequests)}">
+              <span th:if="${selectedStatus == 'PENDING'}">Hiện chưa có yêu cầu rút tiền nào đang chờ duyệt.</span>
+              <span th:if="${selectedStatus == 'COMPLETED'}">Chưa có yêu cầu rút tiền nào đã được duyệt.</span>
+              <span th:if="${selectedStatus == 'CANCELLED'}">Chưa có yêu cầu rút tiền nào đã hủy.</span>
             </div>
 
-            <div class="staff-withdraw-grid" th:if="${!#lists.isEmpty(pendingWithdrawRequests)}">
-              <article class="staff-withdraw-card" th:each="request : ${pendingWithdrawRequests}">
+            <div class="staff-withdraw-grid" th:if="${!#lists.isEmpty(withdrawRequests)}">
+              <article class="staff-withdraw-card" th:each="request : ${withdrawRequests}">
                 <div class="staff-withdraw-card__top">
                   <div>
                     <div class="staff-withdraw-card__name"
@@ -45,7 +62,11 @@
                       0900000000
                     </div>
                   </div>
-                  <span class="staff-withdraw-badge">Chờ duyệt</span>
+                  <span class="staff-withdraw-badge"
+                        th:classappend="${selectedStatus == 'COMPLETED'} ? ' staff-withdraw-badge--approved' : (${selectedStatus == 'CANCELLED'} ? ' staff-withdraw-badge--cancelled' : '')"
+                        th:text="${selectedStatus == 'PENDING' ? 'Đang chờ' : (selectedStatus == 'COMPLETED' ? 'Đã duyệt' : 'Đã hủy')}">
+                    Đang chờ
+                  </span>
                 </div>
 
                 <div class="staff-withdraw-amount"
@@ -60,13 +81,21 @@
                      th:text="${request.description != null and !#strings.isEmpty(request.description) ? request.description : 'Khách không để lại ghi chú.'}">
                   Ghi chú của khách
                 </div>
-                <div class="staff-action-group">
+
+                <div class="staff-withdraw-proof" th:if="${request.proofImageUrl != null and !#strings.isEmpty(request.proofImageUrl)}">
+                  <div class="staff-withdraw-proof__label">Ảnh bằng chứng</div>
+                  <a th:href="${request.proofImageUrl}" target="_blank" rel="noopener noreferrer">
+                    <img th:src="${request.proofImageUrl}" alt="Bằng chứng rút tiền" />
+                  </a>
+                </div>
+
+                <div class="staff-action-group" th:if="${selectedStatus == 'PENDING'}">
                   <button
                     type="button"
                     class="btn-payment"
                     th:onclick="'approveWithdrawRequest(' + ${request.id} + ')'"
                   >
-                    Duyệt chi tiền mặt
+                    Duyệt
                   </button>
                   <button
                     type="button"
@@ -83,14 +112,14 @@
           <div class="pagination" th:if="${totalPages > 1}">
             <a
               th:if="${currentPage > 1}"
-              th:href="@{/staff/wallet/withdraw-requests(page=${currentPage - 1})}"
+              th:href="@{/staff/wallet/withdraw-requests(page=${currentPage - 1}, status=${selectedStatus})}"
             >
               Trước
             </a>
 
             <span th:each="i : ${#numbers.sequence(1, totalPages)}">
               <a
-                th:href="@{/staff/wallet/withdraw-requests(page=${i})}"
+                th:href="@{/staff/wallet/withdraw-requests(page=${i}, status=${selectedStatus})}"
                 th:text="${i}"
                 th:classappend="${i == currentPage} ? 'active'"
               >
@@ -99,7 +128,7 @@
 
             <a
               th:if="${currentPage < totalPages}"
-              th:href="@{/staff/wallet/withdraw-requests(page=${currentPage + 1})}"
+              th:href="@{/staff/wallet/withdraw-requests(page=${currentPage + 1}, status=${selectedStatus})}"
             >
               Sau
             </a>

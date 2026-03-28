@@ -4,6 +4,10 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${blog.title}">Chi tiết bài viết</title>
+
+    <link rel="stylesheet" th:href="@{/css/tailwind-animations.css}" />
+    <link rel="stylesheet" th:href="@{/css/homepage/home.css}" />
+
     <style>
         body {
             margin: 0;
@@ -15,7 +19,7 @@
         .page-wrap {
             max-width: 920px;
             margin: 0 auto;
-            padding: 28px 18px 48px;
+            padding: 110px 18px 48px;
         }
 
         .back-link {
@@ -30,7 +34,7 @@
             background: #fff;
             border-radius: 18px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
         }
 
         .article-title {
@@ -56,7 +60,9 @@
         }
 
         .article-thumb {
+            display: block;
             width: 100%;
+            max-width: 100%;
             border-radius: 14px;
             object-fit: cover;
             margin: 0 0 10px;
@@ -73,6 +79,7 @@
             font-size: 20px;
             line-height: 1.9;
             color: #111827;
+            word-break: break-word;
         }
 
         .article-content p {
@@ -88,11 +95,35 @@
         }
 
         .article-content img {
-            display: block;
-            max-width: 100%;
-            height: auto;
-            margin: 28px auto 10px;
+            display: block !important;
+            max-width: 100% !important;
+            height: auto !important;
+            margin: 28px auto 10px !important;
             border-radius: 14px;
+        }
+
+        .article-content figure.image {
+            margin: 24px auto;
+            text-align: center;
+        }
+
+        .article-content figure.image img {
+            display: block !important;
+            max-width: 100% !important;
+            height: auto !important;
+            margin: 0 auto !important;
+            border-radius: 14px;
+        }
+
+        .article-content figure.image.image_resized {
+            max-width: 100%;
+        }
+
+        .article-content figcaption {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #6b7280;
+            font-style: italic;
         }
 
         .article-content ul,
@@ -125,10 +156,16 @@
             .article-content {
                 font-size: 18px;
             }
+
+            .page-wrap {
+                padding: 95px 14px 36px;
+            }
         }
     </style>
 </head>
 <body>
+<div th:replace="~{fragments/header :: header}"></div>
+
 <div class="page-wrap">
     <a th:href="@{/customer/homepage}" class="back-link">← Quay lại</a>
 
@@ -145,7 +182,7 @@
         </p>
 
         <img th:if="${!#strings.isEmpty(blog.imageUrl)}"
-             th:src="${blog.imageUrl}"
+             th:src="@{${blog.imageUrl}}"
              class="article-thumb"
              alt="Ảnh bài viết"/>
 

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 @Repository
@@ -40,4 +41,24 @@ public interface CustomerProfileRepository
         @Query("SELECT COUNT(DISTINCT c) FROM CustomerProfile c " +
                         "WHERE EXISTS (SELECT 1 FROM Appointment a WHERE a.customer = c AND a.status IN ('PENDING', 'CONFIRMED'))")
         long countCustomersWithUpcomingAppointments();
+
+        @Query("""
+                        SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
+                        FROM CustomerProfile c
+                        JOIN c.user u
+                        WHERE u.role = com.dentalclinic.model.user.Role.CUSTOMER
+                          AND LOWER(u.email) = LOWER(:email)
+                          AND LOWER(u.email) NOT LIKE '%@guest.local'
+                        """)
+        boolean existsSystemCustomerByEmail(@Param("email") String email);
+
+        @Query("""
+                        SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
+                        FROM CustomerProfile c
+                        JOIN c.user u
+                        WHERE u.role = com.dentalclinic.model.user.Role.CUSTOMER
+                          AND c.phone = :phone
+                          AND LOWER(u.email) NOT LIKE '%@guest.local'
+                        """)
+        boolean existsSystemCustomerByPhone(@Param("phone") String phone);
 }

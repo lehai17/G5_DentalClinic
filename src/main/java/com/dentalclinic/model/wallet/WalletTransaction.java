@@ -37,6 +37,9 @@ public class WalletTransaction {
     @Column(length = 500)
     private String description;
 
+    @Column(name = "proof_image_url", length = 500)
+    private String proofImageUrl;
+
     @Column(name = "appointment_id")
     private Long appointmentId;
 
@@ -104,6 +107,14 @@ public class WalletTransaction {
         this.appointmentId = appointmentId;
     }
 
+    public String getProofImageUrl() {
+        return proofImageUrl;
+    }
+
+    public void setProofImageUrl(String proofImageUrl) {
+        this.proofImageUrl = proofImageUrl;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -122,6 +133,7 @@ public class WalletTransaction {
         private BigDecimal amount;
         private WalletTransactionStatus status = WalletTransactionStatus.COMPLETED;
         private String description;
+        private String proofImageUrl;
         private Long appointmentId;
 
         public WalletTransactionBuilder wallet(Wallet wallet) {
@@ -149,6 +161,11 @@ public class WalletTransaction {
             return this;
         }
 
+        public WalletTransactionBuilder proofImageUrl(String proofImageUrl) {
+            this.proofImageUrl = proofImageUrl;
+            return this;
+        }
+
         public WalletTransactionBuilder appointmentId(Long appointmentId) {
             this.appointmentId = appointmentId;
             return this;
@@ -161,6 +178,7 @@ public class WalletTransaction {
             transaction.setAmount(this.amount);
             transaction.setStatus(this.status);
             transaction.setDescription(this.description);
+            transaction.setProofImageUrl(this.proofImageUrl);
             transaction.setAppointmentId(this.appointmentId);
             return transaction;
         }

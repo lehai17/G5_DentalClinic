@@ -6,8 +6,10 @@ import com.dentalclinic.model.user.User;
 import com.dentalclinic.repository.BlogRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.BlogWorkflowService;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -23,6 +25,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,26 +55,71 @@ public class AdminBlogController {
     private final BlogWorkflowService workflowService;
 
     public AdminBlogController(BlogRepository blogRepository,
-            UserRepository userRepository,
-            BlogWorkflowService workflowService) {
+                               UserRepository userRepository,
+                               BlogWorkflowService workflowService) {
         this.blogRepository = blogRepository;
         this.userRepository = userRepository;
         this.workflowService = workflowService;
     }
 
     @GetMapping
-    public String dashboard(@RequestParam(value = "status", defaultValue = "PENDING") BlogStatus status,
+    public String dashboard(
+            @RequestParam(value = "status", required = false) BlogStatus status,
             @RequestParam(value = "page", defaultValue = "0") int page,
-            Model model) {
-        Pageable pageable = PageRequest.of(page, 10);
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "fromDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(value = "toDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            Model model
+    ) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "updatedAt"));
 
-        model.addAttribute("blogPage", blogRepository.findByStatusOrderByUpdatedAtDesc(status, pageable));
-        model.addAttribute("status", status);
+        Specification<Blog> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (email != null && !email.isBlank()) {
+                predicates.add(
+                        cb.like(
+                                cb.lower(root.get("createdBy").get("email")),
+                                "%" + email.trim().toLowerCase() + "%"
+                        )
+                );
+            }
+
+            if (fromDate != null) {
+                predicates.add(
+                        cb.greaterThanOrEqualTo(root.get("updatedAt"), fromDate.atStartOfDay())
+                );
+            }
+
+            if (toDate != null) {
+                predicates.add(
+                        cb.lessThanOrEqualTo(root.get("updatedAt"), toDate.plusDays(1).atStartOfDay().minusNanos(1))
+                );
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Blog> blogPage = blogRepository.findAll(spec, pageable);
+
+        model.addAttribute("blogPage", blogPage);
+        model.addAttribute("selectedStatus", status == null ? "ALL" : status.name());
+
         model.addAttribute("draftCount", blogRepository.countByStatus(BlogStatus.DRAFT));
         model.addAttribute("pendingCount", blogRepository.countByStatus(BlogStatus.PENDING));
         model.addAttribute("approvedCount", blogRepository.countByStatus(BlogStatus.APPROVED));
         model.addAttribute("rejectedCount", blogRepository.countByStatus(BlogStatus.REJECTED));
         model.addAttribute("activePage", "blogs");
+
+        model.addAttribute("email", email);
+        model.addAttribute("fromDate", fromDate);
+        model.addAttribute("toDate", toDate);
 
         return "admin/blog/dashboard";
     }
@@ -93,9 +147,9 @@ public class AdminBlogController {
 
     @PostMapping("/{id}/update")
     public String update(@PathVariable("id") Long id,
-            @RequestParam("title") String title,
-            @RequestParam("summary") String summary,
-            @RequestParam("content") String content) {
+                         @RequestParam("title") String title,
+                         @RequestParam("summary") String summary,
+                         @RequestParam("content") String content) {
 
         Blog blog = blogRepository.findById(id).orElseThrow();
 
@@ -122,9 +176,9 @@ public class AdminBlogController {
 
     @PostMapping("/{id}/reject")
     public String reject(@PathVariable("id") Long id,
-            @RequestParam("rejectionReason") String rejectionReason,
-            @RequestParam(value = "returnStatus", required = false) BlogStatus returnStatus,
-            Authentication authentication) {
+                         @RequestParam("rejectionReason") String rejectionReason,
+                         @RequestParam(value = "returnStatus", required = false) BlogStatus returnStatus,
+                         Authentication authentication) {
 
         User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
         Blog blog = blogRepository.findById(id).orElseThrow();
@@ -144,10 +198,10 @@ public class AdminBlogController {
 
     @PostMapping("/create")
     public String create(@ModelAttribute Blog form,
-            @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
-            @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
-            Authentication authentication,
-            Model model) throws IOException {
+                         @RequestParam(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
+                         @RequestParam(value = "existingImageUrl", required = false) String existingImageUrl,
+                         Authentication authentication,
+                         Model model) throws IOException {
 
         User admin = userRepository.findByEmail(authentication.getName()).orElseThrow();
 

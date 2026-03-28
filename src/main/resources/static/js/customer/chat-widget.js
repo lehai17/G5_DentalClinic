@@ -29,6 +29,8 @@
   let loadingMessages = false;
   let sending = false;
   let selectedAttachment = null;
+  const currentUrl = new URL(window.location.href);
+  const openChatOnLoad = ["1", "true", "yes"].includes((currentUrl.searchParams.get("openChat") || "").toLowerCase());
   const OPEN_POLL_INTERVAL_MS = 3000;
   const CLOSED_POLL_INTERVAL_MS = 15000;
 
@@ -344,6 +346,14 @@
     scheduleNextPoll(isOpen() ? OPEN_POLL_INTERVAL_MS : CLOSED_POLL_INTERVAL_MS);
   }
 
+  function clearChatOpenParams() {
+    if (!openChatOnLoad) return;
+    currentUrl.searchParams.delete("openChat");
+    currentUrl.searchParams.delete("threadId");
+    const nextUrl = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`;
+    window.history.replaceState({}, document.title, nextUrl);
+  }
+
   async function init() {
     try {
       setLoadingState(true);
@@ -351,6 +361,10 @@
       await loadUnreadCount();
       setHelper("B\u1ea1n c\u00f3 th\u1ec3 h\u1ecfi v\u1ec1 l\u1ecbch h\u1eb9n, d\u1ecbch v\u1ee5 ho\u1eb7c chi ph\u00ed kh\u00e1m.", "neutral");
       startPolling();
+      if (openChatOnLoad) {
+        openWindow();
+        clearChatOpenParams();
+      }
     } catch (error) {
       toggleBtn.classList.add("hidden");
       windowEl.classList.add("hidden");

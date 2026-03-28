@@ -36,24 +36,6 @@ public class CustomerNotificationController {
         this.supportTicketRepository = supportTicketRepository;
     }
 
-    @GetMapping
-    public String list(@AuthenticationPrincipal UserDetails principal,
-                       @RequestParam(defaultValue = "0") int page,
-                       @RequestParam(defaultValue = "all") String filter,
-                       Model model) {
-        Long customerId = getCurrentCustomerId(principal);
-        var pageable = PageRequest.of(Math.max(0, page), 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        boolean unreadOnly = "unread".equalsIgnoreCase(filter);
-        var notificationsPage = notificationService.getCustomerNotifications(customerId, pageable, unreadOnly);
-
-        model.addAttribute("notifications", notificationsPage.getContent());
-        model.addAttribute("currentPage", notificationsPage.getNumber());
-        model.addAttribute("totalPages", notificationsPage.getTotalPages());
-        model.addAttribute("selectedFilter", filter);
-        model.addAttribute("active", "notifications");
-        return "customer/notifications";
-    }
-
     @PostMapping("/{id}/read")
     public String markRead(@PathVariable Long id,
                            @AuthenticationPrincipal UserDetails principal,
@@ -94,6 +76,9 @@ public class CustomerNotificationController {
 
     private String resolveNotificationTargetUrl(Notification notification, Long customerId) {
         String url = notification.getUrl();
+        if (isCustomerChatApiUrl(url)) {
+            return buildCustomerChatUrl(notification.getReferenceId());
+        }
         if (isSafeInternalUrl(url)) {
             return url;
         }
@@ -128,6 +113,22 @@ public class CustomerNotificationController {
         if (url == null || url.isBlank()) return false;
         if (!url.startsWith("/")) return false;
         return !(url.startsWith("//") || url.contains("://"));
+    }
+
+    private boolean isCustomerChatApiUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        return url.equals("/customer/chat")
+                || url.startsWith("/customer/chat?")
+                || url.startsWith("/customer/chat/");
+    }
+
+    private String buildCustomerChatUrl(Long threadId) {
+        if (threadId == null) {
+            return "/homepage?openChat=1";
+        }
+        return "/homepage?openChat=1&threadId=" + threadId;
     }
 
     private Long extractSupportTicketId(Notification notification) {

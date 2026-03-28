@@ -2,28 +2,26 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="sidebar">
-    <aside class="sidebar">
-        <h2>Bảng điều khiển nhân viên</h2>
-        <ul>
-            <li><a th:href="@{/staff/dashboard}">Tổng quan</a></li>
-            <li><a th:href="@{/staff/appointments}">Lịch hẹn</a></li>
-            <li><a th:href="@{/staff/wallet/withdraw-requests}">Yêu cầu rút tiền</a></li>
-            <li><a th:href="@{/staff/walk-in-booking}">Book khách vãng lai</a></li>
-            <li><a th:href="@{/staff/blogs}">Bài viết sức khỏe</a></li>
-            <li><a th:href="@{/staff/chat}">Chat khách hàng</a></li>
-            <li><a th:href="@{/staff/reviews}">Đánh giá khách hàng</a></li>
+<aside class="sidebar" th:fragment="sidebar">
+    <h2>Bảng điều khiển nhân viên</h2>
+    <ul>
+        <li><a th:href="@{/staff/dashboard}">Tổng quan</a></li>
+        <li><a th:href="@{/staff/appointments}">Lịch hẹn</a></li>
+        <li><a th:href="@{/staff/wallet/withdraw-requests}">Yêu cầu rút tiền</a></li>
+        <li><a th:href="@{/staff/walk-in-booking}">Book khách vãng lai</a></li>
+        <li><a th:href="@{/staff/blogs}">Bài viết sức khỏe</a></li>
+        <li><a th:href="@{/staff/chat}">Chat khách hàng</a></li>
+        <li><a th:href="@{/staff/reviews}">Đánh giá khách hàng</a></li>
 
-            <li class="logout">
-                <form th:action="@{/logout}" method="post" style="display:inline;">
-                    <button type="submit" class="logout-btn">
-                        Đăng xuất
-                    </button>
-                </form>
-            </li>
-        </ul>
-    </aside>
-</div>
+        <li class="logout">
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="logout-btn">
+                    Đăng xuất
+                </button>
+            </form>
+        </li>
+    </ul>
+</aside>
 
 </body>
 </html>
