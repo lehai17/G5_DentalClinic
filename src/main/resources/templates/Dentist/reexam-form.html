@@ -51,7 +51,10 @@
     </div>
   </div>
 
-  <form id="reexamForm" method="post" th:action="@{/dentist/reexam/save/{appointmentId}(appointmentId=${originalAppointmentId})}">
+  <form id="reexamForm"
+        method="post"
+        th:action="@{/dentist/reexam/save/{appointmentId}(appointmentId=${originalAppointmentId})}"
+        th:attr="data-appointment-id=${originalAppointmentId}">
     <input type="hidden" name="weekStart" th:value="${weekStart}"/>
 
     <div class="form-group">
