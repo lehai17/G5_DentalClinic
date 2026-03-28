@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.time.DayOfWeek;
 
 @Service
 public class ReexamService {
@@ -363,16 +362,16 @@ public class ReexamService {
     public void validateReexamTime(Appointment originalAppointment, LocalDate date, LocalTime startTime, LocalTime endTime) {
         // Check if date is in past
         LocalDate today = LocalDate.now();
-        DayOfWeek day = date.getDayOfWeek();
-        if (day == DayOfWeek.SUNDAY) {
-            throw new BookingException(
-                    BookingErrorCode.VALIDATION_ERROR,
-                    "Reexam appointments are only allowed from Monday to Saturday"
-            );
-        }
         if (date.isBefore(today)) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR,
                     "Cannot schedule reexam in the past");
+        }
+
+        if (!hasActiveSlotsOnDate(date)) {
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "The selected date is not open for booking"
+            );
         }
         
         // Check if today
@@ -427,6 +426,10 @@ public class ReexamService {
      */
     private boolean isValid30MinInterval(LocalTime time) {
         return time.getMinute() == 0 || time.getMinute() == 30;
+    }
+
+    private boolean hasActiveSlotsOnDate(LocalDate date) {
+        return !slotRepository.findActiveSlotsForDate(date).isEmpty();
     }
     
     /**
