@@ -31,3 +31,16 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+secrets
+secrets.txt
+.env
+.env.*
+application-secret.properties
+application-oauth.properties
+
+
+uploads/blog/
+
+git add .gitignore src/main/resources/application.properties
