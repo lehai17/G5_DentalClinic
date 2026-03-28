@@ -35,13 +35,13 @@ public class CustomerVoucherService {
 
     @Transactional(readOnly = true)
     public BookingPricePreviewDto buildBookingPreview(Long userId, BigDecimal originalAmount, String voucherCode) {
-        VoucherApplication application = resolveVoucherApplication(userId, originalAmount, voucherCode, true);
+        VoucherApplication application = resolveBookingVoucherApplication(userId, originalAmount, voucherCode);
         return toBookingPreview(userId, application);
     }
 
     @Transactional(readOnly = true)
     public VoucherQuote quoteForBooking(Long userId, BigDecimal originalAmount, String voucherCode) {
-        VoucherApplication application = resolveVoucherApplication(userId, originalAmount, voucherCode, true);
+        VoucherApplication application = resolveBookingVoucherApplication(userId, originalAmount, voucherCode);
         return new VoucherQuote(
                 application.voucher(),
                 application.originalAmount(),
@@ -128,6 +128,14 @@ public class CustomerVoucherService {
         return new VoucherApplication(voucher, originalAmount, discountAmount, payableAmount, normalizedCode);
     }
 
+    private VoucherApplication resolveBookingVoucherApplication(Long userId,
+                                                                BigDecimal originalAmount,
+                                                                String voucherCode) {
+        VoucherApplication application = resolveVoucherApplication(userId, originalAmount, voucherCode, true);
+        validateBookingDepositAfterVoucher(application);
+        return application;
+    }
+
     private void validateVoucher(Long userId, Voucher voucher, BigDecimal originalAmount, boolean strictValidate) {
         if (!voucher.isActive() || voucher.isDeleted()) {
             throw new BookingException(BookingErrorCode.VALIDATION_ERROR, "Voucher hiện không khả dụng.");
@@ -173,6 +181,22 @@ public class CustomerVoucherService {
         }
 
         return discountAmount.min(originalAmount).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private void validateBookingDepositAfterVoucher(VoucherApplication application) {
+        if (application == null || application.voucher() == null) {
+            return;
+        }
+
+        BigDecimal originalDepositAmount = calculateDepositAmount(application.originalAmount());
+        BigDecimal finalDepositAmount = originalDepositAmount.subtract(application.discountAmount())
+                .setScale(2, RoundingMode.HALF_UP);
+        if (finalDepositAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "Voucher không thể áp dụng vì tiền đặt cọc còn lại phải lớn hơn 0."
+            );
+        }
     }
 
     private void applyToInvoice(Invoice invoice, VoucherApplication application) {
