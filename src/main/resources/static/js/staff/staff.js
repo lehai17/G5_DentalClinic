@@ -196,26 +196,52 @@ let activeInvoiceData = null;
 let paymentOptionState = null;
 let payOsPollTimer = null;
 
+function getPaymentActionLabel(action) {
+    if (action === "wallet") return "Đang xử lý thanh toán ví...";
+    if (action === "cash") return "Đang xác nhận thanh toán...";
+    if (action === "qr") return "Đang tạo mã QR...";
+    if (action === "options") return "Đang tải phương thức thanh toán...";
+    return "Đang xử lý...";
+}
+
+function setPaymentProcessingState(isProcessing, action) {
+    if (!paymentOptionState) return;
+    paymentOptionState.isProcessing = Boolean(isProcessing);
+    paymentOptionState.processingAction = isProcessing ? (action || null) : null;
+}
+
+function isPaymentProcessing(action) {
+    return !!(paymentOptionState
+        && paymentOptionState.isProcessing
+        && paymentOptionState.processingAction === action);
+}
+
+function buildPaymentLoadingHtml(action) {
+    if (!isPaymentProcessing(action)) return "";
+    return `<div class="staff-payment-feedback staff-payment-feedback--info">${getPaymentActionLabel(action)}</div>`;
+}
+
 function buildPaymentMethodsHtml() {
     if (!paymentOptionState || !activeInvoiceData) return "";
 
     const selectedMethod = paymentOptionState.selectedMethod || "";
     const feedback = paymentOptionState.feedback;
+    const disableMethodSelection = paymentOptionState.isProcessing ? " disabled" : "";
     const methodClass = (method) => selectedMethod === method ? " staff-payment-method--active" : "";
 
     return `
         <div class="staff-payment-section">
             <div class="staff-payment-section__title">Phương thức thanh toán</div>
             <div class="staff-payment-method-grid">
-                <button type="button" class="staff-payment-method${methodClass("QR")}" onclick="selectPaymentMethod('QR')">
+                <button type="button" class="staff-payment-method${methodClass("QR")}" onclick="selectPaymentMethod('QR')"${disableMethodSelection}>
                     <strong>QR</strong>
                     <span>Quét mã payOS và tự động xác nhận</span>
                 </button>
-                <button type="button" class="staff-payment-method${methodClass("WALLET")}" onclick="payInvoiceWithWallet(${activeInvoiceData.id})">
+                <button type="button" class="staff-payment-method${methodClass("WALLET")}" onclick="payInvoiceWithWallet(${activeInvoiceData.id})"${disableMethodSelection}>
                     <strong>Ví customer</strong>
                     <span>Số dư hiện tại: ${formatMoney(paymentOptionState.walletBalance)}</span>
                 </button>
-                <button type="button" class="staff-payment-method${methodClass("CASH")}" onclick="selectPaymentMethod('CASH')">
+                <button type="button" class="staff-payment-method${methodClass("CASH")}" onclick="selectPaymentMethod('CASH')"${disableMethodSelection}>
                     <strong>Tiền mặt</strong>
                     <span>Xác nhận đã thu tại quầy</span>
                 </button>
@@ -229,13 +255,15 @@ function buildPaymentMethodsHtml() {
 
 function buildQrMethodHtml() {
     if (!paymentOptionState) return "";
+    const isLoading = isPaymentProcessing("qr");
     if (!paymentOptionState.qrImageUrl) {
         return `
             <div class="staff-payment-detail">
                 <div class="staff-payment-detail__title">Thanh toán QR qua payOS</div>
                 <div class="staff-payment-meta">Tạo mã QR cho hóa đơn này và chờ hệ thống tự động cập nhật khi thanh toán thành công.</div>
+                ${buildPaymentLoadingHtml("qr")}
                 <div class="staff-payment-actions">
-                    <button type="button" class="btn-payment" onclick="loadPayOsQr(${activeInvoiceData.id})">Tạo mã QR</button>
+                    <button type="button" class="btn-payment" onclick="loadPayOsQr(${activeInvoiceData.id})"${isLoading ? " disabled" : ""}>${isLoading ? "Đang tạo..." : "Tạo mã QR"}</button>
                 </div>
             </div>
         `;
@@ -255,13 +283,14 @@ function buildQrMethodHtml() {
 
 function buildCashMethodHtml() {
     if (!activeInvoiceData) return "";
-    const remaining = activeInvoiceData.remainingAmount || 0;
+    const isLoading = isPaymentProcessing("cash");
     return `
         <div class="staff-payment-detail">
             <div class="staff-payment-detail__title">Thanh toán tiền mặt</div>
             <div class="staff-payment-meta">Số tiền cần thu: <strong>${formatMoney(activeInvoiceData.remainingAmount)}</strong></div>
+            ${buildPaymentLoadingHtml("cash")}
             <div class="staff-payment-actions">
-                <button type="button" class="btn-payment" onclick="confirmManualPayment(${activeInvoiceData.id}, 'CASH')">Xác nhận thanh toán bằng tiền mặt</button>
+                <button type="button" class="btn-payment" onclick="submitManualPayment(${activeInvoiceData.id}, 'CASH')"${isLoading ? " disabled" : ""}>${isLoading ? "Đang xử lý..." : "Xác nhận thanh toán bằng tiền mặt"}</button>
             </div>
         </div>
     `;
@@ -404,14 +433,15 @@ function stopPayOsPolling() {
     }
 }
 
-function markPaymentCompleted(reloadDelay) {
-    if (!paymentOptionState) return;
-    paymentOptionState.feedback = {
-        type: "success",
-        message: "Đã thanh toán thành công! Hoàn tất lịch hẹn."
-    };
+function markPaymentCompleted() {
+    if (!paymentOptionState || !activeInvoiceData) return;
+    stopPayOsPolling();
+    activeInvoiceData.invoiceStatus = "PAID";
+    activeInvoiceData.status = "COMPLETED";
+    activeInvoiceData.canPayRemaining = false;
+    activeInvoiceData.remainingAmount = 0;
+    paymentOptionState = null;
     rerenderInvoiceModal();
-    setTimeout(() => location.reload(), reloadDelay || 1000);
 }
 
 function syncPaymentMethodVisibility() {
@@ -430,6 +460,27 @@ function syncPaymentMethodVisibility() {
 }
 
 function showPaymentMethods(id) {
+    activeInvoiceData = activeInvoiceData || { id: id };
+    paymentOptionState = paymentOptionState || {
+        walletBalance: 0,
+        allowWalletPayment: true,
+        transferContent: null,
+        selectedMethod: null,
+        feedback: null,
+        qrImageUrl: null,
+        checkoutUrl: null,
+        orderCode: null,
+        payOsStatus: null,
+        isProcessing: true,
+        processingAction: "options"
+    };
+    setPaymentProcessingState(true, "options");
+    paymentOptionState.feedback = {
+        type: "info",
+        message: "Đang tải phương thức thanh toán..."
+    };
+    rerenderInvoiceModal();
+
     fetch(`/staff/appointments/${id}/payment-options`, {
         method: "POST"
     }).then((res) => {
@@ -449,7 +500,9 @@ function showPaymentMethods(id) {
             qrImageUrl: null,
             checkoutUrl: null,
             orderCode: null,
-            payOsStatus: null
+            payOsStatus: null,
+            isProcessing: false,
+            processingAction: null
         };
         stopPayOsPolling();
         const existingModal = document.querySelector(".staff-invoice-modal");
@@ -460,12 +513,21 @@ function showPaymentMethods(id) {
         });
         syncPaymentMethodVisibility();
     }).catch((err) => {
+        setPaymentProcessingState(false);
+        if (paymentOptionState) {
+            paymentOptionState.feedback = {
+                type: "error",
+                message: err.message || "Không thể tải phương thức thanh toán."
+            };
+            rerenderInvoiceModal();
+            return;
+        }
         alert("Lỗi: " + err.message);
     });
 }
 
 function selectPaymentMethod(method) {
-    if (!paymentOptionState) return;
+    if (!paymentOptionState || paymentOptionState.isProcessing) return;
     paymentOptionState.selectedMethod = method;
     paymentOptionState.feedback = null;
     if (method !== "QR") {
@@ -475,8 +537,13 @@ function selectPaymentMethod(method) {
 }
 
 function loadPayOsQr(id) {
-    if (!paymentOptionState) return;
+    if (!paymentOptionState || paymentOptionState.isProcessing) return;
     paymentOptionState.feedback = null;
+    setPaymentProcessingState(true, "qr");
+    paymentOptionState.feedback = {
+        type: "info",
+        message: "Đang tạo mã QR payOS..."
+    };
     rerenderInvoiceModal();
 
     fetch(`/staff/appointments/${id}/payos-link`, {
@@ -491,6 +558,7 @@ function loadPayOsQr(id) {
         paymentOptionState.checkoutUrl = payload.checkoutUrl;
         paymentOptionState.orderCode = payload.orderCode;
         paymentOptionState.payOsStatus = payload.status || "PENDING";
+        setPaymentProcessingState(false);
         paymentOptionState.feedback = {
             type: "success",
             message: "Đã tạo mã QR payOS. Hệ thống đang chờ xác nhận thanh toán."
@@ -498,6 +566,7 @@ function loadPayOsQr(id) {
         rerenderInvoiceModal();
         startPayOsPolling(id);
     }).catch((err) => {
+        setPaymentProcessingState(false);
         paymentOptionState.feedback = {
             type: "error",
             message: err.message || "Không thể tạo QR payOS."
@@ -523,7 +592,7 @@ function startPayOsPolling(id) {
                     stopPayOsPolling();
                     activeInvoiceData.invoiceStatus = payload.invoiceStatus || "PAID";
                     activeInvoiceData.status = payload.appointmentStatus || "COMPLETED";
-                    markPaymentCompleted(1200);
+                    markPaymentCompleted();
                 }
             })
             .catch(() => {});
@@ -531,9 +600,14 @@ function startPayOsPolling(id) {
 }
 
 function payInvoiceWithWallet(id) {
-    if (!paymentOptionState) return;
+    if (!paymentOptionState || paymentOptionState.isProcessing) return;
+    if (!confirm("Xác nhận thanh toán phần còn lại bằng ví customer?")) return;
     paymentOptionState.selectedMethod = "WALLET";
-    paymentOptionState.feedback = null;
+    paymentOptionState.feedback = {
+        type: "info",
+        message: "Đang xử lý thanh toán bằng ví..."
+    };
+    setPaymentProcessingState(true, "wallet");
     rerenderInvoiceModal();
 
     fetch(`/staff/appointments/${id}/pay-wallet`, {
@@ -542,8 +616,9 @@ function payInvoiceWithWallet(id) {
         if (!res.ok) {
             throw new Error(await res.text() || "Không thể thanh toán bằng ví");
         }
-        markPaymentCompleted(1000);
+        markPaymentCompleted();
     }).catch((err) => {
+        setPaymentProcessingState(false);
         const message = (err.message || "").toLowerCase().includes("khong du")
             ? "Số dư ví không đủ. Vui lòng chọn phương thức khác."
             : (err.message || "Không thể thanh toán bằng ví.");
@@ -556,6 +631,7 @@ function payInvoiceWithWallet(id) {
 }
 
 function submitManualPayment(id, method) {
+    if (!paymentOptionState || paymentOptionState.isProcessing) return;
     const input = document.getElementById("cashPaidAmount");
     const paidAmount = input ? input.value : (activeInvoiceData ? activeInvoiceData.remainingAmount : 0);
 
@@ -566,6 +642,12 @@ function submitManualPayment(id, method) {
 
     const params = new URLSearchParams();
     params.append("paidAmount", paidAmount);
+    paymentOptionState.feedback = {
+        type: "info",
+        message: "Đang xác nhận thanh toán..."
+    };
+    setPaymentProcessingState(true, "cash");
+    rerenderInvoiceModal();
 
     fetch(`/staff/appointments/${id}/confirm-manual-payment?${params.toString()}`, {
         method: "POST"
@@ -573,8 +655,9 @@ function submitManualPayment(id, method) {
         if (!res.ok) {
             throw new Error(await res.text() || "Không thể xác nhận thanh toán");
         }
-        markPaymentCompleted(1000);
+        markPaymentCompleted();
     }).catch((err) => {
+        setPaymentProcessingState(false);
         if (paymentOptionState) {
             paymentOptionState.feedback = {
                 type: "error",
