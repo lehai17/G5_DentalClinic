@@ -25,7 +25,7 @@ public class Voucher {
     @Column(nullable = false, length = 120)
     private String code;
 
-    @Column(length = 500)
+    @Column(length = 500, columnDefinition = "NVARCHAR(500)")
     private String description;
 
     @Enumerated(EnumType.STRING)

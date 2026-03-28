@@ -36,8 +36,14 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
         @Query("SELECT COALESCE(SUM(s.bookedCount), 0) FROM Slot s WHERE s.slotTime >= :start AND s.slotTime < :end AND s.active = true")
         long sumBookedActiveInRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-        @Query("SELECT s FROM Slot s WHERE FUNCTION('DATE', s.slotTime) = :date AND s.active = true ORDER BY s.slotTime ASC")
-        List<Slot> findActiveSlotsForDate(@Param("date") LocalDate date);
+        default List<Slot> findActiveSlotsForDate(LocalDate date) {
+                if (date == null) {
+                        return List.of();
+                }
+                LocalDateTime startOfDay = date.atStartOfDay();
+                LocalDateTime nextDay = date.plusDays(1).atStartOfDay();
+                return findActiveSlotsForDateRange(startOfDay, nextDay);
+        }
 
         @Modifying
         @Query("UPDATE Slot s SET s.bookedCount = s.bookedCount + 1 WHERE s.slotTime = :slotTime AND s.bookedCount < s.capacity AND s.active = true")

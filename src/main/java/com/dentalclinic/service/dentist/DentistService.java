@@ -105,9 +105,13 @@ public class DentistService {
 
         User user = new User();
         user.setEmail(dto.getEmail());
-        user.setPassword("123456");
+        user.setPassword(dto.getTempPassword());
         user.setRole(Role.DENTIST);
         user.setStatus(UserStatus.ACTIVE);
+        user.setDateOfBirth(dto.getDateOfBirth());
+        if (dto.getGender() != null) {
+            user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
+        }
         userRepository.save(user);
 
         DentistProfile profile = new DentistProfile();
@@ -123,12 +127,6 @@ public class DentistService {
         }
 
         dentistProfileRepository.save(profile);
-
-        user.setDateOfBirth(dto.getDateOfBirth());
-        if (dto.getGender() != null) {
-            user.setGender(Gender.valueOf(dto.getGender().toUpperCase()));
-        }
-        userRepository.save(user);
 
         if (dto.getAvailableDays() != null && !dto.getAvailableDays().isEmpty()) {
             LocalTime startTime = parseTimeSafe(dto.getShiftStartTime());
