@@ -2,6 +2,16 @@
   'use strict';
 
   var SLOT_MINUTES = 30;
+  var EMAIL_PATTERN = /^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+(?:[._%+-][A-Za-z0-9]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$/;
+  var PHONE_PATTERN = /^0\d{9}$/;
+  var COMMON_EMAIL_DOMAIN_RULES = {
+    gmail: ['gmail.com'],
+    yahoo: ['yahoo.com'],
+    outlook: ['outlook.com'],
+    hotmail: ['hotmail.com'],
+    icloud: ['icloud.com'],
+    live: ['live.com']
+  };
   var state = {
     currentYear: new Date().getFullYear(),
     currentMonth: new Date().getMonth(),
@@ -74,6 +84,10 @@
       labelEl.innerHTML = 'Email <span class="required">*</span>';
       inputEl.placeholder = 'Nhập email liên hệ';
       inputEl.type = 'email';
+      inputEl.setAttribute('inputmode', 'email');
+      inputEl.setAttribute('autocomplete', 'email');
+      inputEl.setAttribute('pattern', EMAIL_PATTERN.source);
+      inputEl.removeAttribute('maxlength');
       return;
     }
 
@@ -81,12 +95,40 @@
       labelEl.innerHTML = 'Số điện thoại <span class="required">*</span>';
       inputEl.placeholder = 'Nhập số điện thoại liên hệ';
       inputEl.type = 'text';
+      inputEl.setAttribute('inputmode', 'numeric');
+      inputEl.setAttribute('autocomplete', 'tel');
+      inputEl.setAttribute('pattern', PHONE_PATTERN.source);
+      inputEl.setAttribute('maxlength', '10');
       return;
     }
 
     labelEl.innerHTML = 'Số điện thoại / Email <span class="required">*</span>';
     inputEl.placeholder = 'Nhập số điện thoại hoặc email';
     inputEl.type = 'text';
+    inputEl.removeAttribute('inputmode');
+    inputEl.removeAttribute('autocomplete');
+    inputEl.removeAttribute('pattern');
+    inputEl.removeAttribute('maxlength');
+  }
+
+  function hasAllowedCommonEmailDomain(email) {
+    var normalizedEmail = String(email || '').trim().toLowerCase();
+    var atIndex = normalizedEmail.lastIndexOf('@');
+    if (atIndex < 0) return false;
+
+    var domain = normalizedEmail.slice(atIndex + 1);
+    var firstLabel = domain.split('.')[0];
+    var allowedDomains = COMMON_EMAIL_DOMAIN_RULES[firstLabel];
+    return !allowedDomains || allowedDomains.indexOf(domain) !== -1;
+  }
+
+  function isValidEmail(email) {
+    var normalizedEmail = String(email || '').trim();
+    return EMAIL_PATTERN.test(normalizedEmail) && hasAllowedCommonEmailDomain(normalizedEmail);
+  }
+
+  function isValidPhone(phone) {
+    return PHONE_PATTERN.test(String(phone || '').trim());
   }
 
   function parseTimeParts(timeValue) {
@@ -571,6 +613,16 @@
 
     if (!slotId || serviceIds.length === 0 || !fullName || !contactChannel || !contactValue) {
       showAlert('Vui lòng điền đầy đủ thông tin khách và chọn ít nhất một dịch vụ.', 'warning', 'Thiếu thông tin');
+      return;
+    }
+
+    if (contactChannel === 'EMAIL' && !isValidEmail(contactValue)) {
+      showAlert('Vui lòng nhập email hợp lệ. Ví dụ: ten@gmail.com.', 'warning', 'Email không hợp lệ');
+      return;
+    }
+
+    if (contactChannel === 'PHONE' && !isValidPhone(contactValue)) {
+      showAlert('Vui lòng nhập số điện thoại bắt đầu bằng số 0 và gồm đủ 10 chữ số.', 'warning', 'Số điện thoại không hợp lệ');
       return;
     }
 

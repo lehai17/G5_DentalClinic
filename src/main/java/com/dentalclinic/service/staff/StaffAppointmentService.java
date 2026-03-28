@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,6 +63,8 @@ public class StaffAppointmentService {
     private static final Logger logger = LoggerFactory.getLogger(StaffAppointmentService.class);
     private static final BigDecimal FINAL_DEPOSIT_RATE = new BigDecimal("0.50");
     private static final ZoneId CLINIC_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+(?:[._%+-][A-Za-z0-9]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z]{2,24}$");
+    private static final Pattern VN_WALKIN_PHONE_PATTERN = Pattern.compile("^0\\d{9}$");
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -143,6 +146,12 @@ public class StaffAppointmentService {
         }
         if (!"PHONE".equals(contactChannel) && !"EMAIL".equals(contactChannel)) {
             throw new RuntimeException("Kenh lien he chi ho tro so dien thoai hoac email.");
+        }
+        if ("EMAIL".equals(contactChannel) && !isValidWalkInEmail(contactValue)) {
+            throw new RuntimeException("Email khong hop le.");
+        }
+        if ("PHONE".equals(contactChannel) && !VN_WALKIN_PHONE_PATTERN.matcher(contactValue).matches()) {
+            throw new RuntimeException("So dien thoai khong hop le. So dien thoai phai bat dau bang so 0 va gom du 10 chu so.");
         }
 
         request.setContactChannel(contactChannel);
@@ -268,7 +277,7 @@ public class StaffAppointmentService {
             s = Sort.by("date").ascending();
         }
 
-        Pageable pageable = PageRequest.of(page, 3, s);
+        Pageable pageable = PageRequest.of(page, 5, s);
 
         boolean hasCustomer = keyword != null && !keyword.trim().isEmpty();
         boolean hasService = serviceKeyword != null && !serviceKeyword.trim().isEmpty();
@@ -728,6 +737,33 @@ public class StaffAppointmentService {
             email = "walkin-" + UUID.randomUUID() + "@guest.local";
         } while (userRepository.existsByEmail(email));
         return email;
+    }
+
+    private boolean isValidWalkInEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+        if (!EMAIL_PATTERN.matcher(normalizedEmail).matches()) {
+            return false;
+        }
+
+        int atIndex = normalizedEmail.lastIndexOf('@');
+        if (atIndex < 0 || atIndex == normalizedEmail.length() - 1) {
+            return false;
+        }
+
+        String domain = normalizedEmail.substring(atIndex + 1);
+        return switch (domain.split("\\.")[0]) {
+            case "gmail" -> "gmail.com".equals(domain);
+            case "yahoo" -> "yahoo.com".equals(domain);
+            case "outlook" -> "outlook.com".equals(domain);
+            case "hotmail" -> "hotmail.com".equals(domain);
+            case "icloud" -> "icloud.com".equals(domain);
+            case "live" -> "live.com".equals(domain);
+            default -> true;
+        };
     }
 
     private void validateWalkInContactNotExists(String contactChannel, String contactValue) {
