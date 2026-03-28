@@ -1,7 +1,6 @@
 package com.dentalclinic.dto.admin;
 
 import java.time.LocalDate;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -16,7 +15,7 @@ public class UpdateStaffDTO {
     private String fullName;
 
     @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không hợp lệ")
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$", message = "Email không hợp lệ")
     private String email;
 
     @NotBlank(message = "Số điện thoại không được để trống")
