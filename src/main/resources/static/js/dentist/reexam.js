@@ -9,8 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const endTimeInput = document.getElementById('endTime');
     const deleteBtn = document.getElementById('deleteBtn');
     const deleteForm = document.getElementById('deleteForm');
+    const appointmentId = form?.dataset.appointmentId || '';
     const originalDate = dateInput?.dataset.originalDate || '';
     const originalStartTime = dateInput?.dataset.originalStartTime || '';
+    let availableStartSlots = [];
 
     if (!form) return;
 
@@ -141,6 +143,89 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function syncEndTimeOptions() {
+        if (!startTimeInput || !endTimeInput) {
+            return;
+        }
+
+        const selectedStart = startTimeInput.value;
+        const slotSet = new Set(availableStartSlots || []);
+        Array.from(endTimeInput.options).forEach(option => {
+            if (!option.value) return;
+            if (!selectedStart) {
+                option.disabled = false;
+                return;
+            }
+
+            const requiresAfterStart = option.value > selectedStart;
+            const hasContiguousSlots = requiresAfterStart && hasContinuousSlots(selectedStart, option.value, slotSet);
+            option.disabled = !requiresAfterStart || !hasContiguousSlots;
+        });
+
+        if (endTimeInput.value && endTimeInput.selectedOptions[0]?.disabled) {
+            endTimeInput.value = '';
+        }
+    }
+
+    function syncAvailableStartOptions(availableSlots) {
+        availableStartSlots = availableSlots || [];
+        const slotSet = new Set(availableSlots || []);
+        Array.from(startTimeInput.options).forEach(option => {
+            if (!option.value) return;
+            const allowedBySlot = slotSet.has(option.value);
+            const sameDayBlocked = dateInput.value && originalDate && dateInput.value === originalDate
+                && originalStartTime && option.value < originalStartTime;
+            option.disabled = !allowedBySlot || sameDayBlocked;
+        });
+
+        if (startTimeInput.value && startTimeInput.selectedOptions[0]?.disabled) {
+            startTimeInput.value = '';
+        }
+
+        syncEndTimeOptions();
+    }
+
+    function addMinutes(time, minutes) {
+        const [hour, minute] = time.split(':').map(Number);
+        const total = (hour * 60) + minute + minutes;
+        const newHour = Math.floor(total / 60);
+        const newMinute = total % 60;
+        return `${String(newHour).padStart(2, '0')}:${String(newMinute).padStart(2, '0')}`;
+    }
+
+    function hasContinuousSlots(startTime, endTime, slotSet) {
+        let current = startTime;
+        while (current < endTime) {
+            if (!slotSet.has(current)) {
+                return false;
+            }
+            current = addMinutes(current, 30);
+        }
+        return true;
+    }
+
+    async function refreshAvailableStartTimes() {
+        if (!appointmentId || !dateInput.value) {
+            syncAvailableStartOptions([]);
+            return;
+        }
+
+        try {
+            const res = await fetch(`/dentist/reexam/slots/${appointmentId}?date=${encodeURIComponent(dateInput.value)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!res.ok) {
+                syncAvailableStartOptions([]);
+                return;
+            }
+            const data = await res.json();
+            syncAvailableStartOptions(data.availableSlots || []);
+        } catch (e) {
+            syncAvailableStartOptions([]);
+            console.error('Failed to load available reexam slots', e);
+        }
+    }
+
     function showError(input, message) {
         clearError(input);
         const errorDiv = document.createElement('div');
@@ -175,12 +260,14 @@ document.addEventListener('DOMContentLoaded', function() {
         validateDate(dateInput);
         validateCurrentTime(dateInput, startTimeInput);
         syncSameDayTimeOptions();
+        refreshAvailableStartTimes();
         validateAgainstOriginalAppointment(dateInput, startTimeInput);
     });
     startTimeInput.addEventListener('change', function () {
         validateTime(startTimeInput);
         validateCurrentTime(dateInput, startTimeInput);
         validateAgainstOriginalAppointment(dateInput, startTimeInput);
+        syncEndTimeOptions();
         validateTimes(startTimeInput, endTimeInput);
     });
     endTimeInput.addEventListener('change', function () {
@@ -217,4 +304,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     syncSameDayTimeOptions();
+    syncEndTimeOptions();
+    if (dateInput.value) {
+        refreshAvailableStartTimes();
+    }
 });

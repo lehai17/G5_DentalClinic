@@ -6,6 +6,8 @@ import com.dentalclinic.model.appointment.AppointmentDetail;
 import com.dentalclinic.repository.ServicesRepository;
 import com.dentalclinic.repository.UserRepository;
 import com.dentalclinic.service.dentist.ReexamService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/dentist/reexam")
 public class ReexamController {
+    private static final Logger logger = LoggerFactory.getLogger(ReexamController.class);
+
     private final ReexamService reexamService;
     private final ServicesRepository servicesRepository;
     private final UserRepository userRepository;
@@ -132,6 +136,11 @@ public class ReexamController {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/dentist/reexam/" + appointmentId
                     + (weekStart != null ? "?weekStart=" + weekStart : "");
+        } catch (Exception e) {
+            logger.error("Unexpected error while saving reexam for appointment {}", appointmentId, e);
+            redirect.addFlashAttribute("errorMessage", "Unable to save reexam at the moment");
+            return "redirect:/dentist/reexam/" + appointmentId
+                    + (weekStart != null ? "?weekStart=" + weekStart : "");
         }
 
         return "redirect:/dentist/reexam/" + appointmentId
@@ -179,28 +188,8 @@ public class ReexamController {
             Long reexamIdToExclude = existingReexam.map(Appointment::getId).orElse(null);
 
             ReexamSlotsResponse response = new ReexamSlotsResponse();
-            LocalTime current = LocalTime.of(8, 0);
-            LocalTime end = LocalTime.of(17, 0);
-
-            while (!current.isAfter(end)) {
-                try {
-                    LocalTime slotEnd = current.plusMinutes(30);
-                    if (!slotEnd.isAfter(end)) {
-                        reexamService.checkDentistScheduleConflict(
-                                original.getDentist().getId(),
-                                date,
-                                current,
-                                slotEnd,
-                                reexamIdToExclude
-                        );
-                        response.addAvailableSlot(current.toString());
-                    }
-                } catch (BookingException e) {
-                    // Slot not available
-                }
-
-                current = current.plusMinutes(30);
-            }
+            reexamService.getAvailableReexamStartTimes(original, date, reexamIdToExclude)
+                    .forEach(time -> response.addAvailableSlot(time.toString()));
 
             return response;
 

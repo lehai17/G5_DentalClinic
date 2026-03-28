@@ -12,6 +12,7 @@ import com.dentalclinic.exception.BookingException;
 import com.dentalclinic.exception.BookingErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -131,6 +133,12 @@ public class ReexamService {
         
         // Check schedule conflict (excluding itself if updating)
         Optional<Appointment> existing = getExistingReexam(originalAppointmentId);
+        validateCustomerStartTimeAvailability(
+                original.getCustomer().getId(),
+                newDate,
+                newStartTime,
+                existing.map(Appointment::getId).orElse(null)
+        );
         if (existing.isPresent()) {
             // Update mode: check conflicts excluding this reexam
             checkDentistScheduleConflict(
@@ -195,7 +203,7 @@ public class ReexamService {
                 reexam.addAppointmentSlot(new AppointmentSlot(reexam, newSlots.get(i), i));
             }
             
-            Appointment saved = appointmentRepository.save(reexam);
+            Appointment saved = saveReexamSafely(reexam);
             
             // Release old slots
             releaseSlots(oldSlots);
@@ -236,7 +244,7 @@ public class ReexamService {
                 reexam.addAppointmentSlot(new AppointmentSlot(reexam, slots.get(i), i));
             }
             
-            return appointmentRepository.save(reexam);
+            return saveReexamSafely(reexam);
         }
     }
     
@@ -428,8 +436,104 @@ public class ReexamService {
         return time.getMinute() == 0 || time.getMinute() == 30;
     }
 
+    private void validateCustomerStartTimeAvailability(Long customerId,
+                                                       LocalDate date,
+                                                       LocalTime startTime,
+                                                       Long excludeAppointmentId) {
+        boolean duplicated = excludeAppointmentId == null
+                ? appointmentRepository.existsExactCustomerStartTime(customerId, date, startTime)
+                : appointmentRepository.existsExactCustomerStartTimeExcludingAppointment(
+                        customerId,
+                        date,
+                        startTime,
+                        excludeAppointmentId
+                );
+        if (duplicated) {
+            throw new BookingException(
+                    BookingErrorCode.VALIDATION_ERROR,
+                    "This patient already has another appointment at the selected date and start time"
+            );
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<LocalTime> getAvailableReexamStartTimes(Appointment originalAppointment,
+                                                        LocalDate date,
+                                                        Long excludeAppointmentId) {
+        if (date == null || !hasActiveSlotsOnDate(date)) {
+            return List.of();
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        return slotRepository.findActiveSlotsForDate(date).stream()
+                .map(slot -> slot.getSlotTime().toLocalTime())
+                .filter(startTime -> !startTime.isBefore(CLINIC_OPEN))
+                .filter(startTime -> startTime.plusMinutes(SLOT_DURATION_MIN).compareTo(CLINIC_CLOSE) <= 0)
+                .filter(startTime -> !date.equals(today) || startTime.isAfter(now))
+                .filter(startTime -> originalAppointment == null
+                        || originalAppointment.getDate() == null
+                        || originalAppointment.getStartTime() == null
+                        || !originalAppointment.getDate().isEqual(date)
+                        || !startTime.isBefore(originalAppointment.getStartTime()))
+                .filter(startTime -> {
+                    try {
+                        validateCustomerStartTimeAvailability(
+                                originalAppointment.getCustomer().getId(),
+                                date,
+                                startTime,
+                                excludeAppointmentId
+                        );
+                        return true;
+                    } catch (BookingException e) {
+                        return false;
+                    }
+                })
+                .filter(startTime -> {
+                    try {
+                        checkDentistScheduleConflict(
+                                originalAppointment.getDentist().getId(),
+                                date,
+                                startTime,
+                                startTime.plusMinutes(SLOT_DURATION_MIN),
+                                excludeAppointmentId
+                        );
+                        return true;
+                    } catch (BookingException e) {
+                        return false;
+                    }
+                })
+                .distinct()
+                .sorted(Comparator.naturalOrder())
+                .toList();
+    }
+
     private boolean hasActiveSlotsOnDate(LocalDate date) {
         return !slotRepository.findActiveSlotsForDate(date).isEmpty();
+    }
+
+    private Appointment saveReexamSafely(Appointment reexam) {
+        try {
+            return appointmentRepository.save(reexam);
+        } catch (DataIntegrityViolationException ex) {
+            throw translateDuplicateAppointment(ex);
+        }
+    }
+
+    private BookingException translateDuplicateAppointment(DataIntegrityViolationException ex) {
+        Throwable cause = ex;
+        while (cause != null) {
+            String message = cause.getMessage();
+            if (message != null && message.contains("uk_appointment_customer_date_start")) {
+                return new BookingException(
+                        BookingErrorCode.VALIDATION_ERROR,
+                        "This patient already has another appointment at the selected date and start time"
+                );
+            }
+            cause = cause.getCause();
+        }
+        throw ex;
     }
     
     /**

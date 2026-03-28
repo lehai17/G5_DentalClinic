@@ -127,6 +127,43 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                                 activeStatuses) > 0;
         }
 
+        @Query(value = """
+                        SELECT COUNT(*)
+                        FROM appointment
+                        WHERE customer_id = :customerId
+                          AND appointment_date = :date
+                          AND start_time = CAST(:startTime AS TIME)
+                        """, nativeQuery = true)
+        int countExactCustomerStartTime(@Param("customerId") Long customerId,
+                        @Param("date") LocalDate date,
+                        @Param("startTime") LocalTime startTime);
+
+        @Query(value = """
+                        SELECT COUNT(*)
+                        FROM appointment
+                        WHERE customer_id = :customerId
+                          AND appointment_date = :date
+                          AND start_time = CAST(:startTime AS TIME)
+                          AND id <> :appointmentId
+                        """, nativeQuery = true)
+        int countExactCustomerStartTimeExcludingAppointment(@Param("customerId") Long customerId,
+                        @Param("date") LocalDate date,
+                        @Param("startTime") LocalTime startTime,
+                        @Param("appointmentId") Long appointmentId);
+
+        default boolean existsExactCustomerStartTime(Long customerId,
+                        LocalDate date,
+                        LocalTime startTime) {
+                return countExactCustomerStartTime(customerId, date, startTime) > 0;
+        }
+
+        default boolean existsExactCustomerStartTimeExcludingAppointment(Long customerId,
+                        LocalDate date,
+                        LocalTime startTime,
+                        Long appointmentId) {
+                return countExactCustomerStartTimeExcludingAppointment(customerId, date, startTime, appointmentId) > 0;
+        }
+
         default boolean existsByDentist_IdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Long dentistId,
                         LocalDate date,
                         LocalTime startTime,
